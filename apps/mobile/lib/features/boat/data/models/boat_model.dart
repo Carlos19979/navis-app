@@ -1,0 +1,91 @@
+import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
+
+class BoatModel {
+  const BoatModel({
+    required this.id,
+    required this.name,
+    required this.registration,
+    required this.type,
+    required this.lengthMeters,
+    this.homePort,
+    this.photoUrl,
+    this.ownerId,
+    this.createdAt,
+    this.updatedAt,
+  });
+
+  factory BoatModel.fromJson(Map<String, dynamic> json) {
+    return BoatModel(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      registration: json['registration'] as String,
+      type: json['type'] as String,
+      lengthMeters: (json['length_meters'] as num).toDouble(),
+      homePort: json['home_port'] as String?,
+      photoUrl: json['photo_url'] as String?,
+      ownerId: json['owner_id'] as String?,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : null,
+    );
+  }
+
+  factory BoatModel.fromEntity(Boat boat) {
+    return BoatModel(
+      id: boat.id,
+      name: boat.name,
+      registration: boat.registration,
+      type: boat.type,
+      lengthMeters: boat.lengthMeters,
+      homePort: boat.homePort,
+      photoUrl: boat.photoUrl,
+      ownerId: boat.ownerId,
+      createdAt: boat.createdAt,
+      updatedAt: boat.updatedAt,
+    );
+  }
+
+  final String id;
+  final String name;
+  final String registration;
+  final String type;
+  final double lengthMeters;
+  final String? homePort;
+  final String? photoUrl;
+  final String? ownerId;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'registration': registration,
+      'type': type,
+      'length_meters': lengthMeters,
+      'home_port': homePort,
+      'photo_url': photoUrl,
+      'owner_id': ownerId,
+      if (createdAt != null) 'created_at': createdAt!.toIso8601String(),
+      if (updatedAt != null) 'updated_at': updatedAt!.toIso8601String(),
+    };
+  }
+
+  Boat toEntity() {
+    return Boat(
+      id: id,
+      name: name,
+      registration: registration,
+      type: type,
+      lengthMeters: lengthMeters,
+      homePort: homePort,
+      photoUrl: photoUrl,
+      ownerId: ownerId,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+    );
+  }
+}

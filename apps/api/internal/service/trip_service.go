@@ -1,0 +1,164 @@
+package service
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
+	"github.com/Carlos19979/navis-app/apps/api/internal/port"
+)
+
+// TripService implements business logic for trip operations.
+type TripService struct {
+	tripRepo  port.TripRepository
+	trackRepo port.TripTrackRepository
+}
+
+// NewTripService creates a new TripService.
+func NewTripService(tripRepo port.TripRepository, trackRepo port.TripTrackRepository) *TripService {
+	return &TripService{
+		tripRepo:  tripRepo,
+		trackRepo: trackRepo,
+	}
+}
+
+// Create persists a new trip in recording status.
+func (s *TripService) Create(ctx context.Context, trip *domain.Trip) (*domain.Trip, error) {
+	if trip.UserID == "" {
+		return nil, fmt.Errorf("creating trip: %w", domain.ErrUnauthorized)
+	}
+	if trip.DeparturePort == "" {
+		return nil, &domain.ValidationError{Field: "departure_port", Message: "departure port is required"}
+	}
+
+	trip.Status = domain.TripStatusRecording
+
+	created, err := s.tripRepo.Create(ctx, trip)
+	if err != nil {
+		return nil, fmt.Errorf("creating trip: %w", err)
+	}
+	return created, nil
+}
+
+// GetByID retrieves a single trip owned by the given user.
+func (s *TripService) GetByID(ctx context.Context, userID, id string) (*domain.Trip, error) {
+	trip, err := s.tripRepo.GetByID(ctx, userID, id)
+	if err != nil {
+		return nil, fmt.Errorf("getting trip %s: %w", id, err)
+	}
+	return trip, nil
+}
+
+// List returns a paginated list of trips for a user.
+func (s *TripService) List(ctx context.Context, userID, cursor string, limit int) ([]domain.Trip, string, error) {
+	if limit <= 0 || limit > 50 {
+		limit = 20
+	}
+
+	trips, nextCursor, err := s.tripRepo.List(ctx, userID, cursor, limit)
+	if err != nil {
+		return nil, "", fmt.Errorf("listing trips: %w", err)
+	}
+	return trips, nextCursor, nil
+}
+
+// Update modifies an existing trip that is still recording.
+func (s *TripService) Update(ctx context.Context, userID string, trip *domain.Trip) (*domain.Trip, error) {
+	if trip.ID == "" {
+		return nil, &domain.ValidationError{Field: "id", Message: "id is required"}
+	}
+
+	existing, err := s.tripRepo.GetByID(ctx, userID, trip.ID)
+	if err != nil {
+		return nil, fmt.Errorf("updating trip %s: %w", trip.ID, err)
+	}
+	if existing.Status == domain.TripStatusCompleted {
+		return nil, fmt.Errorf("updating trip %s: %w: trip is already completed", trip.ID, domain.ErrConflict)
+	}
+
+	updated, err := s.tripRepo.Update(ctx, userID, trip)
+	if err != nil {
+		return nil, fmt.Errorf("updating trip %s: %w", trip.ID, err)
+	}
+	return updated, nil
+}
+
+// Complete marks a trip as completed, calculates duration, and records the
+// arrival time if not already set.
+func (s *TripService) Complete(ctx context.Context, userID, id string, arrivalPort *string, distanceNM, engineHours, fuelConsumedL *float64) (*domain.Trip, error) {
+	trip, err := s.tripRepo.GetByID(ctx, userID, id)
+	if err != nil {
+		return nil, fmt.Errorf("completing trip %s: %w", id, err)
+	}
+	if trip.Status == domain.TripStatusCompleted {
+		return nil, fmt.Errorf("completing trip %s: %w: already completed", id, domain.ErrConflict)
+	}
+
+	now := time.Now().UTC()
+	trip.ArrivalTime = &now
+	trip.Status = domain.TripStatusCompleted
+
+	if arrivalPort != nil {
+		trip.ArrivalPort = arrivalPort
+	}
+	if distanceNM != nil {
+		trip.DistanceNM = distanceNM
+	}
+	if engineHours != nil {
+		trip.EngineHours = engineHours
+	}
+	if fuelConsumedL != nil {
+		trip.FuelConsumedL = fuelConsumedL
+	}
+
+	// Calculate duration in minutes.
+	durationMin := int(now.Sub(trip.DepartureTime).Minutes())
+	trip.DurationMinutes = &durationMin
+
+	updated, err := s.tripRepo.Update(ctx, userID, trip)
+	if err != nil {
+		return nil, fmt.Errorf("completing trip %s: %w", id, err)
+	}
+	return updated, nil
+}
+
+// Delete removes a trip if owned by the user.
+func (s *TripService) Delete(ctx context.Context, userID, id string) error {
+	if err := s.tripRepo.Delete(ctx, userID, id); err != nil {
+		return fmt.Errorf("deleting trip %s: %w", id, err)
+	}
+	return nil
+}
+
+// AddTrackPoints persists a batch of GPS track points for a trip.
+func (s *TripService) AddTrackPoints(ctx context.Context, userID string, tracks []domain.TripTrack) error {
+	if len(tracks) == 0 {
+		return nil
+	}
+
+	// Verify trip ownership via the first track's trip ID.
+	tripID := tracks[0].TripID
+	if _, err := s.tripRepo.GetByID(ctx, userID, tripID); err != nil {
+		return fmt.Errorf("adding track points to trip %s: %w", tripID, err)
+	}
+
+	if err := s.trackRepo.BatchCreate(ctx, tracks); err != nil {
+		return fmt.Errorf("adding track points to trip %s: %w", tripID, err)
+	}
+	return nil
+}
+
+// GetTrackPoints returns all GPS track points for a trip.
+func (s *TripService) GetTrackPoints(ctx context.Context, userID, tripID string) ([]domain.TripTrack, error) {
+	// Verify trip ownership.
+	if _, err := s.tripRepo.GetByID(ctx, userID, tripID); err != nil {
+		return nil, fmt.Errorf("getting track points for trip %s: %w", tripID, err)
+	}
+
+	points, err := s.trackRepo.ListByTrip(ctx, tripID)
+	if err != nil {
+		return nil, fmt.Errorf("getting track points for trip %s: %w", tripID, err)
+	}
+	return points, nil
+}

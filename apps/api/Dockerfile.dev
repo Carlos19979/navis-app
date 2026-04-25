@@ -1,0 +1,15 @@
+FROM golang:1.22-alpine
+
+RUN apk add --no-cache git curl
+
+# Install air for live reloading.
+RUN go install github.com/air-verse/air@latest
+
+WORKDIR /app
+
+# Copy dependency files and download modules.
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Source code is mounted as a volume in development.
+CMD ["air"]

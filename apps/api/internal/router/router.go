@@ -1,0 +1,103 @@
+package router
+
+import (
+	"log/slog"
+	"net/http"
+
+	"github.com/go-chi/chi/v5"
+
+	"github.com/Carlos19979/navis-app/apps/api/internal/handler"
+	"github.com/Carlos19979/navis-app/apps/api/internal/middleware"
+)
+
+// New creates and configures the chi router with all routes and middleware.
+func New(
+	boatH *handler.BoatHandler,
+	docH *handler.DocumentHandler,
+	tripH *handler.TripHandler,
+	eventH *handler.EventHandler,
+	weatherH *handler.WeatherHandler,
+	jwtSecret string,
+	allowedOrigins []string,
+	logger *slog.Logger,
+) chi.Router {
+	r := chi.NewRouter()
+
+	// Global middleware chain.
+	r.Use(middleware.Recovery(logger))
+	r.Use(middleware.CORS(allowedOrigins))
+	r.Use(middleware.Logging(logger))
+
+	// Health check (no auth required).
+	r.Get("/health", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"status":"ok"}`))
+	})
+
+	// API v1 routes (all require authentication).
+	r.Route("/api/v1", func(r chi.Router) {
+		r.Use(middleware.Auth(jwtSecret))
+
+		// Boats CRUD.
+		r.Route("/boats", func(r chi.Router) {
+			r.Post("/", boatH.Create)
+			r.Get("/", boatH.List)
+
+			r.Route("/{id}", func(r chi.Router) {
+				r.Get("/", boatH.GetByID)
+				r.Put("/", boatH.Update)
+				r.Delete("/", boatH.Delete)
+			})
+
+			// Documents nested under boats (create and list).
+			r.Route("/{boatId}/documents", func(r chi.Router) {
+				r.Post("/", docH.Create)
+				r.Get("/", docH.ListByBoat)
+			})
+
+			// Trips nested under boats (create and list).
+			r.Route("/{boatId}/trips", func(r chi.Router) {
+				r.Post("/", tripH.Create)
+				r.Get("/", tripH.List)
+			})
+		})
+
+		// Documents (top-level for get, update, delete).
+		r.Route("/documents", func(r chi.Router) {
+			r.Route("/{id}", func(r chi.Router) {
+				r.Get("/", docH.GetByID)
+				r.Put("/", docH.Update)
+				r.Delete("/", docH.Delete)
+			})
+		})
+
+		// Trips (top-level for get, update, complete, tracks).
+		r.Route("/trips", func(r chi.Router) {
+			r.Route("/{id}", func(r chi.Router) {
+				r.Get("/", tripH.GetByID)
+				r.Put("/", tripH.Update)
+				r.Put("/complete", tripH.Complete)
+				r.Post("/tracks", tripH.AddTracks)
+			})
+		})
+
+		// Events.
+		r.Route("/events", func(r chi.Router) {
+			r.Get("/", eventH.List)
+
+			r.Route("/{id}", func(r chi.Router) {
+				r.Get("/", eventH.GetByID)
+				r.Post("/interest", eventH.ToggleInterest)
+			})
+		})
+
+		// Weather.
+		r.Route("/weather", func(r chi.Router) {
+			r.Get("/current", weatherH.GetCurrent)
+			r.Get("/forecast", weatherH.GetForecast)
+		})
+	})
+
+	return r
+}
