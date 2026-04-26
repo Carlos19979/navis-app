@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:navis_mobile/app/router.dart';
 import 'package:navis_mobile/core/theme/app_theme.dart';
 import 'package:navis_mobile/features/notifications/presentation/providers/notification_auth_listener.dart';
+import 'package:navis_mobile/shared/widgets/navis_offline_banner.dart';
 
 class NavisApp extends ConsumerWidget {
   const NavisApp({super.key});
@@ -30,6 +31,9 @@ class NavisApp extends ConsumerWidget {
         Locale('es'),
       ],
       routerConfig: router,
+      builder: (context, child) => NavisOfflineBanner(
+        child: child ?? const SizedBox.shrink(),
+      ),
     );
   }
 }
