@@ -16,7 +16,7 @@ import (
 	"github.com/Carlos19979/navis-app/apps/api/internal/middleware"
 )
 
-// --- Mock ---
+// --- Mocks ---
 
 type mockDeviceRepo struct {
 	upsertFn func(ctx context.Context, userID, token string, platform domain.Platform) error
@@ -30,6 +30,12 @@ func (m *mockDeviceRepo) Upsert(ctx context.Context, userID, token string, platf
 func (m *mockDeviceRepo) Delete(ctx context.Context, token string) error {
 	return m.deleteFn(ctx, token)
 }
+
+type mockNotifier struct{}
+
+func (m *mockNotifier) EnsureSubscriber(_ context.Context, _ string) error        { return nil }
+func (m *mockNotifier) SetPushToken(_ context.Context, _, _ string) error          { return nil }
+func (m *mockNotifier) RemovePushToken(_ context.Context, _, _ string) error       { return nil }
 
 // --- Helpers ---
 
@@ -61,7 +67,7 @@ func TestDeviceHandler_Create_Success(t *testing.T) {
 			gotPlatform = platform
 			return nil
 		},
-	})
+	}, &mockNotifier{})
 
 	w := httptest.NewRecorder()
 	r := authedRequest(http.MethodPost, "/api/v1/devices", `{"token":"abc123","platform":"ios"}`, "user-1")
@@ -86,7 +92,7 @@ func TestDeviceHandler_Create_MissingAuth(t *testing.T) {
 
 	h := handler.NewDeviceHandler(&mockDeviceRepo{
 		upsertFn: func(_ context.Context, _, _ string, _ domain.Platform) error { return nil },
-	})
+	}, &mockNotifier{})
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodPost, "/api/v1/devices", strings.NewReader(`{"token":"abc","platform":"ios"}`))
@@ -102,7 +108,7 @@ func TestDeviceHandler_Create_InvalidJSON(t *testing.T) {
 
 	h := handler.NewDeviceHandler(&mockDeviceRepo{
 		upsertFn: func(_ context.Context, _, _ string, _ domain.Platform) error { return nil },
-	})
+	}, &mockNotifier{})
 
 	w := httptest.NewRecorder()
 	r := authedRequest(http.MethodPost, "/api/v1/devices", `{invalid`, "user-1")
@@ -118,7 +124,7 @@ func TestDeviceHandler_Create_ValidationError_MissingFields(t *testing.T) {
 
 	h := handler.NewDeviceHandler(&mockDeviceRepo{
 		upsertFn: func(_ context.Context, _, _ string, _ domain.Platform) error { return nil },
-	})
+	}, &mockNotifier{})
 
 	w := httptest.NewRecorder()
 	r := authedRequest(http.MethodPost, "/api/v1/devices", `{}`, "user-1")
@@ -134,7 +140,7 @@ func TestDeviceHandler_Create_ValidationError_InvalidPlatform(t *testing.T) {
 
 	h := handler.NewDeviceHandler(&mockDeviceRepo{
 		upsertFn: func(_ context.Context, _, _ string, _ domain.Platform) error { return nil },
-	})
+	}, &mockNotifier{})
 
 	w := httptest.NewRecorder()
 	r := authedRequest(http.MethodPost, "/api/v1/devices", `{"token":"abc","platform":"windows"}`, "user-1")
@@ -157,7 +163,7 @@ func TestDeviceHandler_Create_RepoError(t *testing.T) {
 		upsertFn: func(_ context.Context, _, _ string, _ domain.Platform) error {
 			return errors.New("db error")
 		},
-	})
+	}, &mockNotifier{})
 
 	w := httptest.NewRecorder()
 	r := authedRequest(http.MethodPost, "/api/v1/devices", `{"token":"abc","platform":"android"}`, "user-1")
@@ -181,7 +187,7 @@ func TestDeviceHandler_Delete_Success(t *testing.T) {
 			deletedToken = token
 			return nil
 		},
-	})
+	}, &mockNotifier{})
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodDelete, "/api/v1/devices/abc123", nil)
@@ -202,7 +208,7 @@ func TestDeviceHandler_Delete_MissingToken(t *testing.T) {
 	h := handler.NewDeviceHandler(&mockDeviceRepo{
 		upsertFn: func(_ context.Context, _, _ string, _ domain.Platform) error { return nil },
 		deleteFn: func(_ context.Context, _ string) error { return nil },
-	})
+	}, &mockNotifier{})
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodDelete, "/api/v1/devices/", nil)
@@ -222,7 +228,7 @@ func TestDeviceHandler_Delete_RepoError(t *testing.T) {
 		deleteFn: func(_ context.Context, _ string) error {
 			return errors.New("db error")
 		},
-	})
+	}, &mockNotifier{})
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodDelete, "/api/v1/devices/abc123", nil)

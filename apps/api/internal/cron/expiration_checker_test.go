@@ -48,46 +48,37 @@ func (m *mockNotifLogRepo) Create(ctx context.Context, userID, docID string, day
 	return m.createFn(ctx, userID, docID, daysBefore)
 }
 
-type mockDeviceTokenRepo struct {
-	getByUserIDFn func(ctx context.Context, userID string) ([]domain.DeviceToken, error)
-}
-
-func (m *mockDeviceTokenRepo) Upsert(ctx context.Context, userID, token string, platform domain.Platform) error {
-	return nil
-}
-func (m *mockDeviceTokenRepo) Delete(ctx context.Context, token string) error { return nil }
-func (m *mockDeviceTokenRepo) GetByUserID(ctx context.Context, userID string) ([]domain.DeviceToken, error) {
-	return m.getByUserIDFn(ctx, userID)
-}
-
 type mockNotifier struct {
-	sendFn func(ctx context.Context, deviceToken, title, body string) error
-	sent   []sentNotification
+	triggerFn func(ctx context.Context, workflowID, subscriberID string, payload map[string]any) error
+	triggered []triggeredWorkflow
 }
 
-type sentNotification struct {
-	DeviceToken string
-	Title       string
-	Body        string
+type triggeredWorkflow struct {
+	WorkflowID   string
+	SubscriberID string
+	Payload      map[string]any
 }
 
-func (m *mockNotifier) Send(ctx context.Context, deviceToken, title, body string) error {
-	m.sent = append(m.sent, sentNotification{deviceToken, title, body})
-	if m.sendFn != nil {
-		return m.sendFn(ctx, deviceToken, title, body)
+func (m *mockNotifier) TriggerWorkflow(ctx context.Context, workflowID, subscriberID string, payload map[string]any) error {
+	m.triggered = append(m.triggered, triggeredWorkflow{workflowID, subscriberID, payload})
+	if m.triggerFn != nil {
+		return m.triggerFn(ctx, workflowID, subscriberID, payload)
 	}
 	return nil
 }
+
+func (m *mockNotifier) EnsureSubscriber(_ context.Context, _ string) error        { return nil }
+func (m *mockNotifier) SetPushToken(_ context.Context, _, _ string) error          { return nil }
+func (m *mockNotifier) RemovePushToken(_ context.Context, _, _ string) error       { return nil }
 
 // --- Helpers ---
 
 func newTestChecker(
 	docs *mockDocRepo,
 	notifLogs *mockNotifLogRepo,
-	deviceTokens *mockDeviceTokenRepo,
 	notifier *mockNotifier,
 ) *ExpirationChecker {
-	return New(docs, notifLogs, deviceTokens, notifier, slog.Default())
+	return New(docs, notifLogs, notifier, slog.Default())
 }
 
 func docExpiringIn(id, userID string, days int, alertDays []int) domain.Document {
@@ -103,7 +94,7 @@ func docExpiringIn(id, userID string, days int, alertDays []int) domain.Document
 
 // --- Tests ---
 
-func TestExpirationChecker_Check_SendsNotifications(t *testing.T) {
+func TestExpirationChecker_Check_TriggersWorkflows(t *testing.T) {
 	t.Parallel()
 
 	notifier := &mockNotifier{}
@@ -126,28 +117,19 @@ func TestExpirationChecker_Check_SendsNotifications(t *testing.T) {
 				return nil
 			},
 		},
-		&mockDeviceTokenRepo{
-			getByUserIDFn: func(_ context.Context, _ string) ([]domain.DeviceToken, error) {
-				return []domain.DeviceToken{
-					{Token: "token-ios", Platform: domain.PlatformIOS},
-					{Token: "token-android", Platform: domain.PlatformAndroid},
-				}, nil
-			},
-		},
 		notifier,
 	)
 
 	ec.check(context.Background())
 
-	// 2 alert days matched (30 and 7) × 2 devices = 4 notifications
-	if len(notifier.sent) != 4 {
-		t.Fatalf("expected 4 notifications (2 alerts × 2 devices), got %d", len(notifier.sent))
+	if len(notifier.triggered) != 2 {
+		t.Fatalf("expected 2 workflow triggers (2 alert days), got %d", len(notifier.triggered))
 	}
-	if notifier.sent[0].DeviceToken != "token-ios" {
-		t.Errorf("expected token-ios, got %s", notifier.sent[0].DeviceToken)
+	if notifier.triggered[0].WorkflowID != "document-expiry" {
+		t.Errorf("expected workflow 'document-expiry', got %s", notifier.triggered[0].WorkflowID)
 	}
-	if notifier.sent[1].DeviceToken != "token-android" {
-		t.Errorf("expected token-android, got %s", notifier.sent[1].DeviceToken)
+	if notifier.triggered[0].SubscriberID != "user-1" {
+		t.Errorf("expected subscriber user-1, got %s", notifier.triggered[0].SubscriberID)
 	}
 	if loggedDocID != "doc-1" {
 		t.Errorf("expected notification log for doc-1, got %s", loggedDocID)
@@ -174,18 +156,13 @@ func TestExpirationChecker_Check_SkipsAlreadyNotified(t *testing.T) {
 			existsFn: func(_ context.Context, _, _ string, _ int) (bool, error) { return true, nil },
 			createFn: func(_ context.Context, _, _ string, _ int) error { return nil },
 		},
-		&mockDeviceTokenRepo{
-			getByUserIDFn: func(_ context.Context, _ string) ([]domain.DeviceToken, error) {
-				return []domain.DeviceToken{{Token: "token-1"}}, nil
-			},
-		},
 		notifier,
 	)
 
 	ec.check(context.Background())
 
-	if len(notifier.sent) != 0 {
-		t.Fatalf("expected 0 notifications (already notified), got %d", len(notifier.sent))
+	if len(notifier.triggered) != 0 {
+		t.Fatalf("expected 0 triggers (already notified), got %d", len(notifier.triggered))
 	}
 }
 
@@ -206,50 +183,13 @@ func TestExpirationChecker_Check_RespectsAlertDays(t *testing.T) {
 			existsFn: func(_ context.Context, _, _ string, _ int) (bool, error) { return false, nil },
 			createFn: func(_ context.Context, _, _ string, _ int) error { return nil },
 		},
-		&mockDeviceTokenRepo{
-			getByUserIDFn: func(_ context.Context, _ string) ([]domain.DeviceToken, error) {
-				return []domain.DeviceToken{{Token: "token-1"}}, nil
-			},
-		},
 		notifier,
 	)
 
 	ec.check(context.Background())
 
-	if len(notifier.sent) != 0 {
-		t.Fatalf("expected 0 notifications (60 days > all alert days), got %d", len(notifier.sent))
-	}
-}
-
-func TestExpirationChecker_Check_NoDeviceTokens(t *testing.T) {
-	t.Parallel()
-
-	notifier := &mockNotifier{}
-
-	ec := newTestChecker(
-		&mockDocRepo{
-			listExpiringFn: func(_ context.Context, _ int) ([]domain.Document, error) {
-				return []domain.Document{
-					docExpiringIn("doc-1", "user-1", 5, []int{30}),
-				}, nil
-			},
-		},
-		&mockNotifLogRepo{
-			existsFn: func(_ context.Context, _, _ string, _ int) (bool, error) { return false, nil },
-			createFn: func(_ context.Context, _, _ string, _ int) error { return nil },
-		},
-		&mockDeviceTokenRepo{
-			getByUserIDFn: func(_ context.Context, _ string) ([]domain.DeviceToken, error) {
-				return nil, nil
-			},
-		},
-		notifier,
-	)
-
-	ec.check(context.Background())
-
-	if len(notifier.sent) != 0 {
-		t.Fatalf("expected 0 notifications (no device tokens), got %d", len(notifier.sent))
+	if len(notifier.triggered) != 0 {
+		t.Fatalf("expected 0 triggers (60 days > all alert days), got %d", len(notifier.triggered))
 	}
 }
 
@@ -268,18 +208,13 @@ func TestExpirationChecker_Check_NoExpiringDocs(t *testing.T) {
 			existsFn: func(_ context.Context, _, _ string, _ int) (bool, error) { return false, nil },
 			createFn: func(_ context.Context, _, _ string, _ int) error { return nil },
 		},
-		&mockDeviceTokenRepo{
-			getByUserIDFn: func(_ context.Context, _ string) ([]domain.DeviceToken, error) {
-				return nil, nil
-			},
-		},
 		notifier,
 	)
 
 	ec.check(context.Background())
 
-	if len(notifier.sent) != 0 {
-		t.Fatalf("expected 0 notifications, got %d", len(notifier.sent))
+	if len(notifier.triggered) != 0 {
+		t.Fatalf("expected 0 triggers, got %d", len(notifier.triggered))
 	}
 }
 
@@ -298,18 +233,13 @@ func TestExpirationChecker_Check_ListExpiringError(t *testing.T) {
 			existsFn: func(_ context.Context, _, _ string, _ int) (bool, error) { return false, nil },
 			createFn: func(_ context.Context, _, _ string, _ int) error { return nil },
 		},
-		&mockDeviceTokenRepo{
-			getByUserIDFn: func(_ context.Context, _ string) ([]domain.DeviceToken, error) {
-				return nil, nil
-			},
-		},
 		notifier,
 	)
 
 	ec.check(context.Background())
 
-	if len(notifier.sent) != 0 {
-		t.Fatalf("expected 0 notifications on error, got %d", len(notifier.sent))
+	if len(notifier.triggered) != 0 {
+		t.Fatalf("expected 0 triggers on error, got %d", len(notifier.triggered))
 	}
 }
 
@@ -330,21 +260,17 @@ func TestExpirationChecker_Check_ExpiredDocument(t *testing.T) {
 			existsFn: func(_ context.Context, _, _ string, _ int) (bool, error) { return false, nil },
 			createFn: func(_ context.Context, _, _ string, _ int) error { return nil },
 		},
-		&mockDeviceTokenRepo{
-			getByUserIDFn: func(_ context.Context, _ string) ([]domain.DeviceToken, error) {
-				return []domain.DeviceToken{{Token: "token-1"}}, nil
-			},
-		},
 		notifier,
 	)
 
 	ec.check(context.Background())
 
-	if len(notifier.sent) == 0 {
-		t.Fatal("expected notification for expired document")
+	if len(notifier.triggered) == 0 {
+		t.Fatal("expected workflow trigger for expired document")
 	}
-	if notifier.sent[0].Title != "Document Expired" {
-		t.Errorf("expected 'Document Expired' title, got %q", notifier.sent[0].Title)
+	title, _ := notifier.triggered[0].Payload["title"].(string)
+	if title != "Document Expired" {
+		t.Errorf("expected 'Document Expired' title, got %q", title)
 	}
 }
 

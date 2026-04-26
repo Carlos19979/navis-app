@@ -18,14 +18,21 @@ type deviceRepo interface {
 	Delete(ctx context.Context, token string) error
 }
 
+type notificationProvider interface {
+	EnsureSubscriber(ctx context.Context, subscriberID string) error
+	SetPushToken(ctx context.Context, subscriberID, token string) error
+	RemovePushToken(ctx context.Context, subscriberID, token string) error
+}
+
 // DeviceHandler handles device token registration and removal.
 type DeviceHandler struct {
-	repo deviceRepo
+	repo     deviceRepo
+	notifier notificationProvider
 }
 
 // NewDeviceHandler creates a new DeviceHandler.
-func NewDeviceHandler(repo deviceRepo) *DeviceHandler {
-	return &DeviceHandler{repo: repo}
+func NewDeviceHandler(repo deviceRepo, notifier notificationProvider) *DeviceHandler {
+	return &DeviceHandler{repo: repo, notifier: notifier}
 }
 
 // Create registers or updates a device token.
@@ -52,6 +59,9 @@ func (h *DeviceHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_ = h.notifier.EnsureSubscriber(r.Context(), userID)
+	_ = h.notifier.SetPushToken(r.Context(), userID, req.Token)
+
 	JSON(w, http.StatusCreated, map[string]string{"status": "registered"})
 }
 
@@ -66,6 +76,10 @@ func (h *DeviceHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	if err := h.repo.Delete(r.Context(), token); err != nil {
 		Error(w, http.StatusInternalServerError, "failed to delete device token", "INTERNAL_ERROR")
 		return
+	}
+
+	if userID, ok := middleware.UserIDFromContext(r.Context()); ok {
+		_ = h.notifier.RemovePushToken(r.Context(), userID, token)
 	}
 
 	w.WriteHeader(http.StatusNoContent)

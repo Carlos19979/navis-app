@@ -22,7 +22,10 @@ type WeatherProvider interface {
 	GetForecast(ctx context.Context, lat, lon float64, days int) ([]WeatherData, error)
 }
 
-// PushNotifier abstracts push notification delivery (e.g. FCM).
-type PushNotifier interface {
-	Send(ctx context.Context, deviceToken, title, body string) error
+// NotificationProvider abstracts notification delivery (e.g. Novu).
+type NotificationProvider interface {
+	TriggerWorkflow(ctx context.Context, workflowID, subscriberID string, payload map[string]any) error
+	EnsureSubscriber(ctx context.Context, subscriberID string) error
+	SetPushToken(ctx context.Context, subscriberID, token string) error
+	RemovePushToken(ctx context.Context, subscriberID, token string) error
 }

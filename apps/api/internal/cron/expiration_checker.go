@@ -12,30 +12,27 @@ import (
 )
 
 // ExpirationChecker runs a daily cron job that checks for expiring documents
-// and sends push notifications to their owners via their registered device tokens.
+// and triggers notification workflows via Novu for their owners.
 type ExpirationChecker struct {
-	docs         port.DocumentRepository
-	notifLogs    port.NotificationLogRepository
-	deviceTokens port.DeviceTokenRepository
-	notifier     port.PushNotifier
-	logger       *slog.Logger
-	cron         *cron.Cron
+	docs      port.DocumentRepository
+	notifLogs port.NotificationLogRepository
+	notifier  port.NotificationProvider
+	logger    *slog.Logger
+	cron      *cron.Cron
 }
 
 // New creates a new ExpirationChecker.
 func New(
 	docs port.DocumentRepository,
 	notifLogs port.NotificationLogRepository,
-	deviceTokens port.DeviceTokenRepository,
-	notifier port.PushNotifier,
+	notifier port.NotificationProvider,
 	logger *slog.Logger,
 ) *ExpirationChecker {
 	return &ExpirationChecker{
-		docs:         docs,
-		notifLogs:    notifLogs,
-		deviceTokens: deviceTokens,
-		notifier:     notifier,
-		logger:       logger,
+		docs:      docs,
+		notifLogs: notifLogs,
+		notifier:  notifier,
+		logger:    logger,
 	}
 }
 
@@ -99,30 +96,22 @@ func (ec *ExpirationChecker) check(ctx context.Context) {
 
 			title, body := buildMessage(string(doc.Type), doc.CustomName, daysUntilExpiry, doc.ExpiryDate)
 
-			tokens, err := ec.deviceTokens.GetByUserID(ctx, doc.UserID)
-			if err != nil {
-				ec.logger.Error("failed to get device tokens",
+			payload := map[string]any{
+				"title":              title,
+				"body":               body,
+				"document_id":        doc.ID,
+				"document_type":      string(doc.Type),
+				"days_until_expiry":  daysUntilExpiry,
+				"expiry_date":        doc.ExpiryDate.Format("2006-01-02"),
+			}
+
+			if err := ec.notifier.TriggerWorkflow(ctx, "document-expiry", doc.UserID, payload); err != nil {
+				ec.logger.Error("failed to trigger notification workflow",
+					slog.String("doc_id", doc.ID),
 					slog.String("user_id", doc.UserID),
 					slog.String("error", err.Error()),
 				)
 				continue
-			}
-
-			if len(tokens) == 0 {
-				ec.logger.Debug("no device tokens for user, skipping",
-					slog.String("user_id", doc.UserID),
-				)
-				continue
-			}
-
-			for _, dt := range tokens {
-				if err := ec.notifier.Send(ctx, dt.Token, title, body); err != nil {
-					ec.logger.Error("failed to send push notification",
-						slog.String("doc_id", doc.ID),
-						slog.String("device_token", dt.Token),
-						slog.String("error", err.Error()),
-					)
-				}
 			}
 
 			if err := ec.notifLogs.Create(ctx, doc.UserID, doc.ID, alertDay); err != nil {
@@ -133,11 +122,10 @@ func (ec *ExpirationChecker) check(ctx context.Context) {
 			}
 
 			sent++
-			ec.logger.Info("sent expiry notification",
+			ec.logger.Info("triggered expiry notification",
 				slog.String("doc_id", doc.ID),
 				slog.String("user_id", doc.UserID),
 				slog.Int("alert_day", alertDay),
-				slog.Int("devices", len(tokens)),
 			)
 		}
 	}

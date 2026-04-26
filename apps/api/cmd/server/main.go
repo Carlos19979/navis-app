@@ -10,7 +10,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Carlos19979/navis-app/apps/api/internal/adapter/fcm"
+	"github.com/Carlos19979/navis-app/apps/api/internal/adapter/novu"
 	"github.com/Carlos19979/navis-app/apps/api/internal/adapter/openmeteo"
 	"github.com/Carlos19979/navis-app/apps/api/internal/adapter/postgres"
 	"github.com/Carlos19979/navis-app/apps/api/internal/config"
@@ -65,7 +65,7 @@ func main() {
 
 	// Create adapters.
 	weatherProvider := openmeteo.New()
-	pushNotifier := fcm.New(logger)
+	notifier := novu.New(cfg.NovuAPIKey, logger)
 
 	// Create services.
 	boatSvc := service.NewBoatService(boatRepo)
@@ -75,7 +75,7 @@ func main() {
 	weatherSvc := service.NewWeatherService(weatherProvider)
 
 	// Create and start expiration checker cron.
-	expirationChecker := cron.New(docRepo, notifLogRepo, deviceTokenRepo, pushNotifier, logger)
+	expirationChecker := cron.New(docRepo, notifLogRepo, notifier, logger)
 	expirationChecker.Start()
 	defer expirationChecker.Stop()
 
@@ -85,7 +85,7 @@ func main() {
 	tripH := handler.NewTripHandler(tripSvc)
 	eventH := handler.NewEventHandler(eventSvc)
 	weatherH := handler.NewWeatherHandler(weatherSvc)
-	deviceH := handler.NewDeviceHandler(deviceTokenRepo)
+	deviceH := handler.NewDeviceHandler(deviceTokenRepo, notifier)
 
 	// Create router.
 	r := router.New(
