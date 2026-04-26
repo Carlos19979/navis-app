@@ -9,7 +9,7 @@ import 'package:navis_mobile/features/boat/presentation/widgets/boat_header.dart
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_empty_state.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
-import 'package:navis_mobile/shared/widgets/navis_loading.dart';
+import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
 
 class BoatDashboardScreen extends ConsumerWidget {
   const BoatDashboardScreen({super.key});
@@ -21,7 +21,7 @@ class BoatDashboardScreen extends ConsumerWidget {
     return Scaffold(
       appBar: const NavisAppBar(title: 'My Boats'),
       body: boatsAsync.when(
-        loading: () => const NavisLoading(),
+        loading: () => const NavisShimmer(itemCount: 3, itemHeight: 180),
         error: (error, stack) => NavisErrorWidget(
           message: error.toString(),
           onRetry: () => ref.invalidate(boatsProvider),

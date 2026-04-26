@@ -9,6 +9,7 @@ import 'package:navis_mobile/features/documents/domain/entities/document.dart';
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
+import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 
 class DocumentFormScreen extends ConsumerStatefulWidget {
   const DocumentFormScreen({
@@ -104,7 +105,12 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
       ref.invalidate(boatDocumentsProvider(widget.boatId));
 
       if (mounted) {
+        NavisSnackbar.success(context, 'Document saved');
         context.pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        NavisSnackbar.error(context, 'Failed to save document');
       }
     } finally {
       if (mounted) {

@@ -9,6 +9,7 @@ import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
+import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 
 class BoatFormScreen extends ConsumerStatefulWidget {
   const BoatFormScreen({super.key, required this.boatId});
@@ -96,7 +97,15 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen> {
       }
 
       if (mounted) {
+        NavisSnackbar.success(
+          context,
+          _isEdit ? 'Boat updated successfully' : 'Boat created successfully',
+        );
         context.go('/boats');
+      }
+    } catch (e) {
+      if (mounted) {
+        NavisSnackbar.error(context, 'Failed to save boat');
       }
     } finally {
       if (mounted) {
@@ -262,11 +271,18 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen> {
                       ),
                     );
                     if (confirmed == true && context.mounted) {
-                      await ref
-                          .read(boatsProvider.notifier)
-                          .deleteBoat(widget.boatId);
-                      if (!context.mounted) return;
-                      context.go('/boats');
+                      try {
+                        await ref
+                            .read(boatsProvider.notifier)
+                            .deleteBoat(widget.boatId);
+                        if (!context.mounted) return;
+                        NavisSnackbar.success(context, 'Boat deleted');
+                        context.go('/boats');
+                      } catch (e) {
+                        if (context.mounted) {
+                          NavisSnackbar.error(context, 'Failed to delete boat');
+                        }
+                      }
                     }
                   },
                   style: OutlinedButton.styleFrom(

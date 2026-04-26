@@ -8,7 +8,7 @@ import 'package:navis_mobile/features/events/presentation/widgets/event_card.dar
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_empty_state.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
-import 'package:navis_mobile/shared/widgets/navis_loading.dart';
+import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
 
 class EventsScreen extends ConsumerStatefulWidget {
   const EventsScreen({super.key});
@@ -39,7 +39,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
         ],
       ),
       body: eventsAsync.when(
-        loading: () => const NavisLoading(),
+        loading: () => const NavisShimmer(itemCount: 4, itemHeight: 100),
         error: (error, stack) => NavisErrorWidget(
           message: error.toString(),
           onRetry: () => ref.invalidate(eventsProvider),
