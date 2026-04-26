@@ -17,6 +17,7 @@ func New(
 	tripH *handler.TripHandler,
 	eventH *handler.EventHandler,
 	weatherH *handler.WeatherHandler,
+	deviceH *handler.DeviceHandler,
 	jwtSecret string,
 	allowedOrigins []string,
 	logger *slog.Logger,
@@ -96,6 +97,12 @@ func New(
 		r.Route("/weather", func(r chi.Router) {
 			r.Get("/current", weatherH.GetCurrent)
 			r.Get("/forecast", weatherH.GetForecast)
+		})
+
+		// Device tokens for push notifications.
+		r.Route("/devices", func(r chi.Router) {
+			r.Post("/", deviceH.Create)
+			r.Delete("/{token}", deviceH.Delete)
 		})
 	})
 

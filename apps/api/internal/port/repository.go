@@ -60,3 +60,10 @@ type NotificationLogRepository interface {
 	Exists(ctx context.Context, userID, documentID string, daysBefore int) (bool, error)
 	Create(ctx context.Context, userID, documentID string, daysBefore int) error
 }
+
+// DeviceTokenRepository defines persistence operations for push notification device tokens.
+type DeviceTokenRepository interface {
+	Upsert(ctx context.Context, userID, token string, platform domain.Platform) error
+	Delete(ctx context.Context, token string) error
+	GetByUserID(ctx context.Context, userID string) ([]domain.DeviceToken, error)
+}
