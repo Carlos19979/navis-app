@@ -24,16 +24,13 @@ class NavisButton extends StatelessWidget {
       button: true,
       label: label,
       child: ElevatedButton(
-        onPressed:
-            (isLoading || isDisabled) ? null : onPressed,
+        onPressed: (isLoading || isDisabled) ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.cyan,
           foregroundColor: Colors.white,
-          disabledBackgroundColor:
-              AppColors.cyan.withValues(alpha: 0.5),
+          disabledBackgroundColor: AppColors.cyan.withValues(alpha: 0.5),
           disabledForegroundColor: Colors.white70,
-          minimumSize:
-              const Size(double.infinity, 48),
+          minimumSize: const Size(double.infinity, 48),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),

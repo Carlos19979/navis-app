@@ -30,23 +30,18 @@ class NavisEmptyState extends StatelessWidget {
                 child: Icon(
                   icon,
                   size: 72,
-                  color: AppColors.textSecondary
-                      .withValues(alpha: 0.5),
+                  color: AppColors.textSecondary.withValues(alpha: 0.5),
                 ),
               ),
               const SizedBox(height: 16),
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyLarge
-                    ?.copyWith(
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: AppColors.textSecondary,
                     ),
               ),
-              if (actionLabel != null &&
-                  onAction != null) ...[
+              if (actionLabel != null && onAction != null) ...[
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: onAction,
