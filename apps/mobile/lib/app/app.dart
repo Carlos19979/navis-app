@@ -4,12 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:navis_mobile/app/router.dart';
 import 'package:navis_mobile/core/theme/app_theme.dart';
+import 'package:navis_mobile/features/notifications/presentation/providers/notification_auth_listener.dart';
 
 class NavisApp extends ConsumerWidget {
   const NavisApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(notificationAuthListenerProvider);
     final router = ref.watch(routerProvider);
 
     return MaterialApp.router(
