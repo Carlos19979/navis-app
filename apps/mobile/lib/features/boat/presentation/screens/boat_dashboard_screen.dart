@@ -21,7 +21,7 @@ class BoatDashboardScreen extends ConsumerWidget {
     return Scaffold(
       appBar: const NavisAppBar(title: 'My Boats'),
       body: boatsAsync.when(
-        loading: () => const NavisShimmer(itemCount: 3, itemHeight: 180),
+        loading: () => const NavisShimmer(itemHeight: 180),
         error: (error, stack) => NavisErrorWidget(
           message: error.toString(),
           onRetry: () => ref.invalidate(boatsProvider),

@@ -36,7 +36,7 @@ class SettingsScreen extends ConsumerWidget {
                   title: const Text('Dark Mode'),
                   subtitle: const Text('Use dark theme'),
                   value: isDarkMode,
-                  activeColor: AppColors.cyan,
+                  activeThumbColor: AppColors.cyan,
                   onChanged: (value) {
                     ref.read(themeModeProvider.notifier).state = value;
                   },
@@ -86,14 +86,14 @@ class SettingsScreen extends ConsumerWidget {
                   title: const Text('Document Expiry Alerts'),
                   subtitle: const Text('Get notified before documents expire'),
                   value: true,
-                  activeColor: AppColors.cyan,
+                  activeThumbColor: AppColors.cyan,
                   onChanged: (value) {},
                 ),
                 SwitchListTile(
                   title: const Text('Event Reminders'),
                   subtitle: const Text('Get reminded about upcoming events'),
                   value: true,
-                  activeColor: AppColors.cyan,
+                  activeThumbColor: AppColors.cyan,
                   onChanged: (value) {},
                 ),
               ],
