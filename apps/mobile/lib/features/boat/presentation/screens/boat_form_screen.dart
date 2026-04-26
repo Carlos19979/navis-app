@@ -193,7 +193,7 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                initialValue: _selectedType,
+                value: _selectedType,
                 decoration: const InputDecoration(
                   labelText: 'Boat Type',
                   prefixIcon: Icon(Icons.category_outlined),
