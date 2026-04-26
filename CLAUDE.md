@@ -442,16 +442,50 @@ Use these Dart 3.x features everywhere they apply:
 ## Commands
 
 ```bash
-make api-dev        # Hot reload (air)
-make api-build      # go build
-make api-test       # go test ./...
-make api-lint       # golangci-lint run
-make mobile-run     # flutter run
-make mobile-test    # flutter test
-make mobile-lint    # flutter analyze
-make db-migrate     # Apply Supabase migrations
-make db-reset       # Reset and reseed database
+# Local development
+make dev             # Start Supabase + Go API (full stack)
+make stop            # Stop everything
+
+# Supabase (Database + Auth + Storage)
+make db-start        # Start Supabase local stack
+make db-stop         # Stop Supabase local
+make db-migrate      # Apply pending migrations
+make db-reset        # Reset and reseed database
+
+# Go API
+make api-dev         # Hot reload (air)
+make api-build       # go build
+make api-test        # go test ./...
+make api-lint        # golangci-lint run
+
+# Flutter
+make mobile-run      # flutter run (device/emulator)
+make mobile-run-emu  # flutter run on Android emulator (10.0.2.2 URLs)
+make mobile-test     # flutter test
+make mobile-lint     # flutter analyze --fatal-infos
+make mobile-format   # dart format --line-length=80
+make mobile-codegen  # build_runner code generation
 ```
+
+## Local Development Setup
+
+Prerequisites: Docker, Supabase CLI, Flutter SDK, Go.
+
+```bash
+# 1. Start Supabase (Postgres + Auth + Storage + Dashboard)
+make db-start
+# Dashboard at http://localhost:54323
+
+# 2. Start Go API (connects to Supabase Postgres on port 54322)
+make dev
+# API at http://localhost:8080
+
+# 3. Run Flutter app
+make mobile-run           # Physical device
+make mobile-run-emu       # Android emulator (uses 10.0.2.2)
+```
+
+Note: Android emulator uses `10.0.2.2` to reach the host machine's localhost.
 
 ## External Services & Infrastructure
 

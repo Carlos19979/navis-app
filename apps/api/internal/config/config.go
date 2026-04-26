@@ -22,7 +22,7 @@ type Config struct {
 func Load() *Config {
 	return &Config{
 		Port:               getEnv("PORT", "8080"),
-		DatabaseURL:        getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/navis?sslmode=disable"),
+		DatabaseURL:        getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:54322/postgres?sslmode=disable"),
 		SupabaseJWTSecret:  getEnv("SUPABASE_JWT_SECRET", ""),
 		SupabaseURL:        getEnv("SUPABASE_URL", "http://localhost:54321"),
 		LogLevel:           getEnv("LOG_LEVEL", "debug"),
