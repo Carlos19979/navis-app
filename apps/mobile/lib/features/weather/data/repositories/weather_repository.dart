@@ -16,13 +16,15 @@ class WeatherRepository {
     return WeatherModel.fromJson(response.data!).toEntity();
   }
 
-  Future<List<Weather>> getForecast(double lat, double lon, {int days = 7}) async {
+  Future<List<Weather>> getForecast(double lat, double lon,
+      {int days = 7}) async {
     final response = await _apiClient.get<Map<String, dynamic>>(
       '/api/v1/weather/forecast',
       queryParameters: {'lat': lat, 'lon': lon, 'days': days},
     );
     final items = (response.data!['forecast'] as List<dynamic>)
-        .map((json) => WeatherModel.fromJson(json as Map<String, dynamic>).toEntity())
+        .map((json) =>
+            WeatherModel.fromJson(json as Map<String, dynamic>).toEntity())
         .toList();
     return items;
   }

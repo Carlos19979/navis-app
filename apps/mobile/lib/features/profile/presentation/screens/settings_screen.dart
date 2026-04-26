@@ -61,8 +61,8 @@ class SettingsScreen extends ConsumerWidget {
                 ListTile(
                   title: const Text('Language'),
                   subtitle: const Text('English'),
-                  trailing:
-                      const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+                  trailing: const Icon(Icons.chevron_right,
+                      color: AppColors.textSecondary),
                   onTap: () {},
                 ),
               ],
@@ -106,8 +106,7 @@ class SettingsScreen extends ConsumerWidget {
                 context: context,
                 builder: (context) => AlertDialog(
                   title: const Text('Log Out'),
-                  content:
-                      const Text('Are you sure you want to log out?'),
+                  content: const Text('Are you sure you want to log out?'),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context, false),

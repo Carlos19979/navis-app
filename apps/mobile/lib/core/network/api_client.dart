@@ -48,8 +48,9 @@ class ApiClient {
     return InterceptorsWrapper(
       onError: (error, handler) {
         final statusCode = error.response?.statusCode;
-        final message =
-            error.response?.data?['error']?.toString() ?? error.message ?? 'Unknown error';
+        final message = error.response?.data?['error']?.toString() ??
+            error.message ??
+            'Unknown error';
 
         if (error.type == DioExceptionType.connectionTimeout ||
             error.type == DioExceptionType.receiveTimeout ||
@@ -83,11 +84,13 @@ class ApiClient {
         handler.next(options);
       },
       onResponse: (response, handler) {
-        debugPrint('[API] ${response.statusCode} ${response.requestOptions.uri}');
+        debugPrint(
+            '[API] ${response.statusCode} ${response.requestOptions.uri}');
         handler.next(response);
       },
       onError: (error, handler) {
-        debugPrint('[API] ERROR ${error.response?.statusCode} ${error.requestOptions.uri}');
+        debugPrint(
+            '[API] ERROR ${error.response?.statusCode} ${error.requestOptions.uri}');
         handler.next(error);
       },
     );

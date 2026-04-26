@@ -48,10 +48,22 @@ class WindIndicator extends StatelessWidget {
 
   String _degreesToCardinal(double degrees) {
     const directions = [
-      'N', 'NNE', 'NE', 'ENE',
-      'E', 'ESE', 'SE', 'SSE',
-      'S', 'SSW', 'SW', 'WSW',
-      'W', 'WNW', 'NW', 'NNW',
+      'N',
+      'NNE',
+      'NE',
+      'ENE',
+      'E',
+      'ESE',
+      'SE',
+      'SSE',
+      'S',
+      'SSW',
+      'SW',
+      'WSW',
+      'W',
+      'WNW',
+      'NW',
+      'NNW',
     ];
     final index = ((degrees + 11.25) / 22.5).floor() % 16;
     return directions[index];

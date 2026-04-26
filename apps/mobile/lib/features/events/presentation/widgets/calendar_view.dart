@@ -24,15 +24,13 @@ class _CalendarViewState extends State<CalendarView> {
 
   void _previousMonth() {
     setState(() {
-      _currentMonth =
-          DateTime(_currentMonth.year, _currentMonth.month - 1);
+      _currentMonth = DateTime(_currentMonth.year, _currentMonth.month - 1);
     });
   }
 
   void _nextMonth() {
     setState(() {
-      _currentMonth =
-          DateTime(_currentMonth.year, _currentMonth.month + 1);
+      _currentMonth = DateTime(_currentMonth.year, _currentMonth.month + 1);
     });
   }
 
@@ -129,13 +127,10 @@ class _CalendarViewState extends State<CalendarView> {
                     : null,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: isToday
-                        ? AppColors.cyan.withValues(alpha: 0.2)
-                        : null,
+                    color:
+                        isToday ? AppColors.cyan.withValues(alpha: 0.2) : null,
                     borderRadius: BorderRadius.circular(8),
-                    border: isToday
-                        ? Border.all(color: AppColors.cyan)
-                        : null,
+                    border: isToday ? Border.all(color: AppColors.cyan) : null,
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -143,9 +138,8 @@ class _CalendarViewState extends State<CalendarView> {
                       Text(
                         '$day',
                         style: TextStyle(
-                          color: isToday
-                              ? AppColors.cyan
-                              : AppColors.textPrimary,
+                          color:
+                              isToday ? AppColors.cyan : AppColors.textPrimary,
                           fontWeight:
                               isToday ? FontWeight.w600 : FontWeight.w400,
                           fontSize: 14,
@@ -174,8 +168,18 @@ class _CalendarViewState extends State<CalendarView> {
 
   String _monthName(int month) {
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December',
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return months[month - 1];
   }

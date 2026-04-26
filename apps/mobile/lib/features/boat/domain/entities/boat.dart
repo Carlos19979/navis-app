@@ -74,5 +74,6 @@ class Boat {
       );
 
   @override
-  String toString() => 'Boat(id: $id, name: $name, registration: $registration)';
+  String toString() =>
+      'Boat(id: $id, name: $name, registration: $registration)';
 }

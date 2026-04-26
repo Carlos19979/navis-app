@@ -113,8 +113,7 @@ class _BoatCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () =>
-                          context.go('/boats/${boat.id}/trips'),
+                      onPressed: () => context.go('/boats/${boat.id}/trips'),
                       icon: const Icon(Icons.route_outlined, size: 18),
                       label: const Text('Trips'),
                     ),

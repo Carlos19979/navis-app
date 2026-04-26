@@ -23,9 +23,8 @@ class WeatherModel {
       humidity: json['humidity'] as int?,
       pressure: (json['pressure'] as num?)?.toDouble(),
       icon: json['icon'] as String?,
-      date: json['date'] != null
-          ? DateTime.parse(json['date'] as String)
-          : null,
+      date:
+          json['date'] != null ? DateTime.parse(json['date'] as String) : null,
     );
   }
 

@@ -189,7 +189,8 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
               OutlinedButton.icon(
                 onPressed: _pickPhoto,
                 icon: const Icon(Icons.add_photo_alternate_outlined),
-                label: Text(_photoPath != null ? 'Photo selected' : 'Add Photo'),
+                label:
+                    Text(_photoPath != null ? 'Photo selected' : 'Add Photo'),
               ),
               const SizedBox(height: 32),
               NavisButton(

@@ -29,8 +29,7 @@ class MapState {
   }
 }
 
-final chartProvider =
-    StateNotifierProvider<ChartNotifier, MapState>((ref) {
+final chartProvider = StateNotifierProvider<ChartNotifier, MapState>((ref) {
   return ChartNotifier();
 });
 

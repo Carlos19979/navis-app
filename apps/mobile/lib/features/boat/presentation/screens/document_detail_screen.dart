@@ -46,7 +46,8 @@ class DocumentDetailScreen extends ConsumerWidget {
                             Expanded(
                               child: Text(
                                 doc.type,
-                                style: Theme.of(context).textTheme.headlineMedium,
+                                style:
+                                    Theme.of(context).textTheme.headlineMedium,
                               ),
                             ),
                             DocumentStatusBadge(expiryDate: doc.expiryDate),

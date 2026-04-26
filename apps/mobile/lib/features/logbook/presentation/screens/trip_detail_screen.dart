@@ -86,7 +86,8 @@ class TripDetailScreen extends ConsumerWidget {
                               '${trip.departurePort}\n${NavisDateUtils.formatDateTime(trip.departureTime)}',
                         ),
                         const Divider(height: 24),
-                        if (trip.arrivalPort != null && trip.arrivalTime != null)
+                        if (trip.arrivalPort != null &&
+                            trip.arrivalTime != null)
                           _DetailRow(
                             icon: Icons.flight_land,
                             label: 'Arrival',
@@ -98,8 +99,8 @@ class TripDetailScreen extends ConsumerWidget {
                           _DetailRow(
                             icon: Icons.straighten,
                             label: 'Distance',
-                            value: DistanceUtils.formatDistance(
-                                trip.distanceNm!),
+                            value:
+                                DistanceUtils.formatDistance(trip.distanceNm!),
                           ),
                         ],
                         if (trip.duration != null) ...[
@@ -107,8 +108,8 @@ class TripDetailScreen extends ConsumerWidget {
                           _DetailRow(
                             icon: Icons.schedule,
                             label: 'Duration',
-                            value: NavisDateUtils.formatDuration(
-                                trip.duration!),
+                            value:
+                                NavisDateUtils.formatDuration(trip.duration!),
                           ),
                         ],
                         if (trip.maxSpeedKnots != null) ...[
@@ -116,8 +117,8 @@ class TripDetailScreen extends ConsumerWidget {
                           _DetailRow(
                             icon: Icons.speed,
                             label: 'Max Speed',
-                            value: DistanceUtils.formatSpeed(
-                                trip.maxSpeedKnots!),
+                            value:
+                                DistanceUtils.formatSpeed(trip.maxSpeedKnots!),
                           ),
                         ],
                         if (trip.avgSpeedKnots != null) ...[
@@ -125,12 +126,11 @@ class TripDetailScreen extends ConsumerWidget {
                           _DetailRow(
                             icon: Icons.trending_flat,
                             label: 'Avg Speed',
-                            value: DistanceUtils.formatSpeed(
-                                trip.avgSpeedKnots!),
+                            value:
+                                DistanceUtils.formatSpeed(trip.avgSpeedKnots!),
                           ),
                         ],
-                        if (trip.notes != null &&
-                            trip.notes!.isNotEmpty) ...[
+                        if (trip.notes != null && trip.notes!.isNotEmpty) ...[
                           const Divider(height: 24),
                           _DetailRow(
                             icon: Icons.notes,

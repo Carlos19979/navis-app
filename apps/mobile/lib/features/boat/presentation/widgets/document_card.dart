@@ -42,9 +42,7 @@ class DocumentCard extends StatelessWidget {
                 ),
               ),
               Text(
-                daysLeft < 0
-                    ? '${-daysLeft}d overdue'
-                    : '${daysLeft}d left',
+                daysLeft < 0 ? '${-daysLeft}d overdue' : '${daysLeft}d left',
                 style: TextStyle(
                   color: daysLeft < 0
                       ? AppColors.red

@@ -66,8 +66,7 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen> {
         latitude: position.latitude,
         longitude: position.longitude,
         timestamp: DateTime.now(),
-        speedKnots:
-            DistanceUtils.kmhToKnots(position.speed * 3.6),
+        speedKnots: DistanceUtils.kmhToKnots(position.speed * 3.6),
       );
 
       if (_trackPoints.isNotEmpty) {
@@ -150,9 +149,9 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen> {
               Text(
                 _formatElapsed(_elapsed),
                 style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                      color: AppColors.cyan,
-                    ),
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                  color: AppColors.cyan,
+                ),
               ),
               const SizedBox(height: 32),
               Row(

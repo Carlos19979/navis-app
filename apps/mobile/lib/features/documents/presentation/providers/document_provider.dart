@@ -30,7 +30,8 @@ final createDocumentProvider =
 });
 
 final deleteDocumentProvider =
-    FutureProvider.family<void, ({String id, String boatId})>((ref, params) async {
+    FutureProvider.family<void, ({String id, String boatId})>(
+        (ref, params) async {
   final repository = ref.read(documentRepositoryProvider);
   await repository.deleteDocument(params.id);
   ref.invalidate(boatDocumentsProvider(params.boatId));

@@ -63,8 +63,7 @@ class BoatsNotifier extends AsyncNotifier<List<Boat>> {
   }
 }
 
-final boatProvider =
-    FutureProvider.family<Boat, String>((ref, id) async {
+final boatProvider = FutureProvider.family<Boat, String>((ref, id) async {
   final repository = ref.watch(boatRepositoryProvider);
   return repository.getBoat(id);
 });

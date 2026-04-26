@@ -14,8 +14,7 @@ final boatTripsProvider =
   return response.items;
 });
 
-final tripProvider =
-    FutureProvider.family<Trip, String>((ref, id) async {
+final tripProvider = FutureProvider.family<Trip, String>((ref, id) async {
   final repository = ref.watch(tripRepositoryProvider);
   return repository.getTrip(id);
 });
@@ -34,8 +33,7 @@ class TripStats {
   final double totalHours;
 }
 
-final tripStatsProvider =
-    Provider.family<TripStats, List<Trip>>((ref, trips) {
+final tripStatsProvider = Provider.family<TripStats, List<Trip>>((ref, trips) {
   double totalDistance = 0;
   double totalHours = 0;
 

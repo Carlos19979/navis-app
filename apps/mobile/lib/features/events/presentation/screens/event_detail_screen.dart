@@ -78,8 +78,8 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                           MarkerLayer(
                             markers: [
                               Marker(
-                                point: LatLng(
-                                    event.latitude!, event.longitude!),
+                                point:
+                                    LatLng(event.latitude!, event.longitude!),
                                 width: 40,
                                 height: 40,
                                 child: const Icon(
@@ -144,8 +144,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                 const SizedBox(height: 16),
                 NavisButton(
                   label: event.isRegistered ? 'Unregister' : 'Register',
-                  onPressed: () =>
-                      _toggleRegistration(event.isRegistered),
+                  onPressed: () => _toggleRegistration(event.isRegistered),
                   isLoading: _isRegistering,
                 ),
               ],

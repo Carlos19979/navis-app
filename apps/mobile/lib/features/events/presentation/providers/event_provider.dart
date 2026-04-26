@@ -13,8 +13,7 @@ final eventsProvider = FutureProvider<List<Event>>((ref) async {
   return response.items;
 });
 
-final eventProvider =
-    FutureProvider.family<Event, String>((ref, id) async {
+final eventProvider = FutureProvider.family<Event, String>((ref, id) async {
   final repository = ref.watch(eventRepositoryProvider);
   return repository.getEvent(id);
 });

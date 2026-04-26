@@ -47,7 +47,8 @@ void main() {
 
   group('boatsProvider', () {
     test('returns list of boats on success', () async {
-      when(() => mockRepository.getBoats(cursor: any(named: 'cursor'), limit: any(named: 'limit')))
+      when(() => mockRepository.getBoats(
+              cursor: any(named: 'cursor'), limit: any(named: 'limit')))
           .thenAnswer((_) async => PaginatedResponse<Boat>(
                 items: testBoats,
               ));

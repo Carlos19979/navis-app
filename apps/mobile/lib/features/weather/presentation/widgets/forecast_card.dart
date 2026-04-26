@@ -69,7 +69,9 @@ class ForecastCard extends StatelessWidget {
     }
     if (lower.contains('cloud')) return Icons.cloud;
     if (lower.contains('rain')) return Icons.grain;
-    if (lower.contains('storm') || lower.contains('thunder')) return Icons.flash_on;
+    if (lower.contains('storm') || lower.contains('thunder')) {
+      return Icons.flash_on;
+    }
     if (lower.contains('snow')) return Icons.ac_unit;
     if (lower.contains('fog') || lower.contains('mist')) return Icons.blur_on;
     return Icons.cloud_outlined;

@@ -91,7 +91,8 @@ class WeatherScreen extends ConsumerWidget {
                                   const SizedBox(height: 4),
                                   Text(
                                     weather.description,
-                                    style: Theme.of(context).textTheme.bodySmall,
+                                    style:
+                                        Theme.of(context).textTheme.bodySmall,
                                   ),
                                 ],
                               ),

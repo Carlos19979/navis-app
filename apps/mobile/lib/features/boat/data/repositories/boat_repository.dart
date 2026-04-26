@@ -27,7 +27,8 @@ class BoatRepositoryImpl implements BoatRepository {
 
     final data = response.data!;
     final items = (data['items'] as List<dynamic>)
-        .map((json) => BoatModel.fromJson(json as Map<String, dynamic>).toEntity())
+        .map((json) =>
+            BoatModel.fromJson(json as Map<String, dynamic>).toEntity())
         .toList();
 
     return PaginatedResponse<Boat>(

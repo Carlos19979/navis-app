@@ -67,9 +67,7 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
               maxZoom: 18,
               onPositionChanged: (position, hasGesture) {
                 if (hasGesture) {
-                  ref
-                      .read(chartProvider.notifier)
-                      .setCenter(position.center);
+                  ref.read(chartProvider.notifier).setCenter(position.center);
                   ref.read(chartProvider.notifier).setZoom(position.zoom);
                 }
               },

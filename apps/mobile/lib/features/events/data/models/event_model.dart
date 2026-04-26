@@ -70,7 +70,8 @@ class EventModel {
       if (organizerName != null) 'organizer_name': organizerName,
       'is_registered': isRegistered,
       if (maxParticipants != null) 'max_participants': maxParticipants,
-      if (currentParticipants != null) 'current_participants': currentParticipants,
+      if (currentParticipants != null)
+        'current_participants': currentParticipants,
       if (createdAt != null) 'created_at': createdAt!.toIso8601String(),
     };
   }
