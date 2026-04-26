@@ -106,7 +106,7 @@ func (c *Client) doRequest(ctx context.Context, method, path string, body any) e
 	if err != nil {
 		return fmt.Errorf("novu: request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= 400 {
 		return fmt.Errorf("novu: API error status %d on %s %s", resp.StatusCode, method, path)

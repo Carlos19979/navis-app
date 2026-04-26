@@ -24,43 +24,46 @@ class NavisButton extends StatelessWidget {
       button: true,
       label: label,
       child: ElevatedButton(
-      onPressed: (isLoading || isDisabled) ? null : onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.cyan,
-        foregroundColor: Colors.white,
-        disabledBackgroundColor: AppColors.cyan.withValues(alpha: 0.5),
-        disabledForegroundColor: Colors.white70,
-        minimumSize: const Size(double.infinity, 48),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+        onPressed:
+            (isLoading || isDisabled) ? null : onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.cyan,
+          foregroundColor: Colors.white,
+          disabledBackgroundColor:
+              AppColors.cyan.withValues(alpha: 0.5),
+          disabledForegroundColor: Colors.white70,
+          minimumSize:
+              const Size(double.infinity, 48),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
-      ),
-      child: isLoading
-          ? const SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.white,
-              ),
-            )
-          : Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (icon != null) ...[
-                  Icon(icon, size: 20),
-                  const SizedBox(width: 8),
-                ],
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
+        child: isLoading
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
                 ),
-              ],
-            ),
-    ),
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (icon != null) ...[
+                    Icon(icon, size: 20),
+                    const SizedBox(width: 8),
+                  ],
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+      ),
     );
   }
 }
