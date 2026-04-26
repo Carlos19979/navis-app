@@ -453,10 +453,46 @@ make db-migrate     # Apply Supabase migrations
 make db-reset       # Reset and reseed database
 ```
 
+## External Services & Infrastructure
+
+| Service | Purpose | Dashboard | Env Var |
+|---------|---------|-----------|---------|
+| **Supabase** | Auth, Storage, PostgreSQL+PostGIS | supabase.com/dashboard | `SUPABASE_URL`, `SUPABASE_JWT_SECRET`, `SUPABASE_ANON_KEY` |
+| **Novu** | Notification orchestration (push, email, in-app) | dashboard.novu.co | `NOVU_API_KEY` |
+| **Firebase** | FCM push transport (Android/iOS) | console.firebase.google.com | `google-services.json` (Android), `GoogleService-Info.plist` (iOS) |
+| **Resend** | Email delivery (integrated via Novu) | resend.com/emails | Configured in Novu Integrations |
+
+### Novu Setup
+
+- **Workflow:** `document-expiry` — triggered by Go API cron. Steps: Push (FCM) → Email (Resend).
+- **Integrations:** FCM (Service Account JSON from Firebase) + Resend (API Key).
+- **Environments:** Development and Production — each has its own API Key. Same Firebase Service Account and Resend key in both.
+- **Subscribers:** Created automatically when users register device tokens via `POST /api/v1/devices`. Subscriber ID = Supabase `user_id`.
+- **Sender:** `Navis <notifications@aerolume.app>`
+
+### Firebase Setup
+
+- **Project:** `navis-44c8b`
+- **Android:** `google-services.json` in `apps/mobile/android/app/` (gitignored)
+- **iOS:** `GoogleService-Info.plist` in `apps/mobile/ios/Runner/` (pending)
+- **Only used for:** FCM push transport. No Firebase Auth, no Firestore, no Analytics.
+
+### How Notifications Flow
+
+```
+Go API cron (08:00 UTC)
+  → detects expiring document
+  → checks notification_logs (dedup)
+  → POST Novu /v1/events/trigger (workflow: document-expiry, subscriber: user_id)
+    → Novu Push Step → FCM → device notification
+    → Novu Email Step → Resend → notifications@aerolume.app → user inbox
+Flutter receives push via firebase_messaging → tap → deep link to document
+```
+
 ## Deployment
 
 - **MVP:** Supabase Cloud + Railway (Go API, EU region) + App Store / Google Play
-- **Scale:** Migrate to K8s on Hetzner + self-hosted Supabase + Cloudflare R2/CDN
+- **Scale:** Migrate to K8s on Hetzner + self-hosted Supabase + Cloudflare R2/CDN + self-hosted Novu
 - **CI/CD:** GitHub Actions — lint+test on develop push, full deploy on main push
 
 ## Stack Versions
