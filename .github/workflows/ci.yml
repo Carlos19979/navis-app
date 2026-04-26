@@ -92,4 +92,5 @@ jobs:
           path: apps/mobile/coverage/lcov.info
 
       - name: Build APK (compile check)
+        if: github.ref == 'refs/heads/main'
         run: flutter build apk --debug
