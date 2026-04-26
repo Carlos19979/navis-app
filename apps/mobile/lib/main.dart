@@ -10,7 +10,11 @@ import 'package:navis_mobile/core/config/env.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp();
+  try {
+    await Firebase.initializeApp();
+  } catch (_) {
+    // Firebase not configured — push notifications disabled
+  }
 
   await Supabase.initialize(
     url: Env.supabaseUrl,
