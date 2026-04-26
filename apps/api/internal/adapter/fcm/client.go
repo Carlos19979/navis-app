@@ -7,7 +7,7 @@ import (
 
 // Client is a placeholder implementation of port.PushNotifier.
 // It logs notifications instead of sending them via FCM.
-// A real FCM integration will replace this later.
+// Replace with a real FCM integration when Firebase credentials are available.
 type Client struct {
 	logger *slog.Logger
 }
@@ -18,9 +18,9 @@ func New(logger *slog.Logger) *Client {
 }
 
 // Send logs the notification details and returns nil.
-func (c *Client) Send(ctx context.Context, userID, title, body string) error {
+func (c *Client) Send(ctx context.Context, deviceToken, title, body string) error {
 	c.logger.Info("push notification (placeholder)",
-		slog.String("user_id", userID),
+		slog.String("device_token", deviceToken),
 		slog.String("title", title),
 		slog.String("body", body),
 	)

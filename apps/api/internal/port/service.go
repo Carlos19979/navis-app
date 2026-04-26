@@ -24,5 +24,5 @@ type WeatherProvider interface {
 
 // PushNotifier abstracts push notification delivery (e.g. FCM).
 type PushNotifier interface {
-	Send(ctx context.Context, userID, title, body string) error
+	Send(ctx context.Context, deviceToken, title, body string) error
 }

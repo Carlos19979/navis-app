@@ -61,6 +61,7 @@ func main() {
 	eventRepo := postgres.NewEventRepo(pool)
 	interestRepo := postgres.NewEventInterestRepo(pool)
 	notifLogRepo := postgres.NewNotificationLogRepo(pool)
+	deviceTokenRepo := postgres.NewDeviceTokenRepo(pool)
 
 	// Create adapters.
 	weatherProvider := openmeteo.New()
@@ -74,7 +75,7 @@ func main() {
 	weatherSvc := service.NewWeatherService(weatherProvider)
 
 	// Create and start expiration checker cron.
-	expirationChecker := cron.New(docRepo, notifLogRepo, pushNotifier, logger)
+	expirationChecker := cron.New(docRepo, notifLogRepo, deviceTokenRepo, pushNotifier, logger)
 	expirationChecker.Start()
 	defer expirationChecker.Stop()
 
@@ -84,10 +85,11 @@ func main() {
 	tripH := handler.NewTripHandler(tripSvc)
 	eventH := handler.NewEventHandler(eventSvc)
 	weatherH := handler.NewWeatherHandler(weatherSvc)
+	deviceH := handler.NewDeviceHandler(deviceTokenRepo)
 
 	// Create router.
 	r := router.New(
-		boatH, docH, tripH, eventH, weatherH,
+		boatH, docH, tripH, eventH, weatherH, deviceH,
 		cfg.SupabaseJWTSecret,
 		cfg.CORSAllowedOrigins,
 		logger,
