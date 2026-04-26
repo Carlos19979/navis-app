@@ -50,7 +50,6 @@ void main() {
       when(() => mockRepository.getBoats(cursor: any(named: 'cursor'), limit: any(named: 'limit')))
           .thenAnswer((_) async => PaginatedResponse<Boat>(
                 items: testBoats,
-                nextCursor: null,
               ));
 
       final result = await container.read(boatsProvider.future);
@@ -58,7 +57,7 @@ void main() {
       expect(result, hasLength(2));
       expect(result.first.name, 'Sea Breeze');
       expect(result.last.name, 'Blue Horizon');
-      verify(() => mockRepository.getBoats(cursor: null, limit: 20)).called(1);
+      verify(() => mockRepository.getBoats()).called(1);
     });
 
     test('returns single boat by id', () async {

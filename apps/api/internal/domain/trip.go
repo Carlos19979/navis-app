@@ -5,6 +5,7 @@ import "time"
 // TripStatus represents the current status of a trip.
 type TripStatus string
 
+// TripStatus values.
 const (
 	TripStatusRecording TripStatus = "recording"
 	TripStatusCompleted TripStatus = "completed"

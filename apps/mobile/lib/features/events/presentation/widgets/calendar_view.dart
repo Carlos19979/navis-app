@@ -52,7 +52,7 @@ class _CalendarViewState extends State<CalendarView> {
     final daysInMonth =
         DateTime(_currentMonth.year, _currentMonth.month + 1, 0).day;
     final firstWeekday =
-        DateTime(_currentMonth.year, _currentMonth.month, 1).weekday;
+        DateTime(_currentMonth.year, _currentMonth.month).weekday;
     final eventDays = _eventDaysInMonth();
     final today = DateTime.now();
 

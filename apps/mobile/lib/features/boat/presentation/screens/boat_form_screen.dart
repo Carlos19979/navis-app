@@ -261,11 +261,12 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen> {
                         ],
                       ),
                     );
-                    if (confirmed == true && mounted) {
+                    if (confirmed == true && context.mounted) {
                       await ref
                           .read(boatsProvider.notifier)
                           .deleteBoat(widget.boatId);
-                      if (mounted) context.go('/boats');
+                      if (!context.mounted) return;
+                      context.go('/boats');
                     }
                   },
                   style: OutlinedButton.styleFrom(

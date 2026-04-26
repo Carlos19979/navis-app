@@ -69,7 +69,6 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                         options: MapOptions(
                           initialCenter:
                               LatLng(event.latitude!, event.longitude!),
-                          initialZoom: 13,
                           interactionOptions: const InteractionOptions(
                             flags: InteractiveFlag.none,
                           ),

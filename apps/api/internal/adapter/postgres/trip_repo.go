@@ -199,7 +199,7 @@ func (r *TripTrackRepo) BatchCreate(ctx context.Context, tracks []domain.TripTra
 	}
 
 	br := r.pool.SendBatch(ctx, batch)
-	defer br.Close()
+	defer func() { _ = br.Close() }()
 
 	for range tracks {
 		if _, err := br.Exec(); err != nil {

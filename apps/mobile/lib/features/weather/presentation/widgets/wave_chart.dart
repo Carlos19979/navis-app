@@ -45,7 +45,7 @@ class WaveChart extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Row(
+            const Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _WaveLabel(label: 'Calm', color: AppColors.green),
@@ -114,7 +114,7 @@ class _WavePainter extends CustomPainter {
       ..strokeWidth = 2;
 
     final amplitude = (waveHeight / 4.0).clamp(0.1, 1.0) * size.height * 0.4;
-    final frequency = 3.0;
+    const frequency = 3.0;
 
     final path = Path();
     path.moveTo(0, size.height);

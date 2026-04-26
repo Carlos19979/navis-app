@@ -36,7 +36,7 @@ class BoatsNotifier extends AsyncNotifier<List<Boat>> {
 
   Future<void> refresh() async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() => build());
+    state = await AsyncValue.guard(build);
   }
 
   Future<void> createBoat(Boat boat) async {

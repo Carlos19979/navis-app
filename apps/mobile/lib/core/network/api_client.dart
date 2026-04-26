@@ -57,7 +57,7 @@ class ApiClient {
           handler.reject(
             DioException(
               requestOptions: error.requestOptions,
-              error: const NetworkException(message: 'Network connection failed'),
+              error: const NetworkException(),
               type: error.type,
             ),
           );

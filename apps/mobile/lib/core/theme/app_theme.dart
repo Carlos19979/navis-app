@@ -110,12 +110,9 @@ class AppTheme {
         colorScheme: const ColorScheme.light(
           primary: AppColors.cyan,
           secondary: AppColors.green,
-          surface: AppColors.lightSurface,
           error: AppColors.red,
-          onPrimary: Colors.white,
           onSecondary: Colors.white,
           onSurface: AppColors.textLight,
-          onError: Colors.white,
         ),
         textTheme: AppTypography.lightTextTheme,
         appBarTheme: const AppBarTheme(
