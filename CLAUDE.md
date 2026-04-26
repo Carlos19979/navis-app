@@ -32,7 +32,7 @@ Dependency flow: `handler → service → port ← adapter`
 | Domain | `internal/domain/` | Pure structs, typed string enums, sentinel errors |
 | Ports | `internal/port/` | Interfaces only — repository + external service contracts |
 | Services | `internal/service/` | Business logic. Transport-agnostic (no HTTP knowledge) |
-| Adapters | `internal/adapter/<impl>/` | Implementations: `postgres/` (pgx), `openmeteo/`, `fcm/` |
+| Adapters | `internal/adapter/<impl>/` | Implementations: `postgres/` (pgx), `openmeteo/`, `novu/` |
 | Handlers | `internal/handler/` | HTTP only: parse request, call service, encode response |
 | DTOs | `internal/dto/` | Request/response structs with JSON tags. Separate from domain |
 | Middleware | `internal/middleware/` | Auth (JWT), logging, recovery, CORS, request ID, rate limit |
@@ -436,7 +436,8 @@ Use these Dart 3.x features everywhere they apply:
 
 - `robfig/cron/v3` in Go API, runs daily at 08:00 UTC.
 - Checks document expiry against `alert_days` array (default: 30, 7 days).
-- Sends push via FCM adapter. Logs to `notification_logs` to avoid duplicates.
+- Triggers Novu `document-expiry` workflow per user. Novu delivers via FCM (push) and Resend (email).
+- Logs to `notification_logs` to avoid duplicates.
 
 ## Commands
 
@@ -464,4 +465,6 @@ make db-reset       # Reset and reseed database
 - Flutter 3.32, Dart 3.x, Riverpod 2, GoRouter 14, Dio 5, supabase_flutter 2.5
 - flutter_map 7, geolocator 12, drift/sqflite, mocktail, cached_network_image
 - Supabase (Auth, Storage, PostGIS, RLS)
+- Novu (notification orchestration: push + email + in-app), Resend (email delivery)
+- Firebase Messaging (push transport layer in Flutter)
 - Sentry for error reporting (Go + Flutter)

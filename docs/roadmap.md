@@ -241,15 +241,15 @@ Estado actual: Fases 0-4 y 6-11 implementadas. Este roadmap cubre solo lo que qu
 | 2 | Go API Core | ✅ HECHO | — |
 | 3 | Go Repos PostgreSQL | ✅ HECHO | — |
 | 4 | Go Services + Handlers | ✅ HECHO | — |
-| **V** | **Verificación** | **PENDIENTE** | **1-2 días** |
-| **5** | **Cron + FCM + Device Tokens** | **PARCIAL → PENDIENTE** | **1-2 días** |
+| **V** | **Verificación** | **✅ HECHO** | — |
+| **5** | **Cron + Novu + Device Tokens** | **✅ HECHO** | — |
 | 6 | Flutter Core | ✅ HECHO | — |
 | 7 | Flutter Mi Barco | ✅ HECHO | — |
 | 8 | Flutter Cartas | ✅ HECHO | — |
 | 9 | Flutter Meteo | ✅ HECHO | — |
 | 10 | Flutter Regatas | ✅ HECHO | — |
 | 11 | Flutter Logbook | ✅ HECHO | — |
-| **12** | **Integración + Pulido** | **NO EMPEZADO** | **4-6 días** |
+| **12** | **Integración + Pulido** | **EN PROGRESO** | **4-6 días** |
 | | **TOTAL RESTANTE** | | **~6-10 días** |
 
 ---
