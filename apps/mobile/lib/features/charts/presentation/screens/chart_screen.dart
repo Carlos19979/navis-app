@@ -58,26 +58,28 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          FlutterMap(
-            mapController: _mapController,
-            options: MapOptions(
-              initialCenter: mapState.center,
-              initialZoom: mapState.zoom,
-              minZoom: 3,
-              maxZoom: 18,
-              onPositionChanged: (position, hasGesture) {
-                if (hasGesture) {
-                  ref.read(chartProvider.notifier).setCenter(position.center);
-                  ref.read(chartProvider.notifier).setZoom(position.zoom);
-                }
-              },
+          RepaintBoundary(
+            child: FlutterMap(
+              mapController: _mapController,
+              options: MapOptions(
+                initialCenter: mapState.center,
+                initialZoom: mapState.zoom,
+                minZoom: 3,
+                maxZoom: 18,
+                onPositionChanged: (position, hasGesture) {
+                  if (hasGesture) {
+                    ref.read(chartProvider.notifier).setCenter(position.center);
+                    ref.read(chartProvider.notifier).setZoom(position.zoom);
+                  }
+                },
+              ),
+              children: [
+                OpenSeaMapTileProvider.baseLayer,
+                if (mapState.showSeamarks) OpenSeaMapTileProvider.seamarkLayer,
+                if (_currentPosition != null && mapState.showPosition)
+                  PositionIndicator(position: _currentPosition!),
+              ],
             ),
-            children: [
-              OpenSeaMapTileProvider.baseLayer,
-              if (mapState.showSeamarks) OpenSeaMapTileProvider.seamarkLayer,
-              if (_currentPosition != null && mapState.showPosition)
-                PositionIndicator(position: _currentPosition!),
-            ],
           ),
           MapControls(
             onZoomIn: () {

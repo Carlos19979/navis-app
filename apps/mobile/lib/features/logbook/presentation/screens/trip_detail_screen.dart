@@ -41,34 +41,36 @@ class TripDetailScreen extends ConsumerWidget {
                 if (hasTrack)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: SizedBox(
-                      height: 200,
-                      child: FlutterMap(
-                        options: MapOptions(
-                          initialCenter: LatLng(
-                            trackPoints.first.latitude,
-                            trackPoints.first.longitude,
+                    child: RepaintBoundary(
+                      child: SizedBox(
+                        height: 200,
+                        child: FlutterMap(
+                          options: MapOptions(
+                            initialCenter: LatLng(
+                              trackPoints.first.latitude,
+                              trackPoints.first.longitude,
+                            ),
+                            initialZoom: 12,
+                            interactionOptions: const InteractionOptions(
+                              flags: InteractiveFlag.none,
+                            ),
                           ),
-                          initialZoom: 12,
-                          interactionOptions: const InteractionOptions(
-                            flags: InteractiveFlag.none,
-                          ),
+                          children: [
+                            OpenSeaMapTileProvider.baseLayer,
+                            PolylineLayer(
+                              polylines: [
+                                Polyline(
+                                  points: trackPoints
+                                      .map((tp) =>
+                                          LatLng(tp.latitude, tp.longitude))
+                                      .toList(),
+                                  color: AppColors.cyan,
+                                  strokeWidth: 3,
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                        children: [
-                          OpenSeaMapTileProvider.baseLayer,
-                          PolylineLayer(
-                            polylines: [
-                              Polyline(
-                                points: trackPoints
-                                    .map((tp) =>
-                                        LatLng(tp.latitude, tp.longitude))
-                                    .toList(),
-                                color: AppColors.cyan,
-                                strokeWidth: 3,
-                              ),
-                            ],
-                          ),
-                        ],
                       ),
                     ),
                   ),

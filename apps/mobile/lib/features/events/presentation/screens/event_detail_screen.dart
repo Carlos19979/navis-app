@@ -63,34 +63,36 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                 if (event.latitude != null && event.longitude != null)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: SizedBox(
-                      height: 200,
-                      child: FlutterMap(
-                        options: MapOptions(
-                          initialCenter:
-                              LatLng(event.latitude!, event.longitude!),
-                          interactionOptions: const InteractionOptions(
-                            flags: InteractiveFlag.none,
+                    child: RepaintBoundary(
+                      child: SizedBox(
+                        height: 200,
+                        child: FlutterMap(
+                          options: MapOptions(
+                            initialCenter:
+                                LatLng(event.latitude!, event.longitude!),
+                            interactionOptions: const InteractionOptions(
+                              flags: InteractiveFlag.none,
+                            ),
                           ),
-                        ),
-                        children: [
-                          OpenSeaMapTileProvider.baseLayer,
-                          MarkerLayer(
-                            markers: [
-                              Marker(
-                                point:
-                                    LatLng(event.latitude!, event.longitude!),
-                                width: 40,
-                                height: 40,
-                                child: const Icon(
-                                  Icons.location_on,
-                                  color: AppColors.cyan,
-                                  size: 40,
+                          children: [
+                            OpenSeaMapTileProvider.baseLayer,
+                            MarkerLayer(
+                              markers: [
+                                Marker(
+                                  point:
+                                      LatLng(event.latitude!, event.longitude!),
+                                  width: 40,
+                                  height: 40,
+                                  child: const Icon(
+                                    Icons.location_on,
+                                    color: AppColors.cyan,
+                                    size: 40,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
