@@ -15,4 +15,6 @@ class Env {
     'API_URL',
     defaultValue: 'http://localhost:8080',
   );
+
+  static const sentryDsn = String.fromEnvironment('SENTRY_DSN');
 }

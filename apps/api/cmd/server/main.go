@@ -10,6 +10,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/getsentry/sentry-go"
+
 	"github.com/Carlos19979/navis-app/apps/api/internal/adapter/novu"
 	"github.com/Carlos19979/navis-app/apps/api/internal/adapter/openmeteo"
 	"github.com/Carlos19979/navis-app/apps/api/internal/adapter/postgres"
@@ -39,6 +41,20 @@ func main() {
 		Level: logLevel,
 	}))
 	slog.SetDefault(logger)
+
+	// Initialize Sentry.
+	if cfg.SentryDSN != "" {
+		if err := sentry.Init(sentry.ClientOptions{
+			Dsn:              cfg.SentryDSN,
+			TracesSampleRate: 0.2,
+			Environment:      cfg.LogLevel,
+		}); err != nil {
+			logger.Error("failed to init sentry", slog.String("error", err.Error()))
+		} else {
+			defer sentry.Flush(2 * time.Second)
+			logger.Info("sentry initialized")
+		}
+	}
 
 	// Create context that listens for interrupt signals.
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

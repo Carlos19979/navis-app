@@ -461,6 +461,7 @@ make db-reset       # Reset and reseed database
 | **Novu** | Notification orchestration (push, email, in-app) | dashboard.novu.co | `NOVU_API_KEY` |
 | **Firebase** | FCM push transport (Android/iOS) | console.firebase.google.com | `google-services.json` (Android), `GoogleService-Info.plist` (iOS) |
 | **Resend** | Email delivery (integrated via Novu) | resend.com/emails | Configured in Novu Integrations |
+| **Sentry** | Error/crash reporting (Go API + Flutter) | sentry.io | `SENTRY_DSN` (Go), `--dart-define=SENTRY_DSN=...` (Flutter) |
 
 ### Novu Setup
 

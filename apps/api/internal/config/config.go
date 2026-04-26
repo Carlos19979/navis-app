@@ -14,6 +14,7 @@ type Config struct {
 	LogLevel           string
 	CORSAllowedOrigins []string
 	NovuAPIKey string
+	SentryDSN string
 }
 
 // Load reads configuration from environment variables, applying defaults
@@ -27,6 +28,7 @@ func Load() *Config {
 		LogLevel:           getEnv("LOG_LEVEL", "debug"),
 		CORSAllowedOrigins: strings.Split(getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000"), ","),
 		NovuAPIKey: getEnv("NOVU_API_KEY", ""),
+		SentryDSN: getEnv("SENTRY_DSN", ""),
 	}
 }
 
