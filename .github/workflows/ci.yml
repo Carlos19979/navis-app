@@ -69,8 +69,14 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Generate l10n
+        run: flutter gen-l10n
+
+      - name: Run build_runner code generation
+        run: dart run build_runner build --delete-conflicting-outputs
+
       - name: Verify formatting
-        run: dart format --output=none --set-exit-if-changed .
+        run: dart format --output=none --set-exit-if-changed --line-length=80 lib/ test/
 
       - name: Run analyzer
         run: flutter analyze --fatal-infos
@@ -84,3 +90,6 @@ jobs:
         with:
           name: flutter-coverage
           path: apps/mobile/coverage/lcov.info
+
+      - name: Build APK (compile check)
+        run: flutter build apk --debug
