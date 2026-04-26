@@ -54,7 +54,8 @@ class BoatDashboardScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.go('/boats/new'),
-        child: const Icon(Icons.add),
+        tooltip: 'Add new boat',
+        child: const Icon(Icons.add, semanticLabel: 'Add new boat'),
       ),
     );
   }

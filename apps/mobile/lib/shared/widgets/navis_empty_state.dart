@@ -18,17 +18,21 @@ class NavisEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 72,
-              color: AppColors.textSecondary.withValues(alpha: 0.5),
-            ),
+    return Semantics(
+      label: message,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ExcludeSemantics(
+                child: Icon(
+                  icon,
+                  size: 72,
+                  color: AppColors.textSecondary.withValues(alpha: 0.5),
+                ),
+              ),
             const SizedBox(height: 16),
             Text(
               message,
@@ -44,7 +48,8 @@ class NavisEmptyState extends StatelessWidget {
                 child: Text(actionLabel!),
               ),
             ],
-          ],
+            ],
+          ),
         ),
       ),
     );

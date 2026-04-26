@@ -20,7 +20,10 @@ class NavisButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
+    return Semantics(
+      button: true,
+      label: label,
+      child: ElevatedButton(
       onPressed: (isLoading || isDisabled) ? null : onPressed,
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.cyan,
@@ -57,6 +60,7 @@ class NavisButton extends StatelessWidget {
                 ),
               ],
             ),
+    ),
     );
   }
 }
