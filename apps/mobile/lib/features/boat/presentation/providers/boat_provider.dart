@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:navis_mobile/core/analytics/analytics_service.dart';
 import 'package:navis_mobile/core/database/mutation_queue.dart';
 import 'package:navis_mobile/core/database/offline_repository.dart';
 import 'package:navis_mobile/features/boat/data/repositories/boat_repository.dart';
@@ -47,6 +48,7 @@ class BoatsNotifier extends AsyncNotifier<List<Boat>> {
   Future<Boat> createBoat(Boat boat) async {
     final repository = ref.read(boatRepositoryProvider);
     final created = await repository.createBoat(boat);
+    ref.read(analyticsProvider).trackBoatCreated(created.id);
     final currentBoats = state.valueOrNull ?? [];
     state = AsyncData([created, ...currentBoats]);
     return created;

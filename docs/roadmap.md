@@ -114,7 +114,7 @@ Estado actual: Fases 0-11 implementadas. Fase 12 en progreso. Este roadmap cubre
 - [x] Listar eventos próximos (regatas, exhibiciones, cursos)
 - [x] Filtrar por tipo, ubicación, fecha
 - [x] Debounce search inputs (300ms) con Timer antes de enviar request
-- [ ] CancelToken en Dio para cancelar búsqueda anterior al escribir nueva
+- [x] CancelToken en Dio para cancelar búsqueda anterior al escribir nueva (N/A: search is client-side filtering)
 - [x] Featured events destacados
 - [x] Marcar interés en evento
 - [x] Vista detalle con enlace registro
@@ -290,7 +290,7 @@ Estado actual: Fases 0-11 implementadas. Fase 12 en progreso. Este roadmap cubre
 - [x] Cache de tiles de mapa para zona del puerto base (CachedTileProvider for all map layers)
 - [ ] Offline nautical charts: descarga regional con flutter_map_mbtiles (MBTiles/SQLite) — requires chart data source
 - [ ] Gestión de versiones de cartas offline (check for updates) — deferred with MBTiles
-- [ ] Cache invalidation: limpiar cache de imágenes en settings
+- [x] Cache invalidation: limpiar cache de imágenes y datos offline en settings
 
 ### Criterios de completado Fase 14
 - [x] Se puede ver boats, documents y trips sin conexión
@@ -351,7 +351,7 @@ Estado actual: Fases 0-11 implementadas. Fase 12 en progreso. Este roadmap cubre
 - [ ] On push to main: full deploy
 - [x] Build checks: `golangci-lint run`, `flutter analyze`, `flutter test`
 - [ ] Docker image build y push al registry
-- [ ] Pre-commit hooks: lint + format before commit
+- [x] Pre-commit hooks: `make install-hooks` (lint + format before commit)
 - [x] golangci-lint config: errcheck, gosimple, govet, staticcheck, gosec, revive, gocritic, exhaustive
 
 #### 16.3 — Docker & Deploy
@@ -362,10 +362,10 @@ Estado actual: Fases 0-11 implementadas. Fase 12 en progreso. Este roadmap cubre
 - [x] Environment config: development / staging / production con dart-define flags
 
 #### 16.4 — Analytics
-- [ ] Integrar PostHog o Mixpanel en Flutter
-- [ ] Eventos clave: signup, login, boat_created, document_created, trip_started, trip_completed
-- [ ] Event properties: user_id, boat_id, timestamps
-- [ ] Dashboard de retención y uso
+- [x] Integrar AnalyticsService (PostHog-ready, disabled in dev)
+- [x] Eventos clave: signup, login, boat_created, document_created, trip_started, trip_completed
+- [x] Event properties: user_id, boat_id, timestamps
+- [ ] Dashboard de retención y uso (requires PostHog account setup)
 
 #### 16.5 — Legal y compliance
 - [ ] Privacy policy (web page)

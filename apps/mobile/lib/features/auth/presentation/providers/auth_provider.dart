@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as supa;
 
+import 'package:navis_mobile/core/analytics/analytics_service.dart';
 import 'package:navis_mobile/features/auth/data/auth_repository.dart';
 import 'package:navis_mobile/features/auth/domain/auth_state.dart';
 
@@ -12,15 +13,18 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final repository = ref.watch(authRepositoryProvider);
-  return AuthNotifier(repository);
+  final analytics = ref.watch(analyticsProvider);
+  return AuthNotifier(repository, analytics);
 });
 
 class AuthNotifier extends StateNotifier<AuthState> {
-  AuthNotifier(this._repository) : super(const AuthState.initial()) {
+  AuthNotifier(this._repository, this._analytics)
+      : super(const AuthState.initial()) {
     _init();
   }
 
   final AuthRepository _repository;
+  final AnalyticsService _analytics;
   StreamSubscription<supa.AuthState>? _authSubscription;
 
   void _init() {
@@ -52,6 +56,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         password: password,
       );
       if (response.user != null) {
+        _analytics.trackLogin(response.user!.id);
         state = AuthState.authenticated(response.user);
       } else {
         state = const AuthState.unauthenticated(
@@ -74,6 +79,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         password: password,
       );
       if (response.user != null) {
+        _analytics.trackSignup(response.user!.id);
         state = AuthState.authenticated(response.user);
       } else {
         state = const AuthState.unauthenticated(
@@ -86,6 +92,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> logout() async {
+    _analytics.reset();
     await _repository.signOut();
     state = const AuthState.unauthenticated();
   }

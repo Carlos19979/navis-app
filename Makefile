@@ -1,4 +1,4 @@
-.PHONY: help dev stop api-run api-build api-test api-lint api-dev mobile-run mobile-test mobile-lint mobile-analyze mobile-codegen db-start db-stop db-reset db-migrate
+.PHONY: help dev stop api-run api-build api-test api-lint api-dev mobile-run mobile-test mobile-lint mobile-analyze mobile-codegen db-start db-stop db-reset db-migrate install-hooks lint
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -71,3 +71,17 @@ mobile-build-ios: ## Build iOS
 
 mobile-codegen: ## Run Flutter build_runner code generation
 	cd apps/mobile && dart run build_runner build --delete-conflicting-outputs
+
+lint: ## Run all linters (Go + Flutter)
+	cd apps/api && golangci-lint run --timeout=5m
+	cd apps/mobile && flutter analyze --fatal-infos
+	cd apps/mobile && dart format --output=none --set-exit-if-changed --line-length=80 lib/
+
+install-hooks: ## Install git pre-commit hooks
+	@echo '#!/bin/sh' > .git/hooks/pre-commit
+	@echo 'echo "Running linters..."' >> .git/hooks/pre-commit
+	@echo 'cd apps/api && golangci-lint run --timeout=5m || exit 1' >> .git/hooks/pre-commit
+	@echo 'cd ../../apps/mobile && flutter analyze --fatal-infos || exit 1' >> .git/hooks/pre-commit
+	@echo 'cd ../../apps/mobile && dart format --output=none --set-exit-if-changed --line-length=80 lib/ || exit 1' >> .git/hooks/pre-commit
+	@chmod +x .git/hooks/pre-commit
+	@echo "Pre-commit hook installed."
