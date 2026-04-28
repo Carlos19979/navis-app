@@ -177,6 +177,36 @@ class LocalDatabase {
     return rows.first['value'] as String;
   }
 
+  Future<void> insertMutation(Map<String, dynamic> mutation) async {
+    final db = await database;
+    await db.insert('pending_mutations', mutation);
+  }
+
+  Future<List<Map<String, dynamic>>> getPendingMutations() async {
+    final db = await database;
+    return db.query('pending_mutations', orderBy: 'created_at ASC');
+  }
+
+  Future<int> getPendingMutationCount() async {
+    final db = await database;
+    final result =
+        await db.rawQuery('SELECT COUNT(*) as cnt FROM pending_mutations');
+    return result.first['cnt'] as int;
+  }
+
+  Future<void> deleteMutation(String id) async {
+    final db = await database;
+    await db.delete('pending_mutations', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> incrementRetryCount(String id) async {
+    final db = await database;
+    await db.rawUpdate(
+      'UPDATE pending_mutations SET retry_count = retry_count + 1 WHERE id = ?',
+      [id],
+    );
+  }
+
   Future<void> close() async {
     await _db?.close();
     _db = null;

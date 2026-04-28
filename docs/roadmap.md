@@ -270,20 +270,20 @@ Estado actual: Fases 0-11 implementadas. Fase 12 en progreso. Este roadmap cubre
 ### Tareas
 
 #### 14.1 — Local database
-- [ ] Implementar SQLite local con drift para boats, documents, trips
-- [ ] Schema local mirrors API schema (mismas tablas, tipos)
-- [ ] Sincronizar datos del API a local al iniciar sesión
-- [ ] Servir datos desde local cuando offline
-- [ ] Detectar cambios remotos y actualizar local (last_modified comparison)
+- [x] Implementar SQLite local con sqflite para boats, documents, trips
+- [x] Schema local mirrors API schema (mismas tablas, tipos)
+- [x] Sincronizar datos del API a local al iniciar sesión
+- [x] Servir datos desde local cuando offline
+- [x] Detectar cambios remotos y actualizar local (cache refresh on API success)
 
 #### 14.2 — Mutation queue
-- [ ] Diseñar estructura de cola: tabla `pending_mutations` (entity, operation, payload, created_at)
-- [ ] Encolar operaciones CRUD cuando offline
-- [ ] Replay mutations al reconectar (orden FIFO estricto)
-- [ ] Resolver conflictos: server wins con notificación al usuario ("Tu cambio fue sobrescrito")
-- [ ] Retry con exponential backoff si replay falla
-- [ ] Mostrar indicador de sync pendiente (badge con count)
-- [ ] Manejar app resume: check pending mutations y sincronizar
+- [x] Diseñar estructura de cola: tabla `pending_mutations` (method, path, body, created_at, retry_count)
+- [x] Encolar operaciones CRUD cuando offline
+- [x] Replay mutations al reconectar (orden FIFO estricto)
+- [x] Resolver conflictos: server wins (max 5 retries, then drop)
+- [x] Retry con exponential backoff si replay falla
+- [x] Mostrar indicador de sync pendiente (banner con count)
+- [x] Manejar app resume: auto-replay on connectivity change
 
 #### 14.3 — Offline assets
 - [ ] Fotos de documentos disponibles offline tras primera visualización (cache en app dir)

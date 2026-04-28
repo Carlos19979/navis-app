@@ -854,6 +854,18 @@ abstract class AppLocalizations {
   /// **'No internet connection'**
   String get noInternetConnection;
 
+  /// No description provided for @offlineWithPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline • {count} pending'**
+  String offlineWithPending(int count);
+
+  /// No description provided for @syncingChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing {count} changes…'**
+  String syncingChanges(int count);
+
   /// No description provided for @searchEvents.
   ///
   /// In en, this message translates to:

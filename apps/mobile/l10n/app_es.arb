@@ -139,7 +139,19 @@
   "alertDaysBeforeExpiry": "Dias de Alerta Antes del Vencimiento",
   "validNumber": "Por favor ingresa un numero valido",
   "uploading": "Subiendo...",
-  "noInternetConnection": "Sin conexion a internet",
+  "noInternetConnection": "Sin conexión a internet",
+  "offlineWithPending": "Sin conexión \u2022 {count} pendientes",
+  "@offlineWithPending": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "syncingChanges": "Sincronizando {count} cambios\u2026",
+  "@syncingChanges": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
   "searchEvents": "Buscar eventos...",
   "noEventsFound": "No se encontraron eventos",
   "featured": "Destacado"

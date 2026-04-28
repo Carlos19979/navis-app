@@ -1,3 +1,4 @@
+import 'package:navis_mobile/core/database/mutation_queue.dart';
 import 'package:navis_mobile/core/database/offline_repository.dart';
 import 'package:navis_mobile/core/network/api_client.dart';
 import 'package:navis_mobile/features/logbook/data/models/trip_model.dart';
@@ -5,11 +6,15 @@ import 'package:navis_mobile/features/logbook/domain/entities/trip.dart';
 import 'package:navis_mobile/shared/models/paginated_response.dart';
 
 class TripRepository {
-  TripRepository({ApiClient? apiClient, this.offlineRepo})
-      : _apiClient = apiClient ?? ApiClient.instance;
+  TripRepository({
+    ApiClient? apiClient,
+    this.offlineRepo,
+    this.mutationQueue,
+  }) : _apiClient = apiClient ?? ApiClient.instance;
 
   final ApiClient _apiClient;
   final OfflineRepository? offlineRepo;
+  final MutationQueueNotifier? mutationQueue;
 
   Future<PaginatedResponse<Trip>> getTrips(
     String boatId, {
@@ -121,26 +126,52 @@ class TripRepository {
 
   Future<Trip> createTrip(Trip trip) async {
     final model = TripModel.fromEntity(trip);
-    final response = await _apiClient.post<Map<String, dynamic>>(
-      '/api/v1/boats/${trip.boatId}/trips',
-      data: model.toJson(),
-    );
-    final envelope = response.data!;
-    return TripModel.fromJson(
-      envelope['data'] as Map<String, dynamic>,
-    ).toEntity();
+    final json = model.toJson();
+    try {
+      final response = await _apiClient.post<Map<String, dynamic>>(
+        '/api/v1/boats/${trip.boatId}/trips',
+        data: json,
+      );
+      final envelope = response.data!;
+      return TripModel.fromJson(
+        envelope['data'] as Map<String, dynamic>,
+      ).toEntity();
+    } catch (e) {
+      if (_canEnqueue(e)) {
+        await mutationQueue!.enqueue(
+          method: 'POST',
+          path: '/api/v1/boats/${trip.boatId}/trips',
+          body: json,
+        );
+        return trip;
+      }
+      rethrow;
+    }
   }
 
   Future<Trip> updateTrip(Trip trip) async {
     final model = TripModel.fromEntity(trip);
-    final response = await _apiClient.put<Map<String, dynamic>>(
-      '/api/v1/trips/${trip.id}',
-      data: model.toJson(),
-    );
-    final envelope = response.data!;
-    return TripModel.fromJson(
-      envelope['data'] as Map<String, dynamic>,
-    ).toEntity();
+    final json = model.toJson();
+    try {
+      final response = await _apiClient.put<Map<String, dynamic>>(
+        '/api/v1/trips/${trip.id}',
+        data: json,
+      );
+      final envelope = response.data!;
+      return TripModel.fromJson(
+        envelope['data'] as Map<String, dynamic>,
+      ).toEntity();
+    } catch (e) {
+      if (_canEnqueue(e)) {
+        await mutationQueue!.enqueue(
+          method: 'PUT',
+          path: '/api/v1/trips/${trip.id}',
+          body: json,
+        );
+        return trip;
+      }
+      rethrow;
+    }
   }
 
   Future<Trip> completeTrip(
@@ -185,6 +216,22 @@ class TripRepository {
   }
 
   Future<void> deleteTrip(String id) async {
-    await _apiClient.delete<void>('/api/v1/trips/$id');
+    try {
+      await _apiClient.delete<void>('/api/v1/trips/$id');
+    } catch (e) {
+      if (_canEnqueue(e)) {
+        await mutationQueue!.enqueue(
+          method: 'DELETE',
+          path: '/api/v1/trips/$id',
+        );
+      } else {
+        rethrow;
+      }
+    }
   }
+
+  bool _canEnqueue(Object e) =>
+      mutationQueue != null &&
+      offlineRepo != null &&
+      offlineRepo!.isNetworkError(e);
 }

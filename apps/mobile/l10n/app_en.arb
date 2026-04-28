@@ -140,6 +140,18 @@
   "validNumber": "Please enter a valid number",
   "uploading": "Uploading...",
   "noInternetConnection": "No internet connection",
+  "offlineWithPending": "Offline \u2022 {count} pending",
+  "@offlineWithPending": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "syncingChanges": "Syncing {count} changes\u2026",
+  "@syncingChanges": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
   "searchEvents": "Search events...",
   "noEventsFound": "No events found",
   "featured": "Featured"

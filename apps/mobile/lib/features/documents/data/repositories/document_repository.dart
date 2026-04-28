@@ -1,3 +1,4 @@
+import 'package:navis_mobile/core/database/mutation_queue.dart';
 import 'package:navis_mobile/core/database/offline_repository.dart';
 import 'package:navis_mobile/core/network/api_client.dart';
 import 'package:navis_mobile/features/documents/data/models/document_model.dart';
@@ -9,10 +10,12 @@ class DocumentRepositoryImpl implements DocumentRepository {
   DocumentRepositoryImpl({
     ApiClient? apiClient,
     this.offlineRepo,
+    this.mutationQueue,
   }) : _apiClient = apiClient ?? ApiClient.instance;
 
   final ApiClient _apiClient;
   final OfflineRepository? offlineRepo;
+  final MutationQueueNotifier? mutationQueue;
 
   @override
   Future<PaginatedResponse<Document>> getDocuments(
@@ -99,53 +102,103 @@ class DocumentRepositoryImpl implements DocumentRepository {
   @override
   Future<Document> createDocument(Document document) async {
     final model = DocumentModel.fromEntity(document);
-    final response = await _apiClient.post<Map<String, dynamic>>(
-      '/api/v1/boats/${document.boatId}/documents',
-      data: model.toJson(),
-    );
-    final envelope = response.data!;
-    final data = envelope['data'] as Map<String, dynamic>;
-
-    if (offlineRepo != null) {
-      await offlineRepo!.cacheItem(
-        'documents',
-        data['id'] as String,
-        data,
-        boatId: document.boatId,
+    final json = model.toJson();
+    try {
+      final response = await _apiClient.post<Map<String, dynamic>>(
+        '/api/v1/boats/${document.boatId}/documents',
+        data: json,
       );
-    }
+      final envelope = response.data!;
+      final data = envelope['data'] as Map<String, dynamic>;
 
-    return DocumentModel.fromJson(data).toEntity();
+      if (offlineRepo != null) {
+        await offlineRepo!.cacheItem(
+          'documents',
+          data['id'] as String,
+          data,
+          boatId: document.boatId,
+        );
+      }
+
+      return DocumentModel.fromJson(data).toEntity();
+    } catch (e) {
+      if (_canEnqueue(e)) {
+        await mutationQueue!.enqueue(
+          method: 'POST',
+          path: '/api/v1/boats/${document.boatId}/documents',
+          body: json,
+        );
+        return document;
+      }
+      rethrow;
+    }
   }
 
   @override
   Future<Document> updateDocument(Document document) async {
     final model = DocumentModel.fromEntity(document);
-    final response = await _apiClient.put<Map<String, dynamic>>(
-      '/api/v1/documents/${document.id}',
-      data: model.toJson(),
-    );
-    final envelope = response.data!;
-    final data = envelope['data'] as Map<String, dynamic>;
-
-    if (offlineRepo != null) {
-      await offlineRepo!.cacheItem(
-        'documents',
-        document.id,
-        data,
-        boatId: document.boatId,
+    final json = model.toJson();
+    try {
+      final response = await _apiClient.put<Map<String, dynamic>>(
+        '/api/v1/documents/${document.id}',
+        data: json,
       );
-    }
+      final envelope = response.data!;
+      final data = envelope['data'] as Map<String, dynamic>;
 
-    return DocumentModel.fromJson(data).toEntity();
+      if (offlineRepo != null) {
+        await offlineRepo!.cacheItem(
+          'documents',
+          document.id,
+          data,
+          boatId: document.boatId,
+        );
+      }
+
+      return DocumentModel.fromJson(data).toEntity();
+    } catch (e) {
+      if (_canEnqueue(e)) {
+        await mutationQueue!.enqueue(
+          method: 'PUT',
+          path: '/api/v1/documents/${document.id}',
+          body: json,
+        );
+        if (offlineRepo != null) {
+          await offlineRepo!.cacheItem(
+            'documents',
+            document.id,
+            json,
+            boatId: document.boatId,
+          );
+        }
+        return document;
+      }
+      rethrow;
+    }
   }
 
   @override
   Future<void> deleteDocument(String id) async {
-    await _apiClient.delete<void>('/api/v1/documents/$id');
+    try {
+      await _apiClient.delete<void>('/api/v1/documents/$id');
+    } catch (e) {
+      if (_canEnqueue(e)) {
+        await mutationQueue!.enqueue(
+          method: 'DELETE',
+          path: '/api/v1/documents/$id',
+        );
+      } else {
+        rethrow;
+      }
+    }
 
     if (offlineRepo != null) {
       await offlineRepo!.removeItem('documents', id);
     }
   }
+
+  bool _canEnqueue(Object e) =>
+      mutationQueue != null &&
+      offlineRepo != null &&
+      offlineRepo!.isNetworkError(e);
 }

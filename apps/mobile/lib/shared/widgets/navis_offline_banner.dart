@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:navis_mobile/core/database/mutation_queue.dart';
 import 'package:navis_mobile/core/network/connectivity_provider.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -13,29 +14,33 @@ class NavisOfflineBanner extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isOnline = ref.watch(connectivityProvider);
+    final pendingCount = ref.watch(mutationQueueProvider);
     final l10n = AppLocalizations.of(context);
+    final showBanner = !isOnline || pendingCount > 0;
 
     return Column(
       children: [
         AnimatedContainer(
           duration: const Duration(milliseconds: 300),
-          height: isOnline ? 0 : 32,
-          color: AppColors.amber,
-          child: isOnline
-              ? const SizedBox.shrink()
-              : Center(
+          height: showBanner ? 32 : 0,
+          color: isOnline ? AppColors.cyan : AppColors.amber,
+          child: showBanner
+              ? Center(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(
-                        Icons.cloud_off,
+                      Icon(
+                        isOnline ? Icons.sync : Icons.cloud_off,
                         size: 16,
                         color: Colors.black87,
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        l10n?.noInternetConnection ??
-                            'No internet connection',
+                        _bannerText(
+                          isOnline: isOnline,
+                          pendingCount: pendingCount,
+                          l10n: l10n,
+                        ),
                         style: const TextStyle(
                           color: Colors.black87,
                           fontSize: 13,
@@ -44,10 +49,27 @@ class NavisOfflineBanner extends ConsumerWidget {
                       ),
                     ],
                   ),
-                ),
+                )
+              : const SizedBox.shrink(),
         ),
         Expanded(child: child),
       ],
     );
+  }
+
+  String _bannerText({
+    required bool isOnline,
+    required int pendingCount,
+    required AppLocalizations? l10n,
+  }) {
+    if (!isOnline && pendingCount > 0) {
+      return l10n?.offlineWithPending(pendingCount) ??
+          'Offline \u2022 $pendingCount pending';
+    }
+    if (!isOnline) {
+      return l10n?.noInternetConnection ?? 'No internet connection';
+    }
+    return l10n?.syncingChanges(pendingCount) ??
+        'Syncing $pendingCount changes\u2026';
   }
 }

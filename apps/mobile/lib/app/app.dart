@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:navis_mobile/app/router.dart';
+import 'package:navis_mobile/core/database/mutation_queue.dart';
 import 'package:navis_mobile/core/database/sync_auth_listener.dart';
 import 'package:navis_mobile/core/theme/app_theme.dart';
 import 'package:navis_mobile/features/notifications/presentation/providers/notification_auth_listener.dart';
@@ -16,6 +17,7 @@ class NavisApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(notificationAuthListenerProvider);
     ref.watch(syncAuthListenerProvider);
+    ref.watch(mutationQueueProvider);
     final router = ref.watch(routerProvider);
 
     return MaterialApp.router(

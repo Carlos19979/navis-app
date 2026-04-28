@@ -1,3 +1,4 @@
+import 'package:navis_mobile/core/database/mutation_queue.dart';
 import 'package:navis_mobile/core/database/offline_repository.dart';
 import 'package:navis_mobile/core/network/api_client.dart';
 import 'package:navis_mobile/features/boat/data/models/boat_model.dart';
@@ -9,10 +10,12 @@ class BoatRepositoryImpl implements BoatRepository {
   BoatRepositoryImpl({
     ApiClient? apiClient,
     this.offlineRepo,
+    this.mutationQueue,
   }) : _apiClient = apiClient ?? ApiClient.instance;
 
   final ApiClient _apiClient;
   final OfflineRepository? offlineRepo;
+  final MutationQueueNotifier? mutationQueue;
 
   @override
   Future<PaginatedResponse<Boat>> getBoats({
@@ -93,43 +96,88 @@ class BoatRepositoryImpl implements BoatRepository {
   @override
   Future<Boat> createBoat(Boat boat) async {
     final model = BoatModel.fromEntity(boat);
-    final response = await _apiClient.post<Map<String, dynamic>>(
-      '/api/v1/boats',
-      data: model.toJson(),
-    );
-    final envelope = response.data!;
-    final data = envelope['data'] as Map<String, dynamic>;
+    final json = model.toJson();
+    try {
+      final response = await _apiClient.post<Map<String, dynamic>>(
+        '/api/v1/boats',
+        data: json,
+      );
+      final envelope = response.data!;
+      final data = envelope['data'] as Map<String, dynamic>;
 
-    if (offlineRepo != null) {
-      await offlineRepo!.cacheItem('boats', data['id'] as String, data);
+      if (offlineRepo != null) {
+        await offlineRepo!.cacheItem('boats', data['id'] as String, data);
+      }
+
+      return BoatModel.fromJson(data).toEntity();
+    } catch (e) {
+      if (_canEnqueue(e)) {
+        await mutationQueue!.enqueue(
+          method: 'POST',
+          path: '/api/v1/boats',
+          body: json,
+        );
+        return boat;
+      }
+      rethrow;
     }
-
-    return BoatModel.fromJson(data).toEntity();
   }
 
   @override
   Future<Boat> updateBoat(Boat boat) async {
     final model = BoatModel.fromEntity(boat);
-    final response = await _apiClient.put<Map<String, dynamic>>(
-      '/api/v1/boats/${boat.id}',
-      data: model.toJson(),
-    );
-    final envelope = response.data!;
-    final data = envelope['data'] as Map<String, dynamic>;
+    final json = model.toJson();
+    try {
+      final response = await _apiClient.put<Map<String, dynamic>>(
+        '/api/v1/boats/${boat.id}',
+        data: json,
+      );
+      final envelope = response.data!;
+      final data = envelope['data'] as Map<String, dynamic>;
 
-    if (offlineRepo != null) {
-      await offlineRepo!.cacheItem('boats', boat.id, data);
+      if (offlineRepo != null) {
+        await offlineRepo!.cacheItem('boats', boat.id, data);
+      }
+
+      return BoatModel.fromJson(data).toEntity();
+    } catch (e) {
+      if (_canEnqueue(e)) {
+        await mutationQueue!.enqueue(
+          method: 'PUT',
+          path: '/api/v1/boats/${boat.id}',
+          body: json,
+        );
+        if (offlineRepo != null) {
+          await offlineRepo!.cacheItem('boats', boat.id, json);
+        }
+        return boat;
+      }
+      rethrow;
     }
-
-    return BoatModel.fromJson(data).toEntity();
   }
 
   @override
   Future<void> deleteBoat(String id) async {
-    await _apiClient.delete<void>('/api/v1/boats/$id');
+    try {
+      await _apiClient.delete<void>('/api/v1/boats/$id');
+    } catch (e) {
+      if (_canEnqueue(e)) {
+        await mutationQueue!.enqueue(
+          method: 'DELETE',
+          path: '/api/v1/boats/$id',
+        );
+      } else {
+        rethrow;
+      }
+    }
 
     if (offlineRepo != null) {
       await offlineRepo!.removeItem('boats', id);
     }
   }
+
+  bool _canEnqueue(Object e) =>
+      mutationQueue != null &&
+      offlineRepo != null &&
+      offlineRepo!.isNetworkError(e);
 }

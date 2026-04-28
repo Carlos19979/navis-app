@@ -392,7 +392,17 @@ class AppLocalizationsEs extends AppLocalizations {
   String get uploading => 'Subiendo...';
 
   @override
-  String get noInternetConnection => 'Sin conexion a internet';
+  String get noInternetConnection => 'Sin conexión a internet';
+
+  @override
+  String offlineWithPending(int count) {
+    return 'Sin conexión • $count pendientes';
+  }
+
+  @override
+  String syncingChanges(int count) {
+    return 'Sincronizando $count cambios…';
+  }
 
   @override
   String get searchEvents => 'Buscar eventos...';

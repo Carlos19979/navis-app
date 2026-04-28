@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:navis_mobile/core/database/mutation_queue.dart';
 import 'package:navis_mobile/core/database/offline_repository.dart';
 import 'package:navis_mobile/features/documents/data/repositories/document_repository.dart';
 import 'package:navis_mobile/features/documents/domain/entities/document.dart';
@@ -8,6 +9,7 @@ import 'package:navis_mobile/features/documents/domain/repositories/document_rep
 final documentRepositoryProvider = Provider<DocumentRepository>((ref) {
   return DocumentRepositoryImpl(
     offlineRepo: ref.watch(offlineRepositoryProvider),
+    mutationQueue: ref.watch(mutationQueueProvider.notifier),
   );
 });
 
