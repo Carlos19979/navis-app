@@ -347,19 +347,19 @@ Estado actual: Fases 0-11 implementadas. Fase 12 en progreso. Este roadmap cubre
 - [ ] Flutter: test sealed class branches con exhaustive switch
 
 #### 16.2 — CI/CD pipeline (GitHub Actions)
-- [ ] On push to develop: lint + test (Go y Flutter)
+- [x] On push to develop: lint + test (Go y Flutter)
 - [ ] On push to main: full deploy
-- [ ] Build checks: `golangci-lint run`, `flutter analyze`, `flutter test`
+- [x] Build checks: `golangci-lint run`, `flutter analyze`, `flutter test`
 - [ ] Docker image build y push al registry
 - [ ] Pre-commit hooks: lint + format before commit
-- [ ] golangci-lint config: errcheck, gosimple, govet, staticcheck, gosec, revive, gocritic, exhaustive
+- [x] golangci-lint config: errcheck, gosimple, govet, staticcheck, gosec, revive, gocritic, exhaustive
 
 #### 16.3 — Docker & Deploy
-- [ ] Multi-stage Docker: build stage → `gcr.io/distroless/static-debian12` final (~10MB)
+- [x] Multi-stage Docker: build stage → `gcr.io/distroless/static-debian12` final (~10MB)
 - [ ] Supabase Cloud project para staging
 - [ ] Go API desplegado en Railway (EU region)
-- [ ] Flutter apuntando a staging con `--dart-define=ENVIRONMENT=staging`
-- [ ] Environment config: development / staging / production con dart-define flags
+- [x] Flutter apuntando a staging con `--dart-define=ENVIRONMENT=staging`
+- [x] Environment config: development / staging / production con dart-define flags
 
 #### 16.4 — Analytics
 - [ ] Integrar PostHog o Mixpanel en Flutter
@@ -370,15 +370,15 @@ Estado actual: Fases 0-11 implementadas. Fase 12 en progreso. Este roadmap cubre
 #### 16.5 — Legal y compliance
 - [ ] Privacy policy (web page)
 - [ ] Terms of service (web page)
-- [ ] GDPR: endpoint para exportar datos del usuario (JSON)
-- [ ] GDPR: endpoint para eliminar cuenta y todos los datos
+- [x] GDPR: endpoint para exportar datos del usuario (JSON) — GET /api/v1/user/export
+- [x] GDPR: endpoint para eliminar cuenta y todos los datos — DELETE /api/v1/user
 - [ ] App Store / Google Play metadata y screenshots
 
 #### 16.6 — Database hardening
-- [ ] Verificar pgxpool config: MaxConns=10, MinConns=2, MaxConnLifetime=1h, MaxConnIdleTime=30m
-- [ ] Verificar que todas las queries usan context.Context como primer param
-- [ ] Verificar RLS: todas las tablas con `user_id = auth.uid()` policy
-- [ ] Verificar queries parameterizadas (no string concatenation)
+- [x] Verificar pgxpool config: MaxConns=10, MinConns=2, MaxConnLifetime=1h, MaxConnIdleTime=30m
+- [x] Verificar que todas las queries usan context.Context como primer param
+- [x] Verificar RLS: todas las tablas con `user_id = auth.uid()` policy
+- [x] Verificar queries parameterizadas (no string concatenation)
 - [ ] Migration rollback strategy: down migrations para cada up migration
 - [ ] TxManager pattern: services inician transactions, repos aceptan tx
 

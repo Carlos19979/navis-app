@@ -19,6 +19,7 @@ func New(
 	eventH *handler.EventHandler,
 	weatherH *handler.WeatherHandler,
 	deviceH *handler.DeviceHandler,
+	userH *handler.UserHandler,
 	jwtSecret string,
 	jwksURL string,
 	allowedOrigins []string,
@@ -121,6 +122,12 @@ func New(
 		r.Route("/devices", func(r chi.Router) {
 			r.Post("/", deviceH.Create)
 			r.Delete("/{token}", deviceH.Delete)
+		})
+
+		// User account (GDPR).
+		r.Route("/user", func(r chi.Router) {
+			r.Get("/export", userH.ExportData)
+			r.Delete("/", userH.DeleteAccount)
 		})
 	})
 

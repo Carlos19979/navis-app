@@ -12,6 +12,8 @@ linters:
     - unused
     - gosec
     - revive
+    - gocritic
+    - exhaustive
 
 linters-settings:
   revive:
