@@ -39,11 +39,12 @@ class BoatsNotifier extends AsyncNotifier<List<Boat>> {
     state = await AsyncValue.guard(build);
   }
 
-  Future<void> createBoat(Boat boat) async {
+  Future<Boat> createBoat(Boat boat) async {
     final repository = ref.read(boatRepositoryProvider);
     final created = await repository.createBoat(boat);
     final currentBoats = state.valueOrNull ?? [];
     state = AsyncData([created, ...currentBoats]);
+    return created;
   }
 
   Future<void> updateBoat(Boat boat) async {

@@ -10,32 +10,50 @@ class DocumentRepositoryImpl implements DocumentRepository {
 
   final ApiClient _apiClient;
 
+  static final Map<String, List<Document>> _cachedDocuments = {};
+
   @override
   Future<PaginatedResponse<Document>> getDocuments(
     String boatId, {
     String? cursor,
     int limit = 20,
   }) async {
-    final queryParams = <String, dynamic>{
-      'limit': limit,
-      if (cursor != null) 'cursor': cursor,
-    };
+    try {
+      final queryParams = <String, dynamic>{
+        'limit': limit,
+        if (cursor != null) 'cursor': cursor,
+      };
 
-    final response = await _apiClient.get<Map<String, dynamic>>(
-      '/api/v1/boats/$boatId/documents',
-      queryParameters: queryParams,
-    );
+      final response = await _apiClient.get<Map<String, dynamic>>(
+        '/api/v1/boats/$boatId/documents',
+        queryParameters: queryParams,
+      );
 
-    final data = response.data!;
-    final items = (data['items'] as List<dynamic>)
-        .map((json) =>
-            DocumentModel.fromJson(json as Map<String, dynamic>).toEntity())
-        .toList();
+      final envelope = response.data!;
+      final items = (envelope['data'] as List<dynamic>)
+          .map((json) =>
+              DocumentModel.fromJson(json as Map<String, dynamic>)
+                  .toEntity())
+          .toList();
+      final meta = envelope['meta'] as Map<String, dynamic>?;
 
-    return PaginatedResponse<Document>(
-      items: items,
-      nextCursor: data['next_cursor'] as String?,
-    );
+      if (cursor == null) {
+        _cachedDocuments[boatId] = items;
+      }
+
+      return PaginatedResponse<Document>(
+        items: items,
+        nextCursor: meta?['next_cursor'] as String?,
+      );
+    } catch (e) {
+      if (_cachedDocuments.containsKey(boatId) &&
+          cursor == null) {
+        return PaginatedResponse<Document>(
+          items: _cachedDocuments[boatId]!,
+        );
+      }
+      rethrow;
+    }
   }
 
   @override
@@ -43,7 +61,10 @@ class DocumentRepositoryImpl implements DocumentRepository {
     final response = await _apiClient.get<Map<String, dynamic>>(
       '/api/v1/documents/$id',
     );
-    return DocumentModel.fromJson(response.data!).toEntity();
+    final envelope = response.data!;
+    return DocumentModel.fromJson(
+      envelope['data'] as Map<String, dynamic>,
+    ).toEntity();
   }
 
   @override
@@ -53,7 +74,10 @@ class DocumentRepositoryImpl implements DocumentRepository {
       '/api/v1/boats/${document.boatId}/documents',
       data: model.toJson(),
     );
-    return DocumentModel.fromJson(response.data!).toEntity();
+    final envelope = response.data!;
+    return DocumentModel.fromJson(
+      envelope['data'] as Map<String, dynamic>,
+    ).toEntity();
   }
 
   @override
@@ -63,7 +87,10 @@ class DocumentRepositoryImpl implements DocumentRepository {
       '/api/v1/documents/${document.id}',
       data: model.toJson(),
     );
-    return DocumentModel.fromJson(response.data!).toEntity();
+    final envelope = response.data!;
+    return DocumentModel.fromJson(
+      envelope['data'] as Map<String, dynamic>,
+    ).toEntity();
   }
 
   @override

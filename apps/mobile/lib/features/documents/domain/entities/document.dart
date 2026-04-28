@@ -7,6 +7,10 @@ class Document {
     this.photoUrl,
     this.notes,
     this.alertDaysBefore,
+    this.lastRenewalDate,
+    this.lastRenewalCost,
+    this.lastRenewalProvider,
+    this.status,
     this.createdAt,
     this.updatedAt,
   });
@@ -18,6 +22,10 @@ class Document {
   final String? photoUrl;
   final String? notes;
   final int? alertDaysBefore;
+  final DateTime? lastRenewalDate;
+  final double? lastRenewalCost;
+  final String? lastRenewalProvider;
+  final String? status;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -29,6 +37,10 @@ class Document {
     String? photoUrl,
     String? notes,
     int? alertDaysBefore,
+    DateTime? lastRenewalDate,
+    double? lastRenewalCost,
+    String? lastRenewalProvider,
+    String? status,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -40,6 +52,10 @@ class Document {
       photoUrl: photoUrl ?? this.photoUrl,
       notes: notes ?? this.notes,
       alertDaysBefore: alertDaysBefore ?? this.alertDaysBefore,
+      lastRenewalDate: lastRenewalDate ?? this.lastRenewalDate,
+      lastRenewalCost: lastRenewalCost ?? this.lastRenewalCost,
+      lastRenewalProvider: lastRenewalProvider ?? this.lastRenewalProvider,
+      status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -53,8 +69,21 @@ class Document {
           id == other.id &&
           boatId == other.boatId &&
           type == other.type &&
-          expiryDate == other.expiryDate;
+          expiryDate == other.expiryDate &&
+          lastRenewalDate == other.lastRenewalDate &&
+          lastRenewalCost == other.lastRenewalCost &&
+          lastRenewalProvider == other.lastRenewalProvider &&
+          status == other.status;
 
   @override
-  int get hashCode => Object.hash(id, boatId, type, expiryDate);
+  int get hashCode => Object.hash(
+        id,
+        boatId,
+        type,
+        expiryDate,
+        lastRenewalDate,
+        lastRenewalCost,
+        lastRenewalProvider,
+        status,
+      );
 }

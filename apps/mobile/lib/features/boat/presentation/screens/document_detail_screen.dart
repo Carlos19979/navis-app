@@ -1,5 +1,8 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
@@ -19,7 +22,41 @@ class DocumentDetailScreen extends ConsumerWidget {
     final docAsync = ref.watch(documentProvider(documentId));
 
     return Scaffold(
-      appBar: const NavisAppBar(title: 'Document Details', showBack: true),
+      appBar: NavisAppBar(
+        title: 'Document Details',
+        showBack: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit_outlined),
+            tooltip: 'Edit document',
+            onPressed: () {
+              final doc = ref.read(documentProvider(documentId)).valueOrNull;
+              if (doc != null) {
+                context.push(
+                  '/documents/$documentId/edit?boatId=${doc.boatId}',
+                );
+              }
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.autorenew, color: AppColors.cyan),
+            tooltip: 'Renew document',
+            onPressed: () {
+              final doc = ref.read(documentProvider(documentId)).valueOrNull;
+              if (doc != null) {
+                context.push(
+                  '/documents/$documentId/edit?boatId=${doc.boatId}&renew=true',
+                );
+              }
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outlined, color: AppColors.red),
+            tooltip: 'Delete document',
+            onPressed: () => _confirmDelete(context, ref),
+          ),
+        ],
+      ),
       body: docAsync.when(
         loading: () => const NavisLoading(),
         error: (error, stack) => NavisErrorWidget(
@@ -76,6 +113,36 @@ class DocumentDetailScreen extends ConsumerWidget {
                           const SizedBox(height: 12),
                           _DetailRow(label: 'Notes', value: doc.notes!),
                         ],
+                        if (doc.lastRenewalDate != null) ...[
+                          const SizedBox(height: 12),
+                          const Divider(height: 24),
+                          Text(
+                            'Last Renewal',
+                            style: Theme.of(context).textTheme.titleSmall,
+                          ),
+                          const SizedBox(height: 8),
+                          _DetailRow(
+                            label: 'Date',
+                            value: NavisDateUtils.formatDate(
+                              doc.lastRenewalDate!,
+                            ),
+                          ),
+                          if (doc.lastRenewalCost != null) ...[
+                            const SizedBox(height: 8),
+                            _DetailRow(
+                              label: 'Cost',
+                              value:
+                                  '\u20AC${doc.lastRenewalCost!.toStringAsFixed(2)}',
+                            ),
+                          ],
+                          if (doc.lastRenewalProvider != null) ...[
+                            const SizedBox(height: 8),
+                            _DetailRow(
+                              label: 'Provider',
+                              value: doc.lastRenewalProvider!,
+                            ),
+                          ],
+                        ],
                       ],
                     ),
                   ),
@@ -84,15 +151,29 @@ class DocumentDetailScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                   Card(
                     clipBehavior: Clip.antiAlias,
-                    child: AspectRatio(
-                      aspectRatio: 4 / 3,
-                      child: Container(
-                        color: AppColors.darkCard,
-                        child: const Center(
-                          child: Icon(
-                            Icons.image_outlined,
-                            size: 48,
-                            color: AppColors.textSecondary,
+                    child: Semantics(
+                      label: 'Document scan',
+                      child: CachedNetworkImage(
+                        imageUrl: doc.photoUrl!,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => const AspectRatio(
+                          aspectRatio: 4 / 3,
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              color: AppColors.cyan,
+                              strokeWidth: 2,
+                            ),
+                          ),
+                        ),
+                        errorWidget: (context, url, error) =>
+                            const AspectRatio(
+                          aspectRatio: 4 / 3,
+                          child: Center(
+                            child: Icon(
+                              Icons.broken_image_outlined,
+                              size: 48,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                         ),
                       ),
@@ -103,6 +184,49 @@ class DocumentDetailScreen extends ConsumerWidget {
             ),
           );
         },
+      ),
+    );
+  }
+
+  void _confirmDelete(BuildContext context, WidgetRef ref) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Document'),
+        content: const Text(
+          'Are you sure you want to delete this document?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              try {
+                final repo = ref.read(documentRepositoryProvider);
+                await repo.deleteDocument(documentId);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Document deleted')),
+                  );
+                  context.pop();
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to delete: $e')),
+                  );
+                }
+              }
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.red,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
       ),
     );
   }

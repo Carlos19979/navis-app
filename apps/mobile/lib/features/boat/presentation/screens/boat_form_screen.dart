@@ -1,11 +1,20 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import 'package:latlong2/latlong.dart';
+
+import 'package:navis_mobile/core/network/storage_service.dart';
+import 'package:navis_mobile/core/network/supabase_client.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
+import 'package:navis_mobile/features/boat/presentation/screens/map_picker_screen.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
@@ -20,7 +29,11 @@ class BoatFormScreen extends ConsumerStatefulWidget {
   ConsumerState<BoatFormScreen> createState() => _BoatFormScreenState();
 }
 
-class _BoatFormScreenState extends ConsumerState<BoatFormScreen> {
+class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _registrationController = TextEditingController();
@@ -30,6 +43,9 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen> {
   bool _isLoading = false;
   bool _isEdit = false;
   String? _photoPath;
+  String? _existingPhotoUrl;
+  double? _homePortLat;
+  double? _homePortLon;
 
   static const _boatTypes = ['sailboat', 'motorboat', 'catamaran', 'other'];
 
@@ -50,6 +66,9 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen> {
     _homePortController.text = boat.homePort ?? '';
     setState(() {
       _selectedType = boat.type;
+      _existingPhotoUrl = boat.photoUrl;
+      _homePortLat = boat.homePortLat;
+      _homePortLon = boat.homePortLon;
     });
   }
 
@@ -78,6 +97,15 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen> {
     setState(() => _isLoading = true);
 
     try {
+      final userId = supabaseClient.auth.currentUser!.id;
+      final storage = ref.read(storageServiceProvider);
+      String? photoUrl;
+
+      if (_isEdit) {
+        final existing = await ref.read(boatProvider(widget.boatId).future);
+        photoUrl = existing.photoUrl;
+      }
+
       final boat = Boat(
         id: _isEdit ? widget.boatId : '',
         name: _nameController.text.trim(),
@@ -87,13 +115,34 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen> {
         homePort: _homePortController.text.trim().isEmpty
             ? null
             : _homePortController.text.trim(),
-        photoUrl: _photoPath,
+        homePortLat: _homePortLat,
+        homePortLon: _homePortLon,
+        photoUrl: photoUrl,
       );
 
       if (_isEdit) {
-        await ref.read(boatsProvider.notifier).updateBoat(boat);
+        if (_photoPath != null) {
+          photoUrl = await storage.uploadBoatPhoto(
+            userId: userId,
+            boatId: widget.boatId,
+            file: File(_photoPath!),
+          );
+        }
+        await ref.read(boatsProvider.notifier).updateBoat(
+              boat.copyWith(photoUrl: photoUrl),
+            );
       } else {
-        await ref.read(boatsProvider.notifier).createBoat(boat);
+        final created = await ref.read(boatsProvider.notifier).createBoat(boat);
+        if (_photoPath != null) {
+          final url = await storage.uploadBoatPhoto(
+            userId: userId,
+            boatId: created.id,
+            file: File(_photoPath!),
+          );
+          await ref
+              .read(boatsProvider.notifier)
+              .updateBoat(created.copyWith(photoUrl: url));
+        }
       }
 
       if (mounted) {
@@ -101,7 +150,11 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen> {
           context,
           _isEdit ? 'Boat updated successfully' : 'Boat created successfully',
         );
-        context.go('/boats');
+        if (_isEdit) {
+          context.pop();
+        } else {
+          context.go('/boats');
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -116,6 +169,7 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     if (_isEdit) {
       final boatAsync = ref.watch(boatProvider(widget.boatId));
       if (boatAsync.isLoading) {
@@ -139,26 +193,66 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen> {
                 onTap: _pickPhoto,
                 child: Container(
                   height: 180,
+                  clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(
                     color: AppColors.darkCard,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: AppColors.darkDivider),
                   ),
-                  child: const Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.add_photo_alternate_outlined,
-                        size: 48,
-                        color: AppColors.textSecondary,
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Add Photo',
-                        style: TextStyle(color: AppColors.textSecondary),
-                      ),
-                    ],
-                  ),
+                  child: _photoPath != null || _existingPhotoUrl != null
+                      ? Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            if (_photoPath != null)
+                              Image.file(
+                                File(_photoPath!),
+                                fit: BoxFit.cover,
+                                semanticLabel: 'Boat photo',
+                              )
+                            else
+                              Image.network(
+                                _existingPhotoUrl!,
+                                fit: BoxFit.cover,
+                                semanticLabel: 'Boat photo',
+                                errorBuilder: (_, __, ___) => const Center(
+                                  child: Icon(
+                                    Icons.broken_image_outlined,
+                                    size: 48,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ),
+                            Positioned(
+                              bottom: 8,
+                              right: 8,
+                              child: CircleAvatar(
+                                radius: 18,
+                                backgroundColor:
+                                    Colors.black.withValues(alpha: 0.6),
+                                child: const Icon(
+                                  Icons.edit,
+                                  size: 18,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.add_photo_alternate_outlined,
+                              size: 48,
+                              color: AppColors.textSecondary,
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'Add Photo',
+                              style: TextStyle(color: AppColors.textSecondary),
+                            ),
+                          ],
+                        ),
                 ),
               ),
               const SizedBox(height: 24),
@@ -238,6 +332,39 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen> {
                   prefixIcon: Icon(Icons.anchor),
                 ),
               ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () async {
+                  final result =
+                      await Navigator.of(context).push<LatLng>(
+                    MaterialPageRoute(
+                      builder: (_) => MapPickerScreen(
+                        initialLatitude: _homePortLat,
+                        initialLongitude: _homePortLon,
+                      ),
+                    ),
+                  );
+                  if (result != null) {
+                    setState(() {
+                      _homePortLat = result.latitude;
+                      _homePortLon = result.longitude;
+                    });
+                  }
+                },
+                icon: Icon(
+                  _homePortLat != null
+                      ? Icons.check_circle
+                      : Icons.map_outlined,
+                  color: _homePortLat != null
+                      ? AppColors.green
+                      : null,
+                ),
+                label: Text(
+                  _homePortLat != null
+                      ? 'Location set (${_homePortLat!.toStringAsFixed(3)}, ${_homePortLon!.toStringAsFixed(3)})'
+                      : 'Pick location on map',
+                ),
+              ),
               const SizedBox(height: 32),
               NavisButton(
                 label: _isEdit ? 'Update Boat' : 'Create Boat',
@@ -248,6 +375,7 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen> {
                 const SizedBox(height: 12),
                 OutlinedButton(
                   onPressed: () async {
+                    unawaited(HapticFeedback.mediumImpact());
                     final confirmed = await showDialog<bool>(
                       context: context,
                       builder: (context) => AlertDialog(

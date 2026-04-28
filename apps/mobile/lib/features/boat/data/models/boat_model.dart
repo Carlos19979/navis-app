@@ -8,6 +8,8 @@ class BoatModel {
     required this.type,
     required this.lengthMeters,
     this.homePort,
+    this.homePortLat,
+    this.homePortLon,
     this.photoUrl,
     this.ownerId,
     this.createdAt,
@@ -20,8 +22,10 @@ class BoatModel {
       name: json['name'] as String,
       registration: json['registration'] as String,
       type: json['type'] as String,
-      lengthMeters: (json['length_meters'] as num).toDouble(),
+      lengthMeters: (json['length_m'] as num).toDouble(),
       homePort: json['home_port'] as String?,
+      homePortLat: (json['home_port_lat'] as num?)?.toDouble(),
+      homePortLon: (json['home_port_lon'] as num?)?.toDouble(),
       photoUrl: json['photo_url'] as String?,
       ownerId: json['owner_id'] as String?,
       createdAt: json['created_at'] != null
@@ -41,6 +45,8 @@ class BoatModel {
       type: boat.type,
       lengthMeters: boat.lengthMeters,
       homePort: boat.homePort,
+      homePortLat: boat.homePortLat,
+      homePortLon: boat.homePortLon,
       photoUrl: boat.photoUrl,
       ownerId: boat.ownerId,
       createdAt: boat.createdAt,
@@ -54,6 +60,8 @@ class BoatModel {
   final String type;
   final double lengthMeters;
   final String? homePort;
+  final double? homePortLat;
+  final double? homePortLon;
   final String? photoUrl;
   final String? ownerId;
   final DateTime? createdAt;
@@ -65,8 +73,10 @@ class BoatModel {
       'name': name,
       'registration': registration,
       'type': type,
-      'length_meters': lengthMeters,
+      'length_m': lengthMeters,
       'home_port': homePort,
+      if (homePortLat != null) 'home_port_lat': homePortLat,
+      if (homePortLon != null) 'home_port_lon': homePortLon,
       'photo_url': photoUrl,
       'owner_id': ownerId,
       if (createdAt != null) 'created_at': createdAt!.toIso8601String(),
@@ -82,6 +92,8 @@ class BoatModel {
       type: type,
       lengthMeters: lengthMeters,
       homePort: homePort,
+      homePortLat: homePortLat,
+      homePortLon: homePortLon,
       photoUrl: photoUrl,
       ownerId: ownerId,
       createdAt: createdAt,

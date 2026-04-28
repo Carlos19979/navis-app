@@ -19,19 +19,22 @@ class BoatHeader extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             if (boat.photoUrl != null && boat.photoUrl!.isNotEmpty)
-              CachedNetworkImage(
-                imageUrl: boat.photoUrl!,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Container(
-                  color: AppColors.darkCard,
-                  child: const Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.cyan,
-                      strokeWidth: 2,
+              Semantics(
+                label: 'Boat photo',
+                child: CachedNetworkImage(
+                  imageUrl: boat.photoUrl!,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    color: AppColors.darkCard,
+                    child: const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.cyan,
+                        strokeWidth: 2,
+                      ),
                     ),
                   ),
+                  errorWidget: (context, url, error) => _PlaceholderImage(),
                 ),
-                errorWidget: (context, url, error) => _PlaceholderImage(),
               )
             else
               _PlaceholderImage(),

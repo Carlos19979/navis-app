@@ -10,31 +10,48 @@ class BoatRepositoryImpl implements BoatRepository {
 
   final ApiClient _apiClient;
 
+  static List<Boat>? _cachedBoats;
+
   @override
   Future<PaginatedResponse<Boat>> getBoats({
     String? cursor,
     int limit = 20,
   }) async {
-    final queryParams = <String, dynamic>{
-      'limit': limit,
-      if (cursor != null) 'cursor': cursor,
-    };
+    try {
+      final queryParams = <String, dynamic>{
+        'limit': limit,
+        if (cursor != null) 'cursor': cursor,
+      };
 
-    final response = await _apiClient.get<Map<String, dynamic>>(
-      '/api/v1/boats',
-      queryParameters: queryParams,
-    );
+      final response = await _apiClient.get<Map<String, dynamic>>(
+        '/api/v1/boats',
+        queryParameters: queryParams,
+      );
 
-    final data = response.data!;
-    final items = (data['items'] as List<dynamic>)
-        .map((json) =>
-            BoatModel.fromJson(json as Map<String, dynamic>).toEntity())
-        .toList();
+      final envelope = response.data!;
+      final items = (envelope['data'] as List<dynamic>)
+          .map((json) =>
+              BoatModel.fromJson(json as Map<String, dynamic>)
+                  .toEntity())
+          .toList();
+      final meta = envelope['meta'] as Map<String, dynamic>?;
 
-    return PaginatedResponse<Boat>(
-      items: items,
-      nextCursor: data['next_cursor'] as String?,
-    );
+      if (cursor == null) {
+        _cachedBoats = items;
+      }
+
+      return PaginatedResponse<Boat>(
+        items: items,
+        nextCursor: meta?['next_cursor'] as String?,
+      );
+    } catch (e) {
+      if (_cachedBoats != null && cursor == null) {
+        return PaginatedResponse<Boat>(
+          items: _cachedBoats!,
+        );
+      }
+      rethrow;
+    }
   }
 
   @override
@@ -42,7 +59,10 @@ class BoatRepositoryImpl implements BoatRepository {
     final response = await _apiClient.get<Map<String, dynamic>>(
       '/api/v1/boats/$id',
     );
-    return BoatModel.fromJson(response.data!).toEntity();
+    final envelope = response.data!;
+    return BoatModel.fromJson(
+      envelope['data'] as Map<String, dynamic>,
+    ).toEntity();
   }
 
   @override
@@ -52,7 +72,10 @@ class BoatRepositoryImpl implements BoatRepository {
       '/api/v1/boats',
       data: model.toJson(),
     );
-    return BoatModel.fromJson(response.data!).toEntity();
+    final envelope = response.data!;
+    return BoatModel.fromJson(
+      envelope['data'] as Map<String, dynamic>,
+    ).toEntity();
   }
 
   @override
@@ -62,7 +85,10 @@ class BoatRepositoryImpl implements BoatRepository {
       '/api/v1/boats/${boat.id}',
       data: model.toJson(),
     );
-    return BoatModel.fromJson(response.data!).toEntity();
+    final envelope = response.data!;
+    return BoatModel.fromJson(
+      envelope['data'] as Map<String, dynamic>,
+    ).toEntity();
   }
 
   @override

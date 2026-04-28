@@ -9,6 +9,10 @@ class DocumentModel {
     this.photoUrl,
     this.notes,
     this.alertDaysBefore,
+    this.lastRenewalDate,
+    this.lastRenewalCost,
+    this.lastRenewalProvider,
+    this.status,
     this.createdAt,
     this.updatedAt,
   });
@@ -21,7 +25,19 @@ class DocumentModel {
       expiryDate: DateTime.parse(json['expiry_date'] as String),
       photoUrl: json['photo_url'] as String?,
       notes: json['notes'] as String?,
-      alertDaysBefore: json['alert_days_before'] as int?,
+      alertDaysBefore: json['alert_days'] != null
+          ? (json['alert_days'] as List<dynamic>).isNotEmpty
+              ? (json['alert_days'] as List<dynamic>).first as int
+              : null
+          : json['alert_days_before'] as int?,
+      lastRenewalDate: json['last_renewal_date'] != null
+          ? DateTime.parse(json['last_renewal_date'] as String)
+          : null,
+      lastRenewalCost: json['last_renewal_cost'] != null
+          ? (json['last_renewal_cost'] as num).toDouble()
+          : null,
+      lastRenewalProvider: json['last_renewal_provider'] as String?,
+      status: json['status'] as String?,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
@@ -40,6 +56,10 @@ class DocumentModel {
       photoUrl: document.photoUrl,
       notes: document.notes,
       alertDaysBefore: document.alertDaysBefore,
+      lastRenewalDate: document.lastRenewalDate,
+      lastRenewalCost: document.lastRenewalCost,
+      lastRenewalProvider: document.lastRenewalProvider,
+      status: document.status,
       createdAt: document.createdAt,
       updatedAt: document.updatedAt,
     );
@@ -52,6 +72,10 @@ class DocumentModel {
   final String? photoUrl;
   final String? notes;
   final int? alertDaysBefore;
+  final DateTime? lastRenewalDate;
+  final double? lastRenewalCost;
+  final String? lastRenewalProvider;
+  final String? status;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -63,7 +87,12 @@ class DocumentModel {
       'expiry_date': expiryDate.toIso8601String(),
       if (photoUrl != null) 'photo_url': photoUrl,
       if (notes != null) 'notes': notes,
-      if (alertDaysBefore != null) 'alert_days_before': alertDaysBefore,
+      if (alertDaysBefore != null) 'alert_days': [alertDaysBefore],
+      if (lastRenewalDate != null)
+        'last_renewal_date': lastRenewalDate!.toIso8601String(),
+      if (lastRenewalCost != null) 'last_renewal_cost': lastRenewalCost,
+      if (lastRenewalProvider != null)
+        'last_renewal_provider': lastRenewalProvider,
       if (createdAt != null) 'created_at': createdAt!.toIso8601String(),
       if (updatedAt != null) 'updated_at': updatedAt!.toIso8601String(),
     };
@@ -78,6 +107,10 @@ class DocumentModel {
       photoUrl: photoUrl,
       notes: notes,
       alertDaysBefore: alertDaysBefore,
+      lastRenewalDate: lastRenewalDate,
+      lastRenewalCost: lastRenewalCost,
+      lastRenewalProvider: lastRenewalProvider,
+      status: status,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );

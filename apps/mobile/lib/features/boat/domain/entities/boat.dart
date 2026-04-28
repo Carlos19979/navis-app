@@ -6,6 +6,8 @@ class Boat {
     required this.type,
     required this.lengthMeters,
     this.homePort,
+    this.homePortLat,
+    this.homePortLon,
     this.photoUrl,
     this.ownerId,
     this.createdAt,
@@ -18,6 +20,8 @@ class Boat {
   final String type;
   final double lengthMeters;
   final String? homePort;
+  final double? homePortLat;
+  final double? homePortLon;
   final String? photoUrl;
   final String? ownerId;
   final DateTime? createdAt;
@@ -30,6 +34,8 @@ class Boat {
     String? type,
     double? lengthMeters,
     String? homePort,
+    double? homePortLat,
+    double? homePortLon,
     String? photoUrl,
     String? ownerId,
     DateTime? createdAt,
@@ -42,6 +48,8 @@ class Boat {
       type: type ?? this.type,
       lengthMeters: lengthMeters ?? this.lengthMeters,
       homePort: homePort ?? this.homePort,
+      homePortLat: homePortLat ?? this.homePortLat,
+      homePortLon: homePortLon ?? this.homePortLon,
       photoUrl: photoUrl ?? this.photoUrl,
       ownerId: ownerId ?? this.ownerId,
       createdAt: createdAt ?? this.createdAt,
@@ -60,6 +68,8 @@ class Boat {
           type == other.type &&
           lengthMeters == other.lengthMeters &&
           homePort == other.homePort &&
+          homePortLat == other.homePortLat &&
+          homePortLon == other.homePortLon &&
           photoUrl == other.photoUrl;
 
   @override
@@ -70,6 +80,8 @@ class Boat {
         type,
         lengthMeters,
         homePort,
+        homePortLat,
+        homePortLon,
         photoUrl,
       );
 
