@@ -49,6 +49,8 @@ func (h *DeviceHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	validator.TrimStrings(&req)
+
 	if errs := validator.Validate(req); errs != nil {
 		ValidationError(w, errs)
 		return

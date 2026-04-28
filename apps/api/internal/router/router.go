@@ -3,6 +3,7 @@ package router
 import (
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 
@@ -19,17 +20,33 @@ func New(
 	weatherH *handler.WeatherHandler,
 	deviceH *handler.DeviceHandler,
 	jwtSecret string,
+	jwksURL string,
 	allowedOrigins []string,
 	logger *slog.Logger,
 ) chi.Router {
 	r := chi.NewRouter()
 
 	// Global middleware chain.
+	r.Use(middleware.RequestID)
 	r.Use(middleware.Recovery(logger))
+	r.Use(middleware.SecurityHeaders)
 	r.Use(middleware.CORS(allowedOrigins))
+	r.Use(middleware.RateLimit(100, time.Minute))
 	r.Use(middleware.Logging(logger))
 
-	// Health check (no auth required).
+	// Health check endpoints (no auth required).
+	r.Get("/healthz", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"status":"ok"}`))
+	})
+	r.Get("/readyz", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"status":"ok"}`))
+	})
+
+	// Keep /health as alias for backwards compatibility.
 	r.Get("/health", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -38,7 +55,7 @@ func New(
 
 	// API v1 routes (all require authentication).
 	r.Route("/api/v1", func(r chi.Router) {
-		r.Use(middleware.Auth(jwtSecret))
+		r.Use(middleware.Auth(jwtSecret, jwksURL))
 
 		// Boats CRUD.
 		r.Route("/boats", func(r chi.Router) {

@@ -2,57 +2,77 @@ package middleware
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 	"strings"
 
+	"github.com/MicahParks/keyfunc/v3"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// contextKey is an unexported type for context keys to prevent collisions.
 type contextKey string
 
 const userIDKey contextKey = "userID"
 
-// Auth returns a middleware that validates JWT tokens from the Authorization header.
-// It extracts the "sub" claim and injects the user ID into the request context.
-func Auth(jwtSecret string) func(http.Handler) http.Handler {
+// Auth returns a middleware that validates JWT tokens using JWKS (ES256) with
+// HS256 fallback. It extracts the "sub" claim and injects the user ID into
+// the request context.
+func Auth(jwtSecret string, jwksURL string) func(http.Handler) http.Handler {
+	var k keyfunc.Keyfunc
+	if jwksURL != "" {
+		var err error
+		k, err = keyfunc.NewDefault([]string{jwksURL})
+		if err != nil {
+			slog.Warn("failed to initialize JWKS, falling back to HS256 only",
+				slog.String("error", err.Error()))
+		}
+	}
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")
 			if authHeader == "" {
-				http.Error(w, `{"error":{"message":"missing authorization header","code":"UNAUTHORIZED"}}`, http.StatusUnauthorized)
+				writeAuthError(w, "missing authorization header")
 				return
 			}
 
 			parts := strings.SplitN(authHeader, " ", 2)
 			if len(parts) != 2 || !strings.EqualFold(parts[0], "bearer") {
-				http.Error(w, `{"error":{"message":"invalid authorization header format","code":"UNAUTHORIZED"}}`, http.StatusUnauthorized)
+				writeAuthError(w, "invalid authorization header format")
 				return
 			}
 
 			tokenString := parts[1]
 
-			token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
-				// Ensure the signing method is HMAC.
-				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			keyFunc := func(token *jwt.Token) (any, error) {
+				switch token.Method.(type) {
+				case *jwt.SigningMethodHMAC:
+					return []byte(jwtSecret), nil
+				case *jwt.SigningMethodECDSA:
+					if k != nil {
+						return k.KeyfuncCtx(r.Context())(token)
+					}
+					return nil, jwt.ErrSignatureInvalid
+				default:
 					return nil, jwt.ErrSignatureInvalid
 				}
-				return []byte(jwtSecret), nil
-			})
+			}
+
+			token, err := jwt.Parse(tokenString, keyFunc)
 			if err != nil || !token.Valid {
-				http.Error(w, `{"error":{"message":"invalid or expired token","code":"UNAUTHORIZED"}}`, http.StatusUnauthorized)
+				writeAuthError(w, "invalid or expired token")
 				return
 			}
 
 			claims, ok := token.Claims.(jwt.MapClaims)
 			if !ok {
-				http.Error(w, `{"error":{"message":"invalid token claims","code":"UNAUTHORIZED"}}`, http.StatusUnauthorized)
+				writeAuthError(w, "invalid token claims")
 				return
 			}
 
 			sub, ok := claims["sub"].(string)
 			if !ok || sub == "" {
-				http.Error(w, `{"error":{"message":"missing sub claim in token","code":"UNAUTHORIZED"}}`, http.StatusUnauthorized)
+				writeAuthError(w, "missing sub claim in token")
 				return
 			}
 
@@ -62,8 +82,13 @@ func Auth(jwtSecret string) func(http.Handler) http.Handler {
 	}
 }
 
+func writeAuthError(w http.ResponseWriter, message string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusUnauthorized)
+	_, _ = w.Write([]byte(`{"error":{"message":"` + message + `","code":"UNAUTHORIZED"}}`))
+}
+
 // UserIDFromContext extracts the user ID from the request context.
-// Returns the user ID and true if present, or an empty string and false if not.
 func UserIDFromContext(ctx context.Context) (string, bool) {
 	userID, ok := ctx.Value(userIDKey).(string)
 	return userID, ok

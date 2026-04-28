@@ -104,9 +104,12 @@ func main() {
 	deviceH := handler.NewDeviceHandler(deviceTokenRepo, notifier)
 
 	// Create router.
+	jwksURL := cfg.SupabaseURL + "/auth/v1/.well-known/jwks.json"
+
 	r := router.New(
 		boatH, docH, tripH, eventH, weatherH, deviceH,
 		cfg.SupabaseJWTSecret,
+		jwksURL,
 		cfg.CORSAllowedOrigins,
 		logger,
 	)

@@ -43,14 +43,11 @@ func Logging(logger *slog.Logger) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
 
-			// Generate or use existing request ID.
-			requestID := r.Header.Get(requestIDHeaderKey)
+			requestID := RequestIDFromContext(r.Context())
 			if requestID == "" {
 				requestID = uuid.New().String()
+				w.Header().Set(requestIDHeaderKey, requestID)
 			}
-
-			// Set the request ID in the response header.
-			w.Header().Set(requestIDHeaderKey, requestID)
 
 			// Wrap response writer to capture status code.
 			wrapped := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
@@ -58,13 +55,22 @@ func Logging(logger *slog.Logger) func(http.Handler) http.Handler {
 			next.ServeHTTP(wrapped, r)
 
 			duration := time.Since(start)
+			userID, _ := UserIDFromContext(r.Context())
 
-			logger.Info("request completed",
+			level := slog.LevelInfo
+			if wrapped.statusCode >= 500 {
+				level = slog.LevelError
+			} else if wrapped.statusCode >= 400 {
+				level = slog.LevelWarn
+			}
+
+			logger.Log(r.Context(), level, "request completed",
 				slog.String("method", r.Method),
 				slog.String("path", r.URL.Path),
 				slog.Int("status", wrapped.statusCode),
 				slog.Duration("duration", duration),
 				slog.String("request_id", requestID),
+				slog.String("user_id", userID),
 				slog.String("remote_addr", r.RemoteAddr),
 			)
 		})
