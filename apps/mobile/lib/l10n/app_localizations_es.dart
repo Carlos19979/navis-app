@@ -219,6 +219,45 @@ class AppLocalizationsEs extends AppLocalizations {
   String get totalTrips => 'Viajes Totales';
 
   @override
+  String get tripStatistics => 'Estadísticas de Viajes';
+
+  @override
+  String get totalDistanceNm => 'MN navegadas';
+
+  @override
+  String get totalHoursAtSea => 'Horas en el mar';
+
+  @override
+  String get portsVisited => 'Puertos visitados';
+
+  @override
+  String get topSpeed => 'Velocidad máxima';
+
+  @override
+  String get fuelConsumed => 'Combustible consumido';
+
+  @override
+  String get engineHoursTotal => 'Horas de motor';
+
+  @override
+  String get yearInReview => 'Resumen del Año';
+
+  @override
+  String get monthlyActivity => 'Actividad Mensual';
+
+  @override
+  String get tripsLabel => 'Viajes';
+
+  @override
+  String get distanceNmLabel => 'MN';
+
+  @override
+  String get hoursLabel => 'Horas';
+
+  @override
+  String get allTime => 'Total Histórico';
+
+  @override
   String get totalDistance => 'Distancia Total';
 
   @override

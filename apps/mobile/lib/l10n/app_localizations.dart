@@ -506,6 +506,84 @@ abstract class AppLocalizations {
   /// **'Total Trips'**
   String get totalTrips;
 
+  /// No description provided for @tripStatistics.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip Statistics'**
+  String get tripStatistics;
+
+  /// No description provided for @totalDistanceNm.
+  ///
+  /// In en, this message translates to:
+  /// **'NM sailed'**
+  String get totalDistanceNm;
+
+  /// No description provided for @totalHoursAtSea.
+  ///
+  /// In en, this message translates to:
+  /// **'Hours at sea'**
+  String get totalHoursAtSea;
+
+  /// No description provided for @portsVisited.
+  ///
+  /// In en, this message translates to:
+  /// **'Ports visited'**
+  String get portsVisited;
+
+  /// No description provided for @topSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Top speed'**
+  String get topSpeed;
+
+  /// No description provided for @fuelConsumed.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel consumed'**
+  String get fuelConsumed;
+
+  /// No description provided for @engineHoursTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Engine hours'**
+  String get engineHoursTotal;
+
+  /// No description provided for @yearInReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Year in Review'**
+  String get yearInReview;
+
+  /// No description provided for @monthlyActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly Activity'**
+  String get monthlyActivity;
+
+  /// No description provided for @tripsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Trips'**
+  String get tripsLabel;
+
+  /// No description provided for @distanceNmLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'NM'**
+  String get distanceNmLabel;
+
+  /// No description provided for @hoursLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Hours'**
+  String get hoursLabel;
+
+  /// No description provided for @allTime.
+  ///
+  /// In en, this message translates to:
+  /// **'All Time'**
+  String get allTime;
+
   /// No description provided for @totalDistance.
   ///
   /// In en, this message translates to:

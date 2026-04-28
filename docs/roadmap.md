@@ -293,11 +293,11 @@ Estado actual: Fases 0-11 implementadas. Fase 12 en progreso. Este roadmap cubre
 - [ ] Cache invalidation: limpiar cache de imágenes en settings
 
 ### Criterios de completado Fase 14
-- [ ] Se puede ver boats, documents y trips sin conexión
-- [ ] Se puede crear/editar sin conexión y se sincroniza al reconectar
-- [ ] Las fotos se muestran offline tras primera carga
-- [ ] Cartas náuticas offline para zona descargada
-- [ ] Conflictos se resuelven sin pérdida de datos
+- [x] Se puede ver boats, documents y trips sin conexión
+- [x] Se puede crear/editar sin conexión y se sincroniza al reconectar
+- [x] Las fotos se muestran offline tras primera carga
+- [ ] Cartas náuticas offline para zona descargada (requires MBTiles chart data source)
+- [x] Conflictos se resuelven sin pérdida de datos
 
 ---
 
@@ -309,23 +309,23 @@ Estado actual: Fases 0-11 implementadas. Fase 12 en progreso. Este roadmap cubre
 ### Tareas
 
 #### 15.1 — Trip sharing
-- [ ] Generar link público con mapa del viaje
-- [ ] Página web pública con el track renderizado
-- [ ] Botón compartir en detalle de viaje (WhatsApp, email, etc.)
+- [ ] Generar link público con mapa del viaje (requires public web page)
+- [ ] Página web pública con el track renderizado (requires web frontend)
+- [x] Botón compartir en detalle de viaje (WhatsApp, email, etc.) — share_plus
 
 #### 15.2 — Trip statistics
-- [ ] Dashboard: distancia total navegada, horas en el mar, puertos visitados
-- [ ] Estadísticas por barco y totales
-- [ ] Resumen anual de navegación (year in review)
+- [x] Dashboard: distancia total navegada, horas en el mar, puertos visitados
+- [x] Estadísticas por barco (per-boat stats screen)
+- [x] Resumen anual de navegación (year in review with monthly chart)
 
 #### 15.3 — Boat profile
-- [ ] Página pública del barco (shareable link)
-- [ ] Foto, datos, estadísticas de navegación
+- [ ] Página pública del barco (shareable link) — requires web frontend
+- [ ] Foto, datos, estadísticas de navegación — requires web frontend
 
 ### Criterios de completado Fase 15
-- [ ] Links de viajes compartidos funcionan y muestran el mapa
-- [ ] Dashboard de estadísticas muestra datos reales
-- [ ] Resumen anual genera correctamente
+- [ ] Links de viajes compartidos funcionan y muestran el mapa (requires web frontend)
+- [x] Dashboard de estadísticas muestra datos reales
+- [x] Resumen anual genera correctamente
 
 ---
 

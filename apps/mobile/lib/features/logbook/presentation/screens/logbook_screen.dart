@@ -21,7 +21,17 @@ class LogbookScreen extends ConsumerWidget {
     final tripsAsync = ref.watch(boatTripsProvider(boatId));
 
     return Scaffold(
-      appBar: const NavisAppBar(title: 'Logbook', showBack: true),
+      appBar: NavisAppBar(
+        title: 'Logbook',
+        showBack: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.bar_chart_outlined),
+            tooltip: 'Statistics',
+            onPressed: () => context.push('/boats/$boatId/stats'),
+          ),
+        ],
+      ),
       body: tripsAsync.when(
         loading: () => const NavisShimmer(itemCount: 4, itemHeight: 100),
         error: (error, stack) => NavisErrorWidget(

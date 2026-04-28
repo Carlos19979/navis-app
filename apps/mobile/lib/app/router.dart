@@ -18,6 +18,7 @@ import 'package:navis_mobile/features/logbook/presentation/screens/logbook_scree
 import 'package:navis_mobile/features/logbook/presentation/screens/trip_detail_screen.dart';
 import 'package:navis_mobile/features/logbook/presentation/screens/trip_edit_screen.dart';
 import 'package:navis_mobile/features/logbook/presentation/screens/trip_recording_screen.dart';
+import 'package:navis_mobile/features/logbook/presentation/screens/trip_stats_screen.dart';
 import 'package:navis_mobile/features/profile/presentation/screens/profile_screen.dart';
 import 'package:navis_mobile/features/profile/presentation/screens/settings_screen.dart';
 import 'package:navis_mobile/features/weather/presentation/screens/weather_screen.dart';
@@ -158,6 +159,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final boatId = state.pathParameters['id']!;
           return TripRecordingScreen(boatId: boatId);
+        },
+      ),
+      GoRoute(
+        path: '/boats/:id/stats',
+        builder: (context, state) {
+          final boatId = state.pathParameters['id']!;
+          return TripStatsScreen(boatId: boatId);
         },
       ),
       GoRoute(

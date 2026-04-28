@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
@@ -28,6 +29,11 @@ class TripDetailScreen extends ConsumerWidget {
         title: 'Trip Details',
         showBack: true,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.share_outlined),
+            tooltip: 'Share trip',
+            onPressed: () => _shareTrip(context, ref),
+          ),
           IconButton(
             icon: const Icon(Icons.edit_outlined),
             tooltip: 'Edit trip',
@@ -251,6 +257,28 @@ class TripDetailScreen extends ConsumerWidget {
     final minutes = d.inMinutes % 60;
     if (hours > 0) return '${hours}h ${minutes}m';
     return '${minutes}m';
+  }
+
+  void _shareTrip(BuildContext context, WidgetRef ref) {
+    final tripAsync = ref.read(tripProvider(tripId));
+    if (tripAsync case AsyncData(:final value)) {
+      final trip = value;
+      final distance = trip.distanceNm != null
+          ? '${trip.distanceNm!.toStringAsFixed(1)} NM'
+          : '';
+      final duration = trip.duration != null
+          ? '${trip.duration!.inHours}h ${trip.duration!.inMinutes % 60}m'
+          : '';
+      final text = StringBuffer()
+        ..writeln(
+            '${trip.departurePort} \u2192 ${trip.arrivalPort ?? '?'}')
+        ..writeln(
+            trip.departureTime.toLocal().toString().substring(0, 16))
+        ..writeln([distance, duration].where((s) => s.isNotEmpty).join(' \u2022 '))
+        ..writeln()
+        ..write('Shared from Navis');
+      Share.share(text.toString());
+    }
   }
 
   void _confirmDelete(BuildContext context, WidgetRef ref) {
