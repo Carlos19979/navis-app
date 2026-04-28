@@ -7,6 +7,7 @@ import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/utils/distance_utils.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/charts/data/tile_provider.dart';
+import 'package:navis_mobile/features/logbook/domain/entities/trip.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:go_router/go_router.dart';
@@ -74,14 +75,38 @@ class TripDetailScreen extends ConsumerWidget {
                           children: [
                             OpenSeaMapTileProvider.baseLayer,
                             PolylineLayer(
-                              polylines: [
-                                Polyline(
-                                  points: trackPoints
-                                      .map((tp) =>
-                                          LatLng(tp.latitude, tp.longitude))
-                                      .toList(),
-                                  color: AppColors.cyan,
-                                  strokeWidth: 3,
+                              polylines:
+                                  _buildSpeedPolylines(trackPoints),
+                            ),
+                            MarkerLayer(
+                              markers: [
+                                Marker(
+                                  point: LatLng(
+                                    trackPoints.first.latitude,
+                                    trackPoints.first.longitude,
+                                  ),
+                                  width: 12,
+                                  height: 12,
+                                  child: Container(
+                                    decoration: const BoxDecoration(
+                                      color: AppColors.green,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                ),
+                                Marker(
+                                  point: LatLng(
+                                    trackPoints.last.latitude,
+                                    trackPoints.last.longitude,
+                                  ),
+                                  width: 12,
+                                  height: 12,
+                                  child: Container(
+                                    decoration: const BoxDecoration(
+                                      color: AppColors.red,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
@@ -90,6 +115,10 @@ class TripDetailScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
+                if (hasTrack) ...[
+                  const SizedBox(height: 8),
+                  const _SpeedLegend(),
+                ],
                 const SizedBox(height: 16),
                 Card(
                   child: Padding(
@@ -103,49 +132,45 @@ class TripDetailScreen extends ConsumerWidget {
                           value:
                               '${trip.departurePort}\n${NavisDateUtils.formatDateTime(trip.departureTime)}',
                         ),
-                        const Divider(height: 24),
-                        if (trip.arrivalPort != null &&
-                            trip.arrivalTime != null)
+                        if (trip.arrivalPort != null) ...[
+                          const Divider(height: 24),
                           _DetailRow(
                             icon: Icons.flight_land,
                             label: 'Arrival',
                             value:
-                                '${trip.arrivalPort}\n${NavisDateUtils.formatDateTime(trip.arrivalTime!)}',
+                                '${trip.arrivalPort!}\n${trip.arrivalTime != null ? NavisDateUtils.formatDateTime(trip.arrivalTime!) : ''}',
                           ),
+                        ],
                         if (trip.distanceNm != null) ...[
                           const Divider(height: 24),
                           _DetailRow(
                             icon: Icons.straighten,
                             label: 'Distance',
-                            value:
-                                DistanceUtils.formatDistance(trip.distanceNm!),
+                            value: DistanceUtils.formatDistance(
+                              trip.distanceNm!,
+                            ),
                           ),
                         ],
                         if (trip.duration != null) ...[
                           const Divider(height: 24),
                           _DetailRow(
-                            icon: Icons.schedule,
+                            icon: Icons.timer_outlined,
                             label: 'Duration',
-                            value:
-                                NavisDateUtils.formatDuration(trip.duration!),
+                            value: _formatDuration(trip.duration!),
                           ),
                         ],
-                        if (trip.maxSpeedKnots != null) ...[
+                        if (trip.maxSpeedKnots != null ||
+                            trip.avgSpeedKnots != null) ...[
                           const Divider(height: 24),
                           _DetailRow(
                             icon: Icons.speed,
-                            label: 'Max Speed',
-                            value:
-                                DistanceUtils.formatSpeed(trip.maxSpeedKnots!),
-                          ),
-                        ],
-                        if (trip.avgSpeedKnots != null) ...[
-                          const Divider(height: 24),
-                          _DetailRow(
-                            icon: Icons.trending_flat,
-                            label: 'Avg Speed',
-                            value:
-                                DistanceUtils.formatSpeed(trip.avgSpeedKnots!),
+                            label: 'Speed',
+                            value: [
+                              if (trip.maxSpeedKnots != null)
+                                'Max: ${DistanceUtils.formatSpeed(trip.maxSpeedKnots!)}',
+                              if (trip.avgSpeedKnots != null)
+                                'Avg: ${DistanceUtils.formatSpeed(trip.avgSpeedKnots!)}',
+                            ].join(' · '),
                           ),
                         ],
                         if (trip.engineHours != null) ...[
@@ -194,6 +219,40 @@ class TripDetailScreen extends ConsumerWidget {
     );
   }
 
+  List<Polyline> _buildSpeedPolylines(List<TrackPoint> points) {
+    if (points.length < 2) return [];
+
+    final polylines = <Polyline>[];
+    for (int i = 0; i < points.length - 1; i++) {
+      final speed = points[i].speedKnots ?? 0;
+      polylines.add(
+        Polyline(
+          points: [
+            LatLng(points[i].latitude, points[i].longitude),
+            LatLng(points[i + 1].latitude, points[i + 1].longitude),
+          ],
+          color: _speedColor(speed),
+          strokeWidth: 3,
+        ),
+      );
+    }
+    return polylines;
+  }
+
+  static Color _speedColor(double knots) {
+    if (knots < 3) return AppColors.cyan;
+    if (knots < 6) return AppColors.green;
+    if (knots < 12) return AppColors.amber;
+    return AppColors.red;
+  }
+
+  String _formatDuration(Duration d) {
+    final hours = d.inHours;
+    final minutes = d.inMinutes % 60;
+    if (hours > 0) return '${hours}h ${minutes}m';
+    return '${minutes}m';
+  }
+
   void _confirmDelete(BuildContext context, WidgetRef ref) {
     showDialog<void>(
       context: context,
@@ -234,6 +293,49 @@ class TripDetailScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _SpeedLegend extends StatelessWidget {
+  const _SpeedLegend();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _LegendDot(color: AppColors.cyan, label: '<3 kt'),
+        SizedBox(width: 12),
+        _LegendDot(color: AppColors.green, label: '3-6 kt'),
+        SizedBox(width: 12),
+        _LegendDot(color: AppColors.amber, label: '6-12 kt'),
+        SizedBox(width: 12),
+        _LegendDot(color: AppColors.red, label: '>12 kt'),
+      ],
+    );
+  }
+}
+
+class _LegendDot extends StatelessWidget {
+  const _LegendDot({required this.color, required this.label});
+
+  final Color color;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 4),
+        Text(label, style: Theme.of(context).textTheme.bodySmall),
+      ],
     );
   }
 }

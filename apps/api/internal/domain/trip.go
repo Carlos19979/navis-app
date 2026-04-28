@@ -21,6 +21,8 @@ type Trip struct {
 	DepartureTime     time.Time
 	ArrivalTime       *time.Time
 	DistanceNM        *float64
+	MaxSpeedKnots     *float64
+	AvgSpeedKnots     *float64
 	EngineHours       *float64
 	FuelConsumedL     *float64
 	DurationMinutes   *int

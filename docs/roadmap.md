@@ -226,32 +226,32 @@ Estado actual: Fases 0-11 implementadas. Fase 12 en progreso. Este roadmap cubre
 ### Tareas
 
 #### 13.1 — Background location service
-- [ ] Configurar geolocator para captura en background (battery-optimized)
-- [ ] Android: foreground service con notificación persistente ("Navis está grabando tu viaje")
-- [ ] iOS: background modes (location, processing) en Info.plist
-- [ ] Captura cada 10 segundos: lat, lon, speed, heading
-- [ ] Distance filter: solo registrar punto si se movió >10m
-- [ ] Manejar permisos de ubicación (foreground + background + always)
-- [ ] Manejar app suspend/resume: reanudar tracking al volver
+- [x] Configurar geolocator para captura en background (battery-optimized)
+- [x] Android: foreground service con notificación persistente ("Navis está grabando tu viaje")
+- [x] iOS: background modes (location, processing) en Info.plist
+- [x] Captura cada 10 segundos: lat, lon, speed, heading
+- [x] Distance filter: solo registrar punto si se movió >10m
+- [x] Manejar permisos de ubicación (foreground + background + always)
+- [x] Manejar app suspend/resume: reanudar tracking al volver
 
 #### 13.2 — Trip recording UI
-- [ ] Botón Start/Stop trip en pantalla de barco
-- [ ] Pantalla de trip activo: mapa en vivo con track, velocidad, distancia recorrida
-- [ ] Auto-calcular distancia desde GPS track
-- [ ] Indicador de estado GPS (precisión, última posición)
-- [ ] Manejar lifecycle: seguir grabando si app va a background
+- [x] Botón Start/Stop trip en pantalla de barco
+- [x] Pantalla de trip activo: mapa en vivo con track, velocidad, distancia recorrida
+- [x] Auto-calcular distancia desde GPS track
+- [x] Indicador de estado GPS (precisión, última posición)
+- [x] Manejar lifecycle: seguir grabando si app va a background
 
 #### 13.3 — Trip data persistence
-- [ ] Batch upload de puntos GPS al API cada 60 segundos (usar pgx.Batch)
-- [ ] Almacenar track como PostGIS geometry(linestring, 4326) o array de puntos
-- [ ] Buffer local de puntos en caso de pérdida de conexión
-- [ ] Al finalizar viaje: calcular distancia total, velocidades, duración en servidor
+- [x] Batch upload de puntos GPS al API cada 60 segundos (usar pgx.Batch)
+- [x] Almacenar track como PostGIS geometry(linestring, 4326) o array de puntos
+- [x] Buffer local de puntos en caso de pérdida de conexión
+- [x] Al finalizar viaje: calcular distancia total, velocidades, duración en servidor
 
 #### 13.4 — Trip visualization
-- [ ] Track del viaje renderizado sobre mapa con polyline
-- [ ] Colores de velocidad en el track (lento=azul, rápido=verde)
-- [ ] Downsampling de polyline para display (Douglas-Peucker o similar)
-- [ ] Estadísticas post-viaje: velocidad max/media, distancia, duración
+- [x] Track del viaje renderizado sobre mapa con polyline
+- [x] Colores de velocidad en el track (lento=azul, rápido=verde)
+- [x] Downsampling de polyline para display (Douglas-Peucker o similar)
+- [x] Estadísticas post-viaje: velocidad max/media, distancia, duración
 
 ### Criterios de completado Fase 13
 - [ ] Se puede grabar un viaje completo en background sin pérdida de puntos

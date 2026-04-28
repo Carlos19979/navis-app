@@ -96,6 +96,7 @@ func New(
 				r.Get("/", tripH.GetByID)
 				r.Put("/", tripH.Update)
 				r.Put("/complete", tripH.Complete)
+				r.Get("/tracks", tripH.GetTracks)
 				r.Post("/tracks", tripH.AddTracks)
 			})
 		})

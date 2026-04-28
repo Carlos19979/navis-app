@@ -23,17 +23,17 @@ func NewTripRepo(pool *pgxpool.Pool) *TripRepo {
 }
 
 const tripColumns = `id, boat_id, user_id, departure_port, arrival_port, departure_time,
-	arrival_time, distance_nm, engine_hours, fuel_consumed_l, duration_minutes,
-	crew_members, weather_conditions, notes, photos, status, created_at, updated_at`
+	arrival_time, distance_nm, max_speed_knots, avg_speed_knots, engine_hours, fuel_consumed_l,
+	duration_minutes, crew_members, weather_conditions, notes, photos, status, created_at, updated_at`
 
 // scanTrip scans a single row into a domain.Trip.
 func scanTrip(row pgx.Row) (*domain.Trip, error) {
 	t := &domain.Trip{}
 	err := row.Scan(
 		&t.ID, &t.BoatID, &t.UserID, &t.DeparturePort, &t.ArrivalPort,
-		&t.DepartureTime, &t.ArrivalTime, &t.DistanceNM, &t.EngineHours,
-		&t.FuelConsumedL, &t.DurationMinutes, &t.CrewMembers,
-		&t.WeatherConditions, &t.Notes, &t.Photos, &t.Status,
+		&t.DepartureTime, &t.ArrivalTime, &t.DistanceNM, &t.MaxSpeedKnots,
+		&t.AvgSpeedKnots, &t.EngineHours, &t.FuelConsumedL, &t.DurationMinutes,
+		&t.CrewMembers, &t.WeatherConditions, &t.Notes, &t.Photos, &t.Status,
 		&t.CreatedAt, &t.UpdatedAt,
 	)
 	return t, err
@@ -43,16 +43,16 @@ func scanTrip(row pgx.Row) (*domain.Trip, error) {
 func (r *TripRepo) Create(ctx context.Context, trip *domain.Trip) (*domain.Trip, error) {
 	query := `
 		INSERT INTO trips (boat_id, user_id, departure_port, arrival_port, departure_time,
-			arrival_time, distance_nm, engine_hours, fuel_consumed_l, duration_minutes,
-			crew_members, weather_conditions, notes, photos, status)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+			arrival_time, distance_nm, max_speed_knots, avg_speed_knots, engine_hours,
+			fuel_consumed_l, duration_minutes, crew_members, weather_conditions, notes, photos, status)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
 		RETURNING ` + tripColumns
 
 	t, err := scanTrip(r.pool.QueryRow(ctx, query,
 		trip.BoatID, trip.UserID, trip.DeparturePort, trip.ArrivalPort,
-		trip.DepartureTime, trip.ArrivalTime, trip.DistanceNM, trip.EngineHours,
-		trip.FuelConsumedL, trip.DurationMinutes, trip.CrewMembers,
-		trip.WeatherConditions, trip.Notes, trip.Photos, trip.Status,
+		trip.DepartureTime, trip.ArrivalTime, trip.DistanceNM, trip.MaxSpeedKnots,
+		trip.AvgSpeedKnots, trip.EngineHours, trip.FuelConsumedL, trip.DurationMinutes,
+		trip.CrewMembers, trip.WeatherConditions, trip.Notes, trip.Photos, trip.Status,
 	))
 	if err != nil {
 		return nil, fmt.Errorf("inserting trip: %w", err)
@@ -112,9 +112,9 @@ func (r *TripRepo) List(ctx context.Context, userID, cursor string, limit int) (
 		t := domain.Trip{}
 		if err := rows.Scan(
 			&t.ID, &t.BoatID, &t.UserID, &t.DeparturePort, &t.ArrivalPort,
-			&t.DepartureTime, &t.ArrivalTime, &t.DistanceNM, &t.EngineHours,
-			&t.FuelConsumedL, &t.DurationMinutes, &t.CrewMembers,
-			&t.WeatherConditions, &t.Notes, &t.Photos, &t.Status,
+			&t.DepartureTime, &t.ArrivalTime, &t.DistanceNM, &t.MaxSpeedKnots,
+			&t.AvgSpeedKnots, &t.EngineHours, &t.FuelConsumedL, &t.DurationMinutes,
+			&t.CrewMembers, &t.WeatherConditions, &t.Notes, &t.Photos, &t.Status,
 			&t.CreatedAt, &t.UpdatedAt,
 		); err != nil {
 			return nil, "", fmt.Errorf("scanning trip row: %w", err)
@@ -139,18 +139,18 @@ func (r *TripRepo) Update(ctx context.Context, userID string, trip *domain.Trip)
 	query := `
 		UPDATE trips
 		SET departure_port = $3, arrival_port = $4, departure_time = $5,
-			arrival_time = $6, distance_nm = $7, engine_hours = $8,
-			fuel_consumed_l = $9, duration_minutes = $10, crew_members = $11,
-			weather_conditions = $12, notes = $13, photos = $14,
-			status = $15, updated_at = now()
+			arrival_time = $6, distance_nm = $7, max_speed_knots = $8,
+			avg_speed_knots = $9, engine_hours = $10, fuel_consumed_l = $11,
+			duration_minutes = $12, crew_members = $13, weather_conditions = $14,
+			notes = $15, photos = $16, status = $17, updated_at = now()
 		WHERE user_id = $1 AND id = $2
 		RETURNING ` + tripColumns
 
 	t, err := scanTrip(r.pool.QueryRow(ctx, query,
 		userID, trip.ID, trip.DeparturePort, trip.ArrivalPort,
-		trip.DepartureTime, trip.ArrivalTime, trip.DistanceNM, trip.EngineHours,
-		trip.FuelConsumedL, trip.DurationMinutes, trip.CrewMembers,
-		trip.WeatherConditions, trip.Notes, trip.Photos, trip.Status,
+		trip.DepartureTime, trip.ArrivalTime, trip.DistanceNM, trip.MaxSpeedKnots,
+		trip.AvgSpeedKnots, trip.EngineHours, trip.FuelConsumedL, trip.DurationMinutes,
+		trip.CrewMembers, trip.WeatherConditions, trip.Notes, trip.Photos, trip.Status,
 	))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

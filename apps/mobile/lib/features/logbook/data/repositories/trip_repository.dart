@@ -42,9 +42,41 @@ class TripRepository {
       '/api/v1/trips/$id',
     );
     final envelope = response.data!;
-    return TripModel.fromJson(
+    final trip = TripModel.fromJson(
       envelope['data'] as Map<String, dynamic>,
     ).toEntity();
+
+    final trackPoints = await getTrackPoints(id);
+    if (trackPoints.isNotEmpty) {
+      return trip.copyWith(trackPoints: trackPoints);
+    }
+    return trip;
+  }
+
+  Future<List<TrackPoint>> getTrackPoints(
+    String tripId, {
+    double? simplify,
+  }) async {
+    final queryParams = <String, dynamic>{
+      if (simplify != null) 'simplify': simplify,
+    };
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      '/api/v1/trips/$tripId/tracks',
+      queryParameters: queryParams,
+    );
+    final envelope = response.data!;
+    final data = envelope['data'] as List<dynamic>?;
+    if (data == null) return [];
+    return data
+        .map((json) =>
+            TrackPointModel.fromJson(json as Map<String, dynamic>))
+        .map((m) => TrackPoint(
+              latitude: m.latitude,
+              longitude: m.longitude,
+              timestamp: m.timestamp,
+              speedKnots: m.speedKnots,
+            ))
+        .toList();
   }
 
   Future<Trip> createTrip(Trip trip) async {

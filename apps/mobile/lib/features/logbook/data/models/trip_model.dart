@@ -156,9 +156,9 @@ class TrackPointModel {
 
   factory TrackPointModel.fromJson(Map<String, dynamic> json) {
     return TrackPointModel(
-      latitude: (json['latitude'] as num).toDouble(),
-      longitude: (json['longitude'] as num).toDouble(),
-      timestamp: DateTime.parse(json['timestamp'] as String),
+      latitude: (json['lat'] as num).toDouble(),
+      longitude: (json['lon'] as num).toDouble(),
+      timestamp: DateTime.parse(json['recorded_at'] as String),
       speedKnots: (json['speed_knots'] as num?)?.toDouble(),
     );
   }

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
@@ -84,8 +85,8 @@ func (s *TripService) Update(ctx context.Context, userID string, trip *domain.Tr
 	return updated, nil
 }
 
-// Complete marks a trip as completed, calculates duration, and records the
-// arrival time if not already set.
+// Complete marks a trip as completed, calculates duration and stats from
+// track points, and records the arrival time.
 func (s *TripService) Complete(ctx context.Context, userID, id string, arrivalPort *string, distanceNM, engineHours, fuelConsumedL *float64) (*domain.Trip, error) {
 	trip, err := s.tripRepo.GetByID(ctx, userID, id)
 	if err != nil {
@@ -102,9 +103,6 @@ func (s *TripService) Complete(ctx context.Context, userID, id string, arrivalPo
 	if arrivalPort != nil {
 		trip.ArrivalPort = arrivalPort
 	}
-	if distanceNM != nil {
-		trip.DistanceNM = distanceNM
-	}
 	if engineHours != nil {
 		trip.EngineHours = engineHours
 	}
@@ -112,15 +110,64 @@ func (s *TripService) Complete(ctx context.Context, userID, id string, arrivalPo
 		trip.FuelConsumedL = fuelConsumedL
 	}
 
-	// Calculate duration in minutes.
 	durationMin := int(now.Sub(trip.DepartureTime).Minutes())
 	trip.DurationMinutes = &durationMin
+
+	// Compute distance and speed stats from track points.
+	tracks, _ := s.trackRepo.ListByTrip(ctx, id)
+	if len(tracks) >= 2 {
+		dist, maxSpd, avgSpd := computeTrackStats(tracks)
+		trip.DistanceNM = &dist
+		trip.MaxSpeedKnots = &maxSpd
+		trip.AvgSpeedKnots = &avgSpd
+	} else if distanceNM != nil {
+		trip.DistanceNM = distanceNM
+	}
 
 	updated, err := s.tripRepo.Update(ctx, userID, trip)
 	if err != nil {
 		return nil, fmt.Errorf("completing trip %s: %w", id, err)
 	}
 	return updated, nil
+}
+
+// computeTrackStats calculates total distance (NM), max speed, and average
+// speed from an ordered list of track points using the haversine formula.
+func computeTrackStats(tracks []domain.TripTrack) (distNM, maxSpeed, avgSpeed float64) {
+	var totalDist float64
+	var maxSpd float64
+	var speedSum float64
+	var speedCount int
+
+	for i := 1; i < len(tracks); i++ {
+		d := haversineNM(tracks[i-1].Lat, tracks[i-1].Lon, tracks[i].Lat, tracks[i].Lon)
+		totalDist += d
+
+		if tracks[i].SpeedKnots != nil {
+			spd := *tracks[i].SpeedKnots
+			speedSum += spd
+			speedCount++
+			if spd > maxSpd {
+				maxSpd = spd
+			}
+		}
+	}
+
+	if speedCount > 0 {
+		avgSpeed = speedSum / float64(speedCount)
+	}
+	return totalDist, maxSpd, avgSpeed
+}
+
+func haversineNM(lat1, lon1, lat2, lon2 float64) float64 {
+	const earthRadiusNM = 3440.065
+	dLat := (lat2 - lat1) * math.Pi / 180
+	dLon := (lon2 - lon1) * math.Pi / 180
+	a := math.Sin(dLat/2)*math.Sin(dLat/2) +
+		math.Cos(lat1*math.Pi/180)*math.Cos(lat2*math.Pi/180)*
+			math.Sin(dLon/2)*math.Sin(dLon/2)
+	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
+	return earthRadiusNM * c
 }
 
 // Delete removes a trip if owned by the user.
