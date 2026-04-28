@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/app_typography.dart';
@@ -26,6 +27,11 @@ class AppTheme {
           foregroundColor: AppColors.textPrimary,
           elevation: 0,
           centerTitle: true,
+          systemOverlayStyle: SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: Brightness.light,
+            statusBarBrightness: Brightness.dark,
+          ),
         ),
         cardTheme: CardThemeData(
           color: AppColors.darkCard,
@@ -121,6 +127,11 @@ class AppTheme {
           foregroundColor: Colors.white,
           elevation: 0,
           centerTitle: true,
+          systemOverlayStyle: SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: Brightness.light,
+            statusBarBrightness: Brightness.dark,
+          ),
         ),
         cardTheme: CardThemeData(
           color: AppColors.lightCard,

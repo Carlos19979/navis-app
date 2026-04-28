@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:navis_mobile/core/network/connectivity_provider.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 
 class NavisOfflineBanner extends ConsumerWidget {
   const NavisOfflineBanner({super.key, required this.child});
@@ -12,6 +13,7 @@ class NavisOfflineBanner extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isOnline = ref.watch(connectivityProvider);
+    final l10n = AppLocalizations.of(context);
 
     return Column(
       children: [
@@ -21,15 +23,20 @@ class NavisOfflineBanner extends ConsumerWidget {
           color: AppColors.amber,
           child: isOnline
               ? const SizedBox.shrink()
-              : const Center(
+              : Center(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.cloud_off, size: 16, color: Colors.black87),
-                      SizedBox(width: 8),
+                      const Icon(
+                        Icons.cloud_off,
+                        size: 16,
+                        color: Colors.black87,
+                      ),
+                      const SizedBox(width: 8),
                       Text(
-                        'No internet connection',
-                        style: TextStyle(
+                        l10n?.noInternetConnection ??
+                            'No internet connection',
+                        style: const TextStyle(
                           color: Colors.black87,
                           fontSize: 13,
                           fontWeight: FontWeight.w500,

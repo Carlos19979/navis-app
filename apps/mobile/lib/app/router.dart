@@ -6,26 +6,41 @@ import 'package:navis_mobile/core/network/supabase_client.dart';
 import 'package:navis_mobile/features/auth/presentation/screens/login_screen.dart';
 import 'package:navis_mobile/features/auth/presentation/screens/register_screen.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/boat_dashboard_screen.dart';
+import 'package:navis_mobile/features/boat/presentation/screens/boat_detail_screen.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/boat_form_screen.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/document_detail_screen.dart';
 import 'package:navis_mobile/features/charts/presentation/screens/chart_screen.dart';
 import 'package:navis_mobile/features/documents/presentation/screens/document_form_screen.dart';
+import 'package:navis_mobile/features/documents/presentation/screens/document_list_screen.dart';
 import 'package:navis_mobile/features/events/presentation/screens/event_detail_screen.dart';
 import 'package:navis_mobile/features/events/presentation/screens/events_screen.dart';
 import 'package:navis_mobile/features/logbook/presentation/screens/logbook_screen.dart';
 import 'package:navis_mobile/features/logbook/presentation/screens/trip_detail_screen.dart';
+import 'package:navis_mobile/features/logbook/presentation/screens/trip_edit_screen.dart';
 import 'package:navis_mobile/features/logbook/presentation/screens/trip_recording_screen.dart';
 import 'package:navis_mobile/features/profile/presentation/screens/profile_screen.dart';
 import 'package:navis_mobile/features/profile/presentation/screens/settings_screen.dart';
 import 'package:navis_mobile/features/weather/presentation/screens/weather_screen.dart';
 import 'package:navis_mobile/shared/widgets/navis_bottom_nav.dart';
 
-final _rootNavigatorKey = GlobalKey<NavigatorState>();
+class _AuthNotifier extends ChangeNotifier {
+  _AuthNotifier() {
+    supabaseClient.auth.onAuthStateChange.listen((_) {
+      notifyListeners();
+    });
+  }
+}
+
+final _authNotifier = _AuthNotifier();
+/// Global navigator key used by GoRouter.
+/// Exposed for deep link navigation from push notification taps.
+final rootNavigatorKey = GlobalKey<NavigatorState>();
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    navigatorKey: _rootNavigatorKey,
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/boats',
+    refreshListenable: _authNotifier,
     redirect: (context, state) {
       final session = supabaseClient.auth.currentSession;
       final isAuthenticated = session != null;
@@ -61,31 +76,6 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/boats',
                 builder: (context, state) => const BoatDashboardScreen(),
-                routes: [
-                  GoRoute(
-                    path: ':id',
-                    builder: (context, state) {
-                      final id = state.pathParameters['id']!;
-                      return BoatFormScreen(boatId: id);
-                    },
-                    routes: [
-                      GoRoute(
-                        path: 'documents/new',
-                        builder: (context, state) {
-                          final boatId = state.pathParameters['id']!;
-                          return DocumentFormScreen(boatId: boatId);
-                        },
-                      ),
-                      GoRoute(
-                        path: 'trips',
-                        builder: (context, state) {
-                          final boatId = state.pathParameters['id']!;
-                          return LogbookScreen(boatId: boatId);
-                        },
-                      ),
-                    ],
-                  ),
-                ],
               ),
             ],
           ),
@@ -125,10 +115,69 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
       GoRoute(
+        path: '/boats/new',
+        builder: (context, state) => const BoatFormScreen(boatId: 'new'),
+      ),
+      GoRoute(
+        path: '/boats/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return BoatDetailScreen(boatId: id);
+        },
+      ),
+      GoRoute(
+        path: '/boats/:id/edit',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return BoatFormScreen(boatId: id);
+        },
+      ),
+      GoRoute(
+        path: '/boats/:id/documents',
+        builder: (context, state) {
+          final boatId = state.pathParameters['id']!;
+          return DocumentListScreen(boatId: boatId);
+        },
+      ),
+      GoRoute(
+        path: '/boats/:id/documents/new',
+        builder: (context, state) {
+          final boatId = state.pathParameters['id']!;
+          return DocumentFormScreen(boatId: boatId);
+        },
+      ),
+      GoRoute(
+        path: '/boats/:id/trips',
+        builder: (context, state) {
+          final boatId = state.pathParameters['id']!;
+          return LogbookScreen(boatId: boatId);
+        },
+      ),
+      GoRoute(
+        path: '/boats/:id/record',
+        builder: (context, state) {
+          final boatId = state.pathParameters['id']!;
+          return TripRecordingScreen(boatId: boatId);
+        },
+      ),
+      GoRoute(
         path: '/documents/:id',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
           return DocumentDetailScreen(documentId: id);
+        },
+      ),
+      GoRoute(
+        path: '/documents/:id/edit',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          final boatId = state.uri.queryParameters['boatId'] ?? '';
+          final isRenew = state.uri.queryParameters['renew'] == 'true';
+          return DocumentFormScreen(
+            boatId: boatId,
+            documentId: id,
+            isRenew: isRenew,
+          );
         },
       ),
       GoRoute(
@@ -139,8 +188,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
-        path: '/trips/record',
-        builder: (context, state) => const TripRecordingScreen(),
+        path: '/trips/:id/edit',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return TripEditScreen(tripId: id);
+        },
       ),
       GoRoute(
         path: '/profile',

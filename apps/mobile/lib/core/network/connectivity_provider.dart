@@ -32,3 +32,7 @@ class ConnectivityNotifier extends StateNotifier<bool> {
     super.dispose();
   }
 }
+
+final isOnlineProvider = Provider<bool>((ref) {
+  return ref.watch(connectivityProvider);
+});

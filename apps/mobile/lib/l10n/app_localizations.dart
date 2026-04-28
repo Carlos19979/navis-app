@@ -95,7 +95,7 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
-    Locale('es'),
+    Locale('es')
   ];
 
   /// No description provided for @appTitle.
@@ -649,6 +649,228 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Passwords do not match'**
   String get passwordsDoNotMatch;
+
+  /// No description provided for @engineHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Engine Hours'**
+  String get engineHours;
+
+  /// No description provided for @fuelUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel Used'**
+  String get fuelUsed;
+
+  /// No description provided for @crew.
+  ///
+  /// In en, this message translates to:
+  /// **'Crew'**
+  String get crew;
+
+  /// No description provided for @logbook.
+  ///
+  /// In en, this message translates to:
+  /// **'Logbook'**
+  String get logbook;
+
+  /// No description provided for @tripDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip Details'**
+  String get tripDetails;
+
+  /// No description provided for @editBoat.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Boat'**
+  String get editBoat;
+
+  /// No description provided for @myBoats.
+  ///
+  /// In en, this message translates to:
+  /// **'My Boats'**
+  String get myBoats;
+
+  /// No description provided for @addBoat.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Boat'**
+  String get addBoat;
+
+  /// No description provided for @newDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'New Document'**
+  String get newDocument;
+
+  /// No description provided for @editDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Document'**
+  String get editDocument;
+
+  /// No description provided for @renewDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Renew Document'**
+  String get renewDocument;
+
+  /// No description provided for @documentDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Document Details'**
+  String get documentDetails;
+
+  /// No description provided for @renewalCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Renewal Cost'**
+  String get renewalCost;
+
+  /// No description provided for @renewalProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider / Company'**
+  String get renewalProvider;
+
+  /// No description provided for @lastRenewal.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Renewal'**
+  String get lastRenewal;
+
+  /// No description provided for @date.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get date;
+
+  /// No description provided for @cost.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost'**
+  String get cost;
+
+  /// No description provided for @provider.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider'**
+  String get provider;
+
+  /// No description provided for @deleteDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Document'**
+  String get deleteDocument;
+
+  /// No description provided for @deleteDocumentConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this document?'**
+  String get deleteDocumentConfirm;
+
+  /// No description provided for @documentDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Document deleted'**
+  String get documentDeleted;
+
+  /// No description provided for @documentSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Document saved'**
+  String get documentSaved;
+
+  /// No description provided for @documentUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Document updated'**
+  String get documentUpdated;
+
+  /// No description provided for @documentRenewed.
+  ///
+  /// In en, this message translates to:
+  /// **'Document renewed'**
+  String get documentRenewed;
+
+  /// No description provided for @failedToSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save document'**
+  String get failedToSave;
+
+  /// No description provided for @failedToDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to delete'**
+  String get failedToDelete;
+
+  /// No description provided for @takePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take Photo'**
+  String get takePhoto;
+
+  /// No description provided for @chooseFromGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from Gallery'**
+  String get chooseFromGallery;
+
+  /// No description provided for @addScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Scan'**
+  String get addScan;
+
+  /// No description provided for @notesOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes (optional)'**
+  String get notesOptional;
+
+  /// No description provided for @alertDaysBeforeExpiry.
+  ///
+  /// In en, this message translates to:
+  /// **'Alert Days Before Expiry'**
+  String get alertDaysBeforeExpiry;
+
+  /// No description provided for @validNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid number'**
+  String get validNumber;
+
+  /// No description provided for @uploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading...'**
+  String get uploading;
+
+  /// No description provided for @noInternetConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'No internet connection'**
+  String get noInternetConnection;
+
+  /// No description provided for @searchEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Search events...'**
+  String get searchEvents;
+
+  /// No description provided for @noEventsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No events found'**
+  String get noEventsFound;
+
+  /// No description provided for @featured.
+  ///
+  /// In en, this message translates to:
+  /// **'Featured'**
+  String get featured;
 }
 
 class _AppLocalizationsDelegate
@@ -678,9 +900,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   }
 
   throw FlutterError(
-    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-    'an issue with the localizations generation tool. Please file an issue '
-    'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.',
-  );
+      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+      'an issue with the localizations generation tool. Please file an issue '
+      'on GitHub with a reproducible sample app and the gen-l10n configuration '
+      'that was used.');
 }

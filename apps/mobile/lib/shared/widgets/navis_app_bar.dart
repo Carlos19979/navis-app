@@ -23,16 +23,25 @@ class NavisAppBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       title: Text(title),
       centerTitle: true,
+      automaticallyImplyLeading: false,
       leading: showBack
           ? IconButton(
               icon: const Icon(Icons.arrow_back),
-              onPressed: () => context.pop(),
+              tooltip: 'Go back',
+              onPressed: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/boats');
+                }
+              },
             )
           : null,
       actions: [
         ...?actions,
         IconButton(
           icon: const Icon(Icons.person_outline),
+          tooltip: 'Profile',
           onPressed: () => context.go('/profile'),
         ),
       ],
