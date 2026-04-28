@@ -1,11 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:navis_mobile/core/database/offline_repository.dart';
 import 'package:navis_mobile/features/documents/data/repositories/document_repository.dart';
 import 'package:navis_mobile/features/documents/domain/entities/document.dart';
 import 'package:navis_mobile/features/documents/domain/repositories/document_repository.dart';
 
 final documentRepositoryProvider = Provider<DocumentRepository>((ref) {
-  return DocumentRepositoryImpl();
+  return DocumentRepositoryImpl(
+    offlineRepo: ref.watch(offlineRepositoryProvider),
+  );
 });
 
 final boatDocumentsProvider =

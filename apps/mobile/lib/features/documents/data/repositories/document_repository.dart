@@ -1,3 +1,4 @@
+import 'package:navis_mobile/core/database/offline_repository.dart';
 import 'package:navis_mobile/core/network/api_client.dart';
 import 'package:navis_mobile/features/documents/data/models/document_model.dart';
 import 'package:navis_mobile/features/documents/domain/entities/document.dart';
@@ -5,12 +6,13 @@ import 'package:navis_mobile/features/documents/domain/repositories/document_rep
 import 'package:navis_mobile/shared/models/paginated_response.dart';
 
 class DocumentRepositoryImpl implements DocumentRepository {
-  DocumentRepositoryImpl({ApiClient? apiClient})
-      : _apiClient = apiClient ?? ApiClient.instance;
+  DocumentRepositoryImpl({
+    ApiClient? apiClient,
+    this.offlineRepo,
+  }) : _apiClient = apiClient ?? ApiClient.instance;
 
   final ApiClient _apiClient;
-
-  static final Map<String, List<Document>> _cachedDocuments = {};
+  final OfflineRepository? offlineRepo;
 
   @override
   Future<PaginatedResponse<Document>> getDocuments(
@@ -30,15 +32,19 @@ class DocumentRepositoryImpl implements DocumentRepository {
       );
 
       final envelope = response.data!;
-      final items = (envelope['data'] as List<dynamic>)
+      final dataList = envelope['data'] as List<dynamic>;
+      final items = dataList
           .map((json) =>
-              DocumentModel.fromJson(json as Map<String, dynamic>)
-                  .toEntity())
+              DocumentModel.fromJson(json as Map<String, dynamic>).toEntity())
           .toList();
       final meta = envelope['meta'] as Map<String, dynamic>?;
 
-      if (cursor == null) {
-        _cachedDocuments[boatId] = items;
+      if (cursor == null && offlineRepo != null) {
+        await offlineRepo!.cacheList(
+          'documents',
+          dataList.cast<Map<String, dynamic>>(),
+          boatId: boatId,
+        );
       }
 
       return PaginatedResponse<Document>(
@@ -46,11 +52,20 @@ class DocumentRepositoryImpl implements DocumentRepository {
         nextCursor: meta?['next_cursor'] as String?,
       );
     } catch (e) {
-      if (_cachedDocuments.containsKey(boatId) &&
-          cursor == null) {
-        return PaginatedResponse<Document>(
-          items: _cachedDocuments[boatId]!,
+      if (offlineRepo != null &&
+          cursor == null &&
+          offlineRepo!.isNetworkError(e)) {
+        final cached = await offlineRepo!.getCachedByBoat(
+          'documents',
+          boatId,
         );
+        if (cached.isNotEmpty) {
+          return PaginatedResponse<Document>(
+            items: cached
+                .map((j) => DocumentModel.fromJson(j).toEntity())
+                .toList(),
+          );
+        }
       }
       rethrow;
     }
@@ -58,13 +73,27 @@ class DocumentRepositoryImpl implements DocumentRepository {
 
   @override
   Future<Document> getDocument(String id) async {
-    final response = await _apiClient.get<Map<String, dynamic>>(
-      '/api/v1/documents/$id',
-    );
-    final envelope = response.data!;
-    return DocumentModel.fromJson(
-      envelope['data'] as Map<String, dynamic>,
-    ).toEntity();
+    try {
+      final response = await _apiClient.get<Map<String, dynamic>>(
+        '/api/v1/documents/$id',
+      );
+      final envelope = response.data!;
+      final data = envelope['data'] as Map<String, dynamic>;
+
+      if (offlineRepo != null) {
+        await offlineRepo!.cacheItem('documents', id, data);
+      }
+
+      return DocumentModel.fromJson(data).toEntity();
+    } catch (e) {
+      if (offlineRepo != null && offlineRepo!.isNetworkError(e)) {
+        final cached = await offlineRepo!.getCachedById('documents', id);
+        if (cached != null) {
+          return DocumentModel.fromJson(cached).toEntity();
+        }
+      }
+      rethrow;
+    }
   }
 
   @override
@@ -75,9 +104,18 @@ class DocumentRepositoryImpl implements DocumentRepository {
       data: model.toJson(),
     );
     final envelope = response.data!;
-    return DocumentModel.fromJson(
-      envelope['data'] as Map<String, dynamic>,
-    ).toEntity();
+    final data = envelope['data'] as Map<String, dynamic>;
+
+    if (offlineRepo != null) {
+      await offlineRepo!.cacheItem(
+        'documents',
+        data['id'] as String,
+        data,
+        boatId: document.boatId,
+      );
+    }
+
+    return DocumentModel.fromJson(data).toEntity();
   }
 
   @override
@@ -88,13 +126,26 @@ class DocumentRepositoryImpl implements DocumentRepository {
       data: model.toJson(),
     );
     final envelope = response.data!;
-    return DocumentModel.fromJson(
-      envelope['data'] as Map<String, dynamic>,
-    ).toEntity();
+    final data = envelope['data'] as Map<String, dynamic>;
+
+    if (offlineRepo != null) {
+      await offlineRepo!.cacheItem(
+        'documents',
+        document.id,
+        data,
+        boatId: document.boatId,
+      );
+    }
+
+    return DocumentModel.fromJson(data).toEntity();
   }
 
   @override
   Future<void> deleteDocument(String id) async {
     await _apiClient.delete<void>('/api/v1/documents/$id');
+
+    if (offlineRepo != null) {
+      await offlineRepo!.removeItem('documents', id);
+    }
   }
 }

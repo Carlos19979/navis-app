@@ -1,56 +1,96 @@
+import 'package:navis_mobile/core/database/offline_repository.dart';
 import 'package:navis_mobile/core/network/api_client.dart';
 import 'package:navis_mobile/features/logbook/data/models/trip_model.dart';
 import 'package:navis_mobile/features/logbook/domain/entities/trip.dart';
 import 'package:navis_mobile/shared/models/paginated_response.dart';
 
 class TripRepository {
-  TripRepository({ApiClient? apiClient})
+  TripRepository({ApiClient? apiClient, this.offlineRepo})
       : _apiClient = apiClient ?? ApiClient.instance;
 
   final ApiClient _apiClient;
+  final OfflineRepository? offlineRepo;
 
   Future<PaginatedResponse<Trip>> getTrips(
     String boatId, {
     String? cursor,
     int limit = 20,
   }) async {
-    final queryParams = <String, dynamic>{
-      'limit': limit,
-      if (cursor != null) 'cursor': cursor,
-    };
+    try {
+      final queryParams = <String, dynamic>{
+        'limit': limit,
+        if (cursor != null) 'cursor': cursor,
+      };
 
-    final response = await _apiClient.get<Map<String, dynamic>>(
-      '/api/v1/boats/$boatId/trips',
-      queryParameters: queryParams,
-    );
+      final response = await _apiClient.get<Map<String, dynamic>>(
+        '/api/v1/boats/$boatId/trips',
+        queryParameters: queryParams,
+      );
 
-    final envelope = response.data!;
-    final items = (envelope['data'] as List<dynamic>)
-        .map((json) =>
-            TripModel.fromJson(json as Map<String, dynamic>).toEntity())
-        .toList();
-    final meta = envelope['meta'] as Map<String, dynamic>?;
+      final envelope = response.data!;
+      final dataList = envelope['data'] as List<dynamic>;
+      final items = dataList
+          .map((json) =>
+              TripModel.fromJson(json as Map<String, dynamic>).toEntity())
+          .toList();
+      final meta = envelope['meta'] as Map<String, dynamic>?;
 
-    return PaginatedResponse<Trip>(
-      items: items,
-      nextCursor: meta?['next_cursor'] as String?,
-    );
+      if (cursor == null && offlineRepo != null) {
+        await offlineRepo!.cacheList(
+          'trips',
+          dataList.cast<Map<String, dynamic>>(),
+          boatId: boatId,
+        );
+      }
+
+      return PaginatedResponse<Trip>(
+        items: items,
+        nextCursor: meta?['next_cursor'] as String?,
+      );
+    } catch (e) {
+      if (offlineRepo != null &&
+          cursor == null &&
+          offlineRepo!.isNetworkError(e)) {
+        final cached = await offlineRepo!.getCachedByBoat('trips', boatId);
+        if (cached.isNotEmpty) {
+          return PaginatedResponse<Trip>(
+            items:
+                cached.map((j) => TripModel.fromJson(j).toEntity()).toList(),
+          );
+        }
+      }
+      rethrow;
+    }
   }
 
   Future<Trip> getTrip(String id) async {
-    final response = await _apiClient.get<Map<String, dynamic>>(
-      '/api/v1/trips/$id',
-    );
-    final envelope = response.data!;
-    final trip = TripModel.fromJson(
-      envelope['data'] as Map<String, dynamic>,
-    ).toEntity();
+    try {
+      final response = await _apiClient.get<Map<String, dynamic>>(
+        '/api/v1/trips/$id',
+      );
+      final envelope = response.data!;
+      final data = envelope['data'] as Map<String, dynamic>;
 
-    final trackPoints = await getTrackPoints(id);
-    if (trackPoints.isNotEmpty) {
-      return trip.copyWith(trackPoints: trackPoints);
+      if (offlineRepo != null) {
+        await offlineRepo!.cacheItem('trips', id, data);
+      }
+
+      final trip = TripModel.fromJson(data).toEntity();
+
+      final trackPoints = await getTrackPoints(id);
+      if (trackPoints.isNotEmpty) {
+        return trip.copyWith(trackPoints: trackPoints);
+      }
+      return trip;
+    } catch (e) {
+      if (offlineRepo != null && offlineRepo!.isNetworkError(e)) {
+        final cached = await offlineRepo!.getCachedById('trips', id);
+        if (cached != null) {
+          return TripModel.fromJson(cached).toEntity();
+        }
+      }
+      rethrow;
     }
-    return trip;
   }
 
   Future<List<TrackPoint>> getTrackPoints(
