@@ -12,19 +12,47 @@
 -- Example: SELECT id FROM auth.users WHERE email = 'test@navis.app';
 DO $$
 DECLARE
-  test_user_id UUID := '00000000-0000-0000-0000-000000000001'; -- REPLACE with real auth.users ID
+  test_user_id UUID := '00000000-0000-0000-0000-000000000001';
   boat_1_id    UUID := 'b0000000-0000-0000-0000-000000000001';
   boat_2_id    UUID := 'b0000000-0000-0000-0000-000000000002';
   doc_1_id     UUID := 'd0000000-0000-0000-0000-000000000001';
   doc_2_id     UUID := 'd0000000-0000-0000-0000-000000000002';
   doc_3_id     UUID := 'd0000000-0000-0000-0000-000000000003';
   doc_4_id     UUID := 'd0000000-0000-0000-0000-000000000004';
-  trip_1_id    UUID := 't0000000-0000-0000-0000-000000000001';
-  trip_2_id    UUID := 't0000000-0000-0000-0000-000000000002';
-  event_1_id   UUID := 'e0000000-0000-0000-0000-000000000001';
-  event_2_id   UUID := 'e0000000-0000-0000-0000-000000000002';
-  event_3_id   UUID := 'e0000000-0000-0000-0000-000000000003';
+  trip_1_id    UUID := 'e0000000-0000-0000-0000-000000000001';
+  trip_2_id    UUID := 'e0000000-0000-0000-0000-000000000002';
+  event_1_id   UUID := 'f0000000-0000-0000-0000-000000000001';
+  event_2_id   UUID := 'f0000000-0000-0000-0000-000000000002';
+  event_3_id   UUID := 'f0000000-0000-0000-0000-000000000003';
 BEGIN
+
+-- Create test user in auth.users
+INSERT INTO auth.users (
+  id, instance_id, aud, role, email,
+  encrypted_password, email_confirmed_at,
+  created_at, updated_at,
+  confirmation_token, email_change, email_change_token_new,
+  recovery_token, phone, phone_change, phone_change_token,
+  raw_app_meta_data, raw_user_meta_data
+) VALUES (
+  test_user_id,
+  '00000000-0000-0000-0000-000000000000',
+  'authenticated', 'authenticated', 'test@navis.app',
+  crypt('password123', gen_salt('bf')),
+  now(), now(), now(),
+  '', '', '', '', '', '', '',
+  '{"provider":"email","providers":["email"]}'::jsonb,
+  '{"name":"Test User"}'::jsonb
+) ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO auth.identities (
+  id, user_id, provider_id, provider,
+  identity_data, last_sign_in_at, created_at, updated_at
+) VALUES (
+  test_user_id, test_user_id, test_user_id::text, 'email',
+  jsonb_build_object('sub', test_user_id::text, 'email', 'test@navis.app'),
+  now(), now(), now()
+) ON CONFLICT DO NOTHING;
 
 -- ─── Boats ─────────────────────────────────────────────────────────
 INSERT INTO boats (id, user_id, name, registration, type, length_m, home_port, home_port_location, engine_hours) VALUES

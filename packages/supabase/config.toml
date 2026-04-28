@@ -1,9 +1,6 @@
 # Navis — Supabase local development configuration
 # Docs: https://supabase.com/docs/guides/cli/config
 
-[project]
-id = "navis-local"
-
 [api]
 enabled = true
 port = 54321
