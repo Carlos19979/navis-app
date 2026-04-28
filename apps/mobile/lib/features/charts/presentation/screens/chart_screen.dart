@@ -4,10 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
+import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
+import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/charts/data/tile_provider.dart';
 import 'package:navis_mobile/features/charts/presentation/providers/chart_provider.dart';
 import 'package:navis_mobile/features/charts/presentation/widgets/map_controls.dart';
 import 'package:navis_mobile/features/charts/presentation/widgets/position_indicator.dart';
+import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
 
 class ChartScreen extends ConsumerStatefulWidget {
   const ChartScreen({super.key});
@@ -54,6 +58,7 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
   @override
   Widget build(BuildContext context) {
     final mapState = ref.watch(chartProvider);
+    final boatsAsync = ref.watch(boatsProvider);
 
     return Scaffold(
       body: Stack(
@@ -78,6 +83,35 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                 if (mapState.showSeamarks) OpenSeaMapTileProvider.seamarkLayer,
                 if (_currentPosition != null && mapState.showPosition)
                   PositionIndicator(position: _currentPosition!),
+                if (boatsAsync case AsyncData(:final value))
+                  MarkerLayer(
+                    markers: [
+                      for (final boat in value)
+                        if (boat.homePortLat != null &&
+                            boat.homePortLon != null)
+                          Marker(
+                            point: LatLng(
+                              boat.homePortLat!,
+                              boat.homePortLon!,
+                            ),
+                            width: 40,
+                            height: 40,
+                            child: Tooltip(
+                              message: '${boat.name}'
+                                  ' \u2014 '
+                                  '${boat.homePort ?? "Home port"}',
+                              child: const Icon(
+                                Icons.anchor,
+                                color: AppColors.cyan,
+                                size: 28,
+                              ),
+                            ),
+                          ),
+                    ],
+                  ),
+                if (mapState.showTracks)
+                  if (boatsAsync case AsyncData(:final value))
+                    _TripTracksLayer(boats: value),
               ],
             ),
           ),
@@ -101,9 +135,48 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
               ref.read(chartProvider.notifier).toggleSeamarks();
             },
             showSeamarks: mapState.showSeamarks,
+            onToggleTracks: () {
+              ref.read(chartProvider.notifier).toggleTracks();
+            },
+            showTracks: mapState.showTracks,
           ),
         ],
       ),
     );
+  }
+}
+
+class _TripTracksLayer extends ConsumerWidget {
+  const _TripTracksLayer({required this.boats});
+
+  final List<Boat> boats;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final polylines = <Polyline>[];
+    for (final boat in boats) {
+      final tripsAsync = ref.watch(boatTripsProvider(boat.id));
+      if (tripsAsync case AsyncData(:final value)) {
+        for (final trip in value) {
+          final points = trip.trackPoints;
+          if (points != null && points.length >= 2) {
+            polylines.add(
+              Polyline(
+                points: [
+                  for (final pt in points)
+                    LatLng(pt.latitude, pt.longitude),
+                ],
+                strokeWidth: 3,
+                color: AppColors.cyan.withValues(alpha: 0.7),
+              ),
+            );
+          }
+        }
+      }
+    }
+
+    if (polylines.isEmpty) return const SizedBox.shrink();
+
+    return PolylineLayer(polylines: polylines);
   }
 }

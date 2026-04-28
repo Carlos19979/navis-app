@@ -10,6 +10,8 @@ class MapControls extends StatelessWidget {
     required this.onCenterGps,
     required this.onToggleLayers,
     required this.showSeamarks,
+    this.onToggleTracks,
+    this.showTracks = false,
   });
 
   final VoidCallback onZoomIn;
@@ -17,6 +19,8 @@ class MapControls extends StatelessWidget {
   final VoidCallback onCenterGps;
   final VoidCallback onToggleLayers;
   final bool showSeamarks;
+  final VoidCallback? onToggleTracks;
+  final bool showTracks;
 
   @override
   Widget build(BuildContext context) {
@@ -28,24 +32,37 @@ class MapControls extends StatelessWidget {
         children: [
           _ControlButton(
             icon: Icons.add,
+            tooltip: 'Zoom in',
             onPressed: onZoomIn,
           ),
           const SizedBox(height: 8),
           _ControlButton(
             icon: Icons.remove,
+            tooltip: 'Zoom out',
             onPressed: onZoomOut,
           ),
           const SizedBox(height: 16),
           _ControlButton(
             icon: Icons.my_location,
+            tooltip: 'Center on GPS',
             onPressed: onCenterGps,
           ),
           const SizedBox(height: 8),
           _ControlButton(
             icon: showSeamarks ? Icons.layers : Icons.layers_outlined,
+            tooltip: 'Toggle layers',
             onPressed: onToggleLayers,
             isActive: showSeamarks,
           ),
+          if (onToggleTracks != null) ...[
+            const SizedBox(height: 8),
+            _ControlButton(
+              icon: Icons.route,
+              tooltip: 'Toggle trip tracks',
+              onPressed: onToggleTracks!,
+              isActive: showTracks,
+            ),
+          ],
         ],
       ),
     );
@@ -56,11 +73,13 @@ class _ControlButton extends StatelessWidget {
   const _ControlButton({
     required this.icon,
     required this.onPressed,
+    this.tooltip,
     this.isActive = false,
   });
 
   final IconData icon;
   final VoidCallback onPressed;
+  final String? tooltip;
   final bool isActive;
 
   @override
@@ -79,6 +98,7 @@ class _ControlButton extends StatelessWidget {
       ),
       child: IconButton(
         onPressed: onPressed,
+        tooltip: tooltip,
         icon: Icon(
           icon,
           color: isActive ? AppColors.cyan : AppColors.textPrimary,

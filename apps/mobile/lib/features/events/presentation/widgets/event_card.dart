@@ -31,17 +31,21 @@ class EventCard extends StatelessWidget {
                 child: Column(
                   children: [
                     Text(
-                      '${event.date.day}',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      '${event.startDate.day}',
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleLarge
+                          ?.copyWith(
                             color: AppColors.cyan,
                             fontWeight: FontWeight.w700,
                           ),
                     ),
                     Text(
-                      _monthAbbr(event.date.month),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.cyan,
-                          ),
+                      _monthAbbr(event.startDate.month),
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(color: AppColors.cyan),
                     ),
                   ],
                 ),
@@ -52,59 +56,76 @@ class EventCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      event.title,
-                      style: Theme.of(context).textTheme.titleSmall,
+                      event.name,
+                      style:
+                          Theme.of(context).textTheme.titleSmall,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      NavisDateUtils.formatTime(event.date),
-                      style: Theme.of(context).textTheme.bodySmall,
+                      NavisDateUtils.formatTime(event.startDate),
+                      style:
+                          Theme.of(context).textTheme.bodySmall,
                     ),
-                    if (event.location != null) ...[
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.location_on_outlined,
-                            size: 14,
-                            color: AppColors.textSecondary,
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.location_on_outlined,
+                          size: 14,
+                          color: AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            event.locationName,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              event.location!,
-                              style: Theme.of(context).textTheme.bodySmall,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
-              if (event.isRegistered)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.green.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Text(
-                    'Registered',
-                    style: TextStyle(
-                      color: AppColors.green,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
+              Column(
+                children: [
+                  if (event.isFeatured)
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 4),
+                      child: Icon(
+                        Icons.star,
+                        size: 18,
+                        color: AppColors.amber,
+                        semanticLabel: 'Featured',
+                      ),
                     ),
-                  ),
-                ),
+                  if (event.isInterested)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color:
+                            AppColors.green.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Text(
+                        'Interested',
+                        style: TextStyle(
+                          color: AppColors.green,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ],
           ),
         ),
@@ -114,18 +135,8 @@ class EventCard extends StatelessWidget {
 
   String _monthAbbr(int month) {
     const months = [
-      'JAN',
-      'FEB',
-      'MAR',
-      'APR',
-      'MAY',
-      'JUN',
-      'JUL',
-      'AUG',
-      'SEP',
-      'OCT',
-      'NOV',
-      'DEC',
+      'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
+      'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
     ];
     return months[month - 1];
   }

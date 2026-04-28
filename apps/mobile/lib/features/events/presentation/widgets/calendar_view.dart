@@ -37,9 +37,9 @@ class _CalendarViewState extends State<CalendarView> {
   Set<int> _eventDaysInMonth() {
     final days = <int>{};
     for (final event in widget.events) {
-      if (event.date.year == _currentMonth.year &&
-          event.date.month == _currentMonth.month) {
-        days.add(event.date.day);
+      if (event.startDate.year == _currentMonth.year &&
+          event.startDate.month == _currentMonth.month) {
+        days.add(event.startDate.day);
       }
     }
     return days;
@@ -63,6 +63,7 @@ class _CalendarViewState extends State<CalendarView> {
             children: [
               IconButton(
                 onPressed: _previousMonth,
+                tooltip: 'Previous month',
                 icon: const Icon(Icons.chevron_left),
               ),
               Text(
@@ -71,6 +72,7 @@ class _CalendarViewState extends State<CalendarView> {
               ),
               IconButton(
                 onPressed: _nextMonth,
+                tooltip: 'Next month',
                 icon: const Icon(Icons.chevron_right),
               ),
             ],
@@ -118,9 +120,9 @@ class _CalendarViewState extends State<CalendarView> {
                     ? () {
                         final event = widget.events.firstWhere(
                           (e) =>
-                              e.date.year == _currentMonth.year &&
-                              e.date.month == _currentMonth.month &&
-                              e.date.day == day,
+                              e.startDate.year == _currentMonth.year &&
+                              e.startDate.month == _currentMonth.month &&
+                              e.startDate.day == day,
                         );
                         context.go('/events/${event.id}');
                       }

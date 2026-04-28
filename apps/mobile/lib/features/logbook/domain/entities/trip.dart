@@ -12,6 +12,9 @@ class Trip {
     this.notes,
     this.trackPoints,
     this.status = TripStatus.completed,
+    this.engineHours,
+    this.fuelConsumedL,
+    this.crewMembers,
     this.createdAt,
     this.updatedAt,
   });
@@ -28,6 +31,9 @@ class Trip {
   final String? notes;
   final List<TrackPoint>? trackPoints;
   final TripStatus status;
+  final double? engineHours;
+  final double? fuelConsumedL;
+  final List<String>? crewMembers;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -49,6 +55,9 @@ class Trip {
     String? notes,
     List<TrackPoint>? trackPoints,
     TripStatus? status,
+    double? engineHours,
+    double? fuelConsumedL,
+    List<String>? crewMembers,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -65,6 +74,9 @@ class Trip {
       notes: notes ?? this.notes,
       trackPoints: trackPoints ?? this.trackPoints,
       status: status ?? this.status,
+      engineHours: engineHours ?? this.engineHours,
+      fuelConsumedL: fuelConsumedL ?? this.fuelConsumedL,
+      crewMembers: crewMembers ?? this.crewMembers,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

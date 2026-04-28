@@ -7,24 +7,28 @@ class MapState {
     required this.zoom,
     this.showSeamarks = true,
     this.showPosition = true,
+    this.showTracks = false,
   });
 
   final LatLng center;
   final double zoom;
   final bool showSeamarks;
   final bool showPosition;
+  final bool showTracks;
 
   MapState copyWith({
     LatLng? center,
     double? zoom,
     bool? showSeamarks,
     bool? showPosition,
+    bool? showTracks,
   }) {
     return MapState(
       center: center ?? this.center,
       zoom: zoom ?? this.zoom,
       showSeamarks: showSeamarks ?? this.showSeamarks,
       showPosition: showPosition ?? this.showPosition,
+      showTracks: showTracks ?? this.showTracks,
     );
   }
 }
@@ -66,6 +70,10 @@ class ChartNotifier extends StateNotifier<MapState> {
 
   void togglePosition() {
     state = state.copyWith(showPosition: !state.showPosition);
+  }
+
+  void toggleTracks() {
+    state = state.copyWith(showTracks: !state.showTracks);
   }
 
   void centerOnPosition(LatLng position) {

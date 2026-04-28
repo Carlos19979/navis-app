@@ -13,7 +13,10 @@ class WeatherRepository {
       '/api/v1/weather/current',
       queryParameters: {'lat': lat, 'lon': lon},
     );
-    return WeatherModel.fromJson(response.data!).toEntity();
+    final envelope = response.data!;
+    return WeatherModel.fromJson(
+      envelope['data'] as Map<String, dynamic>,
+    ).toEntity();
   }
 
   Future<List<Weather>> getForecast(double lat, double lon,
@@ -22,7 +25,9 @@ class WeatherRepository {
       '/api/v1/weather/forecast',
       queryParameters: {'lat': lat, 'lon': lon, 'days': days},
     );
-    final items = (response.data!['forecast'] as List<dynamic>)
+    final envelope = response.data!;
+    final data = envelope['data'] as Map<String, dynamic>;
+    final items = (data['forecast'] as List<dynamic>)
         .map((json) =>
             WeatherModel.fromJson(json as Map<String, dynamic>).toEntity())
         .toList();

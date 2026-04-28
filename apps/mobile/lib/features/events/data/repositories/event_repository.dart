@@ -25,15 +25,16 @@ class EventRepository {
       queryParameters: queryParams,
     );
 
-    final data = response.data!;
-    final items = (data['items'] as List<dynamic>)
+    final envelope = response.data!;
+    final items = (envelope['data'] as List<dynamic>)
         .map((json) =>
             EventModel.fromJson(json as Map<String, dynamic>).toEntity())
         .toList();
+    final meta = envelope['meta'] as Map<String, dynamic>?;
 
     return PaginatedResponse<Event>(
       items: items,
-      nextCursor: data['next_cursor'] as String?,
+      nextCursor: meta?['next_cursor'] as String?,
     );
   }
 
@@ -41,18 +42,15 @@ class EventRepository {
     final response = await _apiClient.get<Map<String, dynamic>>(
       '/api/v1/events/$id',
     );
-    return EventModel.fromJson(response.data!).toEntity();
+    final envelope = response.data!;
+    return EventModel.fromJson(
+      envelope['data'] as Map<String, dynamic>,
+    ).toEntity();
   }
 
-  Future<void> registerForEvent(String eventId) async {
+  Future<void> toggleInterest(String eventId) async {
     await _apiClient.post<void>(
-      '/api/v1/events/$eventId/register',
-    );
-  }
-
-  Future<void> unregisterFromEvent(String eventId) async {
-    await _apiClient.delete<void>(
-      '/api/v1/events/$eventId/register',
+      '/api/v1/events/$eventId/interest',
     );
   }
 }

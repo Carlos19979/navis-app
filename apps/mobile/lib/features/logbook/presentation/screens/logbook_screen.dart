@@ -34,7 +34,7 @@ class LogbookScreen extends ConsumerWidget {
               icon: Icons.route_outlined,
               message: 'No trips recorded yet. Start your first trip!',
               actionLabel: 'Record Trip',
-              onAction: () => context.go('/trips/record'),
+              onAction: () => context.push('/boats/$boatId/record'),
             );
           }
 
@@ -45,20 +45,26 @@ class LogbookScreen extends ConsumerWidget {
             onRefresh: () async {
               ref.invalidate(boatTripsProvider(boatId));
             },
-            child: ListView(
+            child: ListView.builder(
               padding: const EdgeInsets.all(16),
-              children: [
-                StatsSummary(stats: stats),
-                const SizedBox(height: 16),
-                ...trips.map((trip) => TripCard(trip: trip)),
-              ],
+              itemCount: trips.length + 1,
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: StatsSummary(stats: stats),
+                  );
+                }
+                return TripCard(trip: trips[index - 1]);
+              },
             ),
           );
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.go('/trips/record'),
-        child: const Icon(Icons.play_arrow),
+        onPressed: () => context.push('/boats/$boatId/record'),
+        tooltip: 'Record trip',
+        child: const Icon(Icons.play_arrow, semanticLabel: 'Record trip'),
       ),
     );
   }
