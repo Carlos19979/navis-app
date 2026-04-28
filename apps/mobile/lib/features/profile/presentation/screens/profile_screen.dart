@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/core/network/notification_service.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
+import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
 import 'package:navis_mobile/features/profile/presentation/providers/profile_provider.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 
@@ -65,7 +67,7 @@ class ProfileScreen extends ConsumerWidget {
                   _ProfileTile(
                     icon: Icons.settings_outlined,
                     title: 'Settings',
-                    onTap: () => context.go('/settings'),
+                    onTap: () => context.push('/settings'),
                   ),
                   const Divider(height: 1),
                   _ProfileTile(
@@ -82,8 +84,56 @@ class ProfileScreen extends ConsumerWidget {
                 ],
               ),
             ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => _confirmLogout(context, ref),
+                icon: const Icon(Icons.logout, color: AppColors.red),
+                label: const Text(
+                  'Log Out',
+                  style: TextStyle(color: AppColors.red),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: AppColors.red),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+              ),
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _confirmLogout(BuildContext context, WidgetRef ref) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Log Out'),
+        content: const Text('Are you sure you want to log out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              final notificationService =
+                  ref.read(notificationServiceProvider);
+              await notificationService.unregisterDevice();
+              await ref.read(authProvider.notifier).logout();
+              if (ctx.mounted) {
+                context.go('/login');
+              }
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.red,
+            ),
+            child: const Text('Log Out'),
+          ),
+        ],
       ),
     );
   }
