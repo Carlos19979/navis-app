@@ -286,11 +286,11 @@ Estado actual: Fases 0-11 implementadas. Fase 12 en progreso. Este roadmap cubre
 - [x] Manejar app resume: auto-replay on connectivity change
 
 #### 14.3 — Offline assets
-- [ ] Fotos de documentos disponibles offline tras primera visualización (cache en app dir)
-- [ ] Cache de tiles de mapa para zona del puerto base
-- [ ] Offline nautical charts: descarga regional con flutter_map_mbtiles (MBTiles/SQLite)
-- [ ] Gestión de versiones de cartas offline (check for updates)
-- [ ] Cache invalidation: limpiar cache de imágenes en app update
+- [x] Fotos de documentos disponibles offline tras primera visualización (CachedNetworkImage persists to disk)
+- [x] Cache de tiles de mapa para zona del puerto base (CachedTileProvider for all map layers)
+- [ ] Offline nautical charts: descarga regional con flutter_map_mbtiles (MBTiles/SQLite) — requires chart data source
+- [ ] Gestión de versiones de cartas offline (check for updates) — deferred with MBTiles
+- [ ] Cache invalidation: limpiar cache de imágenes en settings
 
 ### Criterios de completado Fase 14
 - [ ] Se puede ver boats, documents y trips sin conexión
