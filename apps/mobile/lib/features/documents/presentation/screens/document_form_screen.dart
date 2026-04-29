@@ -50,7 +50,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
   String? _photoPath;
   String? _existingPhotoUrl;
 
-  static const _documentTypes = [
+  static final _documentTypes = [
     'Registration',
     'Insurance',
     'Inspection',
@@ -90,6 +90,9 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
     }
     setState(() {
       _selectedType = doc.type;
+      if (!_documentTypes.contains(doc.type)) {
+        _documentTypes.add(doc.type);
+      }
       _expiryDate = widget.isRenew
           ? DateTime.now().add(const Duration(days: 365))
           : doc.expiryDate;
