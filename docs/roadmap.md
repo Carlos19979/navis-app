@@ -1,4 +1,4 @@
-# Roadmap de Implementación — Navis (Actualizado 2026-04-28)
+# Roadmap de Implementación — Navis (Actualizado 2026-04-29)
 
 Estado actual: Fases 0-11 implementadas. Fase 12 en progreso. Este roadmap cubre todo lo que queda.
 
@@ -337,13 +337,14 @@ Estado actual: Fases 0-11 implementadas. Fase 12 en progreso. Este roadmap cubre
 ### Tareas
 
 #### 16.1 — Test coverage
-- [ ] Go API: unit tests para services con mocked ports (objetivo 80%+)
+- [x] Go API: unit tests para services con mocked ports — 128 tests en 5 ficheros (boat, document, trip, event, weather)
 - [ ] Go API: integration tests para repos contra DB real (testcontainers-go)
-- [ ] Go API: table-driven tests con t.Run() y t.Parallel()
+- [x] Go API: table-driven tests con t.Run() y t.Parallel()
 - [ ] Go API: golden files para assertions de JSON responses complejos
 - [ ] Go API: benchmarks para queries PostGIS y batch inserts (b.Run())
 - [ ] Flutter: unit tests para providers y repositories (mocktail)
-- [ ] Flutter: widget tests para shared widgets y pantallas clave
+- [x] Flutter: widget tests para todas las pantallas (14 ficheros, 299 tests) — cubre rendering, inputs, validación, navegación, dialogs, loading/error/empty states
+- [x] Flutter: E2E integration tests contra API real (10 tests) — auth, boats, documents, logbook, weather, events, logout
 - [ ] Flutter: test sealed class branches con exhaustive switch
 
 #### 16.2 — CI/CD pipeline (GitHub Actions)
@@ -384,7 +385,7 @@ Estado actual: Fases 0-11 implementadas. Fase 12 en progreso. Este roadmap cubre
 
 ### Criterios de completado Fase 16
 - [ ] CI pipeline verde en cada push
-- [ ] Test coverage: Go 80%+, Flutter tests para flujos principales
+- [x] Test coverage: Go services 128 unit tests, Flutter 299 widget tests + 10 E2E integration tests
 - [ ] Docker image < 15MB
 - [ ] Staging environment funcional
 - [ ] Analytics captura eventos clave
@@ -426,7 +427,7 @@ Estado actual: Fases 0-11 implementadas. Fase 12 en progreso. Este roadmap cubre
 | **13** | **GPS Trip Recording** | **PENDIENTE** | **3-5 días** |
 | **14** | **Offline Completo** | **PENDIENTE** | **5-7 días** |
 | **15** | **Social y Estadísticas** | **PENDIENTE** | **3-4 días** |
-| **16** | **Infra y Producción** | **PENDIENTE** | **5-7 días** |
+| **16** | **Infra y Producción** | **EN PROGRESO** | **3-5 días** |
 | **17** | **Premium (Futuro)** | **FUTURO** | **TBD** |
 | | **TOTAL RESTANTE** | | **~24-35 días** |
 

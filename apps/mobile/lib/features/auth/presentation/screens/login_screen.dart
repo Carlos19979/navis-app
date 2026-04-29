@@ -87,8 +87,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ],
       ),
     );
-    emailCtrl.dispose();
-
     if (email == null || email.isEmpty) return;
 
     try {
