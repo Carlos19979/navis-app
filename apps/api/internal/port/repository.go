@@ -30,7 +30,7 @@ type DocumentRepository interface {
 type TripRepository interface {
 	Create(ctx context.Context, trip *domain.Trip) (*domain.Trip, error)
 	GetByID(ctx context.Context, userID, id string) (*domain.Trip, error)
-	List(ctx context.Context, userID, cursor string, limit int) ([]domain.Trip, string, error)
+	List(ctx context.Context, userID, boatID, cursor string, limit int) ([]domain.Trip, string, error)
 	Update(ctx context.Context, userID string, trip *domain.Trip) (*domain.Trip, error)
 	Delete(ctx context.Context, userID, id string) error
 }

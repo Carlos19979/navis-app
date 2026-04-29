@@ -52,12 +52,12 @@ func (s *TripService) GetByID(ctx context.Context, userID, id string) (*domain.T
 }
 
 // List returns a paginated list of trips for a user.
-func (s *TripService) List(ctx context.Context, userID, cursor string, limit int) ([]domain.Trip, string, error) {
+func (s *TripService) List(ctx context.Context, userID, boatID, cursor string, limit int) ([]domain.Trip, string, error) {
 	if limit <= 0 || limit > 50 {
 		limit = 20
 	}
 
-	trips, nextCursor, err := s.tripRepo.List(ctx, userID, cursor, limit)
+	trips, nextCursor, err := s.tripRepo.List(ctx, userID, boatID, cursor, limit)
 	if err != nil {
 		return nil, "", fmt.Errorf("listing trips: %w", err)
 	}

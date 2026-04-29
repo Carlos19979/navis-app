@@ -89,8 +89,9 @@ func (h *TripHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	boatID := chi.URLParam(r, "boatId")
 	cursor, limit := pagination.ParseCursor(r)
-	trips, nextCursor, err := h.svc.List(r.Context(), userID, cursor, limit)
+	trips, nextCursor, err := h.svc.List(r.Context(), userID, boatID, cursor, limit)
 	if err != nil {
 		MapDomainError(w, err)
 		return

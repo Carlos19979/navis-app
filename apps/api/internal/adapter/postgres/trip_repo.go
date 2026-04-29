@@ -75,32 +75,48 @@ func (r *TripRepo) GetByID(ctx context.Context, userID, id string) (*domain.Trip
 }
 
 // List returns a paginated list of trips for a user using cursor-based pagination.
-func (r *TripRepo) List(ctx context.Context, userID, cursor string, limit int) ([]domain.Trip, string, error) {
+func (r *TripRepo) List(ctx context.Context, userID, boatID, cursor string, limit int) ([]domain.Trip, string, error) {
 	var (
 		rows pgx.Rows
 		err  error
 	)
 
 	if cursor == "" {
-		query := `SELECT ` + tripColumns + ` FROM trips
-			WHERE user_id = $1
-			ORDER BY created_at DESC, id DESC
-			LIMIT $2`
-		rows, err = r.pool.Query(ctx, query, userID, limit+1)
+		if boatID != "" {
+			query := `SELECT ` + tripColumns + ` FROM trips
+				WHERE user_id = $1 AND boat_id = $2
+				ORDER BY created_at DESC, id DESC
+				LIMIT $3`
+			rows, err = r.pool.Query(ctx, query, userID, boatID, limit+1)
+		} else {
+			query := `SELECT ` + tripColumns + ` FROM trips
+				WHERE user_id = $1
+				ORDER BY created_at DESC, id DESC
+				LIMIT $2`
+			rows, err = r.pool.Query(ctx, query, userID, limit+1)
+		}
 	} else {
 		var cursorCreatedAt time.Time
 		cErr := r.pool.QueryRow(ctx,
 			`SELECT created_at FROM trips WHERE id = $1`, cursor,
 		).Scan(&cursorCreatedAt)
 		if cErr != nil {
-			return r.List(ctx, userID, "", limit)
+			return r.List(ctx, userID, boatID, "", limit)
 		}
 
-		query := `SELECT ` + tripColumns + ` FROM trips
-			WHERE user_id = $1 AND (created_at, id) < ($2, $3)
-			ORDER BY created_at DESC, id DESC
-			LIMIT $4`
-		rows, err = r.pool.Query(ctx, query, userID, cursorCreatedAt, cursor, limit+1)
+		if boatID != "" {
+			query := `SELECT ` + tripColumns + ` FROM trips
+				WHERE user_id = $1 AND boat_id = $2 AND (created_at, id) < ($3, $4)
+				ORDER BY created_at DESC, id DESC
+				LIMIT $5`
+			rows, err = r.pool.Query(ctx, query, userID, boatID, cursorCreatedAt, cursor, limit+1)
+		} else {
+			query := `SELECT ` + tripColumns + ` FROM trips
+				WHERE user_id = $1 AND (created_at, id) < ($2, $3)
+				ORDER BY created_at DESC, id DESC
+				LIMIT $4`
+			rows, err = r.pool.Query(ctx, query, userID, cursorCreatedAt, cursor, limit+1)
+		}
 	}
 	if err != nil {
 		return nil, "", fmt.Errorf("listing trips: %w", err)

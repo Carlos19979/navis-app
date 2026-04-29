@@ -50,7 +50,7 @@ func (h *UserHandler) ExportData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	trips, _, err := h.trips.List(r.Context(), userID, "", 1000)
+	trips, _, err := h.trips.List(r.Context(), userID, "", "", 1000)
 	if err != nil {
 		Error(w, http.StatusInternalServerError, "failed to export trips", "EXPORT_FAILED")
 		return
@@ -86,7 +86,7 @@ func (h *UserHandler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	trips, _, err := h.trips.List(r.Context(), userID, "", 1000)
+	trips, _, err := h.trips.List(r.Context(), userID, "", "", 1000)
 	if err != nil {
 		Error(w, http.StatusInternalServerError, "failed to list trips", "DELETE_FAILED")
 		return
