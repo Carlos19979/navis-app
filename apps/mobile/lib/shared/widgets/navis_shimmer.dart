@@ -7,8 +7,7 @@ class NavisShimmer extends StatefulWidget {
     super.key,
     this.itemCount = 3,
     this.itemHeight = 88,
-    this.padding =
-        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
   });
 
   final int itemCount;
@@ -32,8 +31,7 @@ class _NavisShimmerState extends State<NavisShimmer>
       duration: const Duration(milliseconds: 1500),
     )..repeat();
     _animation = Tween<double>(begin: -1, end: 2).animate(
-      CurvedAnimation(
-          parent: _controller, curve: Curves.easeInOutSine),
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOutSine),
     );
   }
 

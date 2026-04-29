@@ -59,8 +59,7 @@ class TripRepository {
         final cached = await offlineRepo!.getCachedByBoat('trips', boatId);
         if (cached.isNotEmpty) {
           return PaginatedResponse<Trip>(
-            items:
-                cached.map((j) => TripModel.fromJson(j).toEntity()).toList(),
+            items: cached.map((j) => TripModel.fromJson(j).toEntity()).toList(),
           );
         }
       }
@@ -113,8 +112,7 @@ class TripRepository {
     final data = envelope['data'] as List<dynamic>?;
     if (data == null) return [];
     return data
-        .map((json) =>
-            TrackPointModel.fromJson(json as Map<String, dynamic>))
+        .map((json) => TrackPointModel.fromJson(json as Map<String, dynamic>))
         .map((m) => TrackPoint(
               latitude: m.latitude,
               longitude: m.longitude,

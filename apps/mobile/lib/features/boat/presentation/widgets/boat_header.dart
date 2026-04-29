@@ -65,15 +65,15 @@ class BoatHeader extends StatelessWidget {
                   Text(
                     boat.name,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black.withValues(alpha: 0.5),
-                              blurRadius: 8,
-                            ),
-                          ],
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withValues(alpha: 0.5),
+                          blurRadius: 8,
                         ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 4),
                   // Registration as glass pill badge
@@ -92,11 +92,10 @@ class BoatHeader extends StatelessWidget {
                     ),
                     child: Text(
                       boat.registration,
-                      style:
-                          Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: Colors.white70,
-                                letterSpacing: 0.5,
-                              ),
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: Colors.white70,
+                            letterSpacing: 0.5,
+                          ),
                     ),
                   ),
                 ],

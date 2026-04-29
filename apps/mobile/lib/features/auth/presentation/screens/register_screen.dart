@@ -78,8 +78,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color:
-                                  AppColors.cyan.withValues(alpha: 0.2),
+                              color: AppColors.cyan.withValues(alpha: 0.2),
                               blurRadius: 40,
                               spreadRadius: 8,
                             ),
@@ -99,10 +98,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           ),
                         ),
                       ),
-                    )
-                        .animate()
-                        .fadeIn(duration: 600.ms)
-                        .scale(
+                    ).animate().fadeIn(duration: 600.ms).scale(
                           begin: const Offset(0.8, 0.8),
                           end: const Offset(1.0, 1.0),
                           duration: 600.ms,
@@ -116,9 +112,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         color: AppColors.textPrimary,
                         fontWeight: FontWeight.w700,
                       ),
-                    )
-                        .animate()
-                        .fadeIn(delay: 200.ms, duration: 500.ms),
+                    ).animate().fadeIn(delay: 200.ms, duration: 500.ms),
                     const SizedBox(height: 4),
                     Text(
                       'JOIN NAVIS AND MANAGE YOUR BOAT',
@@ -128,9 +122,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         letterSpacing: 2.0,
                         fontWeight: FontWeight.w400,
                       ),
-                    )
-                        .animate()
-                        .fadeIn(delay: 300.ms, duration: 500.ms),
+                    ).animate().fadeIn(delay: 300.ms, duration: 500.ms),
                     const SizedBox(height: 48),
 
                     // -- Error Display --
@@ -139,8 +131,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         borderRadius: 12,
                         padding: const EdgeInsets.all(14),
                         margin: const EdgeInsets.only(bottom: 20),
-                        borderColor:
-                            AppColors.red.withValues(alpha: 0.4),
+                        borderColor: AppColors.red.withValues(alpha: 0.4),
                         opacity: 0.06,
                         child: Row(
                           children: [
@@ -163,10 +154,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             ),
                           ],
                         ),
-                      )
-                          .animate()
-                          .fadeIn(duration: 300.ms)
-                          .shakeX(
+                      ).animate().fadeIn(duration: 300.ms).shakeX(
                             hz: 3,
                             amount: 4,
                             duration: 400.ms,
@@ -188,10 +176,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         }
                         return null;
                       },
-                    )
-                        .animate()
-                        .fadeIn(delay: 400.ms, duration: 500.ms)
-                        .slideY(
+                    ).animate().fadeIn(delay: 400.ms, duration: 500.ms).slideY(
                           begin: 0.3,
                           end: 0,
                           delay: 400.ms,
@@ -233,10 +218,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         }
                         return null;
                       },
-                    )
-                        .animate()
-                        .fadeIn(delay: 500.ms, duration: 500.ms)
-                        .slideY(
+                    ).animate().fadeIn(delay: 500.ms, duration: 500.ms).slideY(
                           begin: 0.3,
                           end: 0,
                           delay: 500.ms,
@@ -266,8 +248,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             : 'Hide password',
                         onPressed: () {
                           setState(() {
-                            _obscureConfirmPassword =
-                                !_obscureConfirmPassword;
+                            _obscureConfirmPassword = !_obscureConfirmPassword;
                           });
                         },
                       ),
@@ -280,10 +261,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         }
                         return null;
                       },
-                    )
-                        .animate()
-                        .fadeIn(delay: 600.ms, duration: 500.ms)
-                        .slideY(
+                    ).animate().fadeIn(delay: 600.ms, duration: 500.ms).slideY(
                           begin: 0.3,
                           end: 0,
                           delay: 600.ms,
@@ -296,12 +274,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     NavisButton(
                       label: 'Register',
                       onPressed: _onRegister,
-                      isLoading:
-                          authState.status == AuthStatus.loading,
-                    )
-                        .animate()
-                        .fadeIn(delay: 700.ms, duration: 500.ms)
-                        .slideY(
+                      isLoading: authState.status == AuthStatus.loading,
+                    ).animate().fadeIn(delay: 700.ms, duration: 500.ms).slideY(
                           begin: 0.3,
                           end: 0,
                           delay: 700.ms,
@@ -331,9 +305,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                         textAlign: TextAlign.center,
                       ),
-                    )
-                        .animate()
-                        .fadeIn(delay: 800.ms, duration: 500.ms),
+                    ).animate().fadeIn(delay: 800.ms, duration: 500.ms),
                   ],
                 ),
               ),

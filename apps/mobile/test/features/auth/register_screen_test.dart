@@ -146,8 +146,7 @@ void main() {
         expect(find.text('secret123'), findsOneWidget);
       });
 
-      testWidgets('confirm password field accepts input',
-          (tester) async {
+      testWidgets('confirm password field accepts input', (tester) async {
         await tester.pumpWidget(buildRegisterScreen());
         await tester.pumpAndSettle();
 
@@ -161,8 +160,7 @@ void main() {
         expect(find.text('secret123'), findsOneWidget);
       });
 
-      testWidgets('password fields are obscured by default',
-          (tester) async {
+      testWidgets('password fields are obscured by default', (tester) async {
         await tester.pumpWidget(buildRegisterScreen());
         await tester.pumpAndSettle();
 
@@ -192,8 +190,7 @@ void main() {
         expect(confirmTextField.obscureText, isTrue);
       });
 
-      testWidgets(
-          'password visibility toggle works for password field',
+      testWidgets('password visibility toggle works for password field',
           (tester) async {
         await tester.pumpWidget(buildRegisterScreen());
         await tester.pumpAndSettle();
@@ -267,8 +264,7 @@ void main() {
         );
       });
 
-      testWidgets('shows error when password is too short',
-          (tester) async {
+      testWidgets('shows error when password is too short', (tester) async {
         await tester.pumpWidget(buildRegisterScreen());
         await tester.pumpAndSettle();
 
@@ -291,8 +287,7 @@ void main() {
         );
       });
 
-      testWidgets('shows error when confirm password is empty',
-          (tester) async {
+      testWidgets('shows error when confirm password is empty', (tester) async {
         await tester.pumpWidget(buildRegisterScreen());
         await tester.pumpAndSettle();
 
@@ -315,8 +310,7 @@ void main() {
         );
       });
 
-      testWidgets('shows error when passwords do not match',
-          (tester) async {
+      testWidgets('shows error when passwords do not match', (tester) async {
         await tester.pumpWidget(buildRegisterScreen());
         await tester.pumpAndSettle();
 
@@ -433,8 +427,7 @@ void main() {
             ));
       });
 
-      testWidgets(
-          'does not call register when passwords do not match',
+      testWidgets('does not call register when passwords do not match',
           (tester) async {
         await tester.pumpWidget(buildRegisterScreen());
         await tester.pumpAndSettle();
@@ -465,8 +458,7 @@ void main() {
     });
 
     group('error state', () {
-      testWidgets('displays error message from auth state',
-          (tester) async {
+      testWidgets('displays error message from auth state', (tester) async {
         await tester.pumpWidget(buildRegisterScreen(
           initialState: const AuthState.unauthenticated(
             errorMessage: 'Email already registered',
@@ -480,8 +472,7 @@ void main() {
         );
       });
 
-      testWidgets('displays error icon with error message',
-          (tester) async {
+      testWidgets('displays error icon with error message', (tester) async {
         await tester.pumpWidget(buildRegisterScreen(
           initialState: const AuthState.unauthenticated(
             errorMessage: 'Server error',

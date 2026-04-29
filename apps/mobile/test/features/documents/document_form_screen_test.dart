@@ -7,7 +7,6 @@ import 'package:navis_mobile/features/documents/domain/entities/document.dart';
 import 'package:navis_mobile/features/documents/domain/repositories/document_repository.dart';
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
 import 'package:navis_mobile/features/documents/presentation/screens/document_form_screen.dart';
-import 'package:navis_mobile/shared/models/paginated_response.dart';
 
 import '../../helpers/test_helpers.dart';
 
@@ -152,8 +151,7 @@ void main() {
       expect(find.text('Notes (optional)'), findsOneWidget);
     });
 
-    testWidgets('shows Save Document button in create mode',
-        (tester) async {
+    testWidgets('shows Save Document button in create mode', (tester) async {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
@@ -218,8 +216,7 @@ void main() {
       expect(find.text('Annual renewal'), findsOneWidget);
     });
 
-    testWidgets('expiry date field opens date picker on tap',
-        (tester) async {
+    testWidgets('expiry date field opens date picker on tap', (tester) async {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
@@ -265,8 +262,7 @@ void main() {
       expect(find.byType(DatePickerDialog), findsNothing);
     });
 
-    testWidgets('does not show renewal section in create mode',
-        (tester) async {
+    testWidgets('does not show renewal section in create mode', (tester) async {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
@@ -277,12 +273,7 @@ void main() {
   });
 
   group('DocumentFormScreen - Edit Mode', () {
-    final existingDoc = makeDocument(
-      id: 'doc-1',
-      boatId: boatId,
-      type: 'Insurance',
-      daysUntilExpiry: 180,
-    );
+    final existingDoc = makeDocument();
 
     testWidgets('shows Edit Document title in edit mode', (tester) async {
       await tester.pumpWidget(buildSubject(
@@ -294,8 +285,7 @@ void main() {
       expect(find.text('Edit Document'), findsOneWidget);
     });
 
-    testWidgets('shows Update Document button in edit mode',
-        (tester) async {
+    testWidgets('shows Update Document button in edit mode', (tester) async {
       await tester.pumpWidget(buildSubject(
         documentId: 'doc-1',
         existingDocument: existingDoc,
@@ -305,8 +295,7 @@ void main() {
       expect(find.text('Update Document'), findsOneWidget);
     });
 
-    testWidgets('pre-populates notes from existing document',
-        (tester) async {
+    testWidgets('pre-populates notes from existing document', (tester) async {
       await tester.pumpWidget(buildSubject(
         documentId: 'doc-1',
         existingDocument: existingDoc,
@@ -331,9 +320,6 @@ void main() {
 
   group('DocumentFormScreen - Renew Mode', () {
     final existingDoc = makeDocument(
-      id: 'doc-1',
-      boatId: boatId,
-      type: 'Insurance',
       daysUntilExpiry: -10, // Expired
     );
 
@@ -431,8 +417,7 @@ void main() {
   });
 
   group('DocumentFormScreen - Form Interactions', () {
-    testWidgets('scan area is tappable and shows bottom sheet',
-        (tester) async {
+    testWidgets('scan area is tappable and shows bottom sheet', (tester) async {
       tester.view.physicalSize = const Size(1080, 1920);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() {
@@ -491,8 +476,7 @@ void main() {
       expect(find.text('Save Document'), findsOneWidget);
     });
 
-    testWidgets(
-        'form has back navigation via app bar', (tester) async {
+    testWidgets('form has back navigation via app bar', (tester) async {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
@@ -507,7 +491,6 @@ void main() {
         (tester) async {
       final customDoc = makeDocument(
         id: 'doc-custom',
-        boatId: boatId,
         type: 'Diving Certificate',
         daysUntilExpiry: 100,
       );

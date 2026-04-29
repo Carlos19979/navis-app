@@ -36,7 +36,7 @@ void main() {
 
   group('E2E — Full App Flow', () {
     testWidgets('1. Auth: login with test credentials', (tester) async {
-      app.main();
+      await app.main();
       // Initial load — the app starts at /boats but redirects to /login
       // because there is no session. Use pump with duration because the
       // login screen has looping .animate() entrance animations.
@@ -72,7 +72,7 @@ void main() {
 
     testWidgets('2. Boats: seeded boats appear, documents leads to detail',
         (tester) async {
-      app.main();
+      await app.main();
       await tester.pump(_pumpDuration);
 
       // Login first
@@ -114,7 +114,7 @@ void main() {
     });
 
     testWidgets('3. Documents: list and create flow', (tester) async {
-      app.main();
+      await app.main();
       await tester.pump(_pumpDuration);
       await _login(tester);
       await tester.pump(_networkSettleTimeout);
@@ -173,9 +173,7 @@ void main() {
         }
       }
 
-      // Enter notes
-      final notesFields = find.byType(TextFormField);
-      // Find the notes field — it should be labeled 'Notes'
+      // Find the notes field by label
       final notesField = find.widgetWithText(TextFormField, 'Notes');
       if (notesField.evaluate().isNotEmpty) {
         await tester.enterText(notesField, 'Integration test document');
@@ -198,7 +196,7 @@ void main() {
 
     testWidgets('4. Logbook: navigate to trips and view detail',
         (tester) async {
-      app.main();
+      await app.main();
       await tester.pump(_pumpDuration);
       await _login(tester);
       await tester.pump(_networkSettleTimeout);
@@ -242,7 +240,7 @@ void main() {
 
     testWidgets('5. Weather: tab shows weather or location prompt',
         (tester) async {
-      app.main();
+      await app.main();
       await tester.pump(_pumpDuration);
       await _login(tester);
       await tester.pump(_networkSettleTimeout);
@@ -277,7 +275,7 @@ void main() {
     });
 
     testWidgets('6. Events: list events and view detail', (tester) async {
-      app.main();
+      await app.main();
       await tester.pump(_pumpDuration);
       await _login(tester);
       await tester.pump(_networkSettleTimeout);
@@ -323,7 +321,7 @@ void main() {
 
     testWidgets('7. Logout: navigate to profile and log out',
         (tester) async {
-      app.main();
+      await app.main();
       await tester.pump(_pumpDuration);
       await _login(tester);
       await tester.pump(_networkSettleTimeout);
@@ -361,7 +359,7 @@ void main() {
 
   group('E2E — Boat Dashboard Interactions', () {
     testWidgets('pull-to-refresh reloads boat list', (tester) async {
-      app.main();
+      await app.main();
       await tester.pump(_pumpDuration);
       await _login(tester);
       await tester.pump(_networkSettleTimeout);
@@ -381,7 +379,7 @@ void main() {
     });
 
     testWidgets('FAB navigates to new boat form', (tester) async {
-      app.main();
+      await app.main();
       await tester.pump(_pumpDuration);
       await _login(tester);
       await tester.pump(_networkSettleTimeout);
@@ -407,7 +405,7 @@ void main() {
 
     testWidgets('document button on boat card navigates to document list',
         (tester) async {
-      app.main();
+      await app.main();
       await tester.pump(_pumpDuration);
       await _login(tester);
       await tester.pump(_networkSettleTimeout);
@@ -430,7 +428,7 @@ void main() {
 
   group('E2E — Events Search', () {
     testWidgets('search filters events', (tester) async {
-      app.main();
+      await app.main();
       await tester.pump(_pumpDuration);
       await _login(tester);
       await tester.pump(_networkSettleTimeout);

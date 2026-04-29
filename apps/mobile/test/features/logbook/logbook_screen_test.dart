@@ -50,8 +50,7 @@ void main() {
       expect(find.byType(NavisShimmer), findsOneWidget);
     });
 
-    testWidgets('renders trip list with TripCard widgets',
-        (tester) async {
+    testWidgets('renders trip list with TripCard widgets', (tester) async {
       final trips = [
         makeTrip(),
         makeTrip(id: 'trip-2', departurePort: 'Barcelona'),
@@ -77,8 +76,7 @@ void main() {
       expect(find.text('Barcelona'), findsOneWidget);
     });
 
-    testWidgets('shows stats summary when trips exist',
-        (tester) async {
+    testWidgets('shows stats summary when trips exist', (tester) async {
       final trips = [makeTrip()];
 
       await tester.pumpWidget(
@@ -103,8 +101,7 @@ void main() {
       expect(find.text('25'), findsOneWidget); // totalHours rounded
     });
 
-    testWidgets('shows empty state with CTA when no trips',
-        (tester) async {
+    testWidgets('shows empty state with CTA when no trips', (tester) async {
       await tester.pumpWidget(
         buildTestApp(
           const LogbookScreen(boatId: boatId),
@@ -125,8 +122,7 @@ void main() {
       expect(find.text('Record Trip'), findsOneWidget);
     });
 
-    testWidgets('FAB is present with Record trip tooltip',
-        (tester) async {
+    testWidgets('FAB is present with Record trip tooltip', (tester) async {
       final trips = [makeTrip()];
 
       await tester.pumpWidget(
@@ -176,8 +172,7 @@ void main() {
       expect(find.byIcon(Icons.bar_chart_outlined), findsOneWidget);
     });
 
-    testWidgets('shows error state with retry button',
-        (tester) async {
+    testWidgets('shows error state with retry button', (tester) async {
       await tester.pumpWidget(
         buildTestApp(
           const LogbookScreen(boatId: boatId),
@@ -195,8 +190,7 @@ void main() {
       expect(find.text('Retry'), findsOneWidget);
     });
 
-    testWidgets('retry button triggers provider refresh',
-        (tester) async {
+    testWidgets('retry button triggers provider refresh', (tester) async {
       var callCount = 0;
 
       await tester.pumpWidget(
@@ -259,8 +253,7 @@ void main() {
       expect(callCount, greaterThan(initialCount));
     });
 
-    testWidgets('TripCard widget is rendered and tappable',
-        (tester) async {
+    testWidgets('TripCard widget is rendered and tappable', (tester) async {
       final trips = [makeTrip()];
 
       await tester.pumpWidget(

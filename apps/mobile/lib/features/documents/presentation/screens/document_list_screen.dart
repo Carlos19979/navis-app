@@ -30,28 +30,23 @@ class DocumentListScreen extends ConsumerWidget {
       body: GradientBackground(
         child: SafeArea(
           child: docsAsync.when(
-            loading: () =>
-                const NavisShimmer(itemCount: 4, itemHeight: 80),
+            loading: () => const NavisShimmer(itemCount: 4, itemHeight: 80),
             error: (error, stack) => NavisErrorWidget(
               message: error.toString(),
-              onRetry: () =>
-                  ref.invalidate(boatDocumentsProvider(boatId)),
+              onRetry: () => ref.invalidate(boatDocumentsProvider(boatId)),
             ),
             data: (docs) {
               if (docs.isEmpty) {
                 return NavisEmptyState(
                   icon: Icons.description_outlined,
-                  message:
-                      'No documents yet. Add your first document!',
+                  message: 'No documents yet. Add your first document!',
                   actionLabel: 'Add Document',
-                  onAction: () =>
-                      context.push('/boats/$boatId/documents/new'),
+                  onAction: () => context.push('/boats/$boatId/documents/new'),
                 );
               }
 
               final sorted = List<Document>.from(docs)
-                ..sort(
-                    (a, b) => a.expiryDate.compareTo(b.expiryDate));
+                ..sort((a, b) => a.expiryDate.compareTo(b.expiryDate));
 
               return RefreshIndicator(
                 color: AppColors.cyan,
@@ -96,8 +91,7 @@ class DocumentListScreen extends ConsumerWidget {
           ],
         ),
         child: FloatingActionButton(
-          onPressed: () =>
-              context.push('/boats/$boatId/documents/new'),
+          onPressed: () => context.push('/boats/$boatId/documents/new'),
           tooltip: 'Add document',
           elevation: 0,
           backgroundColor: Colors.transparent,
@@ -170,18 +164,15 @@ class _DocumentCard extends StatelessWidget {
                             style: Theme.of(context)
                                 .textTheme
                                 .titleSmall
-                                ?.copyWith(
-                                    fontWeight: FontWeight.w600),
+                                ?.copyWith(fontWeight: FontWeight.w600),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             'Expires: ${_formatDate(doc.expiryDate)}',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(
-                                  color: AppColors.textSecondary,
-                                ),
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
                           ),
                         ],
                       ),
@@ -202,8 +193,7 @@ class _DocumentCard extends StatelessWidget {
     return type
         .replaceAll('_', ' ')
         .split(' ')
-        .map((w) =>
-            w.isEmpty ? w : w[0].toUpperCase() + w.substring(1))
+        .map((w) => w.isEmpty ? w : w[0].toUpperCase() + w.substring(1))
         .join(' ');
   }
 

@@ -56,8 +56,7 @@ class WeatherScreen extends ConsumerWidget {
                         child: Icon(
                           Icons.location_off,
                           size: 40,
-                          color: AppColors.textSecondary
-                              .withValues(alpha: 0.6),
+                          color: AppColors.textSecondary.withValues(alpha: 0.6),
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -193,8 +192,7 @@ class WeatherScreen extends ConsumerWidget {
                           child: _WeatherStatPill(
                             icon: Icons.air,
                             label: 'Wind',
-                            value:
-                                '${weather.windSpeed.toStringAsFixed(0)} kt',
+                            value: '${weather.windSpeed.toStringAsFixed(0)} kt',
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -202,8 +200,7 @@ class WeatherScreen extends ConsumerWidget {
                           child: _WeatherStatPill(
                             icon: Icons.waves,
                             label: 'Waves',
-                            value:
-                                '${weather.waveHeight.toStringAsFixed(1)} m',
+                            value: '${weather.waveHeight.toStringAsFixed(1)} m',
                           ),
                         ),
                         if (weather.humidity != null) ...[
@@ -224,9 +221,7 @@ class WeatherScreen extends ConsumerWidget {
                     const SizedBox(height: 16),
 
                     // Wave chart
-                    WaveChart(waveHeight: weather.waveHeight)
-                        .animate()
-                        .fadeIn(
+                    WaveChart(waveHeight: weather.waveHeight).animate().fadeIn(
                           delay: 500.ms,
                           duration: 500.ms,
                         ),
@@ -237,13 +232,11 @@ class WeatherScreen extends ConsumerWidget {
                       padding: const EdgeInsets.only(left: 4),
                       child: Text(
                         '7-Day Forecast',
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleMedium
-                            ?.copyWith(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w600,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                ),
                       ),
                     ),
                     const SizedBox(height: 12),

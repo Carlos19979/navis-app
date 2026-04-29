@@ -17,16 +17,11 @@ class NavisBottomNav extends ConsumerWidget {
         icon: Icons.sailing_outlined,
         activeIcon: Icons.sailing,
         label: 'Boats'),
+    _NavItem(icon: Icons.map_outlined, activeIcon: Icons.map, label: 'Charts'),
     _NavItem(
-        icon: Icons.map_outlined, activeIcon: Icons.map, label: 'Charts'),
+        icon: Icons.cloud_outlined, activeIcon: Icons.cloud, label: 'Weather'),
     _NavItem(
-        icon: Icons.cloud_outlined,
-        activeIcon: Icons.cloud,
-        label: 'Weather'),
-    _NavItem(
-        icon: Icons.event_outlined,
-        activeIcon: Icons.event,
-        label: 'Events'),
+        icon: Icons.event_outlined, activeIcon: Icons.event, label: 'Events'),
   ];
 
   @override
@@ -69,15 +64,13 @@ class NavisBottomNav extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: List.generate(_items.length, (index) {
                     final item = _items[index];
-                    final isActive =
-                        navigationShell.currentIndex == index;
+                    final isActive = navigationShell.currentIndex == index;
                     return _NavBarItem(
                       item: item,
                       isActive: isActive,
                       onTap: () => navigationShell.goBranch(
                         index,
-                        initialLocation:
-                            index == navigationShell.currentIndex,
+                        initialLocation: index == navigationShell.currentIndex,
                       ),
                     );
                   }),
@@ -126,8 +119,7 @@ class _NavBarItem extends StatelessWidget {
           children: [
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               decoration: BoxDecoration(
                 color: isActive
                     ? AppColors.cyan.withValues(alpha: 0.15)
@@ -136,9 +128,7 @@ class _NavBarItem extends StatelessWidget {
               ),
               child: Icon(
                 isActive ? item.activeIcon : item.icon,
-                color: isActive
-                    ? AppColors.cyan
-                    : AppColors.textSecondary,
+                color: isActive ? AppColors.cyan : AppColors.textSecondary,
                 size: 24,
               ),
             ),
@@ -147,11 +137,8 @@ class _NavBarItem extends StatelessWidget {
               duration: const Duration(milliseconds: 200),
               style: TextStyle(
                 fontSize: 10,
-                fontWeight:
-                    isActive ? FontWeight.w600 : FontWeight.w400,
-                color: isActive
-                    ? AppColors.cyan
-                    : AppColors.textSecondary,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                color: isActive ? AppColors.cyan : AppColors.textSecondary,
               ),
               child: Text(item.label),
             ),

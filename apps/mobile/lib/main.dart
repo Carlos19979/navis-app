@@ -41,8 +41,7 @@ Future<void> main() async {
       _firebaseMessagingBackgroundHandler,
     );
     FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
-    final initialMessage =
-        await FirebaseMessaging.instance.getInitialMessage();
+    final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
     if (initialMessage != null) {
       _handleNotificationTap(initialMessage);
     }
@@ -71,8 +70,7 @@ Future<void> main() async {
         options.beforeSend = (event, hint) {
           final request = event.request;
           if (request != null) {
-            final headers =
-                Map<String, String>.from(request.headers);
+            final headers = Map<String, String>.from(request.headers);
             headers.remove('Authorization');
             headers.remove('authorization');
             return event.copyWith(

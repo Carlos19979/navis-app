@@ -46,10 +46,10 @@ api-dev: ## Run Go API with hot reload (air)
 # === Flutter ===
 
 mobile-run: ## Run Flutter app on connected device
-	cd apps/mobile && flutter run
+	cd apps/mobile && flutter run --dart-define=SENTRY_DSN=https://8d4df83b941529996aff13bc6546ec4d@o4511287726702592.ingest.de.sentry.io/4511287738433616
 
 mobile-run-emu: ## Run Flutter app on Android emulator with local backend
-	cd apps/mobile && flutter run --dart-define=API_URL=http://10.0.2.2:8080 --dart-define=SUPABASE_URL=http://10.0.2.2:54321
+	cd apps/mobile && flutter run --dart-define=API_URL=http://10.0.2.2:8080 --dart-define=SUPABASE_URL=http://10.0.2.2:54321 --dart-define=SENTRY_DSN=https://8d4df83b941529996aff13bc6546ec4d@o4511287726702592.ingest.de.sentry.io/4511287738433616
 
 mobile-test: ## Run Flutter tests
 	cd apps/mobile && flutter test

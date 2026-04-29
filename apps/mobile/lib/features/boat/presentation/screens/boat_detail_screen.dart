@@ -65,12 +65,8 @@ class _BoatDetailView extends ConsumerWidget {
                   title: 'Documents',
                   subtitle: 'Certificates, insurance, inspections',
                   color: AppColors.cyan,
-                  onTap: () =>
-                      context.push('/boats/${boat.id}/documents'),
-                )
-                    .animate()
-                    .fadeIn(duration: 400.ms, delay: 50.ms)
-                    .slideY(
+                  onTap: () => context.push('/boats/${boat.id}/documents'),
+                ).animate().fadeIn(duration: 400.ms, delay: 50.ms).slideY(
                       begin: 0.05,
                       end: 0,
                       duration: 400.ms,
@@ -83,10 +79,7 @@ class _BoatDetailView extends ConsumerWidget {
                   subtitle: 'Trip history and statistics',
                   color: AppColors.green,
                   onTap: () => context.push('/boats/${boat.id}/trips'),
-                )
-                    .animate()
-                    .fadeIn(duration: 400.ms, delay: 100.ms)
-                    .slideY(
+                ).animate().fadeIn(duration: 400.ms, delay: 100.ms).slideY(
                       begin: 0.05,
                       end: 0,
                       duration: 400.ms,
@@ -99,10 +92,7 @@ class _BoatDetailView extends ConsumerWidget {
                   subtitle: 'Modify boat details',
                   color: AppColors.amber,
                   onTap: () => context.push('/boats/${boat.id}/edit'),
-                )
-                    .animate()
-                    .fadeIn(duration: 400.ms, delay: 150.ms)
-                    .slideY(
+                ).animate().fadeIn(duration: 400.ms, delay: 150.ms).slideY(
                       begin: 0.05,
                       end: 0,
                       duration: 400.ms,
@@ -115,10 +105,7 @@ class _BoatDetailView extends ConsumerWidget {
                   subtitle: 'Remove this boat permanently',
                   color: AppColors.red,
                   onTap: () => _confirmDelete(context, ref),
-                )
-                    .animate()
-                    .fadeIn(duration: 400.ms, delay: 200.ms)
-                    .slideY(
+                ).animate().fadeIn(duration: 400.ms, delay: 200.ms).slideY(
                       begin: 0.05,
                       end: 0,
                       duration: 400.ms,
@@ -185,9 +172,7 @@ class _BoatDetailView extends ConsumerWidget {
             onPressed: () async {
               Navigator.of(ctx).pop();
               try {
-                await ref
-                    .read(boatsProvider.notifier)
-                    .deleteBoat(boat.id);
+                await ref.read(boatsProvider.notifier).deleteBoat(boat.id);
                 if (context.mounted) {
                   context.go('/boats');
                 }
@@ -269,8 +254,7 @@ class _BoatSliverAppBar extends StatelessWidget {
                   placeholder: (context, url) => Container(
                     color: AppColors.darkCard,
                   ),
-                  errorWidget: (context, url, error) =>
-                      _placeholderImage(),
+                  errorWidget: (context, url, error) => _placeholderImage(),
                 ),
               )
             else
@@ -343,8 +327,7 @@ class _InfoSection extends StatelessWidget {
           _DetailRow(
             icon: Icons.category_outlined,
             label: 'Type',
-            value:
-                boat.type[0].toUpperCase() + boat.type.substring(1),
+            value: boat.type[0].toUpperCase() + boat.type.substring(1),
           ),
           _glassDivider(),
           _DetailRow(
@@ -465,18 +448,16 @@ class _ActionTile extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style:
-                      Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style:
-                      Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                 ),
               ],
             ),

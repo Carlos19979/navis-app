@@ -104,10 +104,7 @@ class _CalendarViewState extends State<CalendarView> {
                       child: Text(
                         day,
                         textAlign: TextAlign.center,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.copyWith(
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: AppColors.textSecondary,
                               fontWeight: FontWeight.w500,
                             ),
@@ -175,8 +172,7 @@ class _CalendarViewState extends State<CalendarView> {
                     boxShadow: isToday
                         ? [
                             BoxShadow(
-                              color:
-                                  AppColors.cyan.withValues(alpha: 0.25),
+                              color: AppColors.cyan.withValues(alpha: 0.25),
                               blurRadius: 8,
                             ),
                           ]
@@ -205,15 +201,11 @@ class _CalendarViewState extends State<CalendarView> {
                           width: 6,
                           height: 6,
                           decoration: BoxDecoration(
-                            color: isToday
-                                ? Colors.white
-                                : AppColors.cyan,
+                            color: isToday ? Colors.white : AppColors.cyan,
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: (isToday
-                                        ? Colors.white
-                                        : AppColors.cyan)
+                                color: (isToday ? Colors.white : AppColors.cyan)
                                     .withValues(alpha: 0.5),
                                 blurRadius: 4,
                               ),

@@ -49,8 +49,7 @@ void main() {
   }
 
   group('TripDetailScreen', () {
-    testWidgets('shows loading indicator while fetching trip',
-        (tester) async {
+    testWidgets('shows loading indicator while fetching trip', (tester) async {
       final completer = Completer<Trip>();
 
       await tester.pumpWidget(
@@ -69,8 +68,7 @@ void main() {
       expect(find.byType(NavisLoading), findsOneWidget);
     });
 
-    testWidgets('displays Trip Details title in app bar',
-        (tester) async {
+    testWidgets('displays Trip Details title in app bar', (tester) async {
       await tester.pumpWidget(
         buildScreen(
           extraOverrides: [
@@ -85,8 +83,7 @@ void main() {
       expect(find.text('Trip Details'), findsOneWidget);
     });
 
-    testWidgets('displays departure port and arrival port',
-        (tester) async {
+    testWidgets('displays departure port and arrival port', (tester) async {
       final trip = makeTrip();
 
       await tester.pumpWidget(
@@ -113,8 +110,7 @@ void main() {
       );
     });
 
-    testWidgets(
-        'shows "Not recorded" for arrival when arrivalPort is null',
+    testWidgets('shows "Not recorded" for arrival when arrivalPort is null',
         (tester) async {
       final trip = makeTrip(arrivalPort: null);
 
@@ -188,8 +184,7 @@ void main() {
       expect(find.byIcon(Icons.delete_outlined), findsOneWidget);
     });
 
-    testWidgets('delete button shows confirmation dialog',
-        (tester) async {
+    testWidgets('delete button shows confirmation dialog', (tester) async {
       await tester.pumpWidget(
         buildScreen(
           extraOverrides: [
@@ -214,8 +209,7 @@ void main() {
       expect(find.text('Delete'), findsOneWidget);
     });
 
-    testWidgets('cancel button in delete dialog dismisses it',
-        (tester) async {
+    testWidgets('cancel button in delete dialog dismisses it', (tester) async {
       await tester.pumpWidget(
         buildScreen(
           extraOverrides: [
@@ -243,10 +237,8 @@ void main() {
       expect(find.text('Delete Trip'), findsNothing);
     });
 
-    testWidgets('confirm delete calls repository deleteTrip',
-        (tester) async {
-      when(() => mockRepo.deleteTrip(tripId))
-          .thenAnswer((_) async {});
+    testWidgets('confirm delete calls repository deleteTrip', (tester) async {
+      when(() => mockRepo.deleteTrip(tripId)).thenAnswer((_) async {});
 
       await tester.pumpWidget(
         buildScreen(
@@ -271,15 +263,13 @@ void main() {
       verify(() => mockRepo.deleteTrip(tripId)).called(1);
     });
 
-    testWidgets('shows error state with retry button',
-        (tester) async {
+    testWidgets('shows error state with retry button', (tester) async {
       await tester.pumpWidget(
         buildTestApp(
           const TripDetailScreen(tripId: tripId),
           overrides: [
             tripProvider.overrideWith(
-              (ref, id) async =>
-                  throw Exception('Failed to load trip'),
+              (ref, id) async => throw Exception('Failed to load trip'),
             ),
             tripRepositoryProvider.overrideWithValue(mockRepo),
           ],
@@ -292,8 +282,7 @@ void main() {
       expect(find.text('Retry'), findsOneWidget);
     });
 
-    testWidgets('retry button triggers provider refresh',
-        (tester) async {
+    testWidgets('retry button triggers provider refresh', (tester) async {
       var callCount = 0;
 
       await tester.pumpWidget(
@@ -338,8 +327,7 @@ void main() {
       expect(find.text('Distance'), findsOneWidget);
     });
 
-    testWidgets('displays max speed stat when present',
-        (tester) async {
+    testWidgets('displays max speed stat when present', (tester) async {
       final trip = makeTrip();
 
       await tester.pumpWidget(

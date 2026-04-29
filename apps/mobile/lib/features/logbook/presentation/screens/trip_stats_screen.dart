@@ -30,8 +30,7 @@ class TripStatsScreen extends ConsumerWidget {
           loading: () => const NavisShimmer(itemHeight: 120),
           error: (error, _) => NavisErrorWidget(
             message: error.toString(),
-            onRetry: () =>
-                ref.invalidate(boatTripsProvider(boatId)),
+            onRetry: () => ref.invalidate(boatTripsProvider(boatId)),
           ),
           data: (trips) {
             final stats = ref.watch(tripStatsProvider(trips));
@@ -56,11 +55,9 @@ class TripStatsScreen extends ConsumerWidget {
             }
 
             final thisYear = DateTime.now().year;
-            final tripsThisYear = trips
-                .where((t) => t.departureTime.year == thisYear)
-                .toList();
-            final yearStats =
-                ref.watch(tripStatsProvider(tripsThisYear));
+            final tripsThisYear =
+                trips.where((t) => t.departureTime.year == thisYear).toList();
+            final yearStats = ref.watch(tripStatsProvider(tripsThisYear));
 
             return ListView(
               padding: const EdgeInsets.all(16),
@@ -78,25 +75,20 @@ class TripStatsScreen extends ConsumerWidget {
                   ),
                   _StatCard(
                     icon: Icons.straighten,
-                    value: stats.totalDistanceNm
-                        .toStringAsFixed(1),
-                    label:
-                        l10n?.totalDistanceNm ?? 'NM sailed',
+                    value: stats.totalDistanceNm.toStringAsFixed(1),
+                    label: l10n?.totalDistanceNm ?? 'NM sailed',
                     color: AppColors.green,
                   ),
                   _StatCard(
                     icon: Icons.schedule,
-                    value:
-                        stats.totalHours.toStringAsFixed(1),
-                    label: l10n?.totalHoursAtSea ??
-                        'Hours at sea',
+                    value: stats.totalHours.toStringAsFixed(1),
+                    label: l10n?.totalHoursAtSea ?? 'Hours at sea',
                     color: AppColors.amber,
                   ),
                   _StatCard(
                     icon: Icons.anchor,
                     value: ports.length.toString(),
-                    label:
-                        l10n?.portsVisited ?? 'Ports visited',
+                    label: l10n?.portsVisited ?? 'Ports visited',
                     color: AppColors.cyan,
                   ),
                   _StatCard(
@@ -112,8 +104,7 @@ class TripStatsScreen extends ConsumerWidget {
                     value: totalFuel > 0
                         ? '${totalFuel.toStringAsFixed(0)} L'
                         : '-',
-                    label: l10n?.fuelConsumed ??
-                        'Fuel consumed',
+                    label: l10n?.fuelConsumed ?? 'Fuel consumed',
                     color: AppColors.amber,
                   ),
                 ]),
@@ -122,13 +113,11 @@ class TripStatsScreen extends ConsumerWidget {
                   _StatRow(
                     icon: Icons.engineering,
                     label: 'Total engine hours',
-                    value:
-                        '${totalEngine.toStringAsFixed(1)} h',
+                    value: '${totalEngine.toStringAsFixed(1)} h',
                   ),
                   const SizedBox(height: 8),
                 ],
-                if (stats.totalDistanceNm > 0 &&
-                    stats.totalHours > 0) ...[
+                if (stats.totalDistanceNm > 0 && stats.totalHours > 0) ...[
                   _StatRow(
                     icon: Icons.speed,
                     label: 'Average speed',
@@ -139,8 +128,7 @@ class TripStatsScreen extends ConsumerWidget {
                 ],
                 const SizedBox(height: 16),
                 _SectionTitle(
-                  label:
-                      'This Year ($thisYear)',
+                  label: 'This Year ($thisYear)',
                 ),
                 const SizedBox(height: 8),
                 _StatsGrid(children: [
@@ -152,18 +140,14 @@ class TripStatsScreen extends ConsumerWidget {
                   ),
                   _StatCard(
                     icon: Icons.straighten,
-                    value: yearStats.totalDistanceNm
-                        .toStringAsFixed(1),
-                    label:
-                        l10n?.totalDistanceNm ?? 'NM sailed',
+                    value: yearStats.totalDistanceNm.toStringAsFixed(1),
+                    label: l10n?.totalDistanceNm ?? 'NM sailed',
                     color: AppColors.green,
                   ),
                   _StatCard(
                     icon: Icons.schedule,
-                    value: yearStats.totalHours
-                        .toStringAsFixed(1),
-                    label: l10n?.totalHoursAtSea ??
-                        'Hours at sea',
+                    value: yearStats.totalHours.toStringAsFixed(1),
+                    label: l10n?.totalHoursAtSea ?? 'Hours at sea',
                     color: AppColors.amber,
                   ),
                 ]),
@@ -255,23 +239,21 @@ class _StatCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             value,
-            style:
-                Theme.of(context).textTheme.displaySmall?.copyWith(
-                      color: AppColors.cyan,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 18,
-                    ),
+            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                  color: AppColors.cyan,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 18,
+                ),
             textAlign: TextAlign.center,
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 2),
           Text(
             label,
-            style:
-                Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textSecondary,
-                      fontSize: 10,
-                    ),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.textSecondary,
+                  fontSize: 10,
+                ),
             textAlign: TextAlign.center,
             overflow: TextOverflow.ellipsis,
           ),
@@ -295,8 +277,7 @@ class _StatRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NavisCard(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
           Container(
@@ -321,11 +302,10 @@ class _StatRow extends StatelessWidget {
           ),
           Text(
             value,
-            style:
-                Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.cyan,
-                    ),
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.cyan,
+                ),
           ),
         ],
       ),
@@ -346,9 +326,7 @@ class _MonthlyChart extends StatelessWidget {
       monthCounts[month]++;
     }
 
-    final maxCount = monthCounts
-        .reduce((a, b) => a > b ? a : b)
-        .clamp(1, 999);
+    final maxCount = monthCounts.reduce((a, b) => a > b ? a : b).clamp(1, 999);
     final months = [
       'J',
       'F',
@@ -369,12 +347,10 @@ class _MonthlyChart extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            AppLocalizations.of(context)?.monthlyActivity ??
-                'Monthly Activity',
-            style:
-                Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+            AppLocalizations.of(context)?.monthlyActivity ?? 'Monthly Activity',
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
           ),
           const SizedBox(height: 16),
           SizedBox(
@@ -402,8 +378,7 @@ class _MonthlyChart extends StatelessWidget {
                           ),
                         const SizedBox(height: 2),
                         Container(
-                          height:
-                              (fraction * 60).clamp(4.0, 60.0),
+                          height: (fraction * 60).clamp(4.0, 60.0),
                           decoration: BoxDecoration(
                             gradient: monthCounts[i] > 0
                                 ? AppColors.cyanGradient
@@ -412,8 +387,7 @@ class _MonthlyChart extends StatelessWidget {
                                 ? null
                                 : AppColors.textSecondary
                                     .withValues(alpha: 0.15),
-                            borderRadius:
-                                BorderRadius.circular(4),
+                            borderRadius: BorderRadius.circular(4),
                           ),
                         ),
                         const SizedBox(height: 4),

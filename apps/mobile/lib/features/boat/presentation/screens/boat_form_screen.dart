@@ -104,8 +104,7 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
       String? photoUrl;
 
       if (_isEdit) {
-        final existing =
-            await ref.read(boatProvider(widget.boatId).future);
+        final existing = await ref.read(boatProvider(widget.boatId).future);
         photoUrl = existing.photoUrl;
       }
 
@@ -135,8 +134,7 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
               boat.copyWith(photoUrl: photoUrl),
             );
       } else {
-        final created =
-            await ref.read(boatsProvider.notifier).createBoat(boat);
+        final created = await ref.read(boatsProvider.notifier).createBoat(boat);
         if (_photoPath != null) {
           final url = await storage.uploadBoatPhoto(
             userId: userId,
@@ -152,9 +150,7 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
       if (mounted) {
         NavisSnackbar.success(
           context,
-          _isEdit
-              ? 'Boat updated successfully'
-              : 'Boat created successfully',
+          _isEdit ? 'Boat updated successfully' : 'Boat created successfully',
         );
         if (_isEdit) {
           context.pop();
@@ -208,8 +204,7 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                     height: 180,
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(16),
-                      child: _photoPath != null ||
-                              _existingPhotoUrl != null
+                      child: _photoPath != null || _existingPhotoUrl != null
                           ? Stack(
                               fit: StackFit.expand,
                               children: [
@@ -224,8 +219,7 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                                     _existingPhotoUrl!,
                                     fit: BoxFit.cover,
                                     semanticLabel: 'Boat photo',
-                                    errorBuilder: (_, __, ___) =>
-                                        const Center(
+                                    errorBuilder: (_, __, ___) => const Center(
                                       child: Icon(
                                         Icons.broken_image_outlined,
                                         size: 48,
@@ -241,8 +235,7 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                                       end: Alignment.bottomCenter,
                                       colors: [
                                         Colors.transparent,
-                                        Colors.black
-                                            .withValues(alpha: 0.3),
+                                        Colors.black.withValues(alpha: 0.3),
                                       ],
                                     ),
                                   ),
@@ -271,13 +264,13 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                               ],
                             )
                           : CustomPaint(
-                              painter: _DashedBorderPainter(
+                              painter: const _DashedBorderPainter(
                                 color: AppColors.glassBorder,
                                 borderRadius: 16,
                               ),
                               child: Container(
                                 decoration: BoxDecoration(
-                                  gradient: LinearGradient(
+                                  gradient: const LinearGradient(
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
                                     colors: [
@@ -285,12 +278,10 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                                       AppColors.glassOverlay,
                                     ],
                                   ),
-                                  borderRadius:
-                                      BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: Column(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.center,
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Container(
                                       width: 56,
@@ -304,8 +295,7 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                                         ),
                                       ),
                                       child: const Icon(
-                                        Icons
-                                            .add_photo_alternate_outlined,
+                                        Icons.add_photo_alternate_outlined,
                                         size: 28,
                                         color: AppColors.cyan,
                                       ),
@@ -317,8 +307,7 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                                           .textTheme
                                           .bodyMedium
                                           ?.copyWith(
-                                            color:
-                                                AppColors.textSecondary,
+                                            color: AppColors.textSecondary,
                                           ),
                                     ),
                                   ],
@@ -340,10 +329,7 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                   children: [
                     Text(
                       'Boat Details',
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
                     ),
@@ -387,8 +373,8 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                       items: _boatTypes.map((type) {
                         return DropdownMenuItem(
                           value: type,
-                          child: Text(type[0].toUpperCase() +
-                              type.substring(1)),
+                          child:
+                              Text(type[0].toUpperCase() + type.substring(1)),
                         );
                       }).toList(),
                       onChanged: (value) {
@@ -418,10 +404,7 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                     ),
                   ],
                 ),
-              )
-                  .animate()
-                  .fadeIn(duration: 400.ms, delay: 50.ms)
-                  .slideY(
+              ).animate().fadeIn(duration: 400.ms, delay: 50.ms).slideY(
                     begin: 0.05,
                     end: 0,
                     duration: 400.ms,
@@ -435,10 +418,7 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                   children: [
                     Text(
                       'Home Port',
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
                     ),
@@ -462,9 +442,7 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                       variant: NavisButtonVariant.secondary,
                       compact: true,
                       onPressed: () async {
-                        final result =
-                            await Navigator.of(context)
-                                .push<LatLng>(
+                        final result = await Navigator.of(context).push<LatLng>(
                           MaterialPageRoute(
                             builder: (_) => MapPickerScreen(
                               initialLatitude: _homePortLat,
@@ -482,10 +460,7 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                     ),
                   ],
                 ),
-              )
-                  .animate()
-                  .fadeIn(duration: 400.ms, delay: 100.ms)
-                  .slideY(
+              ).animate().fadeIn(duration: 400.ms, delay: 100.ms).slideY(
                     begin: 0.05,
                     end: 0,
                     duration: 400.ms,
@@ -496,10 +471,7 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                 label: _isEdit ? 'Update Boat' : 'Create Boat',
                 onPressed: _onSave,
                 isLoading: _isLoading,
-              )
-                  .animate()
-                  .fadeIn(duration: 400.ms, delay: 150.ms)
-                  .slideY(
+              ).animate().fadeIn(duration: 400.ms, delay: 150.ms).slideY(
                     begin: 0.05,
                     end: 0,
                     duration: 400.ms,
@@ -515,8 +487,7 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                     final confirmed = await showDialog<bool>(
                       context: context,
                       builder: (context) => AlertDialog(
-                        backgroundColor:
-                            AppColors.darkSurfaceElevated,
+                        backgroundColor: AppColors.darkSurfaceElevated,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                           side: const BorderSide(
@@ -530,13 +501,11 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                         ),
                         actions: [
                           TextButton(
-                            onPressed: () =>
-                                Navigator.pop(context, false),
+                            onPressed: () => Navigator.pop(context, false),
                             child: const Text('Cancel'),
                           ),
                           TextButton(
-                            onPressed: () =>
-                                Navigator.pop(context, true),
+                            onPressed: () => Navigator.pop(context, true),
                             style: TextButton.styleFrom(
                               foregroundColor: AppColors.red,
                             ),
@@ -545,19 +514,17 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                         ],
                       ),
                     );
-                    if (confirmed == true && this.context.mounted) {
+                    if (confirmed == true && context.mounted) {
                       try {
                         await ref
                             .read(boatsProvider.notifier)
                             .deleteBoat(widget.boatId);
-                        if (!this.context.mounted) return;
-                        NavisSnackbar.success(
-                            this.context, 'Boat deleted');
-                        this.context.go('/boats');
+                        if (!context.mounted) return;
+                        NavisSnackbar.success(context, 'Boat deleted');
+                        context.go('/boats');
                       } catch (e) {
-                        if (this.context.mounted) {
-                          NavisSnackbar.error(
-                              this.context, 'Failed to delete boat');
+                        if (context.mounted) {
+                          NavisSnackbar.error(context, 'Failed to delete boat');
                         }
                       }
                     }
@@ -599,6 +566,5 @@ class _DashedBorderPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _DashedBorderPainter oldDelegate) =>
-      color != oldDelegate.color ||
-      borderRadius != oldDelegate.borderRadius;
+      color != oldDelegate.color || borderRadius != oldDelegate.borderRadius;
 }

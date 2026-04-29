@@ -271,21 +271,18 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                       children: [
                         Text(
                           'Document Info',
-                          style: Theme.of(context)
-                              .textTheme
-                              .labelLarge
-                              ?.copyWith(
-                                color: AppColors.cyan,
-                                letterSpacing: 0.8,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.labelLarge?.copyWith(
+                                    color: AppColors.cyan,
+                                    letterSpacing: 0.8,
+                                  ),
                         ),
                         const SizedBox(height: 16),
                         DropdownButtonFormField<String>(
                           initialValue: _selectedType,
                           decoration: const InputDecoration(
                             labelText: 'Document Type',
-                            prefixIcon:
-                                Icon(Icons.description_outlined),
+                            prefixIcon: Icon(Icons.description_outlined),
                           ),
                           items: _documentTypes.map((type) {
                             return DropdownMenuItem(
@@ -297,8 +294,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                               ? null
                               : (value) {
                                   if (value != null) {
-                                    setState(
-                                        () => _selectedType = value);
+                                    setState(() => _selectedType = value);
                                   }
                                 },
                         ),
@@ -309,14 +305,12 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                             child: TextFormField(
                               decoration: InputDecoration(
                                 labelText: 'Expiry Date',
-                                prefixIcon:
-                                    const Icon(Icons.calendar_today),
-                                hintText: NavisDateUtils.formatDate(
-                                    _expiryDate),
+                                prefixIcon: const Icon(Icons.calendar_today),
+                                hintText:
+                                    NavisDateUtils.formatDate(_expiryDate),
                               ),
                               controller: TextEditingController(
-                                text: NavisDateUtils.formatDate(
-                                    _expiryDate),
+                                text: NavisDateUtils.formatDate(_expiryDate),
                               ),
                             ),
                           ),
@@ -334,13 +328,11 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                       children: [
                         Text(
                           'Alerts & Notes',
-                          style: Theme.of(context)
-                              .textTheme
-                              .labelLarge
-                              ?.copyWith(
-                                color: AppColors.cyan,
-                                letterSpacing: 0.8,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.labelLarge?.copyWith(
+                                    color: AppColors.cyan,
+                                    letterSpacing: 0.8,
+                                  ),
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
@@ -348,8 +340,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                           keyboardType: TextInputType.number,
                           decoration: const InputDecoration(
                             labelText: 'Alert Days Before Expiry',
-                            prefixIcon:
-                                Icon(Icons.notifications_outlined),
+                            prefixIcon: Icon(Icons.notifications_outlined),
                           ),
                           validator: (value) {
                             if (value != null && value.isNotEmpty) {
@@ -379,8 +370,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                     const SizedBox(height: 16),
                     NavisCard(
                       child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             'Renewal Details',
@@ -395,9 +385,8 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                           const SizedBox(height: 16),
                           TextFormField(
                             controller: _renewalCostController,
-                            keyboardType:
-                                const TextInputType.numberWithOptions(
-                                    decimal: true),
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
                             decoration: const InputDecoration(
                               labelText: 'Renewal Cost',
                               prefixIcon: Icon(Icons.euro),
@@ -405,12 +394,10 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                           ),
                           const SizedBox(height: 16),
                           TextFormField(
-                            controller:
-                                _renewalProviderController,
+                            controller: _renewalProviderController,
                             decoration: const InputDecoration(
                               labelText: 'Provider / Company',
-                              prefixIcon:
-                                  Icon(Icons.business_outlined),
+                              prefixIcon: Icon(Icons.business_outlined),
                             ),
                           ),
                         ],
@@ -432,8 +419,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                           decoration: const BoxDecoration(
                             color: AppColors.glassWhite,
                           ),
-                          child: _photoPath != null ||
-                                  _existingPhotoUrl != null
+                          child: _photoPath != null || _existingPhotoUrl != null
                               ? Stack(
                                   fit: StackFit.expand,
                                   children: [
@@ -441,24 +427,19 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                                       Image.file(
                                         File(_photoPath!),
                                         fit: BoxFit.cover,
-                                        semanticLabel:
-                                            'Document scan',
+                                        semanticLabel: 'Document scan',
                                       )
                                     else
                                       Image.network(
                                         _existingPhotoUrl!,
                                         fit: BoxFit.cover,
-                                        semanticLabel:
-                                            'Document scan',
-                                        errorBuilder:
-                                            (_, __, ___) =>
-                                                const Center(
+                                        semanticLabel: 'Document scan',
+                                        errorBuilder: (_, __, ___) =>
+                                            const Center(
                                           child: Icon(
-                                            Icons
-                                                .broken_image_outlined,
+                                            Icons.broken_image_outlined,
                                             size: 48,
-                                            color: AppColors
-                                                .textSecondary,
+                                            color: AppColors.textSecondary,
                                           ),
                                         ),
                                       ),
@@ -470,12 +451,10 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                                         height: 36,
                                         decoration: BoxDecoration(
                                           color: AppColors.navy
-                                              .withValues(
-                                                  alpha: 0.7),
+                                              .withValues(alpha: 0.7),
                                           shape: BoxShape.circle,
                                           border: Border.all(
-                                            color: AppColors
-                                                .glassBorder,
+                                            color: AppColors.glassBorder,
                                           ),
                                         ),
                                         child: const Icon(
@@ -488,12 +467,10 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                                   ],
                                 )
                               : Column(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.center,
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(
-                                      Icons
-                                          .document_scanner_outlined,
+                                      Icons.document_scanner_outlined,
                                       size: 48,
                                       color: AppColors.textSecondary
                                           .withValues(alpha: 0.6),
@@ -502,10 +479,8 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                                     Text(
                                       'Add Scan',
                                       style: TextStyle(
-                                        color: AppColors
-                                            .textSecondary
-                                            .withValues(
-                                                alpha: 0.8),
+                                        color: AppColors.textSecondary
+                                            .withValues(alpha: 0.8),
                                       ),
                                     ),
                                   ],

@@ -21,12 +21,10 @@ class EventDetailScreen extends ConsumerStatefulWidget {
   final String eventId;
 
   @override
-  ConsumerState<EventDetailScreen> createState() =>
-      _EventDetailScreenState();
+  ConsumerState<EventDetailScreen> createState() => _EventDetailScreenState();
 }
 
-class _EventDetailScreenState
-    extends ConsumerState<EventDetailScreen> {
+class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
   bool _isRegistering = false;
 
   Future<void> _toggleRegistration() async {
@@ -45,8 +43,7 @@ class _EventDetailScreenState
 
   @override
   Widget build(BuildContext context) {
-    final eventAsync =
-        ref.watch(eventProvider(widget.eventId));
+    final eventAsync = ref.watch(eventProvider(widget.eventId));
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -60,16 +57,13 @@ class _EventDetailScreenState
           loading: () => const NavisLoading(),
           error: (error, stack) => NavisErrorWidget(
             message: error.toString(),
-            onRetry: () =>
-                ref.invalidate(eventProvider(widget.eventId)),
+            onRetry: () => ref.invalidate(eventProvider(widget.eventId)),
           ),
           data: (event) {
             return SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
                 16,
-                kToolbarHeight +
-                    MediaQuery.of(context).padding.top +
-                    16,
+                kToolbarHeight + MediaQuery.of(context).padding.top + 16,
                 16,
                 100,
               ),
@@ -77,8 +71,7 @@ class _EventDetailScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Map section
-                  if (event.latitude != null &&
-                      event.longitude != null)
+                  if (event.latitude != null && event.longitude != null)
                     ClipRRect(
                       borderRadius: BorderRadius.circular(16),
                       child: RepaintBoundary(
@@ -90,8 +83,7 @@ class _EventDetailScreenState
                                 event.latitude!,
                                 event.longitude!,
                               ),
-                              interactionOptions:
-                                  const InteractionOptions(
+                              interactionOptions: const InteractionOptions(
                                 flags: InteractiveFlag.none,
                               ),
                             ),
@@ -128,8 +120,7 @@ class _EventDetailScreenState
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
-                          crossAxisAlignment:
-                              CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
                               child: Text(
@@ -138,8 +129,7 @@ class _EventDetailScreenState
                                     .textTheme
                                     .headlineMedium
                                     ?.copyWith(
-                                      color:
-                                          AppColors.textPrimary,
+                                      color: AppColors.textPrimary,
                                       fontWeight: FontWeight.w700,
                                     ),
                               ),
@@ -148,8 +138,8 @@ class _EventDetailScreenState
                               Container(
                                 padding: const EdgeInsets.all(6),
                                 decoration: BoxDecoration(
-                                  color: AppColors.amber
-                                      .withValues(alpha: 0.15),
+                                  color:
+                                      AppColors.amber.withValues(alpha: 0.15),
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
@@ -222,9 +212,7 @@ class _EventDetailScreenState
 
                   // Action button
                   NavisButton(
-                    label: event.isInterested
-                        ? 'Not Interested'
-                        : 'Interested',
+                    label: event.isInterested ? 'Not Interested' : 'Interested',
                     icon: event.isInterested
                         ? Icons.close
                         : Icons.favorite_outline,

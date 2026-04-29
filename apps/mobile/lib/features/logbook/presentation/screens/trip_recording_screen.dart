@@ -68,8 +68,7 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed &&
-        _status == TripStatus.recording) {
+    if (state == AppLifecycleState.resumed && _status == TripStatus.recording) {
       _ensureLocationStream();
     }
   }
@@ -95,12 +94,10 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
         accuracy: LocationAccuracy.high,
         distanceFilter: 10,
         intervalDuration: const Duration(seconds: 10),
-        foregroundNotificationConfig:
-            const ForegroundNotificationConfig(
+        foregroundNotificationConfig: const ForegroundNotificationConfig(
           notificationTitle: 'Navis is recording your trip',
           notificationText: 'GPS tracking is active',
-          notificationIcon:
-              AndroidResource(name: 'ic_launcher'),
+          notificationIcon: AndroidResource(name: 'ic_launcher'),
         ),
       );
     }
@@ -203,8 +200,7 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
       _elapsed = Duration.zero;
     });
 
-    _elapsedTimer =
-        Timer.periodic(const Duration(seconds: 1), (_) {
+    _elapsedTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (_status == TripStatus.recording) {
         setState(() {
           _elapsed = DateTime.now().difference(_startTime!);
@@ -217,7 +213,7 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
       (_) => _uploadPendingPoints(),
     );
 
-    HapticFeedback.mediumImpact();
+    unawaited(HapticFeedback.mediumImpact());
 
     try {
       final repo = ref.read(tripRepositoryProvider);
@@ -248,15 +244,15 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
   }
 
   Future<void> _stopRecording() async {
-    _positionSubscription?.cancel();
+    await _positionSubscription?.cancel();
     _positionSubscription = null;
     _elapsedTimer?.cancel();
     _uploadTimer?.cancel();
 
-    HapticFeedback.heavyImpact();
+    unawaited(HapticFeedback.heavyImpact());
 
-    final completionData =
-        await showDialog<TripCompletionData>(
+    if (!mounted) return;
+    final completionData = await showDialog<TripCompletionData>(
       context: context,
       barrierDismissible: false,
       builder: (_) => TripCompletionDialog(
@@ -271,12 +267,10 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
     if (completionData == null) {
       if (_status != TripStatus.completed) {
         _startLocationStream();
-        _elapsedTimer =
-            Timer.periodic(const Duration(seconds: 1), (_) {
+        _elapsedTimer = Timer.periodic(const Duration(seconds: 1), (_) {
           if (_status == TripStatus.recording) {
             setState(() {
-              _elapsed =
-                  DateTime.now().difference(_startTime!);
+              _elapsed = DateTime.now().difference(_startTime!);
             });
           }
         });
@@ -298,15 +292,13 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
 
       if (_createdTrip != null) {
         final updated = _createdTrip!.copyWith(
-          departurePort:
-              completionData.arrivalPort ?? 'Unknown',
+          departurePort: completionData.arrivalPort ?? 'Unknown',
           arrivalPort: completionData.arrivalPort,
           arrivalTime: DateTime.now(),
           distanceNm: _totalDistance,
           maxSpeedKnots: _maxSpeed,
           avgSpeedKnots: _elapsed.inSeconds > 0
-              ? _totalDistance /
-                  (_elapsed.inSeconds / 3600)
+              ? _totalDistance / (_elapsed.inSeconds / 3600)
               : null,
           notes: completionData.notes,
           engineHours: completionData.engineHours,
@@ -340,7 +332,6 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
           fuelConsumedL: completionData.fuelConsumedL,
           crewMembers: completionData.crewMembers,
           trackPoints: _trackPoints,
-          status: TripStatus.completed,
         ));
         if (_trackPoints.isNotEmpty) {
           await repo.addTrackPoints(trip.id, _trackPoints);
@@ -431,8 +422,7 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
                   children: [
                     _buildMap(),
                     const SizedBox(height: 12),
-                    if (_status != TripStatus.completed)
-                      _buildGpsIndicator(),
+                    if (_status != TripStatus.completed) _buildGpsIndicator(),
                     const SizedBox(height: 16),
                     if (_status != TripStatus.completed) ...[
                       _buildStatsRow(),
@@ -456,9 +446,8 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
   }
 
   Widget _buildMap() {
-    final points = _trackPoints
-        .map((p) => LatLng(p.latitude, p.longitude))
-        .toList();
+    final points =
+        _trackPoints.map((p) => LatLng(p.latitude, p.longitude)).toList();
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
@@ -476,12 +465,11 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
           child: RepaintBoundary(
             child: FlutterMap(
               mapController: _mapController,
-              options: MapOptions(
-                initialCenter: const LatLng(39.57, 2.63),
+              options: const MapOptions(
+                initialCenter: LatLng(39.57, 2.63),
                 initialZoom: 14,
-                interactionOptions: const InteractionOptions(
-                  flags: InteractiveFlag.all &
-                      ~InteractiveFlag.rotate,
+                interactionOptions: InteractionOptions(
+                  flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
                 ),
               ),
               children: [
@@ -513,8 +501,7 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.cyan
-                                    .withValues(alpha: 0.4),
+                                color: AppColors.cyan.withValues(alpha: 0.4),
                                 blurRadius: 8,
                                 spreadRadius: 1,
                               ),
@@ -555,20 +542,16 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
           const SizedBox(width: 6),
           Text(
             'GPS: ${_gpsAccuracyLabel()}',
-            style:
-                Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: color,
-                      fontWeight: FontWeight.w600,
-                    ),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w600,
+                ),
           ),
           if (_gpsAccuracy != null) ...[
             const SizedBox(width: 6),
             Text(
               '(\u00b1${_gpsAccuracy!.toStringAsFixed(0)}m)',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppColors.textSecondary,
                   ),
             ),
@@ -592,7 +575,7 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
           Expanded(
             child: _HeroStat(
               label: 'Distance',
-              value: '${_totalDistance.toStringAsFixed(2)}',
+              value: _totalDistance.toStringAsFixed(2),
               unit: 'NM',
             ),
           ),
@@ -662,10 +645,7 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
                       '${weather.temperature.toStringAsFixed(0)}\u00b0C'
                       ' \u00b7 Wind ${weather.windSpeed.toStringAsFixed(0)} kt'
                       ' \u00b7 Waves ${weather.waveHeight.toStringAsFixed(1)} m',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodySmall
-                          ?.copyWith(
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: AppColors.textSecondary,
                           ),
                     ),
@@ -701,10 +681,7 @@ class _HeroStat extends StatelessWidget {
             children: [
               TextSpan(
                 text: value,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleLarge
-                    ?.copyWith(
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: AppColors.cyan,
                     ),
@@ -712,10 +689,7 @@ class _HeroStat extends StatelessWidget {
               if (unit.isNotEmpty)
                 TextSpan(
                   text: ' $unit',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: AppColors.textSecondary,
                       ),
                 ),
@@ -725,10 +699,9 @@ class _HeroStat extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           label,
-          style:
-              Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppColors.textSecondary,
+              ),
         ),
       ],
     );

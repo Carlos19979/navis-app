@@ -114,8 +114,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (next.status == AuthStatus.authenticated) {
-        final notificationService =
-            ref.read(notificationServiceProvider);
+        final notificationService = ref.read(notificationServiceProvider);
         notificationService.requestPermission().then((_) {
           notificationService.registerDevice();
         });
@@ -148,8 +147,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color:
-                                  AppColors.cyan.withValues(alpha: 0.2),
+                              color: AppColors.cyan.withValues(alpha: 0.2),
                               blurRadius: 40,
                               spreadRadius: 8,
                             ),
@@ -169,10 +167,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ),
                       ),
-                    )
-                        .animate()
-                        .fadeIn(duration: 600.ms)
-                        .scale(
+                    ).animate().fadeIn(duration: 600.ms).scale(
                           begin: const Offset(0.8, 0.8),
                           end: const Offset(1.0, 1.0),
                           duration: 600.ms,
@@ -186,9 +181,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         color: AppColors.textPrimary,
                         fontWeight: FontWeight.w700,
                       ),
-                    )
-                        .animate()
-                        .fadeIn(delay: 200.ms, duration: 500.ms),
+                    ).animate().fadeIn(delay: 200.ms, duration: 500.ms),
                     const SizedBox(height: 4),
                     Text(
                       'BOAT MANAGEMENT',
@@ -198,9 +191,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         letterSpacing: 2.0,
                         fontWeight: FontWeight.w400,
                       ),
-                    )
-                        .animate()
-                        .fadeIn(delay: 300.ms, duration: 500.ms),
+                    ).animate().fadeIn(delay: 300.ms, duration: 500.ms),
                     const SizedBox(height: 48),
 
                     // -- Error Display --
@@ -209,8 +200,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         borderRadius: 12,
                         padding: const EdgeInsets.all(14),
                         margin: const EdgeInsets.only(bottom: 20),
-                        borderColor:
-                            AppColors.red.withValues(alpha: 0.4),
+                        borderColor: AppColors.red.withValues(alpha: 0.4),
                         opacity: 0.06,
                         child: Row(
                           children: [
@@ -233,10 +223,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                           ],
                         ),
-                      )
-                          .animate()
-                          .fadeIn(duration: 300.ms)
-                          .shakeX(
+                      ).animate().fadeIn(duration: 300.ms).shakeX(
                             hz: 3,
                             amount: 4,
                             duration: 400.ms,
@@ -258,10 +245,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         }
                         return null;
                       },
-                    )
-                        .animate()
-                        .fadeIn(delay: 400.ms, duration: 500.ms)
-                        .slideY(
+                    ).animate().fadeIn(delay: 400.ms, duration: 500.ms).slideY(
                           begin: 0.3,
                           end: 0,
                           delay: 400.ms,
@@ -304,10 +288,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         }
                         return null;
                       },
-                    )
-                        .animate()
-                        .fadeIn(delay: 500.ms, duration: 500.ms)
-                        .slideY(
+                    ).animate().fadeIn(delay: 500.ms, duration: 500.ms).slideY(
                           begin: 0.3,
                           end: 0,
                           delay: 500.ms,
@@ -320,12 +301,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     NavisButton(
                       label: 'Log In',
                       onPressed: _onLogin,
-                      isLoading:
-                          authState.status == AuthStatus.loading,
-                    )
-                        .animate()
-                        .fadeIn(delay: 600.ms, duration: 500.ms)
-                        .slideY(
+                      isLoading: authState.status == AuthStatus.loading,
+                    ).animate().fadeIn(delay: 600.ms, duration: 500.ms).slideY(
                           begin: 0.3,
                           end: 0,
                           delay: 600.ms,
@@ -344,9 +321,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           color: AppColors.cyan,
                         ),
                       ),
-                    )
-                        .animate()
-                        .fadeIn(delay: 700.ms, duration: 500.ms),
+                    ).animate().fadeIn(delay: 700.ms, duration: 500.ms),
                     const SizedBox(height: 16),
 
                     // -- Register Link --
@@ -370,9 +345,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                         textAlign: TextAlign.center,
                       ),
-                    )
-                        .animate()
-                        .fadeIn(delay: 800.ms, duration: 500.ms),
+                    ).animate().fadeIn(delay: 800.ms, duration: 500.ms),
                   ],
                 ),
               ),

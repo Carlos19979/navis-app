@@ -39,20 +39,14 @@ class EventCard extends StatelessWidget {
               children: [
                 Text(
                   '${event.startDate.day}',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleLarge
-                      ?.copyWith(
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
                       ),
                 ),
                 Text(
                   _monthAbbr(event.startDate.month),
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Colors.white.withValues(alpha: 0.85),
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
@@ -70,21 +64,19 @@ class EventCard extends StatelessWidget {
               children: [
                 Text(
                   event.name,
-                  style:
-                      Theme.of(context).textTheme.titleSmall?.copyWith(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
-                          ),
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 Text(
                   NavisDateUtils.formatTime(event.startDate),
-                  style:
-                      Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                 ),
                 const SizedBox(height: 6),
                 Row(
@@ -98,10 +90,7 @@ class EventCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         event.locationName,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.copyWith(
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: AppColors.textSecondary,
                             ),
                         maxLines: 1,
@@ -127,8 +116,7 @@ class EventCard extends StatelessWidget {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color:
-                              AppColors.amber.withValues(alpha: 0.2),
+                          color: AppColors.amber.withValues(alpha: 0.2),
                           blurRadius: 6,
                         ),
                       ],
@@ -173,8 +161,18 @@ class EventCard extends StatelessWidget {
 
   String _monthAbbr(int month) {
     const months = [
-      'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
-      'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
+      'JAN',
+      'FEB',
+      'MAR',
+      'APR',
+      'MAY',
+      'JUN',
+      'JUL',
+      'AUG',
+      'SEP',
+      'OCT',
+      'NOV',
+      'DEC',
     ];
     return months[month - 1];
   }

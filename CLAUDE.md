@@ -524,6 +524,48 @@ Go API cron (08:00 UTC)
 Flutter receives push via firebase_messaging → tap → deep link to document
 ```
 
+## Development Workflow (MANDATORY for every feature/fix)
+
+Follow this procedure for every piece of work, no exceptions:
+
+### 1. Work on a feature branch
+```bash
+git checkout -b feat/<name>    # or fix/<name>
+```
+
+### 2. Before pushing — run all code quality checks locally
+```bash
+# Go API
+cd apps/api && go test -race ./...        # All tests pass
+cd apps/api && golangci-lint run           # No lint errors
+
+# Flutter
+cd apps/mobile && dart format --output=none --set-exit-if-changed --line-length=80 lib/ test/
+cd apps/mobile && flutter analyze --fatal-infos   # Zero issues
+cd apps/mobile && flutter test                     # All tests pass
+```
+**Do NOT push if any of these fail.** Fix the issues first.
+
+### 3. Commit and push
+- Commit with a clear message following conventional commits (`feat:`, `fix:`, `refactor:`, etc.)
+- Push the feature branch to origin
+
+### 4. Create PR and verify CI passes
+- Create a PR targeting `develop` (or `main` for releases)
+- Wait for GitHub Actions CI to pass **both** Go API and Flutter Mobile jobs
+- If CI fails, fix locally, push again, and re-verify
+
+### 5. Merge only after green CI
+- Only merge the PR once all CI checks are green
+- Delete the feature branch after merging
+
+### Summary
+```
+code → local checks → push → PR → CI green → merge → delete branch
+```
+
+---
+
 ## Deployment
 
 - **MVP:** Supabase Cloud + Railway (Go API, EU region) + App Store / Google Play

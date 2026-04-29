@@ -120,8 +120,7 @@ class _WindArrowPainter extends CustomPainter {
           color.withValues(alpha: 0.1),
           color.withValues(alpha: 0.4),
         ],
-      ).createShader(
-          Rect.fromCircle(center: center, radius: radius))
+      ).createShader(Rect.fromCircle(center: center, radius: radius))
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
     canvas.drawCircle(center, radius, circlePaint);

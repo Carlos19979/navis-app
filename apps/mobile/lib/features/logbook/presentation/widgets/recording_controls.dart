@@ -162,8 +162,7 @@ class _GradientControlButton extends StatefulWidget {
   final VoidCallback onPressed;
 
   @override
-  State<_GradientControlButton> createState() =>
-      _GradientControlButtonState();
+  State<_GradientControlButton> createState() => _GradientControlButtonState();
 }
 
 class _GradientControlButtonState extends State<_GradientControlButton> {

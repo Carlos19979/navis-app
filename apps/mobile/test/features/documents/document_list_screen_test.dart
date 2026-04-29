@@ -42,15 +42,10 @@ void main() {
   // Documents with various expiry states
   final okDoc = makeDocument(
     id: 'doc-ok',
-    boatId: boatId,
-    type: 'Insurance',
-    status: 'ok',
-    daysUntilExpiry: 180,
   );
 
   final warningDoc = makeDocument(
     id: 'doc-warning',
-    boatId: boatId,
     type: 'Registration',
     status: 'warning',
     daysUntilExpiry: 20,
@@ -58,7 +53,6 @@ void main() {
 
   final criticalDoc = makeDocument(
     id: 'doc-critical',
-    boatId: boatId,
     type: 'Inspection',
     status: 'critical',
     daysUntilExpiry: 5,
@@ -66,7 +60,6 @@ void main() {
 
   final expiredDoc = makeDocument(
     id: 'doc-expired',
-    boatId: boatId,
     type: 'License',
     status: 'expired',
     daysUntilExpiry: -30,
@@ -89,15 +82,15 @@ void main() {
           routes: [
             GoRoute(
               path: 'new',
-              builder: (_, __) => const Scaffold(
-                  body: Text('New Document Page')),
+              builder: (_, __) =>
+                  const Scaffold(body: Text('New Document Page')),
             ),
           ],
         ),
         GoRoute(
           path: '/documents/:id',
-          builder: (_, __) => const Scaffold(
-              body: Text('Document Detail Page')),
+          builder: (_, __) =>
+              const Scaffold(body: Text('Document Detail Page')),
         ),
       ],
     );
@@ -118,8 +111,7 @@ void main() {
   }
 
   group('DocumentListScreen', () {
-    testWidgets('shows app bar with Documents title',
-        (tester) async {
+    testWidgets('shows app bar with Documents title', (tester) async {
       await setPhoneSize(tester);
       await tester.pumpWidget(buildSubject(docs: testDocs));
       await pumpScreen(tester);
@@ -147,8 +139,7 @@ void main() {
       expect(find.textContaining('Expires:'), findsNWidgets(4));
     });
 
-    testWidgets('shows status badges on document cards',
-        (tester) async {
+    testWidgets('shows status badges on document cards', (tester) async {
       await setPhoneSize(tester);
       await tester.pumpWidget(buildSubject(docs: testDocs));
       await pumpScreen(tester);
@@ -178,13 +169,11 @@ void main() {
       final fab = find.byType(FloatingActionButton);
       expect(fab, findsOneWidget);
 
-      final fabWidget =
-          tester.widget<FloatingActionButton>(fab);
+      final fabWidget = tester.widget<FloatingActionButton>(fab);
       expect(fabWidget.tooltip, 'Add document');
     });
 
-    testWidgets('FAB navigates to new document page',
-        (tester) async {
+    testWidgets('FAB navigates to new document page', (tester) async {
       await setPhoneSize(tester);
       await tester.pumpWidget(buildSubject(docs: testDocs));
       await pumpScreen(tester);
@@ -195,8 +184,7 @@ void main() {
       expect(find.text('New Document Page'), findsOneWidget);
     });
 
-    testWidgets('shows empty state when no documents',
-        (tester) async {
+    testWidgets('shows empty state when no documents', (tester) async {
       await setPhoneSize(tester);
       await tester.pumpWidget(buildSubject(docs: []));
       await pumpScreen(tester);
@@ -208,8 +196,7 @@ void main() {
       expect(find.text('Add Document'), findsOneWidget);
     });
 
-    testWidgets('empty state Add Document button navigates',
-        (tester) async {
+    testWidgets('empty state Add Document button navigates', (tester) async {
       await setPhoneSize(tester);
       await tester.pumpWidget(buildSubject(docs: []));
       await pumpScreen(tester);
@@ -220,8 +207,7 @@ void main() {
       expect(find.text('New Document Page'), findsOneWidget);
     });
 
-    testWidgets('shows error state with retry button',
-        (tester) async {
+    testWidgets('shows error state with retry button', (tester) async {
       await setPhoneSize(tester);
       await tester.pumpWidget(buildSubject(useError: true));
       await pumpScreen(tester);
@@ -230,8 +216,7 @@ void main() {
       expect(find.text('Retry'), findsOneWidget);
     });
 
-    testWidgets('retry button is tappable in error state',
-        (tester) async {
+    testWidgets('retry button is tappable in error state', (tester) async {
       await setPhoneSize(tester);
       await tester.pumpWidget(buildSubject(useError: true));
       await pumpScreen(tester);
@@ -243,8 +228,7 @@ void main() {
       expect(find.text('Something went wrong'), findsOneWidget);
     });
 
-    testWidgets('shows shimmer loading state initially',
-        (tester) async {
+    testWidgets('shows shimmer loading state initially', (tester) async {
       await setPhoneSize(tester);
       final router = GoRouter(
         initialLocation: '/boats/$boatId/documents',
@@ -261,8 +245,8 @@ void main() {
         ProviderScope(
           overrides: [
             boatDocumentsProvider.overrideWith(
-              (ref, id) => Future<List<Document>>.delayed(
-                  const Duration(days: 1)),
+              (ref, id) =>
+                  Future<List<Document>>.delayed(const Duration(days: 1)),
             ),
           ],
           child: MaterialApp.router(routerConfig: router),
@@ -280,8 +264,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
     });
 
-    testWidgets('document card navigates to detail',
-        (tester) async {
+    testWidgets('document card navigates to detail', (tester) async {
       await setPhoneSize(tester);
       await tester.pumpWidget(buildSubject(docs: testDocs));
       await pumpScreen(tester);
@@ -292,8 +275,7 @@ void main() {
       expect(find.text('Document Detail Page'), findsOneWidget);
     });
 
-    testWidgets('pull to refresh triggers invalidation',
-        (tester) async {
+    testWidgets('pull to refresh triggers invalidation', (tester) async {
       await setPhoneSize(tester);
       await tester.pumpWidget(buildSubject(docs: testDocs));
       await pumpScreen(tester);
@@ -309,8 +291,7 @@ void main() {
       expect(find.text('Insurance'), findsOneWidget);
     });
 
-    testWidgets('renders single document correctly',
-        (tester) async {
+    testWidgets('renders single document correctly', (tester) async {
       await setPhoneSize(tester);
       await tester.pumpWidget(buildSubject(docs: [okDoc]));
       await pumpScreen(tester);
@@ -320,13 +301,11 @@ void main() {
       expect(find.textContaining('Expires:'), findsOneWidget);
     });
 
-    testWidgets(
-        'handles underscore types with proper formatting',
+    testWidgets('handles underscore types with proper formatting',
         (tester) async {
       await setPhoneSize(tester);
       final customDoc = makeDocument(
         id: 'doc-custom',
-        boatId: boatId,
         type: 'safety_certificate',
         daysUntilExpiry: 200,
       );
@@ -338,24 +317,19 @@ void main() {
       expect(find.text('Safety Certificate'), findsOneWidget);
     });
 
-    testWidgets('shows multiple expired documents correctly',
-        (tester) async {
+    testWidgets('shows multiple expired documents correctly', (tester) async {
       await setPhoneSize(tester);
       final expired1 = makeDocument(
         id: 'exp-1',
-        boatId: boatId,
-        type: 'Insurance',
         daysUntilExpiry: -10,
       );
       final expired2 = makeDocument(
         id: 'exp-2',
-        boatId: boatId,
         type: 'License',
         daysUntilExpiry: -60,
       );
 
-      await tester
-          .pumpWidget(buildSubject(docs: [expired1, expired2]));
+      await tester.pumpWidget(buildSubject(docs: [expired1, expired2]));
       await pumpScreen(tester);
 
       expect(find.text('Expired'), findsNWidgets(2));

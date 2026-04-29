@@ -61,8 +61,7 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
       filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
       child: Dialog(
         backgroundColor: Colors.transparent,
-        insetPadding:
-            const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         child: Container(
           constraints: const BoxConstraints(maxWidth: 420),
           decoration: BoxDecoration(
@@ -108,10 +107,9 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
                     const SizedBox(width: 12),
                     Text(
                       'Complete Trip',
-                      style:
-                          Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
                     ),
                   ],
                 ),
@@ -143,8 +141,7 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
                           prefixIcon: Icon(Icons.engineering),
                           suffixText: 'h',
                         ),
-                        keyboardType:
-                            const TextInputType.numberWithOptions(
+                        keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
                         validator: (v) {
@@ -164,8 +161,7 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
                           prefixIcon: Icon(Icons.local_gas_station),
                           suffixText: 'L',
                         ),
-                        keyboardType:
-                            const TextInputType.numberWithOptions(
+                        keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
                         validator: (v) {
@@ -270,9 +266,7 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
       engineHours: double.tryParse(_engineHoursCtrl.text),
       fuelConsumedL: double.tryParse(_fuelCtrl.text),
       crewMembers: crew,
-      notes: _notesCtrl.text.trim().isEmpty
-          ? null
-          : _notesCtrl.text.trim(),
+      notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
     );
 
     Navigator.of(context).pop(data);

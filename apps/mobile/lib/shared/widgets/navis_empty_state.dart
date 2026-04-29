@@ -37,7 +37,6 @@ class NavisEmptyState extends StatelessWidget {
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: AppColors.glassBorder,
-                      width: 1,
                     ),
                   ),
                   child: Icon(
@@ -47,8 +46,7 @@ class NavisEmptyState extends StatelessWidget {
                   ),
                 )
                     .animate(
-                      onPlay: (controller) =>
-                          controller.repeat(reverse: true),
+                      onPlay: (controller) => controller.repeat(reverse: true),
                     )
                     .moveY(
                       begin: 0,

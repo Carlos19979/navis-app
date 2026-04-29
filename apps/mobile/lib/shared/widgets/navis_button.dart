@@ -54,15 +54,9 @@ class _NavisButtonState extends State<NavisButton> {
       button: true,
       label: widget.label,
       child: GestureDetector(
-        onTapDown: disabled
-            ? null
-            : (_) => setState(() => _pressed = true),
-        onTapUp: disabled
-            ? null
-            : (_) => setState(() => _pressed = false),
-        onTapCancel: disabled
-            ? null
-            : () => setState(() => _pressed = false),
+        onTapDown: disabled ? null : (_) => setState(() => _pressed = true),
+        onTapUp: disabled ? null : (_) => setState(() => _pressed = false),
+        onTapCancel: disabled ? null : () => setState(() => _pressed = false),
         onTap: disabled ? null : widget.onPressed,
         child: AnimatedScale(
           scale: _pressed ? 0.97 : 1.0,
@@ -82,21 +76,18 @@ class _NavisButtonState extends State<NavisButton> {
                 border: widget.variant == NavisButtonVariant.secondary
                     ? Border.all(color: AppColors.glassBorder)
                     : null,
-                boxShadow:
-                    widget.variant != NavisButtonVariant.secondary
-                        ? [
-                            BoxShadow(
-                              color: (widget.variant ==
-                                          NavisButtonVariant.danger
-                                      ? AppColors.red
-                                      : AppColors.cyan)
-                                  .withValues(
-                                      alpha: disabled ? 0 : 0.3),
-                              blurRadius: 16,
-                              offset: const Offset(0, 4),
-                            ),
-                          ]
-                        : null,
+                boxShadow: widget.variant != NavisButtonVariant.secondary
+                    ? [
+                        BoxShadow(
+                          color: (widget.variant == NavisButtonVariant.danger
+                                  ? AppColors.red
+                                  : AppColors.cyan)
+                              .withValues(alpha: disabled ? 0 : 0.3),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ]
+                    : null,
               ),
               child: Center(
                 child: widget.isLoading

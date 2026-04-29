@@ -33,6 +33,7 @@ class _AuthNotifier extends ChangeNotifier {
 }
 
 final _authNotifier = _AuthNotifier();
+
 /// Global navigator key used by GoRouter.
 /// Exposed for deep link navigation from push notification taps.
 final rootNavigatorKey = GlobalKey<NavigatorState>();

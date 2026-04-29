@@ -185,8 +185,8 @@ class _WeatherSummary extends ConsumerWidget {
                           Icon(
                             Icons.air,
                             size: 14,
-                            color: AppColors.textSecondary
-                                .withValues(alpha: 0.7),
+                            color:
+                                AppColors.textSecondary.withValues(alpha: 0.7),
                           ),
                           const SizedBox(width: 4),
                           Text(
@@ -200,8 +200,8 @@ class _WeatherSummary extends ConsumerWidget {
                           Icon(
                             Icons.waves,
                             size: 14,
-                            color: AppColors.textSecondary
-                                .withValues(alpha: 0.7),
+                            color:
+                                AppColors.textSecondary.withValues(alpha: 0.7),
                           ),
                           const SizedBox(width: 4),
                           Text(
@@ -260,8 +260,7 @@ class _BoatCard extends ConsumerWidget {
                   ),
                   _InfoChip(
                     icon: Icons.category_outlined,
-                    label: boat.type[0].toUpperCase() +
-                        boat.type.substring(1),
+                    label: boat.type[0].toUpperCase() + boat.type.substring(1),
                   ),
                   if (boat.homePort != null)
                     _InfoChip(
@@ -329,8 +328,7 @@ class _BoatCard extends ConsumerWidget {
                       icon: Icons.route_outlined,
                       variant: NavisButtonVariant.secondary,
                       compact: true,
-                      onPressed: () =>
-                          context.push('/boats/${boat.id}/trips'),
+                      onPressed: () => context.push('/boats/${boat.id}/trips'),
                     ),
                   ),
                 ],

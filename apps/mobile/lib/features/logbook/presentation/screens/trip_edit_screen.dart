@@ -37,14 +37,11 @@ class _TripEditScreenState extends ConsumerState<TripEditScreen> {
   }
 
   Future<void> _loadTrip() async {
-    final trip =
-        await ref.read(tripProvider(widget.tripId).future);
+    final trip = await ref.read(tripProvider(widget.tripId).future);
     _departurePortController.text = trip.departurePort;
     _arrivalPortController.text = trip.arrivalPort ?? '';
-    _engineHoursController.text =
-        trip.engineHours?.toStringAsFixed(1) ?? '';
-    _fuelController.text =
-        trip.fuelConsumedL?.toStringAsFixed(1) ?? '';
+    _engineHoursController.text = trip.engineHours?.toStringAsFixed(1) ?? '';
+    _fuelController.text = trip.fuelConsumedL?.toStringAsFixed(1) ?? '';
     _crewController.text = trip.crewMembers?.join(', ') ?? '';
     _notesController.text = trip.notes ?? '';
     setState(() => _loaded = true);
@@ -67,8 +64,7 @@ class _TripEditScreenState extends ConsumerState<TripEditScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final trip =
-          await ref.read(tripProvider(widget.tripId).future);
+      final trip = await ref.read(tripProvider(widget.tripId).future);
       final crewText = _crewController.text.trim();
       final crewList = crewText.isEmpty
           ? <String>[]
@@ -79,10 +75,8 @@ class _TripEditScreenState extends ConsumerState<TripEditScreen> {
         arrivalPort: _arrivalPortController.text.trim().isEmpty
             ? null
             : _arrivalPortController.text.trim(),
-        engineHours:
-            double.tryParse(_engineHoursController.text.trim()),
-        fuelConsumedL:
-            double.tryParse(_fuelController.text.trim()),
+        engineHours: double.tryParse(_engineHoursController.text.trim()),
+        fuelConsumedL: double.tryParse(_fuelController.text.trim()),
         crewMembers: crewList.isEmpty ? null : crewList,
         notes: _notesController.text.trim().isEmpty
             ? null
@@ -146,8 +140,7 @@ class _TripEditScreenState extends ConsumerState<TripEditScreen> {
                           prefixIcon: Icon(Icons.flight_takeoff),
                         ),
                         validator: (value) {
-                          if (value == null ||
-                              value.trim().isEmpty) {
+                          if (value == null || value.trim().isEmpty) {
                             return 'Please enter the departure port';
                           }
                           return null;
@@ -180,8 +173,7 @@ class _TripEditScreenState extends ConsumerState<TripEditScreen> {
                         ),
                         validator: (value) {
                           if (value != null && value.isNotEmpty) {
-                            if (double.tryParse(value.trim()) ==
-                                null) {
+                            if (double.tryParse(value.trim()) == null) {
                               return 'Please enter a valid number';
                             }
                           }
@@ -199,8 +191,7 @@ class _TripEditScreenState extends ConsumerState<TripEditScreen> {
                         ),
                         validator: (value) {
                           if (value != null && value.isNotEmpty) {
-                            if (double.tryParse(value.trim()) ==
-                                null) {
+                            if (double.tryParse(value.trim()) == null) {
                               return 'Please enter a valid number';
                             }
                           }
@@ -219,8 +210,7 @@ class _TripEditScreenState extends ConsumerState<TripEditScreen> {
                         controller: _crewController,
                         textInputAction: TextInputAction.next,
                         decoration: const InputDecoration(
-                          labelText:
-                              'Crew Members (comma-separated)',
+                          labelText: 'Crew Members (comma-separated)',
                           prefixIcon: Icon(Icons.group),
                         ),
                       ),

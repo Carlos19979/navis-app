@@ -49,8 +49,7 @@ void main() {
   }
 
   group('EventDetailScreen', () {
-    testWidgets('shows loading indicator while fetching event',
-        (tester) async {
+    testWidgets('shows loading indicator while fetching event', (tester) async {
       final completer = Completer<Event>();
 
       await tester.pumpWidget(
@@ -69,8 +68,7 @@ void main() {
       expect(find.byType(NavisLoading), findsOneWidget);
     });
 
-    testWidgets('displays Event Details title in app bar',
-        (tester) async {
+    testWidgets('displays Event Details title in app bar', (tester) async {
       await tester.pumpWidget(
         buildScreen(
           extraOverrides: [
@@ -183,8 +181,7 @@ void main() {
       expect(find.byIcon(Icons.star), findsNothing);
     });
 
-    testWidgets('displays description when present',
-        (tester) async {
+    testWidgets('displays description when present', (tester) async {
       await tester.pumpWidget(
         buildScreen(
           extraOverrides: [
@@ -202,8 +199,7 @@ void main() {
       );
     });
 
-    testWidgets('displays boat classes when present',
-        (tester) async {
+    testWidgets('displays boat classes when present', (tester) async {
       await tester.pumpWidget(
         buildScreen(
           extraOverrides: [
@@ -218,8 +214,7 @@ void main() {
       expect(find.text('TP52, J80'), findsOneWidget);
     });
 
-    testWidgets(
-        'shows Interested button for non-interested event',
+    testWidgets('shows Interested button for non-interested event',
         (tester) async {
       final event = makeEvent().copyWith(isInterested: false);
 
@@ -237,8 +232,7 @@ void main() {
       expect(find.text('Interested'), findsOneWidget);
     });
 
-    testWidgets(
-        'shows Not Interested button for already-interested event',
+    testWidgets('shows Not Interested button for already-interested event',
         (tester) async {
       final event = makeEvent().copyWith(isInterested: true);
 
@@ -263,11 +257,9 @@ void main() {
       expect(find.text('Not Interested'), findsOneWidget);
     });
 
-    testWidgets(
-        'tapping interest button calls repository toggleInterest',
+    testWidgets('tapping interest button calls repository toggleInterest',
         (tester) async {
-      when(() => mockRepo.toggleInterest(eventId))
-          .thenAnswer((_) async {});
+      when(() => mockRepo.toggleInterest(eventId)).thenAnswer((_) async {});
 
       final event = makeEvent().copyWith(isInterested: false);
 
@@ -295,15 +287,13 @@ void main() {
       verify(() => mockRepo.toggleInterest(eventId)).called(1);
     });
 
-    testWidgets('shows error state with retry button',
-        (tester) async {
+    testWidgets('shows error state with retry button', (tester) async {
       await tester.pumpWidget(
         buildTestApp(
           const EventDetailScreen(eventId: eventId),
           overrides: [
             eventProvider.overrideWith(
-              (ref, id) async =>
-                  throw Exception('Failed to load event'),
+              (ref, id) async => throw Exception('Failed to load event'),
             ),
             eventRepositoryProvider.overrideWithValue(mockRepo),
           ],
@@ -316,8 +306,7 @@ void main() {
       expect(find.text('Retry'), findsOneWidget);
     });
 
-    testWidgets('retry button triggers provider refresh',
-        (tester) async {
+    testWidgets('retry button triggers provider refresh', (tester) async {
       var callCount = 0;
 
       await tester.pumpWidget(
@@ -344,8 +333,7 @@ void main() {
       expect(callCount, greaterThan(initialCount));
     });
 
-    testWidgets('displays calendar icon for date info row',
-        (tester) async {
+    testWidgets('displays calendar icon for date info row', (tester) async {
       await tester.pumpWidget(
         buildScreen(
           extraOverrides: [
@@ -363,8 +351,7 @@ void main() {
       );
     });
 
-    testWidgets('displays location icon for location info row',
-        (tester) async {
+    testWidgets('displays location icon for location info row', (tester) async {
       await tester.pumpWidget(
         buildScreen(
           extraOverrides: [
@@ -382,8 +369,7 @@ void main() {
       );
     });
 
-    testWidgets('displays person icon for organizer info row',
-        (tester) async {
+    testWidgets('displays person icon for organizer info row', (tester) async {
       await tester.pumpWidget(
         buildScreen(
           extraOverrides: [

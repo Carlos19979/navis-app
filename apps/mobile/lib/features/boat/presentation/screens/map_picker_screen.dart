@@ -31,8 +31,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.initialLatitude != null &&
-        widget.initialLongitude != null) {
+    if (widget.initialLatitude != null && widget.initialLongitude != null) {
       _selectedPoint = LatLng(
         widget.initialLatitude!,
         widget.initialLongitude!,
@@ -51,8 +50,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
         actions: [
           if (_selectedPoint != null)
             IconButton(
-              onPressed: () =>
-                  Navigator.of(context).pop(_selectedPoint),
+              onPressed: () => Navigator.of(context).pop(_selectedPoint),
               tooltip: 'Confirm location',
               icon: const Icon(Icons.check, color: AppColors.green),
             ),
@@ -82,17 +80,14 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                         child: Container(
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: AppColors.navy
-                                .withValues(alpha: 0.6),
+                            color: AppColors.navy.withValues(alpha: 0.6),
                             border: Border.all(
-                              color: AppColors.cyan
-                                  .withValues(alpha: 0.6),
+                              color: AppColors.cyan.withValues(alpha: 0.6),
                               width: 1.5,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.cyan
-                                    .withValues(alpha: 0.3),
+                                color: AppColors.cyan.withValues(alpha: 0.3),
                                 blurRadius: 10,
                                 spreadRadius: 2,
                               ),
@@ -121,16 +116,14 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(16),
                     child: BackdropFilter(
-                      filter:
-                          ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                      filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 14,
                         ),
                         decoration: BoxDecoration(
-                          color:
-                              AppColors.navy.withValues(alpha: 0.7),
+                          color: AppColors.navy.withValues(alpha: 0.7),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                             color: AppColors.glassBorder,
@@ -144,8 +137,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                               height: 32,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: AppColors.cyan
-                                    .withValues(alpha: 0.15),
+                                color: AppColors.cyan.withValues(alpha: 0.15),
                               ),
                               child: const Icon(
                                 Icons.location_on,
@@ -158,9 +150,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                               child: Text(
                                 '${_selectedPoint!.latitude.toStringAsFixed(4)}, '
                                 '${_selectedPoint!.longitude.toStringAsFixed(4)}',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium,
+                                style: Theme.of(context).textTheme.bodyMedium,
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -168,8 +158,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                               label: 'Confirm',
                               compact: true,
                               onPressed: () =>
-                                  Navigator.of(context)
-                                      .pop(_selectedPoint),
+                                  Navigator.of(context).pop(_selectedPoint),
                             ),
                           ],
                         ),
@@ -180,16 +169,14 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(16),
                     child: BackdropFilter(
-                      filter:
-                          ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                      filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 14,
                         ),
                         decoration: BoxDecoration(
-                          color:
-                              AppColors.navy.withValues(alpha: 0.7),
+                          color: AppColors.navy.withValues(alpha: 0.7),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                             color: AppColors.glassBorder,
@@ -197,8 +184,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                           ),
                         ),
                         child: Row(
-                          mainAxisAlignment:
-                              MainAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
                               Icons.touch_app,

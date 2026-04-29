@@ -42,7 +42,7 @@ void main() {
               forecastProvider.overrideWith(
                 (ref) async => [
                   makeForecast(DateTime(2026, 4, 30)),
-                  makeForecast(DateTime(2026, 5, 1)),
+                  makeForecast(DateTime(2026, 5)),
                 ],
               ),
             ],
@@ -61,7 +61,7 @@ void main() {
           ProviderScope(
             overrides: [
               currentWeatherProvider.overrideWith(
-                (ref) async => makeWeather(temperature: 24.0),
+                (ref) async => makeWeather(),
               ),
               forecastProvider.overrideWith((ref) async => []),
             ],
@@ -98,7 +98,7 @@ void main() {
           ProviderScope(
             overrides: [
               currentWeatherProvider.overrideWith(
-                (ref) async => makeWeather(windSpeed: 12.0),
+                (ref) async => makeWeather(),
               ),
               forecastProvider.overrideWith((ref) async => []),
             ],
@@ -118,7 +118,7 @@ void main() {
           ProviderScope(
             overrides: [
               currentWeatherProvider.overrideWith(
-                (ref) async => makeWeather(waveHeight: 0.8),
+                (ref) async => makeWeather(),
               ),
               forecastProvider.overrideWith((ref) async => []),
             ],
@@ -159,7 +159,7 @@ void main() {
           ProviderScope(
             overrides: [
               currentWeatherProvider.overrideWith(
-                (ref) async => makeWeather(temperature: 24.0),
+                (ref) async => makeWeather(),
               ),
               forecastProvider.overrideWith((ref) async => []),
             ],
@@ -194,8 +194,7 @@ void main() {
     });
 
     group('no location state', () {
-      testWidgets(
-          'shows location access message when weather is null',
+      testWidgets('shows location access message when weather is null',
           (tester) async {
         await tester.pumpWidget(
           ProviderScope(
@@ -240,8 +239,7 @@ void main() {
         expect(find.byIcon(Icons.location_off), findsOneWidget);
       });
 
-      testWidgets(
-          'does not show temperature or stat pills when no location',
+      testWidgets('does not show temperature or stat pills when no location',
           (tester) async {
         await tester.pumpWidget(
           ProviderScope(
@@ -265,8 +263,7 @@ void main() {
     });
 
     group('loading state', () {
-      testWidgets('shows loading indicator while fetching',
-          (tester) async {
+      testWidgets('shows loading indicator while fetching', (tester) async {
         // Use Completers that never complete to keep providers in loading state
         // without leaving pending timers that fail test invariants.
         final weatherCompleter = Completer<Weather?>();
@@ -299,8 +296,7 @@ void main() {
         expect(find.byIcon(Icons.sailing_rounded), findsOneWidget);
       });
 
-      testWidgets(
-          'does not show weather data while in loading state',
+      testWidgets('does not show weather data while in loading state',
           (tester) async {
         final weatherCompleter = Completer<Weather?>();
         final forecastCompleter = Completer<List<Weather>>();
@@ -333,8 +329,7 @@ void main() {
     });
 
     group('error state', () {
-      testWidgets('shows error widget with retry on failure',
-          (tester) async {
+      testWidgets('shows error widget with retry on failure', (tester) async {
         await tester.pumpWidget(
           ProviderScope(
             overrides: [
@@ -354,8 +349,7 @@ void main() {
         expect(find.text('Retry'), findsOneWidget);
       });
 
-      testWidgets('shows error message from exception',
-          (tester) async {
+      testWidgets('shows error message from exception', (tester) async {
         await tester.pumpWidget(
           ProviderScope(
             overrides: [
@@ -376,8 +370,7 @@ void main() {
         );
       });
 
-      testWidgets('shows error_outline icon on error',
-          (tester) async {
+      testWidgets('shows error_outline icon on error', (tester) async {
         await tester.pumpWidget(
           ProviderScope(
             overrides: [
@@ -469,7 +462,7 @@ void main() {
               forecastProvider.overrideWith(
                 (ref) async => [
                   makeForecast(DateTime(2026, 4, 30)),
-                  makeForecast(DateTime(2026, 5, 1)),
+                  makeForecast(DateTime(2026, 5)),
                   makeForecast(DateTime(2026, 5, 2)),
                 ],
               ),
@@ -508,8 +501,7 @@ void main() {
         expect(find.text('10 kt'), findsOneWidget);
       });
 
-      testWidgets('forecast cards show weather description',
-          (tester) async {
+      testWidgets('forecast cards show weather description', (tester) async {
         await tester.pumpWidget(
           ProviderScope(
             overrides: [
@@ -532,8 +524,7 @@ void main() {
         expect(find.text('Sunny'), findsOneWidget);
       });
 
-      testWidgets(
-          'empty forecast shows "Forecast data not available." message',
+      testWidgets('empty forecast shows "Forecast data not available." message',
           (tester) async {
         await tester.pumpWidget(
           ProviderScope(
@@ -574,8 +565,7 @@ void main() {
         expect(find.byType(ForecastCard), findsNothing);
       });
 
-      testWidgets(
-          'forecast error shows error widget with retry',
+      testWidgets('forecast error shows error widget with retry',
           (tester) async {
         await tester.pumpWidget(
           ProviderScope(
@@ -584,8 +574,7 @@ void main() {
                 (ref) async => makeWeather(),
               ),
               forecastProvider.overrideWith(
-                (ref) async =>
-                    throw Exception('Forecast fetch failed'),
+                (ref) async => throw Exception('Forecast fetch failed'),
               ),
             ],
             child: const MaterialApp(home: WeatherScreen()),
@@ -643,8 +632,7 @@ void main() {
         expect(refreshCount, greaterThan(1));
       });
 
-      testWidgets(
-          'RefreshIndicator is present when weather data is loaded',
+      testWidgets('RefreshIndicator is present when weather data is loaded',
           (tester) async {
         await tester.pumpWidget(
           ProviderScope(
@@ -763,15 +751,13 @@ void main() {
     });
 
     group('optional weather fields', () {
-      testWidgets('hides humidity pill when humidity is null',
-          (tester) async {
-        final weatherNoHumidity = Weather(
+      testWidgets('hides humidity pill when humidity is null', (tester) async {
+        const weatherNoHumidity = Weather(
           temperature: 24.0,
           windSpeed: 12.0,
           windDirection: 225.0,
           waveHeight: 0.8,
           description: 'Clear sky',
-          humidity: null,
           pressure: 1013.0,
         );
 
@@ -796,8 +782,7 @@ void main() {
         expect(find.text('Humidity'), findsNothing);
       });
 
-      testWidgets(
-          'shows humidity pill when humidity is present',
+      testWidgets('shows humidity pill when humidity is present',
           (tester) async {
         await tester.pumpWidget(
           ProviderScope(

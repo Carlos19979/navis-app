@@ -37,9 +37,8 @@ class EventModel {
       endDate: json['end_date'] != null
           ? DateTime.parse(json['end_date'] as String)
           : null,
-      boatClasses: (json['boat_classes'] as List<dynamic>?)
-              ?.cast<String>() ??
-          const [],
+      boatClasses:
+          (json['boat_classes'] as List<dynamic>?)?.cast<String>() ?? const [],
       registrationUrl: json['registration_url'] as String?,
       documentsUrl: json['documents_url'] as String?,
       isFeatured: json['is_featured'] as bool? ?? false,

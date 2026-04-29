@@ -75,21 +75,15 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                 maxZoom: 18,
                 onPositionChanged: (position, hasGesture) {
                   if (hasGesture) {
-                    ref
-                        .read(chartProvider.notifier)
-                        .setCenter(position.center);
-                    ref
-                        .read(chartProvider.notifier)
-                        .setZoom(position.zoom);
+                    ref.read(chartProvider.notifier).setCenter(position.center);
+                    ref.read(chartProvider.notifier).setZoom(position.zoom);
                   }
                 },
               ),
               children: [
                 OpenSeaMapTileProvider.baseLayer,
-                if (mapState.showSeamarks)
-                  OpenSeaMapTileProvider.seamarkLayer,
-                if (_currentPosition != null &&
-                    mapState.showPosition)
+                if (mapState.showSeamarks) OpenSeaMapTileProvider.seamarkLayer,
+                if (_currentPosition != null && mapState.showPosition)
                   PositionIndicator(position: _currentPosition!),
                 if (boatsAsync case AsyncData(:final value))
                   MarkerLayer(
@@ -111,17 +105,16 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                               child: Container(
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: AppColors.navy
-                                      .withValues(alpha: 0.7),
+                                  color: AppColors.navy.withValues(alpha: 0.7),
                                   border: Border.all(
-                                    color: AppColors.cyan
-                                        .withValues(alpha: 0.6),
+                                    color:
+                                        AppColors.cyan.withValues(alpha: 0.6),
                                     width: 1.5,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: AppColors.cyan
-                                          .withValues(alpha: 0.3),
+                                      color:
+                                          AppColors.cyan.withValues(alpha: 0.3),
                                       blurRadius: 8,
                                       spreadRadius: 1,
                                     ),
@@ -193,8 +186,8 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                         Text(
                           'z${mapState.zoom.toStringAsFixed(0)}',
                           style: TextStyle(
-                            color: AppColors.textSecondary
-                                .withValues(alpha: 0.7),
+                            color:
+                                AppColors.textSecondary.withValues(alpha: 0.7),
                             fontSize: 11,
                           ),
                         ),
@@ -253,8 +246,7 @@ class _TripTracksLayer extends ConsumerWidget {
             polylines.add(
               Polyline(
                 points: [
-                  for (final pt in points)
-                    LatLng(pt.latitude, pt.longitude),
+                  for (final pt in points) LatLng(pt.latitude, pt.longitude),
                 ],
                 strokeWidth: 3,
                 color: AppColors.cyan.withValues(alpha: 0.7),

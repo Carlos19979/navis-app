@@ -53,8 +53,7 @@ final pendingMutationCountProvider = Provider<int>((ref) {
   return ref.watch(mutationQueueProvider).length;
 });
 
-class MutationQueueNotifier
-    extends StateNotifier<Queue<PendingMutation>> {
+class MutationQueueNotifier extends StateNotifier<Queue<PendingMutation>> {
   MutationQueueNotifier(this._ref) : super(Queue()) {
     _loadFromDisk();
     _ref.listen(connectivityProvider, (prev, isOnline) {

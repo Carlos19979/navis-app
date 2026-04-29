@@ -36,14 +36,10 @@ class SettingsScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding:
-                          const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                       child: Text(
                         'APPEARANCE',
-                        style: Theme.of(context)
-                            .textTheme
-                            .labelLarge
-                            ?.copyWith(
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
                               color: AppColors.cyan,
                               letterSpacing: 1.2,
                             ),
@@ -53,12 +49,10 @@ class SettingsScreen extends ConsumerWidget {
                       title: const Text('Dark Mode'),
                       subtitle: const Text('Use dark theme'),
                       value: isDarkMode,
-                      activeTrackColor:
-                          AppColors.cyan.withValues(alpha: 0.5),
+                      activeTrackColor: AppColors.cyan.withValues(alpha: 0.5),
                       activeThumbColor: AppColors.cyan,
                       onChanged: (value) {
-                        ref.read(themeModeProvider.notifier).state =
-                            value;
+                        ref.read(themeModeProvider.notifier).state = value;
                       },
                     ),
                   ],
@@ -74,14 +68,10 @@ class SettingsScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding:
-                          const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                       child: Text(
                         'LANGUAGE',
-                        style: Theme.of(context)
-                            .textTheme
-                            .labelLarge
-                            ?.copyWith(
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
                               color: AppColors.cyan,
                               letterSpacing: 1.2,
                             ),
@@ -92,8 +82,7 @@ class SettingsScreen extends ConsumerWidget {
                       subtitle: const Text('English'),
                       trailing: Icon(
                         Icons.chevron_right,
-                        color: AppColors.textSecondary
-                            .withValues(alpha: 0.5),
+                        color: AppColors.textSecondary.withValues(alpha: 0.5),
                       ),
                       onTap: () {},
                     ),
@@ -110,14 +99,10 @@ class SettingsScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding:
-                          const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                       child: Text(
                         'NOTIFICATIONS',
-                        style: Theme.of(context)
-                            .textTheme
-                            .labelLarge
-                            ?.copyWith(
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
                               color: AppColors.cyan,
                               letterSpacing: 1.2,
                             ),
@@ -125,28 +110,25 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                     SwitchListTile(
                       title: const Text('Document Expiry Alerts'),
-                      subtitle: const Text(
-                          'Get notified before documents expire'),
+                      subtitle:
+                          const Text('Get notified before documents expire'),
                       value: true,
-                      activeTrackColor:
-                          AppColors.cyan.withValues(alpha: 0.5),
+                      activeTrackColor: AppColors.cyan.withValues(alpha: 0.5),
                       activeThumbColor: AppColors.cyan,
                       onChanged: (value) {},
                     ),
                     Divider(
                       height: 1,
-                      color: AppColors.glassBorder
-                          .withValues(alpha: 0.3),
+                      color: AppColors.glassBorder.withValues(alpha: 0.3),
                       indent: 16,
                       endIndent: 16,
                     ),
                     SwitchListTile(
                       title: const Text('Event Reminders'),
-                      subtitle: const Text(
-                          'Get reminded about upcoming events'),
+                      subtitle:
+                          const Text('Get reminded about upcoming events'),
                       value: true,
-                      activeTrackColor:
-                          AppColors.cyan.withValues(alpha: 0.5),
+                      activeTrackColor: AppColors.cyan.withValues(alpha: 0.5),
                       activeThumbColor: AppColors.cyan,
                       onChanged: (value) {},
                     ),
@@ -163,14 +145,10 @@ class SettingsScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding:
-                          const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                       child: Text(
                         'DATA & STORAGE',
-                        style: Theme.of(context)
-                            .textTheme
-                            .labelLarge
-                            ?.copyWith(
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
                               color: AppColors.cyan,
                               letterSpacing: 1.2,
                             ),
@@ -180,32 +158,30 @@ class SettingsScreen extends ConsumerWidget {
                       leading: const Icon(Icons.cached,
                           color: AppColors.textSecondary),
                       title: const Text('Clear Image Cache'),
-                      subtitle: const Text(
-                          'Remove cached photos and map tiles'),
+                      subtitle:
+                          const Text('Remove cached photos and map tiles'),
                       onTap: () async {
                         await CachedNetworkImage.evictFromCache('');
                         await DefaultCacheManager().emptyCache();
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                                content:
-                                    Text('Image cache cleared')),
+                                content: Text('Image cache cleared')),
                           );
                         }
                       },
                     ),
                     Divider(
                       height: 1,
-                      color: AppColors.glassBorder
-                          .withValues(alpha: 0.3),
+                      color: AppColors.glassBorder.withValues(alpha: 0.3),
                       indent: 56,
                     ),
                     ListTile(
                       leading: const Icon(Icons.delete_sweep,
                           color: AppColors.textSecondary),
                       title: const Text('Clear Offline Data'),
-                      subtitle: const Text(
-                          'Remove cached boats, documents, trips'),
+                      subtitle:
+                          const Text('Remove cached boats, documents, trips'),
                       onTap: () async {
                         final db = ref.read(localDatabaseProvider);
                         await db.clearTable('boats');
@@ -214,8 +190,7 @@ class SettingsScreen extends ConsumerWidget {
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                                content:
-                                    Text('Offline data cleared')),
+                                content: Text('Offline data cleared')),
                           );
                         }
                       },
@@ -234,16 +209,11 @@ class SettingsScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding:
-                          const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                       child: Text(
                         'ACCOUNT',
-                        style: Theme.of(context)
-                            .textTheme
-                            .labelLarge
-                            ?.copyWith(
-                              color: AppColors.red
-                                  .withValues(alpha: 0.8),
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                              color: AppColors.red.withValues(alpha: 0.8),
                               letterSpacing: 1.2,
                             ),
                       ),
@@ -268,8 +238,7 @@ class SettingsScreen extends ConsumerWidget {
                                   child: const Text('Cancel'),
                                 ),
                                 TextButton(
-                                  onPressed: () =>
-                                      Navigator.pop(context, true),
+                                  onPressed: () => Navigator.pop(context, true),
                                   style: TextButton.styleFrom(
                                     foregroundColor: AppColors.red,
                                   ),
@@ -279,9 +248,7 @@ class SettingsScreen extends ConsumerWidget {
                             ),
                           );
                           if (confirmed == true) {
-                            await ref
-                                .read(authProvider.notifier)
-                                .logout();
+                            await ref.read(authProvider.notifier).logout();
                             if (context.mounted) {
                               context.go('/login');
                             }

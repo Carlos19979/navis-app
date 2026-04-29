@@ -55,8 +55,7 @@ void main() {
         authProvider.overrideWith((_) => mockAuthNotifier),
         authRepositoryProvider.overrideWithValue(mockAuthRepository),
         analyticsProvider.overrideWithValue(mockAnalyticsService),
-        notificationServiceProvider
-            .overrideWithValue(mockNotificationService),
+        notificationServiceProvider.overrideWithValue(mockNotificationService),
       ],
       child: const MaterialApp(home: LoginScreen()),
     );
@@ -79,8 +78,7 @@ void main() {
         expect(find.text('BOAT MANAGEMENT'), findsOneWidget);
       });
 
-      testWidgets('displays email and password fields',
-          (tester) async {
+      testWidgets('displays email and password fields', (tester) async {
         await tester.pumpWidget(buildLoginScreen());
         await tester.pumpAndSettle();
 
@@ -146,8 +144,7 @@ void main() {
         expect(find.text('secret123'), findsOneWidget);
       });
 
-      testWidgets('password field is obscured by default',
-          (tester) async {
+      testWidgets('password field is obscured by default', (tester) async {
         await tester.pumpWidget(buildLoginScreen());
         await tester.pumpAndSettle();
 
@@ -167,8 +164,7 @@ void main() {
         expect(textField.obscureText, isTrue);
       });
 
-      testWidgets('password visibility toggles on icon tap',
-          (tester) async {
+      testWidgets('password visibility toggles on icon tap', (tester) async {
         await tester.pumpWidget(buildLoginScreen());
         await tester.pumpAndSettle();
 
@@ -238,8 +234,7 @@ void main() {
         );
       });
 
-      testWidgets('shows error when password is too short',
-          (tester) async {
+      testWidgets('shows error when password is too short', (tester) async {
         await tester.pumpWidget(buildLoginScreen());
         await tester.pumpAndSettle();
 
@@ -262,8 +257,7 @@ void main() {
         );
       });
 
-      testWidgets('no validation errors with valid input',
-          (tester) async {
+      testWidgets('no validation errors with valid input', (tester) async {
         when(() => mockAuthNotifier.login(
               email: any(named: 'email'),
               password: any(named: 'password'),
@@ -326,8 +320,7 @@ void main() {
             )).called(1);
       });
 
-      testWidgets('does not call login when validation fails',
-          (tester) async {
+      testWidgets('does not call login when validation fails', (tester) async {
         await tester.pumpWidget(buildLoginScreen());
         await tester.pumpAndSettle();
 
@@ -343,8 +336,7 @@ void main() {
     });
 
     group('error state', () {
-      testWidgets('displays error message from auth state',
-          (tester) async {
+      testWidgets('displays error message from auth state', (tester) async {
         await tester.pumpWidget(buildLoginScreen(
           initialState: const AuthState.unauthenticated(
             errorMessage: 'Invalid login credentials',
@@ -358,8 +350,7 @@ void main() {
         );
       });
 
-      testWidgets('displays error icon with error message',
-          (tester) async {
+      testWidgets('displays error icon with error message', (tester) async {
         await tester.pumpWidget(buildLoginScreen(
           initialState: const AuthState.unauthenticated(
             errorMessage: 'Network error',
@@ -405,29 +396,28 @@ void main() {
       // TextEditingController immediately after showDialog returns,
       // while the dialog's dismiss animation is still running.
       // We suppress that known framework error in dialog-dismiss tests.
-      void Function(FlutterErrorDetails)? _originalOnError;
+      void Function(FlutterErrorDetails)? originalOnError;
 
       void suppressDisposedControllerErrors() {
-        _originalOnError = FlutterError.onError;
+        originalOnError = FlutterError.onError;
         FlutterError.onError = (details) {
           final msg = details.exceptionAsString();
           if (msg.contains('was used after being disposed') ||
               msg.contains('_dependents.isEmpty')) {
             return; // swallow known dialog-dismiss error
           }
-          _originalOnError?.call(details);
+          originalOnError?.call(details);
         };
       }
 
       void restoreErrorHandler() {
-        if (_originalOnError != null) {
-          FlutterError.onError = _originalOnError;
-          _originalOnError = null;
+        if (originalOnError != null) {
+          FlutterError.onError = originalOnError;
+          originalOnError = null;
         }
       }
 
-      testWidgets('tapping Forgot Password opens reset dialog',
-          (tester) async {
+      testWidgets('tapping Forgot Password opens reset dialog', (tester) async {
         await tester.pumpWidget(buildLoginScreen());
         await tester.pumpAndSettle();
 
@@ -485,8 +475,7 @@ void main() {
         await tester.pump(const Duration(seconds: 1));
       });
 
-      testWidgets('sends reset email on valid submission',
-          (tester) async {
+      testWidgets('sends reset email on valid submission', (tester) async {
         suppressDisposedControllerErrors();
         addTearDown(restoreErrorHandler);
 
@@ -517,8 +506,7 @@ void main() {
             .called(1);
       });
 
-      testWidgets('shows snackbar on successful reset email',
-          (tester) async {
+      testWidgets('shows snackbar on successful reset email', (tester) async {
         suppressDisposedControllerErrors();
         addTearDown(restoreErrorHandler);
 
@@ -548,8 +536,7 @@ void main() {
         );
       });
 
-      testWidgets('shows error snackbar when reset fails',
-          (tester) async {
+      testWidgets('shows error snackbar when reset fails', (tester) async {
         suppressDisposedControllerErrors();
         addTearDown(restoreErrorHandler);
 
@@ -581,8 +568,7 @@ void main() {
     });
 
     group('navigation links', () {
-      testWidgets('displays "Don\'t have an account?" text',
-          (tester) async {
+      testWidgets('displays "Don\'t have an account?" text', (tester) async {
         await tester.pumpWidget(buildLoginScreen());
         await tester.pumpAndSettle();
 

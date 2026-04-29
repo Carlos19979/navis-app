@@ -61,8 +61,7 @@ void main() {
       expect(find.text('Events'), findsOneWidget);
     });
 
-    testWidgets('renders event list with EventCard widgets',
-        (tester) async {
+    testWidgets('renders event list with EventCard widgets', (tester) async {
       final events = [
         makeEvent(),
         makeEvent(
@@ -89,8 +88,7 @@ void main() {
       expect(find.text('Trofeo Princesa Sofia'), findsOneWidget);
     });
 
-    testWidgets('shows featured star icon for featured events',
-        (tester) async {
+    testWidgets('shows featured star icon for featured events', (tester) async {
       final events = [
         makeEvent(),
         makeEvent(
@@ -116,8 +114,7 @@ void main() {
       expect(find.byIcon(Icons.star), findsOneWidget);
     });
 
-    testWidgets('shows empty state when no events',
-        (tester) async {
+    testWidgets('shows empty state when no events', (tester) async {
       await tester.pumpWidget(
         buildTestApp(
           const EventsScreen(),
@@ -134,8 +131,7 @@ void main() {
       expect(find.text('No upcoming events.'), findsOneWidget);
     });
 
-    testWidgets('has calendar toggle button in app bar',
-        (tester) async {
+    testWidgets('has calendar toggle button in app bar', (tester) async {
       await tester.pumpWidget(
         buildTestApp(
           const EventsScreen(),
@@ -233,8 +229,7 @@ void main() {
       expect(find.text('Trofeo Princesa Sofia'), findsNothing);
     });
 
-    testWidgets('search shows no results empty state',
-        (tester) async {
+    testWidgets('search shows no results empty state', (tester) async {
       await tester.pumpWidget(
         buildTestApp(
           const EventsScreen(),
@@ -260,8 +255,7 @@ void main() {
       );
     });
 
-    testWidgets('event type filter chips are displayed',
-        (tester) async {
+    testWidgets('event type filter chips are displayed', (tester) async {
       await tester.pumpWidget(
         buildTestApp(
           const EventsScreen(),
@@ -281,8 +275,7 @@ void main() {
       expect(find.text('Meetup'), findsOneWidget);
     });
 
-    testWidgets('event type filter filters events by type',
-        (tester) async {
+    testWidgets('event type filter filters events by type', (tester) async {
       final events = [
         makeEvent(),
         makeEvent(
@@ -317,15 +310,13 @@ void main() {
       expect(find.text('Boat Meetup'), findsNothing);
     });
 
-    testWidgets('shows error state with retry button',
-        (tester) async {
+    testWidgets('shows error state with retry button', (tester) async {
       await tester.pumpWidget(
         buildTestApp(
           const EventsScreen(),
           overrides: [
             eventsProvider.overrideWith(
-              (ref) async =>
-                  throw Exception('Failed to load events'),
+              (ref) async => throw Exception('Failed to load events'),
             ),
           ],
         ),
@@ -337,8 +328,7 @@ void main() {
       expect(find.text('Retry'), findsOneWidget);
     });
 
-    testWidgets('retry button triggers provider refresh',
-        (tester) async {
+    testWidgets('retry button triggers provider refresh', (tester) async {
       var callCount = 0;
 
       await tester.pumpWidget(

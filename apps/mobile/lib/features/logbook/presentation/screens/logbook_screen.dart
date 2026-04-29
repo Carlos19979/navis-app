@@ -32,14 +32,12 @@ class LogbookScreen extends ConsumerWidget {
             IconButton(
               icon: const Icon(Icons.bar_chart_outlined),
               tooltip: 'Statistics',
-              onPressed: () =>
-                  context.push('/boats/$boatId/stats'),
+              onPressed: () => context.push('/boats/$boatId/stats'),
             ),
           ],
         ),
         body: tripsAsync.when(
-          loading: () =>
-              const NavisShimmer(itemCount: 4, itemHeight: 100),
+          loading: () => const NavisShimmer(itemCount: 4, itemHeight: 100),
           error: (error, stack) => NavisErrorWidget(
             message: error.toString(),
             onRetry: () => ref.invalidate(boatTripsProvider(boatId)),
@@ -48,11 +46,9 @@ class LogbookScreen extends ConsumerWidget {
             if (trips.isEmpty) {
               return NavisEmptyState(
                 icon: Icons.route_outlined,
-                message:
-                    'No trips recorded yet. Start your first trip!',
+                message: 'No trips recorded yet. Start your first trip!',
                 actionLabel: 'Record Trip',
-                onAction: () =>
-                    context.push('/boats/$boatId/record'),
+                onAction: () => context.push('/boats/$boatId/record'),
               );
             }
 
@@ -112,8 +108,7 @@ class LogbookScreen extends ConsumerWidget {
             ],
           ),
           child: FloatingActionButton(
-            onPressed: () =>
-                context.push('/boats/$boatId/record'),
+            onPressed: () => context.push('/boats/$boatId/record'),
             tooltip: 'Record trip',
             backgroundColor: Colors.transparent,
             elevation: 0,

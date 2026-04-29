@@ -36,8 +36,7 @@ class DocumentDetailScreen extends ConsumerWidget {
             icon: const Icon(Icons.edit_outlined),
             tooltip: 'Edit document',
             onPressed: () {
-              final doc =
-                  ref.read(documentProvider(documentId)).valueOrNull;
+              final doc = ref.read(documentProvider(documentId)).valueOrNull;
               if (doc != null) {
                 context.push(
                   '/documents/$documentId/edit?boatId=${doc.boatId}',
@@ -49,8 +48,7 @@ class DocumentDetailScreen extends ConsumerWidget {
             icon: const Icon(Icons.autorenew, color: AppColors.cyan),
             tooltip: 'Renew document',
             onPressed: () {
-              final doc =
-                  ref.read(documentProvider(documentId)).valueOrNull;
+              final doc = ref.read(documentProvider(documentId)).valueOrNull;
               if (doc != null) {
                 context.push(
                   '/documents/$documentId/edit?boatId=${doc.boatId}&renew=true',
@@ -71,12 +69,10 @@ class DocumentDetailScreen extends ConsumerWidget {
             loading: () => const NavisLoading(),
             error: (error, stack) => NavisErrorWidget(
               message: error.toString(),
-              onRetry: () =>
-                  ref.invalidate(documentProvider(documentId)),
+              onRetry: () => ref.invalidate(documentProvider(documentId)),
             ),
             data: (doc) {
-              final daysLeft =
-                  NavisDateUtils.daysUntil(doc.expiryDate);
+              final daysLeft = NavisDateUtils.daysUntil(doc.expiryDate);
               final statusColor = daysLeft < 0
                   ? AppColors.red
                   : daysLeft <= 30
@@ -93,8 +89,7 @@ class DocumentDetailScreen extends ConsumerWidget {
                     // Header card with status accent
                     NavisCard(
                       padding: EdgeInsets.zero,
-                      borderColor:
-                          statusColor.withValues(alpha: 0.3),
+                      borderColor: statusColor.withValues(alpha: 0.3),
                       child: IntrinsicHeight(
                         child: Row(
                           children: [
@@ -106,48 +101,38 @@ class DocumentDetailScreen extends ConsumerWidget {
                                   end: Alignment.bottomCenter,
                                   colors: [
                                     statusColor,
-                                    statusColor.withValues(
-                                        alpha: 0.4),
+                                    statusColor.withValues(alpha: 0.4),
                                   ],
                                 ),
-                                borderRadius:
-                                    const BorderRadius.only(
+                                borderRadius: const BorderRadius.only(
                                   topLeft: Radius.circular(16),
-                                  bottomLeft:
-                                      Radius.circular(16),
+                                  bottomLeft: Radius.circular(16),
                                 ),
                               ),
                             ),
                             Expanded(
                               child: Padding(
-                                padding:
-                                    const EdgeInsets.all(20),
+                                padding: const EdgeInsets.all(20),
                                 child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
                                       mainAxisAlignment:
-                                          MainAxisAlignment
-                                              .spaceBetween,
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Expanded(
                                           child: Text(
                                             doc.type,
-                                            style: Theme.of(
-                                                    context)
+                                            style: Theme.of(context)
                                                 .textTheme
                                                 .headlineMedium
                                                 ?.copyWith(
-                                                  fontWeight:
-                                                      FontWeight
-                                                          .w700,
+                                                  fontWeight: FontWeight.w700,
                                                 ),
                                           ),
                                         ),
                                         DocumentStatusBadge(
-                                            expiryDate:
-                                                doc.expiryDate),
+                                            expiryDate: doc.expiryDate),
                                       ],
                                     ),
                                     const SizedBox(height: 4),
@@ -157,8 +142,7 @@ class DocumentDetailScreen extends ConsumerWidget {
                                           : '$daysLeft days remaining',
                                       style: TextStyle(
                                         color: statusColor,
-                                        fontWeight:
-                                            FontWeight.w500,
+                                        fontWeight: FontWeight.w500,
                                         fontSize: 14,
                                       ),
                                     ),
@@ -181,8 +165,7 @@ class DocumentDetailScreen extends ConsumerWidget {
                     // Details card
                     NavisCard(
                       child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             'Details',
@@ -198,21 +181,18 @@ class DocumentDetailScreen extends ConsumerWidget {
                           _DetailRow(
                             icon: Icons.calendar_today_outlined,
                             label: 'Expiry Date',
-                            value: NavisDateUtils.formatDate(
-                                doc.expiryDate),
+                            value: NavisDateUtils.formatDate(doc.expiryDate),
                           ),
                           if (doc.alertDaysBefore != null) ...[
                             const SizedBox(height: 12),
                             _DetailRow(
-                              icon:
-                                  Icons.notifications_outlined,
+                              icon: Icons.notifications_outlined,
                               label: 'Alert',
                               value:
                                   '${doc.alertDaysBefore} days before expiry',
                             ),
                           ],
-                          if (doc.notes != null &&
-                              doc.notes!.isNotEmpty) ...[
+                          if (doc.notes != null && doc.notes!.isNotEmpty) ...[
                             const SizedBox(height: 12),
                             _DetailRow(
                               icon: Icons.notes_outlined,
@@ -222,10 +202,13 @@ class DocumentDetailScreen extends ConsumerWidget {
                           ],
                         ],
                       ),
-                    ).animate().fadeIn(
+                    )
+                        .animate()
+                        .fadeIn(
                           duration: 400.ms,
                           delay: 100.ms,
-                        ).slideY(
+                        )
+                        .slideY(
                           begin: 0.05,
                           end: 0,
                           duration: 400.ms,
@@ -238,8 +221,7 @@ class DocumentDetailScreen extends ConsumerWidget {
                       const SizedBox(height: 16),
                       NavisCard(
                         child: Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               'Last Renewal',
@@ -255,13 +237,11 @@ class DocumentDetailScreen extends ConsumerWidget {
                             _DetailRow(
                               icon: Icons.event_outlined,
                               label: 'Date',
-                              value:
-                                  NavisDateUtils.formatDate(
+                              value: NavisDateUtils.formatDate(
                                 doc.lastRenewalDate!,
                               ),
                             ),
-                            if (doc.lastRenewalCost !=
-                                null) ...[
+                            if (doc.lastRenewalCost != null) ...[
                               const SizedBox(height: 12),
                               _DetailRow(
                                 icon: Icons.euro_outlined,
@@ -270,23 +250,23 @@ class DocumentDetailScreen extends ConsumerWidget {
                                     '\u20AC${doc.lastRenewalCost!.toStringAsFixed(2)}',
                               ),
                             ],
-                            if (doc.lastRenewalProvider !=
-                                null) ...[
+                            if (doc.lastRenewalProvider != null) ...[
                               const SizedBox(height: 12),
                               _DetailRow(
-                                icon:
-                                    Icons.business_outlined,
+                                icon: Icons.business_outlined,
                                 label: 'Provider',
-                                value:
-                                    doc.lastRenewalProvider!,
+                                value: doc.lastRenewalProvider!,
                               ),
                             ],
                           ],
                         ),
-                      ).animate().fadeIn(
+                      )
+                          .animate()
+                          .fadeIn(
                             duration: 400.ms,
                             delay: 200.ms,
-                          ).slideY(
+                          )
+                          .slideY(
                             begin: 0.05,
                             end: 0,
                             duration: 400.ms,
@@ -301,45 +281,42 @@ class DocumentDetailScreen extends ConsumerWidget {
                       NavisCard(
                         padding: EdgeInsets.zero,
                         child: ClipRRect(
-                          borderRadius:
-                              BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(16),
                           child: Semantics(
                             label: 'Document scan',
                             child: CachedNetworkImage(
                               imageUrl: doc.photoUrl!,
                               fit: BoxFit.cover,
-                              placeholder: (context, url) =>
-                                  const AspectRatio(
+                              placeholder: (context, url) => const AspectRatio(
                                 aspectRatio: 4 / 3,
                                 child: Center(
-                                  child:
-                                      CircularProgressIndicator(
+                                  child: CircularProgressIndicator(
                                     color: AppColors.cyan,
                                     strokeWidth: 2,
                                   ),
                                 ),
                               ),
-                              errorWidget:
-                                  (context, url, error) =>
-                                      const AspectRatio(
+                              errorWidget: (context, url, error) =>
+                                  const AspectRatio(
                                 aspectRatio: 4 / 3,
                                 child: Center(
                                   child: Icon(
-                                    Icons
-                                        .broken_image_outlined,
+                                    Icons.broken_image_outlined,
                                     size: 48,
-                                    color: AppColors
-                                        .textSecondary,
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      ).animate().fadeIn(
+                      )
+                          .animate()
+                          .fadeIn(
                             duration: 400.ms,
                             delay: 300.ms,
-                          ).slideY(
+                          )
+                          .slideY(
                             begin: 0.05,
                             end: 0,
                             duration: 400.ms,
@@ -373,8 +350,7 @@ class DocumentDetailScreen extends ConsumerWidget {
                             icon: Icons.delete_outlined,
                             variant: NavisButtonVariant.danger,
                             compact: true,
-                            onPressed: () =>
-                                _confirmDelete(context, ref),
+                            onPressed: () => _confirmDelete(context, ref),
                           ),
                         ),
                       ],
@@ -413,16 +389,14 @@ class DocumentDetailScreen extends ConsumerWidget {
                 await repo.deleteDocument(documentId);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Document deleted')),
+                    const SnackBar(content: Text('Document deleted')),
                   );
                   context.pop();
                 }
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content: Text('Failed to delete: $e')),
+                    SnackBar(content: Text('Failed to delete: $e')),
                   );
                 }
               }

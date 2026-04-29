@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
@@ -58,8 +57,8 @@ Boat makeBoat({
     type: type,
     lengthMeters: lengthMeters,
     homePort: homePort,
-    createdAt: DateTime(2026, 1, 1),
-    updatedAt: DateTime(2026, 1, 1),
+    createdAt: DateTime(2026),
+    updatedAt: DateTime(2026),
   );
 }
 
@@ -78,8 +77,8 @@ Document makeDocument({
     status: status,
     notes: 'Test document',
     alertDaysBefore: 30,
-    createdAt: DateTime(2026, 1, 1),
-    updatedAt: DateTime(2026, 1, 1),
+    createdAt: DateTime(2026),
+    updatedAt: DateTime(2026),
   );
 }
 
@@ -96,11 +95,10 @@ Trip makeTrip({
     id: id,
     boatId: boatId,
     departurePort: departurePort,
-    departureTime: DateTime(2026, 4, 26, 10, 0),
+    departureTime: DateTime(2026, 4, 26, 10),
     arrivalPort: arrivalPort,
-    arrivalTime: status == TripStatus.completed
-        ? DateTime(2026, 4, 26, 14, 30)
-        : null,
+    arrivalTime:
+        status == TripStatus.completed ? DateTime(2026, 4, 26, 14, 30) : null,
     distanceNm: distanceNm,
     maxSpeedKnots: maxSpeedKnots,
     status: status,

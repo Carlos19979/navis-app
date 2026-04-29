@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/getsentry/sentry-go"
+	"github.com/joho/godotenv"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/adapter/novu"
 	"github.com/Carlos19979/navis-app/apps/api/internal/adapter/openmeteo"
@@ -23,7 +24,8 @@ import (
 )
 
 func main() {
-	// Load configuration.
+	_ = godotenv.Load()
+
 	cfg := config.Load()
 
 	// Set up structured logger.

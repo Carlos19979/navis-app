@@ -108,8 +108,7 @@ void main() {
       expect(find.text('Fuel consumed'), findsWidgets);
     });
 
-    testWidgets('shows correct totalTrips value from stats',
-        (tester) async {
+    testWidgets('shows correct totalTrips value from stats', (tester) async {
       final trips = [makeTrip()];
 
       await tester.pumpWidget(
@@ -192,8 +191,7 @@ void main() {
       expect(find.text('Monthly Activity'), findsOneWidget);
     });
 
-    testWidgets('shows ports visited count from trip data',
-        (tester) async {
+    testWidgets('shows ports visited count from trip data', (tester) async {
       final trips = [
         makeTrip(
           departurePort: 'Palma',
@@ -225,15 +223,13 @@ void main() {
       expect(find.text('3'), findsWidgets);
     });
 
-    testWidgets('shows error state with retry button',
-        (tester) async {
+    testWidgets('shows error state with retry button', (tester) async {
       await tester.pumpWidget(
         buildTestApp(
           const TripStatsScreen(boatId: boatId),
           overrides: [
             boatTripsProvider.overrideWith(
-              (ref, boatId) async =>
-                  throw Exception('Failed to load'),
+              (ref, boatId) async => throw Exception('Failed to load'),
             ),
           ],
         ),
@@ -245,8 +241,7 @@ void main() {
       expect(find.text('Retry'), findsOneWidget);
     });
 
-    testWidgets('retry button triggers provider refresh',
-        (tester) async {
+    testWidgets('retry button triggers provider refresh', (tester) async {
       var callCount = 0;
 
       await tester.pumpWidget(
@@ -295,8 +290,7 @@ void main() {
       expect(find.text('9.2 kn'), findsOneWidget);
     });
 
-    testWidgets('shows dash for top speed when no speed data',
-        (tester) async {
+    testWidgets('shows dash for top speed when no speed data', (tester) async {
       final trips = [
         makeTrip(maxSpeedKnots: null),
       ];

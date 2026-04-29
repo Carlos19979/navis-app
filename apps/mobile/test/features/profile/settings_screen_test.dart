@@ -76,8 +76,7 @@ void main() {
             ),
             GoRoute(
               path: '/login',
-              builder: (_, __) =>
-                  const Scaffold(body: Text('Login Page')),
+              builder: (_, __) => const Scaffold(body: Text('Login Page')),
             ),
           ],
         ),
@@ -95,8 +94,7 @@ void main() {
         expect(find.byType(SettingsScreen), findsOneWidget);
       });
 
-      testWidgets('displays Settings title in app bar',
-          (tester) async {
+      testWidgets('displays Settings title in app bar', (tester) async {
         setPhoneSize(tester);
         await tester.pumpWidget(buildSettingsScreen());
         await tester.pumpAndSettle();
@@ -126,7 +124,7 @@ void main() {
 
       testWidgets('dark mode switch is on by default', (tester) async {
         setPhoneSize(tester);
-        await tester.pumpWidget(buildSettingsScreen(isDarkMode: true));
+        await tester.pumpWidget(buildSettingsScreen());
         await tester.pumpAndSettle();
 
         final switchTile = tester.widgetList<SwitchListTile>(
@@ -136,8 +134,7 @@ void main() {
         expect(switchTile.first.value, isTrue);
       });
 
-      testWidgets('dark mode switch is off when set to false',
-          (tester) async {
+      testWidgets('dark mode switch is off when set to false', (tester) async {
         setPhoneSize(tester);
         await tester.pumpWidget(buildSettingsScreen(isDarkMode: false));
         await tester.pumpAndSettle();
@@ -148,10 +145,9 @@ void main() {
         expect(switchTile.first.value, isFalse);
       });
 
-      testWidgets('toggling dark mode changes switch state',
-          (tester) async {
+      testWidgets('toggling dark mode changes switch state', (tester) async {
         setPhoneSize(tester);
-        await tester.pumpWidget(buildSettingsScreen(isDarkMode: true));
+        await tester.pumpWidget(buildSettingsScreen());
         await tester.pumpAndSettle();
 
         // Find the dark mode switch by looking for the SwitchListTile
@@ -171,10 +167,9 @@ void main() {
         expect(switchTile.first.value, isFalse);
       });
 
-      testWidgets('toggling dark mode off then on again',
-          (tester) async {
+      testWidgets('toggling dark mode off then on again', (tester) async {
         setPhoneSize(tester);
-        await tester.pumpWidget(buildSettingsScreen(isDarkMode: true));
+        await tester.pumpWidget(buildSettingsScreen());
         await tester.pumpAndSettle();
 
         final darkModeSwitch = find.ancestor(
@@ -218,8 +213,7 @@ void main() {
     });
 
     group('notifications section', () {
-      testWidgets('displays NOTIFICATIONS section header',
-          (tester) async {
+      testWidgets('displays NOTIFICATIONS section header', (tester) async {
         setPhoneSize(tester);
         await tester.pumpWidget(buildSettingsScreen());
         await tester.pumpAndSettle();
@@ -227,8 +221,7 @@ void main() {
         expect(find.text('NOTIFICATIONS'), findsOneWidget);
       });
 
-      testWidgets('displays Document Expiry Alerts toggle',
-          (tester) async {
+      testWidgets('displays Document Expiry Alerts toggle', (tester) async {
         setPhoneSize(tester);
         await tester.pumpWidget(buildSettingsScreen());
         await tester.pumpAndSettle();
@@ -257,8 +250,7 @@ void main() {
     });
 
     group('data and storage section', () {
-      testWidgets('displays DATA & STORAGE section header',
-          (tester) async {
+      testWidgets('displays DATA & STORAGE section header', (tester) async {
         setPhoneSize(tester);
         await tester.pumpWidget(buildSettingsScreen());
         await tester.pumpAndSettle();
@@ -303,14 +295,11 @@ void main() {
         await tester.pumpAndSettle();
 
         verify(() => mockLocalDatabase.clearTable('boats')).called(1);
-        verify(() => mockLocalDatabase.clearTable('documents'))
-            .called(1);
+        verify(() => mockLocalDatabase.clearTable('documents')).called(1);
         verify(() => mockLocalDatabase.clearTable('trips')).called(1);
       });
 
-      testWidgets(
-          'shows snackbar after clearing offline data',
-          (tester) async {
+      testWidgets('shows snackbar after clearing offline data', (tester) async {
         when(() => mockLocalDatabase.clearTable(any()))
             .thenAnswer((_) async {});
 
@@ -355,8 +344,7 @@ void main() {
         expect(find.byIcon(Icons.logout), findsOneWidget);
       });
 
-      testWidgets('tapping Log Out opens confirmation dialog',
-          (tester) async {
+      testWidgets('tapping Log Out opens confirmation dialog', (tester) async {
         setPhoneSize(tester);
         await tester.pumpWidget(buildSettingsScreen());
         await tester.pumpAndSettle();
@@ -390,8 +378,7 @@ void main() {
 
       testWidgets('confirming logout calls auth notifier logout',
           (tester) async {
-        when(() => mockAuthNotifier.logout())
-            .thenAnswer((_) async {});
+        when(() => mockAuthNotifier.logout()).thenAnswer((_) async {});
 
         setPhoneSize(tester);
         await tester.pumpWidget(buildSettingsScreen());

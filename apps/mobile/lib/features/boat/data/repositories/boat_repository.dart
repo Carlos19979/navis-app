@@ -59,8 +59,7 @@ class BoatRepositoryImpl implements BoatRepository {
         final cached = await offlineRepo!.getCachedList('boats');
         if (cached.isNotEmpty) {
           return PaginatedResponse<Boat>(
-            items:
-                cached.map((j) => BoatModel.fromJson(j).toEntity()).toList(),
+            items: cached.map((j) => BoatModel.fromJson(j).toEntity()).toList(),
           );
         }
       }

@@ -90,8 +90,7 @@ class TripDetailScreen extends ConsumerWidget {
                     const SizedBox(height: 12),
                     _buildCrewCard(context, trip),
                   ],
-                  if (trip.notes != null &&
-                      trip.notes!.isNotEmpty) ...[
+                  if (trip.notes != null && trip.notes!.isNotEmpty) ...[
                     const SizedBox(height: 12),
                     _buildNotesCard(context, trip),
                   ],
@@ -138,8 +137,7 @@ class TripDetailScreen extends ConsumerWidget {
                 children: [
                   OpenSeaMapTileProvider.baseLayer,
                   PolylineLayer(
-                    polylines:
-                        _buildSpeedPolylines(trackPoints),
+                    polylines: _buildSpeedPolylines(trackPoints),
                   ),
                   MarkerLayer(
                     markers: [
@@ -160,8 +158,7 @@ class TripDetailScreen extends ConsumerWidget {
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.green
-                                    .withValues(alpha: 0.4),
+                                color: AppColors.green.withValues(alpha: 0.4),
                                 blurRadius: 6,
                               ),
                             ],
@@ -185,8 +182,7 @@ class TripDetailScreen extends ConsumerWidget {
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.red
-                                    .withValues(alpha: 0.4),
+                                color: AppColors.red.withValues(alpha: 0.4),
                                 blurRadius: 6,
                               ),
                             ],
@@ -293,8 +289,7 @@ class TripDetailScreen extends ConsumerWidget {
               label: 'Engine Hours',
               value: '${trip.engineHours!.toStringAsFixed(1)} h',
             ),
-          if (trip.engineHours != null &&
-              trip.fuelConsumedL != null) ...[
+          if (trip.engineHours != null && trip.fuelConsumedL != null) ...[
             const SizedBox(height: 12),
             Container(
               height: 0.5,
@@ -306,8 +301,7 @@ class TripDetailScreen extends ConsumerWidget {
             _DetailRow(
               icon: Icons.local_gas_station,
               label: 'Fuel Consumed',
-              value:
-                  '${trip.fuelConsumedL!.toStringAsFixed(1)} L',
+              value: '${trip.fuelConsumedL!.toStringAsFixed(1)} L',
             ),
         ],
       ),
@@ -384,15 +378,10 @@ class TripDetailScreen extends ConsumerWidget {
           '${trip.departurePort} \u2192 ${trip.arrivalPort ?? '?'}',
         )
         ..writeln(
-          trip.departureTime
-              .toLocal()
-              .toString()
-              .substring(0, 16),
+          trip.departureTime.toLocal().toString().substring(0, 16),
         )
         ..writeln(
-          [distance, duration]
-              .where((s) => s.isNotEmpty)
-              .join(' \u2022 '),
+          [distance, duration].where((s) => s.isNotEmpty).join(' \u2022 '),
         )
         ..writeln()
         ..write('Shared from Navis');
@@ -458,8 +447,7 @@ class TripDetailScreen extends ConsumerWidget {
                         label: 'Cancel',
                         variant: NavisButtonVariant.secondary,
                         compact: true,
-                        onPressed: () =>
-                            Navigator.of(ctx).pop(),
+                        onPressed: () => Navigator.of(ctx).pop(),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -476,19 +464,16 @@ class TripDetailScreen extends ConsumerWidget {
                             );
                             await repo.deleteTrip(tripId);
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(
+                              ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content:
-                                      Text('Trip deleted'),
+                                  content: Text('Trip deleted'),
                                 ),
                               );
                               context.pop();
                             }
                           } catch (e) {
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(
+                              ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
                                     'Failed to delete: $e',
@@ -516,15 +501,15 @@ class _SpeedLegend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return const Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         _LegendDot(color: AppColors.cyan, label: '<3 kt'),
-        const SizedBox(width: 12),
+        SizedBox(width: 12),
         _LegendDot(color: AppColors.green, label: '3-6 kt'),
-        const SizedBox(width: 12),
+        SizedBox(width: 12),
         _LegendDot(color: AppColors.amber, label: '6-12 kt'),
-        const SizedBox(width: 12),
+        SizedBox(width: 12),
         _LegendDot(color: AppColors.red, label: '>12 kt'),
       ],
     );
@@ -604,10 +589,9 @@ class _DetailRow extends StatelessWidget {
             children: [
               Text(
                 label,
-                style:
-                    Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
               ),
               const SizedBox(height: 2),
               Text(

@@ -9,7 +9,6 @@ import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/domain/repositories/boat_repository.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/boat_detail_screen.dart';
-import 'package:navis_mobile/shared/models/paginated_response.dart';
 
 import '../../helpers/test_helpers.dart';
 
@@ -62,13 +61,7 @@ void main() {
     registerFallbackValue(FakeRoute());
   });
 
-  final testBoat = makeBoat(
-    id: 'boat-1',
-    name: 'Luna Azul',
-    registration: 'ES-MAL-3-1234',
-    type: 'sailboat',
-    homePort: 'Palma de Mallorca',
-  );
+  final testBoat = makeBoat();
 
   late FakeBoatsNotifier fakeBoatsNotifier;
 
@@ -88,8 +81,7 @@ void main() {
       routes: [
         GoRoute(
           path: '/boats',
-          builder: (_, __) =>
-              const Scaffold(body: Text('Boats Page')),
+          builder: (_, __) => const Scaffold(body: Text('Boats Page')),
           routes: [
             GoRoute(
               path: ':id',
@@ -99,23 +91,20 @@ void main() {
               routes: [
                 GoRoute(
                   path: 'documents',
-                  builder: (_, __) => const Scaffold(
-                      body: Text('Documents Page')),
+                  builder: (_, __) =>
+                      const Scaffold(body: Text('Documents Page')),
                 ),
                 GoRoute(
                   path: 'trips',
-                  builder: (_, __) =>
-                      const Scaffold(body: Text('Trips Page')),
+                  builder: (_, __) => const Scaffold(body: Text('Trips Page')),
                 ),
                 GoRoute(
                   path: 'edit',
-                  builder: (_, __) =>
-                      const Scaffold(body: Text('Edit Page')),
+                  builder: (_, __) => const Scaffold(body: Text('Edit Page')),
                 ),
                 GoRoute(
                   path: 'record',
-                  builder: (_, __) =>
-                      const Scaffold(body: Text('Record Page')),
+                  builder: (_, __) => const Scaffold(body: Text('Record Page')),
                 ),
               ],
             ),
@@ -156,11 +145,9 @@ void main() {
         ProviderScope(
           overrides: [
             boatProvider.overrideWith(
-              (ref, id) => Future<Boat>.delayed(
-                  const Duration(days: 1)),
+              (ref, id) => Future<Boat>.delayed(const Duration(days: 1)),
             ),
-            boatsProvider
-                .overrideWith(() => fakeBoatsNotifier),
+            boatsProvider.overrideWith(() => fakeBoatsNotifier),
           ],
           child: MaterialApp.router(routerConfig: router),
         ),
@@ -177,8 +164,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
     });
 
-    testWidgets('shows error state with retry button',
-        (tester) async {
+    testWidgets('shows error state with retry button', (tester) async {
       await setPhoneSize(tester);
       await tester.pumpWidget(buildSubject(useError: true));
       await pumpScreen(tester);
@@ -187,8 +173,7 @@ void main() {
       expect(find.text('Retry'), findsOneWidget);
     });
 
-    testWidgets('retry button is tappable in error state',
-        (tester) async {
+    testWidgets('retry button is tappable in error state', (tester) async {
       await setPhoneSize(tester);
       await tester.pumpWidget(buildSubject(useError: true));
       await pumpScreen(tester);
@@ -269,8 +254,7 @@ void main() {
       await pumpScreen(tester);
 
       expect(find.text('Logbook'), findsOneWidget);
-      expect(
-          find.text('Trip history and statistics'), findsOneWidget);
+      expect(find.text('Trip history and statistics'), findsOneWidget);
     });
 
     testWidgets('shows Edit Boat action tile', (tester) async {
@@ -294,8 +278,7 @@ void main() {
       );
     });
 
-    testWidgets('Documents tile navigates to documents page',
-        (tester) async {
+    testWidgets('Documents tile navigates to documents page', (tester) async {
       await setPhoneSize(tester);
       await tester.pumpWidget(buildSubject());
       await pumpScreen(tester);
@@ -306,8 +289,7 @@ void main() {
       expect(find.text('Documents Page'), findsOneWidget);
     });
 
-    testWidgets('Edit Boat tile navigates to edit page',
-        (tester) async {
+    testWidgets('Edit Boat tile navigates to edit page', (tester) async {
       await setPhoneSize(tester);
       await tester.pumpWidget(buildSubject());
       await pumpScreen(tester);
@@ -326,8 +308,7 @@ void main() {
       expect(find.text('Start Trip'), findsOneWidget);
     });
 
-    testWidgets('Start Trip FAB navigates to record page',
-        (tester) async {
+    testWidgets('Start Trip FAB navigates to record page', (tester) async {
       await setPhoneSize(tester);
       await tester.pumpWidget(buildSubject());
       await pumpScreen(tester);
@@ -363,8 +344,7 @@ void main() {
         );
       });
 
-      testWidgets('cancel button dismisses the delete dialog',
-          (tester) async {
+      testWidgets('cancel button dismisses the delete dialog', (tester) async {
         await setPhoneSize(tester);
         await tester.pumpWidget(buildSubject());
         await pumpScreen(tester);
@@ -404,8 +384,7 @@ void main() {
         await pumpScreen(tester);
 
         // Tap Delete in the dialog
-        await tester
-            .tap(find.widgetWithText(FilledButton, 'Delete'));
+        await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
         await pumpScreen(tester);
 
         expect(fakeBoatsNotifier.deleteBoatCalled, isTrue);
@@ -438,8 +417,7 @@ void main() {
         );
       });
 
-      testWidgets('dialog has Cancel and Delete buttons',
-          (tester) async {
+      testWidgets('dialog has Cancel and Delete buttons', (tester) async {
         await setPhoneSize(tester);
         await tester.pumpWidget(buildSubject());
         await pumpScreen(tester);
@@ -473,8 +451,7 @@ void main() {
       expect(find.text('Home Port'), findsOneWidget);
     });
 
-    testWidgets('shows correct values in info rows',
-        (tester) async {
+    testWidgets('shows correct values in info rows', (tester) async {
       await setPhoneSize(tester);
       await tester.pumpWidget(buildSubject());
       await pumpScreen(tester);

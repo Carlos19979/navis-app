@@ -46,8 +46,7 @@ class ProfileScreen extends ConsumerWidget {
                     gradient: AppColors.cyanGlowGradient,
                     boxShadow: [
                       BoxShadow(
-                        color:
-                            AppColors.cyan.withValues(alpha: 0.3),
+                        color: AppColors.cyan.withValues(alpha: 0.3),
                         blurRadius: 16,
                         spreadRadius: 2,
                       ),
@@ -60,19 +59,13 @@ class ProfileScreen extends ConsumerWidget {
                       (profile.displayName ?? profile.email)
                           .substring(0, 1)
                           .toUpperCase(),
-                      style: Theme.of(context)
-                          .textTheme
-                          .displaySmall
-                          ?.copyWith(
+                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
                             color: AppColors.cyan,
                             fontWeight: FontWeight.w700,
                           ),
                     ),
                   ),
-                )
-                    .animate()
-                    .fadeIn(duration: 500.ms)
-                    .scale(
+                ).animate().fadeIn(duration: 500.ms).scale(
                       begin: const Offset(0.8, 0.8),
                       end: const Offset(1.0, 1.0),
                       duration: 500.ms,
@@ -96,10 +89,7 @@ class ProfileScreen extends ConsumerWidget {
 
                 Text(
                   profile.email,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: AppColors.textSecondary,
                       ),
                 ).animate().fadeIn(
@@ -111,12 +101,8 @@ class ProfileScreen extends ConsumerWidget {
                   const SizedBox(height: 4),
                   Text(
                     'Member since ${NavisDateUtils.formatDate(profile.createdAt!)}',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(
-                          color: AppColors.textSecondary
-                              .withValues(alpha: 0.7),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary.withValues(alpha: 0.7),
                         ),
                   ).animate().fadeIn(
                         duration: 400.ms,
@@ -138,8 +124,7 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                       Divider(
                         height: 1,
-                        color: AppColors.glassBorder
-                            .withValues(alpha: 0.3),
+                        color: AppColors.glassBorder.withValues(alpha: 0.3),
                         indent: 56,
                       ),
                       _ProfileTile(
@@ -149,8 +134,7 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                       Divider(
                         height: 1,
-                        color: AppColors.glassBorder
-                            .withValues(alpha: 0.3),
+                        color: AppColors.glassBorder.withValues(alpha: 0.3),
                         indent: 56,
                       ),
                       _ProfileTile(
@@ -160,10 +144,13 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
-                ).animate().fadeIn(
+                )
+                    .animate()
+                    .fadeIn(
                       duration: 400.ms,
                       delay: 250.ms,
-                    ).slideY(
+                    )
+                    .slideY(
                       begin: 0.05,
                       end: 0,
                       duration: 400.ms,
@@ -205,8 +192,7 @@ class ProfileScreen extends ConsumerWidget {
           FilledButton(
             onPressed: () async {
               Navigator.of(ctx).pop();
-              final notificationService =
-                  ref.read(notificationServiceProvider);
+              final notificationService = ref.read(notificationServiceProvider);
               await notificationService.unregisterDevice();
               await ref.read(authProvider.notifier).logout();
               if (ctx.mounted) {
@@ -245,8 +231,7 @@ class _ProfileTile extends StatelessWidget {
         color: AppColors.textSecondary.withValues(alpha: 0.5),
       ),
       onTap: onTap,
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
     );
   }
 }

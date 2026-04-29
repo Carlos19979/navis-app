@@ -71,9 +71,7 @@ class MapControls extends StatelessWidget {
                 ),
                 _buildDivider(),
                 _ControlButton(
-                  icon: showSeamarks
-                      ? Icons.layers
-                      : Icons.layers_outlined,
+                  icon: showSeamarks ? Icons.layers : Icons.layers_outlined,
                   tooltip: 'Toggle layers',
                   onPressed: onToggleLayers,
                   isActive: showSeamarks,
@@ -143,8 +141,7 @@ class _ControlButtonState extends State<_ControlButton> {
                 ? BoxDecoration(
                     boxShadow: [
                       BoxShadow(
-                        color:
-                            AppColors.cyan.withValues(alpha: 0.25),
+                        color: AppColors.cyan.withValues(alpha: 0.25),
                         blurRadius: 8,
                         spreadRadius: 1,
                       ),
@@ -153,9 +150,7 @@ class _ControlButtonState extends State<_ControlButton> {
                 : null,
             child: Icon(
               widget.icon,
-              color: widget.isActive
-                  ? AppColors.cyan
-                  : AppColors.textPrimary,
+              color: widget.isActive ? AppColors.cyan : AppColors.textPrimary,
               size: 22,
             ),
           ),

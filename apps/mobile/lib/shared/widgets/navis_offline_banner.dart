@@ -33,13 +33,10 @@ class NavisOfflineBanner extends ConsumerWidget {
                     bottomRight: Radius.circular(12),
                   ),
                   child: BackdropFilter(
-                    filter:
-                        ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: (isOnline
-                                ? AppColors.cyan
-                                : AppColors.amber)
+                        color: (isOnline ? AppColors.cyan : AppColors.amber)
                             .withValues(alpha: 0.15),
                         borderRadius: const BorderRadius.only(
                           bottomLeft: Radius.circular(12),
@@ -47,9 +44,7 @@ class NavisOfflineBanner extends ConsumerWidget {
                         ),
                         border: Border(
                           bottom: BorderSide(
-                            color: (isOnline
-                                    ? AppColors.cyan
-                                    : AppColors.amber)
+                            color: (isOnline ? AppColors.cyan : AppColors.amber)
                                 .withValues(alpha: 0.3),
                             width: 0.5,
                           ),
@@ -57,17 +52,15 @@ class NavisOfflineBanner extends ConsumerWidget {
                       ),
                       child: Center(
                         child: Row(
-                          mainAxisAlignment:
-                              MainAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
                               isOnline
                                   ? Icons.sync_rounded
                                   : Icons.cloud_off_rounded,
                               size: 16,
-                              color: isOnline
-                                  ? AppColors.cyan
-                                  : AppColors.amber,
+                              color:
+                                  isOnline ? AppColors.cyan : AppColors.amber,
                             ),
                             const SizedBox(width: 8),
                             Text(
@@ -77,9 +70,8 @@ class NavisOfflineBanner extends ConsumerWidget {
                                 l10n: l10n,
                               ),
                               style: TextStyle(
-                                color: isOnline
-                                    ? AppColors.cyan
-                                    : AppColors.amber,
+                                color:
+                                    isOnline ? AppColors.cyan : AppColors.amber,
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
                               ),

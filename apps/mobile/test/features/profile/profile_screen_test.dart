@@ -86,8 +86,7 @@ void main() {
         authProvider.overrideWith((_) => mockAuthNotifier),
         authRepositoryProvider.overrideWithValue(mockAuthRepository),
         analyticsProvider.overrideWithValue(mockAnalyticsService),
-        notificationServiceProvider
-            .overrideWithValue(mockNotificationService),
+        notificationServiceProvider.overrideWithValue(mockNotificationService),
       ],
       child: MaterialApp.router(
         routerConfig: GoRouter(
@@ -99,8 +98,7 @@ void main() {
             ),
             GoRoute(
               path: '/login',
-              builder: (_, __) =>
-                  const Scaffold(body: Text('Login Page')),
+              builder: (_, __) => const Scaffold(body: Text('Login Page')),
             ),
           ],
         ),
@@ -131,8 +129,7 @@ void main() {
         expect(find.text('test@navis.app'), findsOneWidget);
       });
 
-      testWidgets('displays avatar initial from display name',
-          (tester) async {
+      testWidgets('displays avatar initial from display name', (tester) async {
         await tester.pumpWidget(buildProfileScreen());
         await tester.pumpAndSettle();
 
@@ -140,8 +137,7 @@ void main() {
         expect(find.text('T'), findsOneWidget);
       });
 
-      testWidgets(
-          'displays avatar initial from email when no display name',
+      testWidgets('displays avatar initial from email when no display name',
           (tester) async {
         await tester.pumpWidget(buildProfileScreen(
           profile: testProfile(
@@ -155,8 +151,7 @@ void main() {
         expect(find.text('C'), findsOneWidget);
       });
 
-      testWidgets(
-          'displays fallback name when display name is null',
+      testWidgets('displays fallback name when display name is null',
           (tester) async {
         await tester.pumpWidget(buildProfileScreen(
           profile: testProfile(displayName: null),
@@ -217,8 +212,7 @@ void main() {
         expect(find.byIcon(Icons.info_outline), findsOneWidget);
       });
 
-      testWidgets('all menu items have chevron trailing icon',
-          (tester) async {
+      testWidgets('all menu items have chevron trailing icon', (tester) async {
         await tester.pumpWidget(buildProfileScreen());
         await tester.pumpAndSettle();
 
@@ -239,8 +233,7 @@ void main() {
         expect(find.byIcon(Icons.logout), findsOneWidget);
       });
 
-      testWidgets('tapping Log Out opens confirmation dialog',
-          (tester) async {
+      testWidgets('tapping Log Out opens confirmation dialog', (tester) async {
         await tester.pumpWidget(buildProfileScreen());
         await tester.pumpAndSettle();
 
@@ -302,10 +295,8 @@ void main() {
             overrides: [
               profileProvider.overrideWithValue(null),
               authProvider.overrideWith((_) => mockAuthNotifier),
-              authRepositoryProvider
-                  .overrideWithValue(mockAuthRepository),
-              analyticsProvider
-                  .overrideWithValue(mockAnalyticsService),
+              authRepositoryProvider.overrideWithValue(mockAuthRepository),
+              analyticsProvider.overrideWithValue(mockAnalyticsService),
               notificationServiceProvider
                   .overrideWithValue(mockNotificationService),
             ],
@@ -324,10 +315,8 @@ void main() {
             overrides: [
               profileProvider.overrideWithValue(null),
               authProvider.overrideWith((_) => mockAuthNotifier),
-              authRepositoryProvider
-                  .overrideWithValue(mockAuthRepository),
-              analyticsProvider
-                  .overrideWithValue(mockAnalyticsService),
+              authRepositoryProvider.overrideWithValue(mockAuthRepository),
+              analyticsProvider.overrideWithValue(mockAnalyticsService),
               notificationServiceProvider
                   .overrideWithValue(mockNotificationService),
             ],
@@ -342,8 +331,7 @@ void main() {
     });
 
     group('different profiles', () {
-      testWidgets('renders profile with long display name',
-          (tester) async {
+      testWidgets('renders profile with long display name', (tester) async {
         await tester.pumpWidget(buildProfileScreen(
           profile: testProfile(
             displayName: 'Captain Juan Carlos Rodriguez de la Mar',
@@ -357,8 +345,7 @@ void main() {
         );
       });
 
-      testWidgets('renders profile without createdAt date',
-          (tester) async {
+      testWidgets('renders profile without createdAt date', (tester) async {
         await tester.pumpWidget(buildProfileScreen(
           profile: testProfile(createdAt: null),
         ));

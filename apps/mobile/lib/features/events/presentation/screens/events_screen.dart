@@ -57,21 +57,15 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     var filtered = events;
 
     if (_selectedType != 'all') {
-      filtered = filtered
-          .where((e) => e.eventType == _selectedType)
-          .toList();
+      filtered = filtered.where((e) => e.eventType == _selectedType).toList();
     }
 
     if (_searchQuery.isNotEmpty) {
       filtered = filtered
           .where((e) =>
               e.name.toLowerCase().contains(_searchQuery) ||
-              e.locationName
-                  .toLowerCase()
-                  .contains(_searchQuery) ||
-              e.organizer
-                  .toLowerCase()
-                  .contains(_searchQuery))
+              e.locationName.toLowerCase().contains(_searchQuery) ||
+              e.organizer.toLowerCase().contains(_searchQuery))
           .toList();
     }
 
@@ -104,8 +98,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
         child: SafeArea(
           bottom: false,
           child: eventsAsync.when(
-            loading: () =>
-                const NavisShimmer(itemCount: 4, itemHeight: 100),
+            loading: () => const NavisShimmer(itemCount: 4, itemHeight: 100),
             error: (error, stack) => NavisErrorWidget(
               message: error.toString(),
               onRetry: () => ref.invalidate(eventsProvider),
@@ -124,8 +117,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                 children: [
                   // Glass search field
                   Padding(
-                    padding:
-                        const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                     child: Container(
                       decoration: BoxDecoration(
                         color: AppColors.glassWhite,
@@ -144,13 +136,13 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                         decoration: InputDecoration(
                           hintText: 'Search events...',
                           hintStyle: TextStyle(
-                            color: AppColors.textSecondary
-                                .withValues(alpha: 0.6),
+                            color:
+                                AppColors.textSecondary.withValues(alpha: 0.6),
                           ),
                           prefixIcon: Icon(
                             Icons.search,
-                            color: AppColors.textSecondary
-                                .withValues(alpha: 0.6),
+                            color:
+                                AppColors.textSecondary.withValues(alpha: 0.6),
                           ),
                           suffixIcon: _searchQuery.isNotEmpty
                               ? IconButton(
@@ -161,14 +153,12 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                                   tooltip: 'Clear search',
                                   onPressed: () {
                                     _searchController.clear();
-                                    setState(
-                                        () => _searchQuery = '');
+                                    setState(() => _searchQuery = '');
                                   },
                                 )
                               : null,
                           border: InputBorder.none,
-                          contentPadding:
-                              const EdgeInsets.symmetric(
+                          contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16,
                             vertical: 14,
                           ),
@@ -183,39 +173,29 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                     height: 38,
                     child: ListView(
                       scrollDirection: Axis.horizontal,
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       children: _eventTypes.entries.map((entry) {
-                        final isSelected =
-                            _selectedType == entry.key;
+                        final isSelected = _selectedType == entry.key;
                         return Padding(
-                          padding:
-                              const EdgeInsets.only(right: 8),
+                          padding: const EdgeInsets.only(right: 8),
                           child: GestureDetector(
                             onTap: () {
-                              setState(() =>
-                                  _selectedType = entry.key);
+                              setState(() => _selectedType = entry.key);
                             },
                             child: AnimatedContainer(
-                              duration:
-                                  const Duration(milliseconds: 200),
+                              duration: const Duration(milliseconds: 200),
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 16,
                                 vertical: 8,
                               ),
                               decoration: BoxDecoration(
-                                gradient: isSelected
-                                    ? AppColors.cyanGradient
-                                    : null,
-                                color: isSelected
-                                    ? null
-                                    : AppColors.glassWhite,
-                                borderRadius:
-                                    BorderRadius.circular(20),
+                                gradient:
+                                    isSelected ? AppColors.cyanGradient : null,
+                                color: isSelected ? null : AppColors.glassWhite,
+                                borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
                                   color: isSelected
-                                      ? AppColors.cyan
-                                          .withValues(alpha: 0.6)
+                                      ? AppColors.cyan.withValues(alpha: 0.6)
                                       : AppColors.glassBorder,
                                   width: isSelected ? 1 : 0.5,
                                 ),
@@ -250,19 +230,17 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                       child: filtered.isEmpty
                           ? const NavisEmptyState(
                               icon: Icons.search_off,
-                              message:
-                                  'No events match your search.',
+                              message: 'No events match your search.',
                             )
                           : RefreshIndicator(
                               color: AppColors.cyan,
-                              backgroundColor:
-                                  AppColors.darkSurface,
+                              backgroundColor: AppColors.darkSurface,
                               onRefresh: () async {
                                 ref.invalidate(eventsProvider);
                               },
                               child: ListView.builder(
-                                padding: const EdgeInsets.fromLTRB(
-                                    16, 8, 16, 100),
+                                padding:
+                                    const EdgeInsets.fromLTRB(16, 8, 16, 100),
                                 itemCount: filtered.length,
                                 itemBuilder: (context, index) {
                                   return EventCard(
@@ -270,15 +248,13 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                                   )
                                       .animate()
                                       .fadeIn(
-                                        delay:
-                                            (index * 60).ms,
+                                        delay: (index * 60).ms,
                                         duration: 400.ms,
                                       )
                                       .slideY(
                                         begin: 0.05,
                                         end: 0,
-                                        delay:
-                                            (index * 60).ms,
+                                        delay: (index * 60).ms,
                                         duration: 400.ms,
                                         curve: Curves.easeOut,
                                       );

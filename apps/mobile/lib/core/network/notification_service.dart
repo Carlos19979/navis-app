@@ -59,8 +59,6 @@ class NotificationService {
   }
 
   String _getPlatform() {
-    return defaultTargetPlatform == TargetPlatform.iOS
-        ? 'ios'
-        : 'android';
+    return defaultTargetPlatform == TargetPlatform.iOS ? 'ios' : 'android';
   }
 }
