@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Carlos19979/navis-app/apps/api/internal/dto"
 	"github.com/Carlos19979/navis-app/apps/api/internal/service"
 )
 
@@ -35,7 +36,7 @@ func (h *WeatherHandler) GetCurrent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	JSON(w, http.StatusOK, data)
+	JSON(w, http.StatusOK, dto.WeatherFromPort(data))
 }
 
 // GetForecast handles GET /weather/forecast?lat=X&lon=Y&days=N.
@@ -61,7 +62,7 @@ func (h *WeatherHandler) GetForecast(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	JSON(w, http.StatusOK, data)
+	JSON(w, http.StatusOK, dto.ForecastFromPort(data))
 }
 
 // parseLatLon extracts lat and lon query parameters.

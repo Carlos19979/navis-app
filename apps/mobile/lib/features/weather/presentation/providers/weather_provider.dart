@@ -24,7 +24,7 @@ final currentWeatherProvider = FutureProvider<Weather?>((ref) async {
 
     final position = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.low,
-    );
+    ).timeout(const Duration(seconds: 5));
 
     final repository = ref.read(weatherRepositoryProvider);
     return repository.getCurrentWeather(position.latitude, position.longitude);
@@ -37,7 +37,7 @@ final forecastProvider = FutureProvider<List<Weather>>((ref) async {
   try {
     final position = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.low,
-    );
+    ).timeout(const Duration(seconds: 5));
     final repository = ref.read(weatherRepositoryProvider);
     return repository.getForecast(position.latitude, position.longitude);
   } on Exception {
