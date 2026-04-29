@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -73,15 +75,21 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                 maxZoom: 18,
                 onPositionChanged: (position, hasGesture) {
                   if (hasGesture) {
-                    ref.read(chartProvider.notifier).setCenter(position.center);
-                    ref.read(chartProvider.notifier).setZoom(position.zoom);
+                    ref
+                        .read(chartProvider.notifier)
+                        .setCenter(position.center);
+                    ref
+                        .read(chartProvider.notifier)
+                        .setZoom(position.zoom);
                   }
                 },
               ),
               children: [
                 OpenSeaMapTileProvider.baseLayer,
-                if (mapState.showSeamarks) OpenSeaMapTileProvider.seamarkLayer,
-                if (_currentPosition != null && mapState.showPosition)
+                if (mapState.showSeamarks)
+                  OpenSeaMapTileProvider.seamarkLayer,
+                if (_currentPosition != null &&
+                    mapState.showPosition)
                   PositionIndicator(position: _currentPosition!),
                 if (boatsAsync case AsyncData(:final value))
                   MarkerLayer(
@@ -94,16 +102,38 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                               boat.homePortLat!,
                               boat.homePortLon!,
                             ),
-                            width: 40,
-                            height: 40,
+                            width: 48,
+                            height: 48,
                             child: Tooltip(
                               message: '${boat.name}'
                                   ' \u2014 '
                                   '${boat.homePort ?? "Home port"}',
-                              child: const Icon(
-                                Icons.anchor,
-                                color: AppColors.cyan,
-                                size: 28,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: AppColors.navy
+                                      .withValues(alpha: 0.7),
+                                  border: Border.all(
+                                    color: AppColors.cyan
+                                        .withValues(alpha: 0.6),
+                                    width: 1.5,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.cyan
+                                          .withValues(alpha: 0.3),
+                                      blurRadius: 8,
+                                      spreadRadius: 1,
+                                    ),
+                                  ],
+                                ),
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.anchor,
+                                    color: AppColors.cyan,
+                                    size: 22,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
@@ -115,6 +145,66 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
               ],
             ),
           ),
+
+          // Glass GPS status overlay at top
+          if (_currentPosition != null)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 8,
+              left: 16,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.navy.withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.glassBorder,
+                        width: 0.5,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: AppColors.green,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${_currentPosition!.latitude.toStringAsFixed(4)}, '
+                          '${_currentPosition!.longitude.toStringAsFixed(4)}',
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'z${mapState.zoom.toStringAsFixed(0)}',
+                          style: TextStyle(
+                            color: AppColors.textSecondary
+                                .withValues(alpha: 0.7),
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
           MapControls(
             onZoomIn: () {
               ref.read(chartProvider.notifier).zoomIn();

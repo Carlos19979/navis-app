@@ -7,7 +7,8 @@ class NavisShimmer extends StatefulWidget {
     super.key,
     this.itemCount = 3,
     this.itemHeight = 88,
-    this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    this.padding =
+        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
   });
 
   final int itemCount;
@@ -31,7 +32,8 @@ class _NavisShimmerState extends State<NavisShimmer>
       duration: const Duration(milliseconds: 1500),
     )..repeat();
     _animation = Tween<double>(begin: -1, end: 2).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOutSine),
+      CurvedAnimation(
+          parent: _controller, curve: Curves.easeInOutSine),
     );
   }
 
@@ -53,9 +55,9 @@ class _NavisShimmerState extends State<NavisShimmer>
               widget.itemCount,
               (index) => Padding(
                 padding: const EdgeInsets.only(bottom: 12),
-                child: _ShimmerCard(
+                child: _ShimmerItem(
                   height: widget.itemHeight,
-                  shimmerValue: _animation.value,
+                  animationValue: _animation.value,
                 ),
               ),
             ),
@@ -66,29 +68,33 @@ class _NavisShimmerState extends State<NavisShimmer>
   }
 }
 
-class _ShimmerCard extends StatelessWidget {
-  const _ShimmerCard({
+class _ShimmerItem extends StatelessWidget {
+  const _ShimmerItem({
     required this.height,
-    required this.shimmerValue,
+    required this.animationValue,
   });
 
   final double height;
-  final double shimmerValue;
+  final double animationValue;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       height: height,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         gradient: LinearGradient(
-          begin: Alignment(shimmerValue - 1, 0),
-          end: Alignment(shimmerValue, 0),
+          begin: Alignment(animationValue - 1, 0),
+          end: Alignment(animationValue, 0),
           colors: const [
-            AppColors.darkCard,
-            AppColors.darkDivider,
-            AppColors.darkCard,
+            AppColors.glassWhite,
+            AppColors.glassHighlight,
+            AppColors.glassWhite,
           ],
+        ),
+        border: Border.all(
+          color: AppColors.glassBorder,
+          width: 0.5,
         ),
       ),
       padding: const EdgeInsets.all(16),
@@ -98,8 +104,8 @@ class _ShimmerCard extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: AppColors.darkDivider,
-              borderRadius: BorderRadius.circular(8),
+              color: AppColors.glassWhite,
+              borderRadius: BorderRadius.circular(12),
             ),
           ),
           const SizedBox(width: 16),
@@ -112,17 +118,17 @@ class _ShimmerCard extends StatelessWidget {
                   height: 14,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: AppColors.darkDivider,
-                    borderRadius: BorderRadius.circular(4),
+                    color: AppColors.glassWhite,
+                    borderRadius: BorderRadius.circular(6),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 Container(
                   height: 10,
                   width: 120,
                   decoration: BoxDecoration(
-                    color: AppColors.darkDivider,
-                    borderRadius: BorderRadius.circular(4),
+                    color: AppColors.glassWhite,
+                    borderRadius: BorderRadius.circular(6),
                   ),
                 ),
               ],

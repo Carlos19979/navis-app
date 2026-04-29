@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/features/events/domain/entities/event.dart';
+import 'package:navis_mobile/shared/widgets/navis_card.dart';
 
 class CalendarView extends StatefulWidget {
   const CalendarView({super.key, required this.events});
@@ -56,28 +57,43 @@ class _CalendarViewState extends State<CalendarView> {
 
     return Column(
       children: [
+        // Month header in glass card
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              IconButton(
-                onPressed: _previousMonth,
-                tooltip: 'Previous month',
-                icon: const Icon(Icons.chevron_left),
-              ),
-              Text(
-                '${_monthName(_currentMonth.month)} ${_currentMonth.year}',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              IconButton(
-                onPressed: _nextMonth,
-                tooltip: 'Next month',
-                icon: const Icon(Icons.chevron_right),
-              ),
-            ],
+          child: NavisCard(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  onPressed: _previousMonth,
+                  tooltip: 'Previous month',
+                  icon: const Icon(
+                    Icons.chevron_left,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                Text(
+                  '${_monthName(_currentMonth.month)} ${_currentMonth.year}',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                IconButton(
+                  onPressed: _nextMonth,
+                  tooltip: 'Next month',
+                  icon: const Icon(
+                    Icons.chevron_right,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
+
+        // Weekday headers
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
@@ -88,13 +104,21 @@ class _CalendarViewState extends State<CalendarView> {
                       child: Text(
                         day,
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodySmall,
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmall
+                            ?.copyWith(
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
                       ),
                     ))
                 .toList(),
           ),
         ),
         const SizedBox(height: 8),
+
+        // Day grid
         Expanded(
           child: GridView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -127,12 +151,36 @@ class _CalendarViewState extends State<CalendarView> {
                         context.go('/events/${event.id}');
                       }
                     : null,
-                child: Container(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
                   decoration: BoxDecoration(
-                    color:
-                        isToday ? AppColors.cyan.withValues(alpha: 0.2) : null,
-                    borderRadius: BorderRadius.circular(8),
-                    border: isToday ? Border.all(color: AppColors.cyan) : null,
+                    color: isToday
+                        ? null
+                        : hasEvent
+                            ? AppColors.glassWhite
+                            : Colors.transparent,
+                    gradient: isToday ? AppColors.cyanGradient : null,
+                    borderRadius: BorderRadius.circular(10),
+                    border: isToday
+                        ? Border.all(
+                            color: AppColors.cyan,
+                            width: 1.5,
+                          )
+                        : hasEvent
+                            ? Border.all(
+                                color: AppColors.glassBorder,
+                                width: 0.5,
+                              )
+                            : null,
+                    boxShadow: isToday
+                        ? [
+                            BoxShadow(
+                              color:
+                                  AppColors.cyan.withValues(alpha: 0.25),
+                              blurRadius: 8,
+                            ),
+                          ]
+                        : null,
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -140,10 +188,14 @@ class _CalendarViewState extends State<CalendarView> {
                       Text(
                         '$day',
                         style: TextStyle(
-                          color:
-                              isToday ? AppColors.cyan : AppColors.textPrimary,
-                          fontWeight:
-                              isToday ? FontWeight.w600 : FontWeight.w400,
+                          color: isToday
+                              ? Colors.white
+                              : hasEvent
+                                  ? AppColors.textPrimary
+                                  : AppColors.textSecondary,
+                          fontWeight: isToday || hasEvent
+                              ? FontWeight.w600
+                              : FontWeight.w400,
                           fontSize: 14,
                         ),
                       ),
@@ -152,9 +204,20 @@ class _CalendarViewState extends State<CalendarView> {
                           margin: const EdgeInsets.only(top: 2),
                           width: 6,
                           height: 6,
-                          decoration: const BoxDecoration(
-                            color: AppColors.cyan,
+                          decoration: BoxDecoration(
+                            color: isToday
+                                ? Colors.white
+                                : AppColors.cyan,
                             shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: (isToday
+                                        ? Colors.white
+                                        : AppColors.cyan)
+                                    .withValues(alpha: 0.5),
+                                blurRadius: 4,
+                              ),
+                            ],
                           ),
                         ),
                     ],

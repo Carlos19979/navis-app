@@ -11,8 +11,10 @@ import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/documents/domain/entities/document.dart';
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
+import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
+import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 
 class DocumentFormScreen extends ConsumerStatefulWidget {
@@ -240,6 +242,8 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
   Widget build(BuildContext context) {
     super.build(context);
     return Scaffold(
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       appBar: NavisAppBar(
         title: widget.isRenew
             ? 'Renew Document'
@@ -248,176 +252,282 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                 : 'New Document',
         showBack: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              DropdownButtonFormField<String>(
-                initialValue: _selectedType,
-                decoration: const InputDecoration(
-                  labelText: 'Document Type',
-                  prefixIcon: Icon(Icons.description_outlined),
-                ),
-                items: _documentTypes.map((type) {
-                  return DropdownMenuItem(
-                    value: type,
-                    child: Text(type),
-                  );
-                }).toList(),
-                onChanged: widget.isRenew
-                    ? null
-                    : (value) {
-                        if (value != null) {
-                          setState(() => _selectedType = value);
-                        }
-                      },
-              ),
-              const SizedBox(height: 16),
-              GestureDetector(
-                onTap: _pickDate,
-                child: AbsorbPointer(
-                  child: TextFormField(
-                    decoration: InputDecoration(
-                      labelText: 'Expiry Date',
-                      prefixIcon: const Icon(Icons.calendar_today),
-                      hintText: NavisDateUtils.formatDate(_expiryDate),
-                    ),
-                    controller: TextEditingController(
-                      text: NavisDateUtils.formatDate(_expiryDate),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _alertDaysController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Alert Days Before Expiry',
-                  prefixIcon: Icon(Icons.notifications_outlined),
-                ),
-                validator: (value) {
-                  if (value != null && value.isNotEmpty) {
-                    if (int.tryParse(value) == null) {
-                      return 'Please enter a valid number';
-                    }
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _notesController,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Notes (optional)',
-                  prefixIcon: Icon(Icons.notes_outlined),
-                  alignLabelWithHint: true,
-                ),
-              ),
-              if (widget.isRenew) ...[
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _renewalCostController,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(
-                    labelText: 'Renewal Cost',
-                    prefixIcon: Icon(Icons.euro),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _renewalProviderController,
-                  decoration: const InputDecoration(
-                    labelText: 'Provider / Company',
-                    prefixIcon: Icon(Icons.business_outlined),
-                  ),
-                ),
-              ],
-              const SizedBox(height: 16),
-              GestureDetector(
-                onTap: _pickScan,
-                child: Container(
-                  height: 160,
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(
-                    color: AppColors.darkCard,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.darkDivider),
-                  ),
-                  child: _photoPath != null || _existingPhotoUrl != null
-                      ? Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            if (_photoPath != null)
-                              Image.file(
-                                File(_photoPath!),
-                                fit: BoxFit.cover,
-                                semanticLabel: 'Document scan',
-                              )
-                            else
-                              Image.network(
-                                _existingPhotoUrl!,
-                                fit: BoxFit.cover,
-                                semanticLabel: 'Document scan',
-                                errorBuilder: (_, __, ___) => const Center(
-                                  child: Icon(
-                                    Icons.broken_image_outlined,
-                                    size: 48,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
+      body: GradientBackground(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Document type & expiry section
+                  NavisCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Document Info',
+                          style: Theme.of(context)
+                              .textTheme
+                              .labelLarge
+                              ?.copyWith(
+                                color: AppColors.cyan,
+                                letterSpacing: 0.8,
                               ),
-                            Positioned(
-                              bottom: 8,
-                              right: 8,
-                              child: CircleAvatar(
-                                radius: 18,
-                                backgroundColor:
-                                    Colors.black.withValues(alpha: 0.6),
-                                child: const Icon(
-                                  Icons.edit,
-                                  size: 18,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                      : const Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.document_scanner_outlined,
-                              size: 48,
-                              color: AppColors.textSecondary,
-                            ),
-                            SizedBox(height: 8),
-                            Text(
-                              'Add Scan',
-                              style: TextStyle(
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
                         ),
-                ),
+                        const SizedBox(height: 16),
+                        DropdownButtonFormField<String>(
+                          initialValue: _selectedType,
+                          decoration: const InputDecoration(
+                            labelText: 'Document Type',
+                            prefixIcon:
+                                Icon(Icons.description_outlined),
+                          ),
+                          items: _documentTypes.map((type) {
+                            return DropdownMenuItem(
+                              value: type,
+                              child: Text(type),
+                            );
+                          }).toList(),
+                          onChanged: widget.isRenew
+                              ? null
+                              : (value) {
+                                  if (value != null) {
+                                    setState(
+                                        () => _selectedType = value);
+                                  }
+                                },
+                        ),
+                        const SizedBox(height: 16),
+                        GestureDetector(
+                          onTap: _pickDate,
+                          child: AbsorbPointer(
+                            child: TextFormField(
+                              decoration: InputDecoration(
+                                labelText: 'Expiry Date',
+                                prefixIcon:
+                                    const Icon(Icons.calendar_today),
+                                hintText: NavisDateUtils.formatDate(
+                                    _expiryDate),
+                              ),
+                              controller: TextEditingController(
+                                text: NavisDateUtils.formatDate(
+                                    _expiryDate),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Alert & notes section
+                  NavisCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Alerts & Notes',
+                          style: Theme.of(context)
+                              .textTheme
+                              .labelLarge
+                              ?.copyWith(
+                                color: AppColors.cyan,
+                                letterSpacing: 0.8,
+                              ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _alertDaysController,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'Alert Days Before Expiry',
+                            prefixIcon:
+                                Icon(Icons.notifications_outlined),
+                          ),
+                          validator: (value) {
+                            if (value != null && value.isNotEmpty) {
+                              if (int.tryParse(value) == null) {
+                                return 'Please enter a valid number';
+                              }
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _notesController,
+                          maxLines: 3,
+                          decoration: const InputDecoration(
+                            labelText: 'Notes (optional)',
+                            prefixIcon: Icon(Icons.notes_outlined),
+                            alignLabelWithHint: true,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Renewal section
+                  if (widget.isRenew) ...[
+                    const SizedBox(height: 16),
+                    NavisCard(
+                      child: Column(
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Renewal Details',
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelLarge
+                                ?.copyWith(
+                                  color: AppColors.cyan,
+                                  letterSpacing: 0.8,
+                                ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _renewalCostController,
+                            keyboardType:
+                                const TextInputType.numberWithOptions(
+                                    decimal: true),
+                            decoration: const InputDecoration(
+                              labelText: 'Renewal Cost',
+                              prefixIcon: Icon(Icons.euro),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller:
+                                _renewalProviderController,
+                            decoration: const InputDecoration(
+                              labelText: 'Provider / Company',
+                              prefixIcon:
+                                  Icon(Icons.business_outlined),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 16),
+
+                  // Scan section
+                  NavisCard(
+                    padding: EdgeInsets.zero,
+                    child: GestureDetector(
+                      onTap: _pickScan,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          height: 160,
+                          decoration: const BoxDecoration(
+                            color: AppColors.glassWhite,
+                          ),
+                          child: _photoPath != null ||
+                                  _existingPhotoUrl != null
+                              ? Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    if (_photoPath != null)
+                                      Image.file(
+                                        File(_photoPath!),
+                                        fit: BoxFit.cover,
+                                        semanticLabel:
+                                            'Document scan',
+                                      )
+                                    else
+                                      Image.network(
+                                        _existingPhotoUrl!,
+                                        fit: BoxFit.cover,
+                                        semanticLabel:
+                                            'Document scan',
+                                        errorBuilder:
+                                            (_, __, ___) =>
+                                                const Center(
+                                          child: Icon(
+                                            Icons
+                                                .broken_image_outlined,
+                                            size: 48,
+                                            color: AppColors
+                                                .textSecondary,
+                                          ),
+                                        ),
+                                      ),
+                                    Positioned(
+                                      bottom: 8,
+                                      right: 8,
+                                      child: Container(
+                                        width: 36,
+                                        height: 36,
+                                        decoration: BoxDecoration(
+                                          color: AppColors.navy
+                                              .withValues(
+                                                  alpha: 0.7),
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: AppColors
+                                                .glassBorder,
+                                          ),
+                                        ),
+                                        child: const Icon(
+                                          Icons.edit,
+                                          size: 18,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : Column(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons
+                                          .document_scanner_outlined,
+                                      size: 48,
+                                      color: AppColors.textSecondary
+                                          .withValues(alpha: 0.6),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Add Scan',
+                                      style: TextStyle(
+                                        color: AppColors
+                                            .textSecondary
+                                            .withValues(
+                                                alpha: 0.8),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  NavisButton(
+                    label: widget.isRenew
+                        ? 'Renew Document'
+                        : _isEdit
+                            ? 'Update Document'
+                            : 'Save Document',
+                    onPressed: _onSave,
+                    isLoading: _isLoading,
+                  ),
+
+                  const SizedBox(height: 32),
+                ],
               ),
-              const SizedBox(height: 32),
-              NavisButton(
-                label: widget.isRenew
-                    ? 'Renew Document'
-                    : _isEdit
-                        ? 'Update Document'
-                        : 'Save Document',
-                onPressed: _onSave,
-                isLoading: _isLoading,
-              ),
-            ],
+            ),
           ),
         ),
       ),

@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -5,6 +7,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/features/charts/data/tile_provider.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
+import 'package:navis_mobile/shared/widgets/navis_button.dart';
 
 class MapPickerScreen extends StatefulWidget {
   const MapPickerScreen({
@@ -74,13 +77,33 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                     markers: [
                       Marker(
                         point: _selectedPoint!,
-                        width: 48,
-                        height: 48,
-                        child: const Icon(
-                          Icons.anchor,
-                          color: AppColors.cyan,
-                          size: 40,
-                          semanticLabel: 'Selected location',
+                        width: 52,
+                        height: 52,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.navy
+                                .withValues(alpha: 0.6),
+                            border: Border.all(
+                              color: AppColors.cyan
+                                  .withValues(alpha: 0.6),
+                              width: 1.5,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.cyan
+                                    .withValues(alpha: 0.3),
+                                blurRadius: 10,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.anchor,
+                            color: AppColors.cyan,
+                            size: 28,
+                            semanticLabel: 'Selected location',
+                          ),
                         ),
                       ),
                     ],
@@ -95,65 +118,106 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             child: Column(
               children: [
                 if (_selectedPoint != null)
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.location_on,
-                            color: AppColors.cyan,
-                            size: 20,
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: BackdropFilter(
+                      filter:
+                          ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
+                        decoration: BoxDecoration(
+                          color:
+                              AppColors.navy.withValues(alpha: 0.7),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: AppColors.glassBorder,
+                            width: 0.5,
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${_selectedPoint!.latitude.toStringAsFixed(4)}, '
-                            '${_selectedPoint!.longitude.toStringAsFixed(4)}',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium,
-                          ),
-                          const Spacer(),
-                          FilledButton(
-                            onPressed: () => Navigator.of(context)
-                                .pop(_selectedPoint),
-                            child: const Text('Confirm'),
-                          ),
-                        ],
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: AppColors.cyan
+                                    .withValues(alpha: 0.15),
+                              ),
+                              child: const Icon(
+                                Icons.location_on,
+                                color: AppColors.cyan,
+                                size: 18,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                '${_selectedPoint!.latitude.toStringAsFixed(4)}, '
+                                '${_selectedPoint!.longitude.toStringAsFixed(4)}',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            NavisButton(
+                              label: 'Confirm',
+                              compact: true,
+                              onPressed: () =>
+                                  Navigator.of(context)
+                                      .pop(_selectedPoint),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   )
                 else
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      child: Row(
-                        mainAxisAlignment:
-                            MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.touch_app,
-                            color: AppColors.textSecondary,
-                            size: 18,
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: BackdropFilter(
+                      filter:
+                          ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
+                        decoration: BoxDecoration(
+                          color:
+                              AppColors.navy.withValues(alpha: 0.7),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: AppColors.glassBorder,
+                            width: 0.5,
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Tap the map to set your home port',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
-                                ?.copyWith(
-                                  color:
-                                      AppColors.textSecondary,
-                                ),
-                          ),
-                        ],
+                        ),
+                        child: Row(
+                          mainAxisAlignment:
+                              MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.touch_app,
+                              color: AppColors.textSecondary
+                                  .withValues(alpha: 0.6),
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Tap the map to set your home port',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

@@ -36,23 +36,34 @@ class NavisSnackbar {
         SnackBar(
           content: Row(
             children: [
-              Icon(icon, color: Colors.white, size: 20),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: Colors.white, size: 18),
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   message,
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ],
           ),
-          backgroundColor: color,
+          backgroundColor: color.withValues(alpha: 0.95),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(14),
           ),
-          margin: const EdgeInsets.all(16),
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 100),
           duration: const Duration(seconds: 3),
+          elevation: 0,
         ),
       );
   }

@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -22,32 +24,70 @@ class NavisOfflineBanner extends ConsumerWidget {
       children: [
         AnimatedContainer(
           duration: const Duration(milliseconds: 300),
-          height: showBanner ? 32 : 0,
-          color: isOnline ? AppColors.cyan : AppColors.amber,
+          curve: Curves.easeInOut,
+          height: showBanner ? 36 : 0,
           child: showBanner
-              ? Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        isOnline ? Icons.sync : Icons.cloud_off,
-                        size: 16,
-                        color: Colors.black87,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        _bannerText(
-                          isOnline: isOnline,
-                          pendingCount: pendingCount,
-                          l10n: l10n,
+              ? ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(12),
+                    bottomRight: Radius.circular(12),
+                  ),
+                  child: BackdropFilter(
+                    filter:
+                        ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: (isOnline
+                                ? AppColors.cyan
+                                : AppColors.amber)
+                            .withValues(alpha: 0.15),
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(12),
+                          bottomRight: Radius.circular(12),
                         ),
-                        style: const TextStyle(
-                          color: Colors.black87,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
+                        border: Border(
+                          bottom: BorderSide(
+                            color: (isOnline
+                                    ? AppColors.cyan
+                                    : AppColors.amber)
+                                .withValues(alpha: 0.3),
+                            width: 0.5,
+                          ),
                         ),
                       ),
-                    ],
+                      child: Center(
+                        child: Row(
+                          mainAxisAlignment:
+                              MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              isOnline
+                                  ? Icons.sync_rounded
+                                  : Icons.cloud_off_rounded,
+                              size: 16,
+                              color: isOnline
+                                  ? AppColors.cyan
+                                  : AppColors.amber,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              _bannerText(
+                                isOnline: isOnline,
+                                pendingCount: pendingCount,
+                                l10n: l10n,
+                              ),
+                              style: TextStyle(
+                                color: isOnline
+                                    ? AppColors.cyan
+                                    : AppColors.amber,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
                 )
               : const SizedBox.shrink(),

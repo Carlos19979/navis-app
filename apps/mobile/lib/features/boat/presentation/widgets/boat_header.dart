@@ -12,9 +12,9 @@ class BoatHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
       child: SizedBox(
-        height: 140,
+        height: 160,
         child: Stack(
           fit: StackFit.expand,
           children: [
@@ -33,19 +33,23 @@ class BoatHeader extends StatelessWidget {
                       ),
                     ),
                   ),
-                  errorWidget: (context, url, error) => _PlaceholderImage(),
+                  errorWidget: (context, url, error) =>
+                      const _PlaceholderImage(),
                 ),
               )
             else
-              _PlaceholderImage(),
+              const _PlaceholderImage(),
+            // 3-stop gradient overlay
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
+                  stops: const [0.0, 0.4, 1.0],
                   colors: [
                     Colors.transparent,
-                    Colors.black.withValues(alpha: 0.7),
+                    Colors.black.withValues(alpha: 0.2),
+                    Colors.black.withValues(alpha: 0.8),
                   ],
                 ),
               ),
@@ -62,15 +66,38 @@ class BoatHeader extends StatelessWidget {
                     boat.name,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           color: Colors.white,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withValues(alpha: 0.5),
+                              blurRadius: 8,
+                            ),
+                          ],
                         ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    boat.registration,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.white70,
-                        ),
+                  const SizedBox(height: 4),
+                  // Registration as glass pill badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.glassWhite,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: AppColors.glassBorder,
+                        width: 0.5,
+                      ),
+                    ),
+                    child: Text(
+                      boat.registration,
+                      style:
+                          Theme.of(context).textTheme.labelSmall?.copyWith(
+                                color: Colors.white70,
+                                letterSpacing: 0.5,
+                              ),
+                    ),
                   ),
                 ],
               ),
@@ -83,15 +110,23 @@ class BoatHeader extends StatelessWidget {
 }
 
 class _PlaceholderImage extends StatelessWidget {
+  const _PlaceholderImage();
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.darkCard,
-      child: const Center(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.navy, AppColors.teal],
+        ),
+      ),
+      child: Center(
         child: Icon(
           Icons.sailing,
           size: 48,
-          color: AppColors.textSecondary,
+          color: AppColors.cyan.withValues(alpha: 0.3),
         ),
       ),
     );

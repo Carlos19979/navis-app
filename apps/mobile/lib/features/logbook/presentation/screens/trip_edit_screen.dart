@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
+import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
+import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 
@@ -35,11 +37,14 @@ class _TripEditScreenState extends ConsumerState<TripEditScreen> {
   }
 
   Future<void> _loadTrip() async {
-    final trip = await ref.read(tripProvider(widget.tripId).future);
+    final trip =
+        await ref.read(tripProvider(widget.tripId).future);
     _departurePortController.text = trip.departurePort;
     _arrivalPortController.text = trip.arrivalPort ?? '';
-    _engineHoursController.text = trip.engineHours?.toStringAsFixed(1) ?? '';
-    _fuelController.text = trip.fuelConsumedL?.toStringAsFixed(1) ?? '';
+    _engineHoursController.text =
+        trip.engineHours?.toStringAsFixed(1) ?? '';
+    _fuelController.text =
+        trip.fuelConsumedL?.toStringAsFixed(1) ?? '';
     _crewController.text = trip.crewMembers?.join(', ') ?? '';
     _notesController.text = trip.notes ?? '';
     setState(() => _loaded = true);
@@ -62,7 +67,8 @@ class _TripEditScreenState extends ConsumerState<TripEditScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final trip = await ref.read(tripProvider(widget.tripId).future);
+      final trip =
+          await ref.read(tripProvider(widget.tripId).future);
       final crewText = _crewController.text.trim();
       final crewList = crewText.isEmpty
           ? <String>[]
@@ -73,8 +79,10 @@ class _TripEditScreenState extends ConsumerState<TripEditScreen> {
         arrivalPort: _arrivalPortController.text.trim().isEmpty
             ? null
             : _arrivalPortController.text.trim(),
-        engineHours: double.tryParse(_engineHoursController.text.trim()),
-        fuelConsumedL: double.tryParse(_fuelController.text.trim()),
+        engineHours:
+            double.tryParse(_engineHoursController.text.trim()),
+        fuelConsumedL:
+            double.tryParse(_fuelController.text.trim()),
         crewMembers: crewList.isEmpty ? null : crewList,
         notes: _notesController.text.trim().isEmpty
             ? null
@@ -104,104 +112,140 @@ class _TripEditScreenState extends ConsumerState<TripEditScreen> {
   @override
   Widget build(BuildContext context) {
     if (!_loaded) {
-      return const Scaffold(body: NavisLoading());
+      return const GradientBackground(
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: NavisLoading(),
+        ),
+      );
     }
 
-    return Scaffold(
-      appBar: const NavisAppBar(title: 'Edit Trip', showBack: true),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextFormField(
-                controller: _departurePortController,
-                textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(
-                  labelText: 'Departure Port',
-                  prefixIcon: Icon(Icons.flight_takeoff),
+    return GradientBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: const NavisAppBar(
+          title: 'Edit Trip',
+          showBack: true,
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                NavisCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextFormField(
+                        controller: _departurePortController,
+                        textInputAction: TextInputAction.next,
+                        decoration: const InputDecoration(
+                          labelText: 'Departure Port',
+                          prefixIcon: Icon(Icons.flight_takeoff),
+                        ),
+                        validator: (value) {
+                          if (value == null ||
+                              value.trim().isEmpty) {
+                            return 'Please enter the departure port';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _arrivalPortController,
+                        textInputAction: TextInputAction.next,
+                        decoration: const InputDecoration(
+                          labelText: 'Arrival Port (optional)',
+                          prefixIcon: Icon(Icons.flight_land),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter the departure port';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _arrivalPortController,
-                textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(
-                  labelText: 'Arrival Port (optional)',
-                  prefixIcon: Icon(Icons.flight_land),
+                const SizedBox(height: 16),
+                NavisCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextFormField(
+                        controller: _engineHoursController,
+                        keyboardType: TextInputType.number,
+                        textInputAction: TextInputAction.next,
+                        decoration: const InputDecoration(
+                          labelText: 'Engine Hours (optional)',
+                          prefixIcon: Icon(Icons.engineering),
+                        ),
+                        validator: (value) {
+                          if (value != null && value.isNotEmpty) {
+                            if (double.tryParse(value.trim()) ==
+                                null) {
+                              return 'Please enter a valid number';
+                            }
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _fuelController,
+                        keyboardType: TextInputType.number,
+                        textInputAction: TextInputAction.next,
+                        decoration: const InputDecoration(
+                          labelText: 'Fuel Used (liters, optional)',
+                          prefixIcon: Icon(Icons.local_gas_station),
+                        ),
+                        validator: (value) {
+                          if (value != null && value.isNotEmpty) {
+                            if (double.tryParse(value.trim()) ==
+                                null) {
+                              return 'Please enter a valid number';
+                            }
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _engineHoursController,
-                keyboardType: TextInputType.number,
-                textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(
-                  labelText: 'Engine Hours (optional)',
-                  prefixIcon: Icon(Icons.engineering),
+                const SizedBox(height: 16),
+                NavisCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextFormField(
+                        controller: _crewController,
+                        textInputAction: TextInputAction.next,
+                        decoration: const InputDecoration(
+                          labelText:
+                              'Crew Members (comma-separated)',
+                          prefixIcon: Icon(Icons.group),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _notesController,
+                        maxLines: 3,
+                        textInputAction: TextInputAction.done,
+                        decoration: const InputDecoration(
+                          labelText: 'Notes (optional)',
+                          prefixIcon: Icon(Icons.notes),
+                          alignLabelWithHint: true,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                validator: (value) {
-                  if (value != null && value.isNotEmpty) {
-                    if (double.tryParse(value.trim()) == null) {
-                      return 'Please enter a valid number';
-                    }
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _fuelController,
-                keyboardType: TextInputType.number,
-                textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(
-                  labelText: 'Fuel Used (liters, optional)',
-                  prefixIcon: Icon(Icons.local_gas_station),
+                const SizedBox(height: 32),
+                NavisButton(
+                  label: 'Update Trip',
+                  onPressed: _onSave,
+                  isLoading: _isLoading,
                 ),
-                validator: (value) {
-                  if (value != null && value.isNotEmpty) {
-                    if (double.tryParse(value.trim()) == null) {
-                      return 'Please enter a valid number';
-                    }
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _crewController,
-                textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(
-                  labelText: 'Crew Members (comma-separated)',
-                  prefixIcon: Icon(Icons.group),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _notesController,
-                maxLines: 3,
-                textInputAction: TextInputAction.done,
-                decoration: const InputDecoration(
-                  labelText: 'Notes (optional)',
-                  prefixIcon: Icon(Icons.notes),
-                  alignLabelWithHint: true,
-                ),
-              ),
-              const SizedBox(height: 32),
-              NavisButton(
-                label: 'Update Trip',
-                onPressed: _onSave,
-                isLoading: _isLoading,
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

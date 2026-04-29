@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:go_router/go_router.dart';
@@ -8,7 +9,10 @@ import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
 import 'package:navis_mobile/features/documents/presentation/widgets/document_status_badge.dart';
+import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
+import 'package:navis_mobile/shared/widgets/navis_button.dart';
+import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
 
@@ -22,6 +26,8 @@ class DocumentDetailScreen extends ConsumerWidget {
     final docAsync = ref.watch(documentProvider(documentId));
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       appBar: NavisAppBar(
         title: 'Document Details',
         showBack: true,
@@ -30,7 +36,8 @@ class DocumentDetailScreen extends ConsumerWidget {
             icon: const Icon(Icons.edit_outlined),
             tooltip: 'Edit document',
             onPressed: () {
-              final doc = ref.read(documentProvider(documentId)).valueOrNull;
+              final doc =
+                  ref.read(documentProvider(documentId)).valueOrNull;
               if (doc != null) {
                 context.push(
                   '/documents/$documentId/edit?boatId=${doc.boatId}',
@@ -42,7 +49,8 @@ class DocumentDetailScreen extends ConsumerWidget {
             icon: const Icon(Icons.autorenew, color: AppColors.cyan),
             tooltip: 'Renew document',
             onPressed: () {
-              final doc = ref.read(documentProvider(documentId)).valueOrNull;
+              final doc =
+                  ref.read(documentProvider(documentId)).valueOrNull;
               if (doc != null) {
                 context.push(
                   '/documents/$documentId/edit?boatId=${doc.boatId}&renew=true',
@@ -57,133 +65,329 @@ class DocumentDetailScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: docAsync.when(
-        loading: () => const NavisLoading(),
-        error: (error, stack) => NavisErrorWidget(
-          message: error.toString(),
-          onRetry: () => ref.invalidate(documentProvider(documentId)),
-        ),
-        data: (doc) {
-          final daysLeft = NavisDateUtils.daysUntil(doc.expiryDate);
+      body: GradientBackground(
+        child: SafeArea(
+          child: docAsync.when(
+            loading: () => const NavisLoading(),
+            error: (error, stack) => NavisErrorWidget(
+              message: error.toString(),
+              onRetry: () =>
+                  ref.invalidate(documentProvider(documentId)),
+            ),
+            data: (doc) {
+              final daysLeft =
+                  NavisDateUtils.daysUntil(doc.expiryDate);
+              final statusColor = daysLeft < 0
+                  ? AppColors.red
+                  : daysLeft <= 30
+                      ? AppColors.red
+                      : daysLeft <= 90
+                          ? AppColors.amber
+                          : AppColors.green;
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header card with status accent
+                    NavisCard(
+                      padding: EdgeInsets.zero,
+                      borderColor:
+                          statusColor.withValues(alpha: 0.3),
+                      child: IntrinsicHeight(
+                        child: Row(
                           children: [
-                            Expanded(
-                              child: Text(
-                                doc.type,
-                                style:
-                                    Theme.of(context).textTheme.headlineMedium,
+                            Container(
+                              width: 4,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    statusColor,
+                                    statusColor.withValues(
+                                        alpha: 0.4),
+                                  ],
+                                ),
+                                borderRadius:
+                                    const BorderRadius.only(
+                                  topLeft: Radius.circular(16),
+                                  bottomLeft:
+                                      Radius.circular(16),
+                                ),
                               ),
                             ),
-                            DocumentStatusBadge(expiryDate: doc.expiryDate),
-                          ],
-                        ),
-                        const Divider(height: 32),
-                        _DetailRow(
-                          label: 'Expiry Date',
-                          value: NavisDateUtils.formatDate(doc.expiryDate),
-                        ),
-                        const SizedBox(height: 12),
-                        _DetailRow(
-                          label: 'Status',
-                          value: daysLeft < 0
-                              ? '${-daysLeft} days overdue'
-                              : '$daysLeft days remaining',
-                        ),
-                        if (doc.alertDaysBefore != null) ...[
-                          const SizedBox(height: 12),
-                          _DetailRow(
-                            label: 'Alert',
-                            value: '${doc.alertDaysBefore} days before expiry',
-                          ),
-                        ],
-                        if (doc.notes != null && doc.notes!.isNotEmpty) ...[
-                          const SizedBox(height: 12),
-                          _DetailRow(label: 'Notes', value: doc.notes!),
-                        ],
-                        if (doc.lastRenewalDate != null) ...[
-                          const SizedBox(height: 12),
-                          const Divider(height: 24),
-                          Text(
-                            'Last Renewal',
-                            style: Theme.of(context).textTheme.titleSmall,
-                          ),
-                          const SizedBox(height: 8),
-                          _DetailRow(
-                            label: 'Date',
-                            value: NavisDateUtils.formatDate(
-                              doc.lastRenewalDate!,
-                            ),
-                          ),
-                          if (doc.lastRenewalCost != null) ...[
-                            const SizedBox(height: 8),
-                            _DetailRow(
-                              label: 'Cost',
-                              value:
-                                  '\u20AC${doc.lastRenewalCost!.toStringAsFixed(2)}',
-                            ),
-                          ],
-                          if (doc.lastRenewalProvider != null) ...[
-                            const SizedBox(height: 8),
-                            _DetailRow(
-                              label: 'Provider',
-                              value: doc.lastRenewalProvider!,
+                            Expanded(
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.all(20),
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment
+                                              .spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            doc.type,
+                                            style: Theme.of(
+                                                    context)
+                                                .textTheme
+                                                .headlineMedium
+                                                ?.copyWith(
+                                                  fontWeight:
+                                                      FontWeight
+                                                          .w700,
+                                                ),
+                                          ),
+                                        ),
+                                        DocumentStatusBadge(
+                                            expiryDate:
+                                                doc.expiryDate),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      daysLeft < 0
+                                          ? '${-daysLeft} days overdue'
+                                          : '$daysLeft days remaining',
+                                      style: TextStyle(
+                                        color: statusColor,
+                                        fontWeight:
+                                            FontWeight.w500,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ],
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-                if (doc.photoUrl != null) ...[
-                  const SizedBox(height: 16),
-                  Card(
-                    clipBehavior: Clip.antiAlias,
-                    child: Semantics(
-                      label: 'Document scan',
-                      child: CachedNetworkImage(
-                        imageUrl: doc.photoUrl!,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => const AspectRatio(
-                          aspectRatio: 4 / 3,
-                          child: Center(
-                            child: CircularProgressIndicator(
-                              color: AppColors.cyan,
-                              strokeWidth: 2,
-                            ),
-                          ),
-                        ),
-                        errorWidget: (context, url, error) =>
-                            const AspectRatio(
-                          aspectRatio: 4 / 3,
-                          child: Center(
-                            child: Icon(
-                              Icons.broken_image_outlined,
-                              size: 48,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
                         ),
                       ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          );
-        },
+                    ).animate().fadeIn(duration: 400.ms).slideY(
+                          begin: 0.05,
+                          end: 0,
+                          duration: 400.ms,
+                          curve: Curves.easeOutCubic,
+                        ),
+
+                    const SizedBox(height: 16),
+
+                    // Details card
+                    NavisCard(
+                      child: Column(
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Details',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleSmall
+                                ?.copyWith(
+                                  color: AppColors.cyan,
+                                  letterSpacing: 0.5,
+                                ),
+                          ),
+                          const SizedBox(height: 16),
+                          _DetailRow(
+                            icon: Icons.calendar_today_outlined,
+                            label: 'Expiry Date',
+                            value: NavisDateUtils.formatDate(
+                                doc.expiryDate),
+                          ),
+                          if (doc.alertDaysBefore != null) ...[
+                            const SizedBox(height: 12),
+                            _DetailRow(
+                              icon:
+                                  Icons.notifications_outlined,
+                              label: 'Alert',
+                              value:
+                                  '${doc.alertDaysBefore} days before expiry',
+                            ),
+                          ],
+                          if (doc.notes != null &&
+                              doc.notes!.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            _DetailRow(
+                              icon: Icons.notes_outlined,
+                              label: 'Notes',
+                              value: doc.notes!,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ).animate().fadeIn(
+                          duration: 400.ms,
+                          delay: 100.ms,
+                        ).slideY(
+                          begin: 0.05,
+                          end: 0,
+                          duration: 400.ms,
+                          delay: 100.ms,
+                          curve: Curves.easeOutCubic,
+                        ),
+
+                    // Renewal info card
+                    if (doc.lastRenewalDate != null) ...[
+                      const SizedBox(height: 16),
+                      NavisCard(
+                        child: Column(
+                          crossAxisAlignment:
+                              CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Last Renewal',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleSmall
+                                  ?.copyWith(
+                                    color: AppColors.cyan,
+                                    letterSpacing: 0.5,
+                                  ),
+                            ),
+                            const SizedBox(height: 16),
+                            _DetailRow(
+                              icon: Icons.event_outlined,
+                              label: 'Date',
+                              value:
+                                  NavisDateUtils.formatDate(
+                                doc.lastRenewalDate!,
+                              ),
+                            ),
+                            if (doc.lastRenewalCost !=
+                                null) ...[
+                              const SizedBox(height: 12),
+                              _DetailRow(
+                                icon: Icons.euro_outlined,
+                                label: 'Cost',
+                                value:
+                                    '\u20AC${doc.lastRenewalCost!.toStringAsFixed(2)}',
+                              ),
+                            ],
+                            if (doc.lastRenewalProvider !=
+                                null) ...[
+                              const SizedBox(height: 12),
+                              _DetailRow(
+                                icon:
+                                    Icons.business_outlined,
+                                label: 'Provider',
+                                value:
+                                    doc.lastRenewalProvider!,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ).animate().fadeIn(
+                            duration: 400.ms,
+                            delay: 200.ms,
+                          ).slideY(
+                            begin: 0.05,
+                            end: 0,
+                            duration: 400.ms,
+                            delay: 200.ms,
+                            curve: Curves.easeOutCubic,
+                          ),
+                    ],
+
+                    // Document scan image
+                    if (doc.photoUrl != null) ...[
+                      const SizedBox(height: 16),
+                      NavisCard(
+                        padding: EdgeInsets.zero,
+                        child: ClipRRect(
+                          borderRadius:
+                              BorderRadius.circular(16),
+                          child: Semantics(
+                            label: 'Document scan',
+                            child: CachedNetworkImage(
+                              imageUrl: doc.photoUrl!,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) =>
+                                  const AspectRatio(
+                                aspectRatio: 4 / 3,
+                                child: Center(
+                                  child:
+                                      CircularProgressIndicator(
+                                    color: AppColors.cyan,
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              ),
+                              errorWidget:
+                                  (context, url, error) =>
+                                      const AspectRatio(
+                                aspectRatio: 4 / 3,
+                                child: Center(
+                                  child: Icon(
+                                    Icons
+                                        .broken_image_outlined,
+                                    size: 48,
+                                    color: AppColors
+                                        .textSecondary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ).animate().fadeIn(
+                            duration: 400.ms,
+                            delay: 300.ms,
+                          ).slideY(
+                            begin: 0.05,
+                            end: 0,
+                            duration: 400.ms,
+                            delay: 300.ms,
+                            curve: Curves.easeOutCubic,
+                          ),
+                    ],
+
+                    const SizedBox(height: 24),
+
+                    // Action buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: NavisButton(
+                            label: 'Renew',
+                            icon: Icons.autorenew,
+                            variant: NavisButtonVariant.secondary,
+                            compact: true,
+                            onPressed: () {
+                              context.push(
+                                '/documents/$documentId/edit?boatId=${doc.boatId}&renew=true',
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: NavisButton(
+                            label: 'Delete',
+                            icon: Icons.delete_outlined,
+                            variant: NavisButtonVariant.danger,
+                            compact: true,
+                            onPressed: () =>
+                                _confirmDelete(context, ref),
+                          ),
+                        ),
+                      ],
+                    ).animate().fadeIn(
+                          duration: 400.ms,
+                          delay: 400.ms,
+                        ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
       ),
     );
   }
@@ -209,14 +413,16 @@ class DocumentDetailScreen extends ConsumerWidget {
                 await repo.deleteDocument(documentId);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Document deleted')),
+                    const SnackBar(
+                        content: Text('Document deleted')),
                   );
                   context.pop();
                 }
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to delete: $e')),
+                    SnackBar(
+                        content: Text('Failed to delete: $e')),
                   );
                 }
               }
@@ -233,23 +439,39 @@ class DocumentDetailScreen extends ConsumerWidget {
 }
 
 class _DetailRow extends StatelessWidget {
-  const _DetailRow({required this.label, required this.value});
+  const _DetailRow({
+    required this.label,
+    required this.value,
+    this.icon,
+  });
 
   final String label;
   final String value;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (icon != null) ...[
+          Icon(
+            icon,
+            size: 18,
+            color: AppColors.textSecondary,
+          ),
+          const SizedBox(width: 10),
+        ],
         SizedBox(
-          width: 120,
+          width: 100,
           child: Text(
             label,
-            style: Theme.of(context).textTheme.bodySmall,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
           ),
         ),
+        const SizedBox(width: 8),
         Expanded(
           child: Text(
             value,
