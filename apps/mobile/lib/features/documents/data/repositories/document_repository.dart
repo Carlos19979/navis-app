@@ -84,7 +84,12 @@ class DocumentRepositoryImpl implements DocumentRepository {
       final data = envelope['data'] as Map<String, dynamic>;
 
       if (offlineRepo != null) {
-        await offlineRepo!.cacheItem('documents', id, data);
+        await offlineRepo!.cacheItem(
+          'documents',
+          id,
+          data,
+          boatId: data['boat_id'] as String?,
+        );
       }
 
       return DocumentModel.fromJson(data).toEntity();

@@ -8,39 +8,40 @@ final weatherRepositoryProvider = Provider<WeatherRepository>((ref) {
   return WeatherRepository();
 });
 
-final currentWeatherProvider = FutureProvider<Weather?>((ref) async {
-  try {
-    final permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      final requested = await Geolocator.requestPermission();
-      if (requested == LocationPermission.denied ||
-          requested == LocationPermission.deniedForever) {
-        return null;
-      }
-    }
-    if (permission == LocationPermission.deniedForever) {
-      return null;
-    }
+Future<Position?> _getPosition() async {
+  if (!await Geolocator.isLocationServiceEnabled()) return null;
 
-    final position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.low,
-    ).timeout(const Duration(seconds: 5));
-
-    final repository = ref.read(weatherRepositoryProvider);
-    return repository.getCurrentWeather(position.latitude, position.longitude);
-  } on Exception {
+  var permission = await Geolocator.checkPermission();
+  if (permission == LocationPermission.denied) {
+    permission = await Geolocator.requestPermission();
+  }
+  if (permission == LocationPermission.denied ||
+      permission == LocationPermission.deniedForever) {
     return null;
   }
+
+  try {
+    return await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.low,
+      timeLimit: const Duration(seconds: 10),
+    );
+  } on Exception {
+    return await Geolocator.getLastKnownPosition();
+  }
+}
+
+final positionProvider = FutureProvider<Position?>((ref) => _getPosition());
+
+final currentWeatherProvider = FutureProvider<Weather?>((ref) async {
+  final position = await ref.watch(positionProvider.future);
+  if (position == null) return null;
+  final repository = ref.read(weatherRepositoryProvider);
+  return repository.getCurrentWeather(position.latitude, position.longitude);
 });
 
 final forecastProvider = FutureProvider<List<Weather>>((ref) async {
-  try {
-    final position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.low,
-    ).timeout(const Duration(seconds: 5));
-    final repository = ref.read(weatherRepositoryProvider);
-    return repository.getForecast(position.latitude, position.longitude);
-  } on Exception {
-    return [];
-  }
+  final position = await ref.watch(positionProvider.future);
+  if (position == null) return [];
+  final repository = ref.read(weatherRepositoryProvider);
+  return repository.getForecast(position.latitude, position.longitude);
 });

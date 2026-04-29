@@ -28,7 +28,7 @@ class MapControls extends StatelessWidget {
   Widget build(BuildContext context) {
     return Positioned(
       right: 16,
-      bottom: 32,
+      bottom: 120,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: BackdropFilter(
