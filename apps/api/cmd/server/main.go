@@ -66,7 +66,7 @@ func main() {
 	pool, err := postgres.NewPool(ctx, cfg.DatabaseURL)
 	if err != nil {
 		logger.Error("failed to connect to database", slog.String("error", err.Error()))
-		os.Exit(1)
+		return
 	}
 	defer pool.Close()
 	logger.Info("connected to database")
@@ -145,7 +145,6 @@ func main() {
 
 	if err := srv.Shutdown(shutdownCtx); err != nil {
 		logger.Error("server shutdown error", slog.String("error", err.Error()))
-		os.Exit(1)
 	}
 
 	logger.Info("server stopped gracefully")

@@ -24,7 +24,7 @@ func trimFields(val reflect.Value) {
 		if !field.CanSet() {
 			continue
 		}
-		switch field.Kind() {
+		switch field.Kind() { //nolint:exhaustive // only string-like and struct fields need trimming
 		case reflect.String:
 			field.SetString(strings.TrimSpace(field.String()))
 		case reflect.Ptr:

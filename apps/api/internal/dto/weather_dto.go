@@ -2,6 +2,7 @@ package dto
 
 import "github.com/Carlos19979/navis-app/apps/api/internal/port"
 
+// WeatherResponse represents current weather conditions.
 type WeatherResponse struct {
 	Temperature   float64  `json:"temperature"`
 	WindSpeed     float64  `json:"wind_speed"`
@@ -12,6 +13,7 @@ type WeatherResponse struct {
 	Date          string   `json:"date,omitempty"`
 }
 
+// WeatherFromPort converts port weather data to a response DTO.
 func WeatherFromPort(d *port.WeatherData) WeatherResponse {
 	r := WeatherResponse{
 		Temperature:   d.Temp,
@@ -29,10 +31,12 @@ func WeatherFromPort(d *port.WeatherData) WeatherResponse {
 	return r
 }
 
+// ForecastResponse wraps a list of weather forecasts.
 type ForecastResponse struct {
 	Forecast []WeatherResponse `json:"forecast"`
 }
 
+// ForecastFromPort converts a slice of port weather data to a forecast response.
 func ForecastFromPort(data []port.WeatherData) ForecastResponse {
 	items := make([]WeatherResponse, len(data))
 	for i := range data {

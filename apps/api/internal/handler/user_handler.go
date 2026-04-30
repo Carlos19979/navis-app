@@ -7,6 +7,7 @@ import (
 	"github.com/Carlos19979/navis-app/apps/api/internal/port"
 )
 
+// UserHandler handles GDPR data export and account deletion.
 type UserHandler struct {
 	boats   port.BoatRepository
 	docs    port.DocumentRepository
@@ -15,6 +16,7 @@ type UserHandler struct {
 	devices port.DeviceTokenRepository
 }
 
+// NewUserHandler creates a UserHandler with the given repositories.
 func NewUserHandler(
 	boats port.BoatRepository,
 	docs port.DocumentRepository,
@@ -31,6 +33,7 @@ func NewUserHandler(
 	}
 }
 
+// ExportData returns all user data as a JSON download.
 func (h *UserHandler) ExportData(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.UserIDFromContext(r.Context())
 	if !ok {
@@ -79,6 +82,7 @@ func (h *UserHandler) ExportData(w http.ResponseWriter, r *http.Request) {
 	JSON(w, http.StatusOK, export)
 }
 
+// DeleteAccount removes all user data and device tokens.
 func (h *UserHandler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.UserIDFromContext(r.Context())
 	if !ok {
