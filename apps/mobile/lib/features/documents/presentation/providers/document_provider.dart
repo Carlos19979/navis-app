@@ -1,11 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:navis_mobile/core/database/mutation_queue.dart';
+import 'package:navis_mobile/core/database/offline_repository.dart';
 import 'package:navis_mobile/features/documents/data/repositories/document_repository.dart';
 import 'package:navis_mobile/features/documents/domain/entities/document.dart';
 import 'package:navis_mobile/features/documents/domain/repositories/document_repository.dart';
 
 final documentRepositoryProvider = Provider<DocumentRepository>((ref) {
-  return DocumentRepositoryImpl();
+  return DocumentRepositoryImpl(
+    offlineRepo: ref.watch(offlineRepositoryProvider),
+    mutationQueue: ref.watch(mutationQueueProvider.notifier),
+  );
 });
 
 final boatDocumentsProvider =
@@ -30,8 +35,56 @@ final createDocumentProvider =
 });
 
 final deleteDocumentProvider =
-    FutureProvider.family<void, ({String id, String boatId})>((ref, params) async {
+    FutureProvider.family<void, ({String id, String boatId})>(
+        (ref, params) async {
   final repository = ref.read(documentRepositoryProvider);
   await repository.deleteDocument(params.id);
   ref.invalidate(boatDocumentsProvider(params.boatId));
+});
+
+class DocumentSummary {
+  const DocumentSummary({
+    this.total = 0,
+    this.expired = 0,
+    this.critical = 0,
+    this.warning = 0,
+    this.ok = 0,
+  });
+
+  final int total;
+  final int expired;
+  final int critical;
+  final int warning;
+  final int ok;
+}
+
+final boatDocumentSummaryProvider =
+    FutureProvider.family<DocumentSummary, String>((ref, boatId) async {
+  final docs = await ref.watch(boatDocumentsProvider(boatId).future);
+  final now = DateTime.now();
+  var expired = 0;
+  var critical = 0;
+  var warning = 0;
+  var ok = 0;
+
+  for (final doc in docs) {
+    final daysLeft = doc.expiryDate.difference(now).inDays;
+    if (daysLeft < 0) {
+      expired++;
+    } else if (daysLeft <= 30) {
+      critical++;
+    } else if (daysLeft <= 90) {
+      warning++;
+    } else {
+      ok++;
+    }
+  }
+
+  return DocumentSummary(
+    total: docs.length,
+    expired: expired,
+    critical: critical,
+    warning: warning,
+    ok: ok,
+  );
 });

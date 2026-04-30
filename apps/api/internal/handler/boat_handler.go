@@ -37,6 +37,8 @@ func (h *BoatHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	validator.TrimStrings(&req)
+
 	if errs := validator.Validate(req); errs != nil {
 		ValidationError(w, errs)
 		return
@@ -109,6 +111,8 @@ func (h *BoatHandler) Update(w http.ResponseWriter, r *http.Request) {
 		Error(w, http.StatusBadRequest, "invalid request body", "BAD_REQUEST")
 		return
 	}
+
+	validator.TrimStrings(&req)
 
 	if errs := validator.Validate(req); errs != nil {
 		ValidationError(w, errs)

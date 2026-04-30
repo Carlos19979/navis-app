@@ -45,7 +45,8 @@ class NavisDateUtils {
     return days >= 0 && days <= criticalDays;
   }
 
-  static bool isWarning(DateTime date, {int warningDays = 30, int criticalDays = 7}) {
+  static bool isWarning(DateTime date,
+      {int warningDays = 30, int criticalDays = 7}) {
     final days = daysUntil(date);
     return days > criticalDays && days <= warningDays;
   }

@@ -1,10 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:navis_mobile/core/database/mutation_queue.dart';
+import 'package:navis_mobile/core/database/offline_repository.dart';
 import 'package:navis_mobile/features/logbook/data/repositories/trip_repository.dart';
 import 'package:navis_mobile/features/logbook/domain/entities/trip.dart';
 
 final tripRepositoryProvider = Provider<TripRepository>((ref) {
-  return TripRepository();
+  return TripRepository(
+    offlineRepo: ref.watch(offlineRepositoryProvider),
+    mutationQueue: ref.watch(mutationQueueProvider.notifier),
+  );
 });
 
 final boatTripsProvider =
@@ -14,8 +19,7 @@ final boatTripsProvider =
   return response.items;
 });
 
-final tripProvider =
-    FutureProvider.family<Trip, String>((ref, id) async {
+final tripProvider = FutureProvider.family<Trip, String>((ref, id) async {
   final repository = ref.watch(tripRepositoryProvider);
   return repository.getTrip(id);
 });
@@ -34,8 +38,7 @@ class TripStats {
   final double totalHours;
 }
 
-final tripStatsProvider =
-    Provider.family<TripStats, List<Trip>>((ref, trips) {
+final tripStatsProvider = Provider.family<TripStats, List<Trip>>((ref, trips) {
   double totalDistance = 0;
   double totalHours = 0;
 

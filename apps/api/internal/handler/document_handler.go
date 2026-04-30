@@ -37,6 +37,8 @@ func (h *DocumentHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	validator.TrimStrings(&req)
+
 	// Override BoatID from URL parameter.
 	boatID := chi.URLParam(r, "boatId")
 	if boatID != "" {
@@ -117,6 +119,8 @@ func (h *DocumentHandler) Update(w http.ResponseWriter, r *http.Request) {
 		Error(w, http.StatusBadRequest, "invalid request body", "BAD_REQUEST")
 		return
 	}
+
+	validator.TrimStrings(&req)
 
 	if errs := validator.Validate(req); errs != nil {
 		ValidationError(w, errs)

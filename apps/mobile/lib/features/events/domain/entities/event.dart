@@ -1,67 +1,83 @@
 class Event {
   const Event({
     required this.id,
-    required this.title,
-    required this.description,
-    required this.date,
+    required this.name,
+    required this.organizer,
+    required this.eventType,
+    required this.locationName,
+    required this.startDate,
+    this.organizerLogoUrl,
+    this.description,
     this.endDate,
-    this.location,
     this.latitude,
     this.longitude,
-    this.imageUrl,
-    this.organizerName,
-    this.isRegistered = false,
-    this.maxParticipants,
-    this.currentParticipants,
+    this.boatClasses = const [],
+    this.registrationUrl,
+    this.documentsUrl,
+    this.isFeatured = false,
+    this.isInterested = false,
     this.createdAt,
+    this.updatedAt,
   });
 
   final String id;
-  final String title;
-  final String description;
-  final DateTime date;
-  final DateTime? endDate;
-  final String? location;
+  final String name;
+  final String organizer;
+  final String? organizerLogoUrl;
+  final String? description;
+  final String eventType;
+  final String locationName;
   final double? latitude;
   final double? longitude;
-  final String? imageUrl;
-  final String? organizerName;
-  final bool isRegistered;
-  final int? maxParticipants;
-  final int? currentParticipants;
+  final DateTime startDate;
+  final DateTime? endDate;
+  final List<String> boatClasses;
+  final String? registrationUrl;
+  final String? documentsUrl;
+  final bool isFeatured;
+  final bool isInterested;
   final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   Event copyWith({
     String? id,
-    String? title,
+    String? name,
+    String? organizer,
+    String? organizerLogoUrl,
     String? description,
-    DateTime? date,
-    DateTime? endDate,
-    String? location,
+    String? eventType,
+    String? locationName,
     double? latitude,
     double? longitude,
-    String? imageUrl,
-    String? organizerName,
-    bool? isRegistered,
-    int? maxParticipants,
-    int? currentParticipants,
+    DateTime? startDate,
+    DateTime? endDate,
+    List<String>? boatClasses,
+    String? registrationUrl,
+    String? documentsUrl,
+    bool? isFeatured,
+    bool? isInterested,
     DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return Event(
       id: id ?? this.id,
-      title: title ?? this.title,
+      name: name ?? this.name,
+      organizer: organizer ?? this.organizer,
+      organizerLogoUrl: organizerLogoUrl ?? this.organizerLogoUrl,
       description: description ?? this.description,
-      date: date ?? this.date,
-      endDate: endDate ?? this.endDate,
-      location: location ?? this.location,
+      eventType: eventType ?? this.eventType,
+      locationName: locationName ?? this.locationName,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
-      imageUrl: imageUrl ?? this.imageUrl,
-      organizerName: organizerName ?? this.organizerName,
-      isRegistered: isRegistered ?? this.isRegistered,
-      maxParticipants: maxParticipants ?? this.maxParticipants,
-      currentParticipants: currentParticipants ?? this.currentParticipants,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      boatClasses: boatClasses ?? this.boatClasses,
+      registrationUrl: registrationUrl ?? this.registrationUrl,
+      documentsUrl: documentsUrl ?? this.documentsUrl,
+      isFeatured: isFeatured ?? this.isFeatured,
+      isInterested: isInterested ?? this.isInterested,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 

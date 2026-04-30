@@ -5,6 +5,7 @@ import "time"
 // DocumentType represents the type of a document.
 type DocumentType string
 
+// DocumentType values.
 const (
 	DocumentTypeITB              DocumentType = "itb"
 	DocumentTypeInsuranceRC      DocumentType = "insurance_rc"
@@ -22,6 +23,7 @@ const (
 // DocumentStatus represents the current validity status of a document.
 type DocumentStatus string
 
+// DocumentStatus values.
 const (
 	DocumentStatusOK       DocumentStatus = "ok"
 	DocumentStatusWarning  DocumentStatus = "warning"

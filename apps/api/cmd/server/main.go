@@ -10,7 +10,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Carlos19979/navis-app/apps/api/internal/adapter/fcm"
+	"github.com/getsentry/sentry-go"
+	"github.com/joho/godotenv"
+
+	"github.com/Carlos19979/navis-app/apps/api/internal/adapter/novu"
 	"github.com/Carlos19979/navis-app/apps/api/internal/adapter/openmeteo"
 	"github.com/Carlos19979/navis-app/apps/api/internal/adapter/postgres"
 	"github.com/Carlos19979/navis-app/apps/api/internal/config"
@@ -21,7 +24,8 @@ import (
 )
 
 func main() {
-	// Load configuration.
+	_ = godotenv.Load()
+
 	cfg := config.Load()
 
 	// Set up structured logger.
@@ -40,6 +44,20 @@ func main() {
 	}))
 	slog.SetDefault(logger)
 
+	// Initialize Sentry.
+	if cfg.SentryDSN != "" {
+		if err := sentry.Init(sentry.ClientOptions{
+			Dsn:              cfg.SentryDSN,
+			TracesSampleRate: 0.2,
+			Environment:      cfg.LogLevel,
+		}); err != nil {
+			logger.Error("failed to init sentry", slog.String("error", err.Error()))
+		} else {
+			defer sentry.Flush(2 * time.Second)
+			logger.Info("sentry initialized")
+		}
+	}
+
 	// Create context that listens for interrupt signals.
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -48,7 +66,7 @@ func main() {
 	pool, err := postgres.NewPool(ctx, cfg.DatabaseURL)
 	if err != nil {
 		logger.Error("failed to connect to database", slog.String("error", err.Error()))
-		os.Exit(1)
+		return
 	}
 	defer pool.Close()
 	logger.Info("connected to database")
@@ -61,10 +79,11 @@ func main() {
 	eventRepo := postgres.NewEventRepo(pool)
 	interestRepo := postgres.NewEventInterestRepo(pool)
 	notifLogRepo := postgres.NewNotificationLogRepo(pool)
+	deviceTokenRepo := postgres.NewDeviceTokenRepo(pool)
 
 	// Create adapters.
 	weatherProvider := openmeteo.New()
-	pushNotifier := fcm.New(logger)
+	notifier := novu.New(cfg.NovuAPIKey, logger)
 
 	// Create services.
 	boatSvc := service.NewBoatService(boatRepo)
@@ -74,7 +93,7 @@ func main() {
 	weatherSvc := service.NewWeatherService(weatherProvider)
 
 	// Create and start expiration checker cron.
-	expirationChecker := cron.New(docRepo, notifLogRepo, pushNotifier, logger)
+	expirationChecker := cron.New(docRepo, notifLogRepo, notifier, logger)
 	expirationChecker.Start()
 	defer expirationChecker.Stop()
 
@@ -84,11 +103,16 @@ func main() {
 	tripH := handler.NewTripHandler(tripSvc)
 	eventH := handler.NewEventHandler(eventSvc)
 	weatherH := handler.NewWeatherHandler(weatherSvc)
+	deviceH := handler.NewDeviceHandler(deviceTokenRepo, notifier)
+	userH := handler.NewUserHandler(boatRepo, docRepo, tripRepo, trackRepo, deviceTokenRepo)
 
 	// Create router.
+	jwksURL := cfg.SupabaseURL + "/auth/v1/.well-known/jwks.json"
+
 	r := router.New(
-		boatH, docH, tripH, eventH, weatherH,
+		boatH, docH, tripH, eventH, weatherH, deviceH, userH,
 		cfg.SupabaseJWTSecret,
+		jwksURL,
 		cfg.CORSAllowedOrigins,
 		logger,
 	)
@@ -121,7 +145,6 @@ func main() {
 
 	if err := srv.Shutdown(shutdownCtx); err != nil {
 		logger.Error("server shutdown error", slog.String("error", err.Error()))
-		os.Exit(1)
 	}
 
 	logger.Info("server stopped gracefully")

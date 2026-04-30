@@ -217,6 +217,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get totalTrips => 'Total Trips';
 
   @override
+  String get tripStatistics => 'Trip Statistics';
+
+  @override
+  String get totalDistanceNm => 'NM sailed';
+
+  @override
+  String get totalHoursAtSea => 'Hours at sea';
+
+  @override
+  String get portsVisited => 'Ports visited';
+
+  @override
+  String get topSpeed => 'Top speed';
+
+  @override
+  String get fuelConsumed => 'Fuel consumed';
+
+  @override
+  String get engineHoursTotal => 'Engine hours';
+
+  @override
+  String get yearInReview => 'Year in Review';
+
+  @override
+  String get monthlyActivity => 'Monthly Activity';
+
+  @override
+  String get tripsLabel => 'Trips';
+
+  @override
+  String get distanceNmLabel => 'NM';
+
+  @override
+  String get hoursLabel => 'Hours';
+
+  @override
+  String get allTime => 'All Time';
+
+  @override
   String get totalDistance => 'Total Distance';
 
   @override
@@ -287,4 +326,126 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get passwordsDoNotMatch => 'Passwords do not match';
+
+  @override
+  String get engineHours => 'Engine Hours';
+
+  @override
+  String get fuelUsed => 'Fuel Used';
+
+  @override
+  String get crew => 'Crew';
+
+  @override
+  String get logbook => 'Logbook';
+
+  @override
+  String get tripDetails => 'Trip Details';
+
+  @override
+  String get editBoat => 'Edit Boat';
+
+  @override
+  String get myBoats => 'My Boats';
+
+  @override
+  String get addBoat => 'Add Boat';
+
+  @override
+  String get newDocument => 'New Document';
+
+  @override
+  String get editDocument => 'Edit Document';
+
+  @override
+  String get renewDocument => 'Renew Document';
+
+  @override
+  String get documentDetails => 'Document Details';
+
+  @override
+  String get renewalCost => 'Renewal Cost';
+
+  @override
+  String get renewalProvider => 'Provider / Company';
+
+  @override
+  String get lastRenewal => 'Last Renewal';
+
+  @override
+  String get date => 'Date';
+
+  @override
+  String get cost => 'Cost';
+
+  @override
+  String get provider => 'Provider';
+
+  @override
+  String get deleteDocument => 'Delete Document';
+
+  @override
+  String get deleteDocumentConfirm =>
+      'Are you sure you want to delete this document?';
+
+  @override
+  String get documentDeleted => 'Document deleted';
+
+  @override
+  String get documentSaved => 'Document saved';
+
+  @override
+  String get documentUpdated => 'Document updated';
+
+  @override
+  String get documentRenewed => 'Document renewed';
+
+  @override
+  String get failedToSave => 'Failed to save document';
+
+  @override
+  String get failedToDelete => 'Failed to delete';
+
+  @override
+  String get takePhoto => 'Take Photo';
+
+  @override
+  String get chooseFromGallery => 'Choose from Gallery';
+
+  @override
+  String get addScan => 'Add Scan';
+
+  @override
+  String get notesOptional => 'Notes (optional)';
+
+  @override
+  String get alertDaysBeforeExpiry => 'Alert Days Before Expiry';
+
+  @override
+  String get validNumber => 'Please enter a valid number';
+
+  @override
+  String get uploading => 'Uploading...';
+
+  @override
+  String get noInternetConnection => 'No internet connection';
+
+  @override
+  String offlineWithPending(int count) {
+    return 'Offline • $count pending';
+  }
+
+  @override
+  String syncingChanges(int count) {
+    return 'Syncing $count changes…';
+  }
+
+  @override
+  String get searchEvents => 'Search events...';
+
+  @override
+  String get noEventsFound => 'No events found';
+
+  @override
+  String get featured => 'Featured';
 }

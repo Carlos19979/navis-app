@@ -12,11 +12,11 @@ import (
 )
 
 // ExpirationChecker runs a daily cron job that checks for expiring documents
-// and sends push notifications to their owners.
+// and triggers notification workflows via Novu for their owners.
 type ExpirationChecker struct {
 	docs      port.DocumentRepository
 	notifLogs port.NotificationLogRepository
-	notifier  port.PushNotifier
+	notifier  port.NotificationProvider
 	logger    *slog.Logger
 	cron      *cron.Cron
 }
@@ -25,7 +25,7 @@ type ExpirationChecker struct {
 func New(
 	docs port.DocumentRepository,
 	notifLogs port.NotificationLogRepository,
-	notifier port.PushNotifier,
+	notifier port.NotificationProvider,
 	logger *slog.Logger,
 ) *ExpirationChecker {
 	return &ExpirationChecker{
@@ -51,7 +51,7 @@ func (ec *ExpirationChecker) Start() {
 	}
 
 	ec.cron.Start()
-	ec.logger.Info("expiration checker cron started", slog.String("schedule", "0 8 * * * (daily 8am UTC)"))
+	ec.logger.Info("expiration checker cron started", slog.String("schedule", "daily 08:00 UTC"))
 }
 
 // Stop gracefully stops the cron scheduler.
@@ -64,7 +64,6 @@ func (ec *ExpirationChecker) Stop() {
 
 // check queries for expiring documents and sends notifications, avoiding duplicates.
 func (ec *ExpirationChecker) check(ctx context.Context) {
-	// Check documents expiring within 90 days to cover typical alert windows.
 	docs, err := ec.docs.ListExpiring(ctx, 90)
 	if err != nil {
 		ec.logger.Error("failed to list expiring documents", slog.String("error", err.Error()))
@@ -73,6 +72,7 @@ func (ec *ExpirationChecker) check(ctx context.Context) {
 
 	ec.logger.Info("checking document expirations", slog.Int("count", len(docs)))
 
+	var sent, skipped int
 	for _, doc := range docs {
 		daysUntilExpiry := int(time.Until(doc.ExpiryDate).Hours() / 24)
 
@@ -81,7 +81,6 @@ func (ec *ExpirationChecker) check(ctx context.Context) {
 				continue
 			}
 
-			// Check if we already sent this specific notification.
 			exists, err := ec.notifLogs.Exists(ctx, doc.UserID, doc.ID, alertDay)
 			if err != nil {
 				ec.logger.Error("failed to check notification log",
@@ -91,34 +90,30 @@ func (ec *ExpirationChecker) check(ctx context.Context) {
 				continue
 			}
 			if exists {
+				skipped++
 				continue
 			}
 
-			// Build notification message.
-			docName := string(doc.Type)
-			if doc.CustomName != nil {
-				docName = *doc.CustomName
+			title, body := buildMessage(string(doc.Type), doc.CustomName, daysUntilExpiry, doc.ExpiryDate)
+
+			payload := map[string]any{
+				"title":              title,
+				"body":               body,
+				"document_id":        doc.ID,
+				"document_type":      string(doc.Type),
+				"days_until_expiry":  daysUntilExpiry,
+				"expiry_date":        doc.ExpiryDate.Format("2006-01-02"),
 			}
 
-			title := "Document Expiring Soon"
-			body := fmt.Sprintf("Your document %q expires in %d days (on %s).",
-				docName, daysUntilExpiry, doc.ExpiryDate.Format("2006-01-02"))
-
-			if daysUntilExpiry <= 0 {
-				title = "Document Expired"
-				body = fmt.Sprintf("Your document %q has expired.", docName)
-			}
-
-			// Send notification.
-			if err := ec.notifier.Send(ctx, doc.UserID, title, body); err != nil {
-				ec.logger.Error("failed to send expiry notification",
+			if err := ec.notifier.TriggerWorkflow(ctx, "document-expiry", doc.UserID, payload); err != nil {
+				ec.logger.Error("failed to trigger notification workflow",
 					slog.String("doc_id", doc.ID),
+					slog.String("user_id", doc.UserID),
 					slog.String("error", err.Error()),
 				)
 				continue
 			}
 
-			// Log that we sent this notification to avoid duplicates.
 			if err := ec.notifLogs.Create(ctx, doc.UserID, doc.ID, alertDay); err != nil {
 				ec.logger.Error("failed to create notification log",
 					slog.String("doc_id", doc.ID),
@@ -126,11 +121,32 @@ func (ec *ExpirationChecker) check(ctx context.Context) {
 				)
 			}
 
-			ec.logger.Info("sent expiry notification",
+			sent++
+			ec.logger.Info("triggered expiry notification",
 				slog.String("doc_id", doc.ID),
 				slog.String("user_id", doc.UserID),
 				slog.Int("alert_day", alertDay),
 			)
 		}
 	}
+
+	ec.logger.Info("expiration check completed",
+		slog.Int("documents_checked", len(docs)),
+		slog.Int("notifications_sent", sent),
+		slog.Int("notifications_skipped", skipped),
+	)
+}
+
+func buildMessage(docType string, customName *string, daysUntil int, expiryDate time.Time) (string, string) {
+	name := docType
+	if customName != nil {
+		name = *customName
+	}
+
+	if daysUntil <= 0 {
+		return "Document Expired", fmt.Sprintf("Your document %q has expired.", name)
+	}
+
+	return "Document Expiring Soon", fmt.Sprintf("Your document %q expires in %d days (on %s).",
+		name, daysUntil, expiryDate.Format("2006-01-02"))
 }

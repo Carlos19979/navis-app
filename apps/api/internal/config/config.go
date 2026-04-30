@@ -13,7 +13,8 @@ type Config struct {
 	SupabaseURL        string
 	LogLevel           string
 	CORSAllowedOrigins []string
-	FCMCredentialsFile string
+	NovuAPIKey string
+	SentryDSN string
 }
 
 // Load reads configuration from environment variables, applying defaults
@@ -21,12 +22,13 @@ type Config struct {
 func Load() *Config {
 	return &Config{
 		Port:               getEnv("PORT", "8080"),
-		DatabaseURL:        getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/navis?sslmode=disable"),
+		DatabaseURL:        getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:54322/postgres?sslmode=disable"),
 		SupabaseJWTSecret:  getEnv("SUPABASE_JWT_SECRET", ""),
 		SupabaseURL:        getEnv("SUPABASE_URL", "http://localhost:54321"),
 		LogLevel:           getEnv("LOG_LEVEL", "debug"),
 		CORSAllowedOrigins: strings.Split(getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000"), ","),
-		FCMCredentialsFile: getEnv("FCM_CREDENTIALS_FILE", ""),
+		NovuAPIKey: getEnv("NOVU_API_KEY", ""),
+		SentryDSN: getEnv("SENTRY_DSN", ""),
 	}
 }
 

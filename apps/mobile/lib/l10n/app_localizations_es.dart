@@ -219,6 +219,45 @@ class AppLocalizationsEs extends AppLocalizations {
   String get totalTrips => 'Viajes Totales';
 
   @override
+  String get tripStatistics => 'Estadísticas de Viajes';
+
+  @override
+  String get totalDistanceNm => 'MN navegadas';
+
+  @override
+  String get totalHoursAtSea => 'Horas en el mar';
+
+  @override
+  String get portsVisited => 'Puertos visitados';
+
+  @override
+  String get topSpeed => 'Velocidad máxima';
+
+  @override
+  String get fuelConsumed => 'Combustible consumido';
+
+  @override
+  String get engineHoursTotal => 'Horas de motor';
+
+  @override
+  String get yearInReview => 'Resumen del Año';
+
+  @override
+  String get monthlyActivity => 'Actividad Mensual';
+
+  @override
+  String get tripsLabel => 'Viajes';
+
+  @override
+  String get distanceNmLabel => 'MN';
+
+  @override
+  String get hoursLabel => 'Horas';
+
+  @override
+  String get allTime => 'Total Histórico';
+
+  @override
   String get totalDistance => 'Distancia Total';
 
   @override
@@ -290,4 +329,126 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get passwordsDoNotMatch => 'Las contrasenas no coinciden';
+
+  @override
+  String get engineHours => 'Horas de Motor';
+
+  @override
+  String get fuelUsed => 'Combustible Usado';
+
+  @override
+  String get crew => 'Tripulacion';
+
+  @override
+  String get logbook => 'Cuaderno de Bitacora';
+
+  @override
+  String get tripDetails => 'Detalles del Viaje';
+
+  @override
+  String get editBoat => 'Editar Barco';
+
+  @override
+  String get myBoats => 'Mis Barcos';
+
+  @override
+  String get addBoat => 'Agregar Barco';
+
+  @override
+  String get newDocument => 'Nuevo Documento';
+
+  @override
+  String get editDocument => 'Editar Documento';
+
+  @override
+  String get renewDocument => 'Renovar Documento';
+
+  @override
+  String get documentDetails => 'Detalles del Documento';
+
+  @override
+  String get renewalCost => 'Coste de Renovacion';
+
+  @override
+  String get renewalProvider => 'Proveedor / Empresa';
+
+  @override
+  String get lastRenewal => 'Ultima Renovacion';
+
+  @override
+  String get date => 'Fecha';
+
+  @override
+  String get cost => 'Coste';
+
+  @override
+  String get provider => 'Proveedor';
+
+  @override
+  String get deleteDocument => 'Eliminar Documento';
+
+  @override
+  String get deleteDocumentConfirm =>
+      'Estas seguro de que deseas eliminar este documento?';
+
+  @override
+  String get documentDeleted => 'Documento eliminado';
+
+  @override
+  String get documentSaved => 'Documento guardado';
+
+  @override
+  String get documentUpdated => 'Documento actualizado';
+
+  @override
+  String get documentRenewed => 'Documento renovado';
+
+  @override
+  String get failedToSave => 'Error al guardar documento';
+
+  @override
+  String get failedToDelete => 'Error al eliminar';
+
+  @override
+  String get takePhoto => 'Tomar Foto';
+
+  @override
+  String get chooseFromGallery => 'Elegir de la Galeria';
+
+  @override
+  String get addScan => 'Agregar Escaneo';
+
+  @override
+  String get notesOptional => 'Notas (opcional)';
+
+  @override
+  String get alertDaysBeforeExpiry => 'Dias de Alerta Antes del Vencimiento';
+
+  @override
+  String get validNumber => 'Por favor ingresa un numero valido';
+
+  @override
+  String get uploading => 'Subiendo...';
+
+  @override
+  String get noInternetConnection => 'Sin conexión a internet';
+
+  @override
+  String offlineWithPending(int count) {
+    return 'Sin conexión • $count pendientes';
+  }
+
+  @override
+  String syncingChanges(int count) {
+    return 'Sincronizando $count cambios…';
+  }
+
+  @override
+  String get searchEvents => 'Buscar eventos...';
+
+  @override
+  String get noEventsFound => 'No se encontraron eventos';
+
+  @override
+  String get featured => 'Destacado';
 }

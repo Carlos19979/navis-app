@@ -1,51 +1,149 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 
-class NavisBottomNav extends StatelessWidget {
+class NavisBottomNav extends ConsumerWidget {
   const NavisBottomNav({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
+  static const _items = [
+    _NavItem(
+        icon: Icons.sailing_outlined,
+        activeIcon: Icons.sailing,
+        label: 'Boats'),
+    _NavItem(icon: Icons.map_outlined, activeIcon: Icons.map, label: 'Charts'),
+    _NavItem(
+        icon: Icons.cloud_outlined, activeIcon: Icons.cloud, label: 'Weather'),
+    _NavItem(
+        icon: Icons.event_outlined, activeIcon: Icons.event, label: 'Events'),
+  ];
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+
+    return GradientBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: navigationShell,
+        extendBody: true,
+        bottomNavigationBar: Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            bottom: bottomPadding + 12,
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+              child: Container(
+                height: 68,
+                decoration: BoxDecoration(
+                  color: AppColors.navy.withValues(alpha: 0.85),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: AppColors.glassBorder,
+                    width: 0.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: List.generate(_items.length, (index) {
+                    final item = _items[index];
+                    final isActive = navigationShell.currentIndex == index;
+                    return _NavBarItem(
+                      item: item,
+                      isActive: isActive,
+                      onTap: () => navigationShell.goBranch(
+                        index,
+                        initialLocation: index == navigationShell.currentIndex,
+                      ),
+                    );
+                  }),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NavItem {
+  const _NavItem({
+    required this.icon,
+    required this.activeIcon,
+    required this.label,
+  });
+
+  final IconData icon;
+  final IconData activeIcon;
+  final String label;
+}
+
+class _NavBarItem extends StatelessWidget {
+  const _NavBarItem({
+    required this.item,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  final _NavItem item;
+  final bool isActive;
+  final VoidCallback onTap;
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: navigationShell,
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: navigationShell.currentIndex,
-        onTap: (index) {
-          navigationShell.goBranch(
-            index,
-            initialLocation: index == navigationShell.currentIndex,
-          );
-        },
-        backgroundColor: AppColors.navy,
-        selectedItemColor: AppColors.cyan,
-        unselectedItemColor: AppColors.textSecondary,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.sailing_outlined),
-            activeIcon: Icon(Icons.sailing),
-            label: 'Boats',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.map_outlined),
-            activeIcon: Icon(Icons.map),
-            label: 'Charts',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.cloud_outlined),
-            activeIcon: Icon(Icons.cloud),
-            label: 'Weather',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.event_outlined),
-            activeIcon: Icon(Icons.event),
-            label: 'Events',
-          ),
-        ],
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        width: 64,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              decoration: BoxDecoration(
+                color: isActive
+                    ? AppColors.cyan.withValues(alpha: 0.15)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                isActive ? item.activeIcon : item.icon,
+                color: isActive ? AppColors.cyan : AppColors.textSecondary,
+                size: 24,
+              ),
+            ),
+            const SizedBox(height: 2),
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                color: isActive ? AppColors.cyan : AppColors.textSecondary,
+              ),
+              child: Text(item.label),
+            ),
+          ],
+        ),
       ),
     );
   }

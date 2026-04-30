@@ -1,11 +1,17 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:navis_mobile/core/analytics/analytics_service.dart';
+import 'package:navis_mobile/core/database/mutation_queue.dart';
+import 'package:navis_mobile/core/database/offline_repository.dart';
 import 'package:navis_mobile/features/boat/data/repositories/boat_repository.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/domain/repositories/boat_repository.dart';
 
 final boatRepositoryProvider = Provider<BoatRepository>((ref) {
-  return BoatRepositoryImpl();
+  return BoatRepositoryImpl(
+    offlineRepo: ref.watch(offlineRepositoryProvider),
+    mutationQueue: ref.watch(mutationQueueProvider.notifier),
+  );
 });
 
 final boatsProvider =
@@ -36,14 +42,16 @@ class BoatsNotifier extends AsyncNotifier<List<Boat>> {
 
   Future<void> refresh() async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() => build());
+    state = await AsyncValue.guard(build);
   }
 
-  Future<void> createBoat(Boat boat) async {
+  Future<Boat> createBoat(Boat boat) async {
     final repository = ref.read(boatRepositoryProvider);
     final created = await repository.createBoat(boat);
+    ref.read(analyticsProvider).trackBoatCreated(created.id);
     final currentBoats = state.valueOrNull ?? [];
     state = AsyncData([created, ...currentBoats]);
+    return created;
   }
 
   Future<void> updateBoat(Boat boat) async {
@@ -63,8 +71,7 @@ class BoatsNotifier extends AsyncNotifier<List<Boat>> {
   }
 }
 
-final boatProvider =
-    FutureProvider.family<Boat, String>((ref, id) async {
+final boatProvider = FutureProvider.family<Boat, String>((ref, id) async {
   final repository = ref.watch(boatRepositoryProvider);
   return repository.getBoat(id);
 });

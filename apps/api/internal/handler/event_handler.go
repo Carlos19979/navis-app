@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/Carlos19979/navis-app/apps/api/internal/dto"
 	"github.com/Carlos19979/navis-app/apps/api/internal/middleware"
 	"github.com/Carlos19979/navis-app/apps/api/internal/service"
 	"github.com/Carlos19979/navis-app/apps/api/pkg/pagination"
@@ -60,7 +61,7 @@ func (h *EventHandler) List(w http.ResponseWriter, r *http.Request) {
 			meta = &Meta{NextCursor: &encoded}
 		}
 
-		JSONWithMeta(w, http.StatusOK, events, meta)
+		JSONWithMeta(w, http.StatusOK, dto.EventListResponseFromDomain(events, nil), meta)
 		return
 	}
 
@@ -78,7 +79,7 @@ func (h *EventHandler) List(w http.ResponseWriter, r *http.Request) {
 			meta = &Meta{NextCursor: &encoded}
 		}
 
-		JSONWithMeta(w, http.StatusOK, events, meta)
+		JSONWithMeta(w, http.StatusOK, dto.EventListResponseFromDomain(events, nil), meta)
 		return
 	}
 
@@ -95,7 +96,7 @@ func (h *EventHandler) List(w http.ResponseWriter, r *http.Request) {
 		meta = &Meta{NextCursor: &encoded}
 	}
 
-	JSONWithMeta(w, http.StatusOK, events, meta)
+	JSONWithMeta(w, http.StatusOK, dto.EventListResponseFromDomain(events, nil), meta)
 }
 
 // GetByID handles GET /events/{id}.
@@ -108,7 +109,7 @@ func (h *EventHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	JSON(w, http.StatusOK, event)
+	JSON(w, http.StatusOK, dto.EventResponseFromDomain(event, false))
 }
 
 // ToggleInterest handles POST /events/{id}/interest.

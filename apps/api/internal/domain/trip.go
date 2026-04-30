@@ -5,6 +5,7 @@ import "time"
 // TripStatus represents the current status of a trip.
 type TripStatus string
 
+// TripStatus values.
 const (
 	TripStatusRecording TripStatus = "recording"
 	TripStatusCompleted TripStatus = "completed"
@@ -20,6 +21,8 @@ type Trip struct {
 	DepartureTime     time.Time
 	ArrivalTime       *time.Time
 	DistanceNM        *float64
+	MaxSpeedKnots     *float64
+	AvgSpeedKnots     *float64
 	EngineHours       *float64
 	FuelConsumedL     *float64
 	DurationMinutes   *int

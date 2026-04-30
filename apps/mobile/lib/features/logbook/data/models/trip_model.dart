@@ -14,6 +14,9 @@ class TripModel {
     this.notes,
     this.trackPoints,
     this.status = 'completed',
+    this.engineHours,
+    this.fuelConsumedL,
+    this.crewMembers,
     this.createdAt,
     this.updatedAt,
   });
@@ -38,6 +41,11 @@ class TripModel {
               .toList()
           : null,
       status: json['status'] as String? ?? 'completed',
+      engineHours: (json['engine_hours'] as num?)?.toDouble(),
+      fuelConsumedL: (json['fuel_consumed_l'] as num?)?.toDouble(),
+      crewMembers: (json['crew_members'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
@@ -60,6 +68,9 @@ class TripModel {
       avgSpeedKnots: trip.avgSpeedKnots,
       notes: trip.notes,
       status: trip.status.name,
+      engineHours: trip.engineHours,
+      fuelConsumedL: trip.fuelConsumedL,
+      crewMembers: trip.crewMembers,
     );
   }
 
@@ -75,6 +86,9 @@ class TripModel {
   final String? notes;
   final List<TrackPointModel>? trackPoints;
   final String status;
+  final double? engineHours;
+  final double? fuelConsumedL;
+  final List<String>? crewMembers;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -91,6 +105,9 @@ class TripModel {
       if (avgSpeedKnots != null) 'avg_speed_knots': avgSpeedKnots,
       if (notes != null) 'notes': notes,
       'status': status,
+      if (engineHours != null) 'engine_hours': engineHours,
+      if (fuelConsumedL != null) 'fuel_consumed_l': fuelConsumedL,
+      if (crewMembers != null) 'crew_members': crewMembers,
       if (createdAt != null) 'created_at': createdAt!.toIso8601String(),
       if (updatedAt != null) 'updated_at': updatedAt!.toIso8601String(),
     };
@@ -120,6 +137,9 @@ class TripModel {
         (s) => s.name == status,
         orElse: () => TripStatus.completed,
       ),
+      engineHours: engineHours,
+      fuelConsumedL: fuelConsumedL,
+      crewMembers: crewMembers,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );
@@ -136,9 +156,9 @@ class TrackPointModel {
 
   factory TrackPointModel.fromJson(Map<String, dynamic> json) {
     return TrackPointModel(
-      latitude: (json['latitude'] as num).toDouble(),
-      longitude: (json['longitude'] as num).toDouble(),
-      timestamp: DateTime.parse(json['timestamp'] as String),
+      latitude: (json['lat'] as num).toDouble(),
+      longitude: (json['lon'] as num).toDouble(),
+      timestamp: DateTime.parse(json['recorded_at'] as String),
       speedKnots: (json['speed_knots'] as num?)?.toDouble(),
     );
   }

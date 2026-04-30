@@ -1,8 +1,7 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 
 class WindIndicator extends StatelessWidget {
   const WindIndicator({
@@ -21,26 +20,57 @@ class WindIndicator extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(
-          width: size,
-          height: size,
-          child: CustomPaint(
-            painter: _WindArrowPainter(
-              direction: direction,
-              color: AppColors.cyan,
+        // Glass circle background with animated rotation
+        GlassContainer(
+          borderRadius: size / 2,
+          padding: EdgeInsets.zero,
+          borderColor: AppColors.cyan.withValues(alpha: 0.25),
+          child: SizedBox(
+            width: size,
+            height: size,
+            child: AnimatedRotation(
+              turns: direction / 360,
+              duration: const Duration(milliseconds: 600),
+              curve: Curves.easeInOutCubic,
+              child: CustomPaint(
+                painter: _WindArrowPainter(
+                  color: AppColors.cyan,
+                ),
+              ),
             ),
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
+
+        // Speed text
         Text(
           '${speed.toStringAsFixed(0)} kt',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
               ),
         ),
-        Text(
-          _degreesToCardinal(direction),
-          style: Theme.of(context).textTheme.labelSmall,
+
+        // Cardinal direction in glass pill badge
+        const SizedBox(height: 2),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          decoration: BoxDecoration(
+            color: AppColors.glassWhite,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: AppColors.glassBorder,
+              width: 0.5,
+            ),
+          ),
+          child: Text(
+            _degreesToCardinal(direction),
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: AppColors.cyan,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 10,
+                ),
+          ),
         ),
       ],
     );
@@ -48,10 +78,22 @@ class WindIndicator extends StatelessWidget {
 
   String _degreesToCardinal(double degrees) {
     const directions = [
-      'N', 'NNE', 'NE', 'ENE',
-      'E', 'ESE', 'SE', 'SSE',
-      'S', 'SSW', 'SW', 'WSW',
-      'W', 'WNW', 'NW', 'NNW',
+      'N',
+      'NNE',
+      'NE',
+      'ENE',
+      'E',
+      'ESE',
+      'SE',
+      'SSE',
+      'S',
+      'SSW',
+      'SW',
+      'WSW',
+      'W',
+      'WNW',
+      'NW',
+      'NNW',
     ];
     final index = ((degrees + 11.25) / 22.5).floor() % 16;
     return directions[index];
@@ -59,9 +101,8 @@ class WindIndicator extends StatelessWidget {
 }
 
 class _WindArrowPainter extends CustomPainter {
-  _WindArrowPainter({required this.direction, required this.color});
+  _WindArrowPainter({required this.color});
 
-  final double direction;
   final Color color;
 
   @override
@@ -69,35 +110,43 @@ class _WindArrowPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2 - 4;
 
-    // Draw circle
+    // Draw gradient compass circle
     final circlePaint = Paint()
-      ..color = color.withValues(alpha: 0.2)
+      ..shader = SweepGradient(
+        colors: [
+          color.withValues(alpha: 0.4),
+          color.withValues(alpha: 0.1),
+          color.withValues(alpha: 0.4),
+          color.withValues(alpha: 0.1),
+          color.withValues(alpha: 0.4),
+        ],
+      ).createShader(Rect.fromCircle(center: center, radius: radius))
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
     canvas.drawCircle(center, radius, circlePaint);
 
-    // Draw arrow
+    // Draw arrow (always pointing up; rotation handled by AnimatedRotation)
     final arrowPaint = Paint()
-      ..color = color
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [color, color.withValues(alpha: 0.6)],
+      ).createShader(
+          Rect.fromCenter(center: center, width: 12, height: radius * 2))
       ..style = PaintingStyle.fill;
 
-    canvas.save();
-    canvas.translate(center.dx, center.dy);
-    canvas.rotate(direction * math.pi / 180);
-
     final path = Path()
-      ..moveTo(0, -radius + 4)
-      ..lineTo(-6, radius * 0.3)
-      ..lineTo(0, radius * 0.15)
-      ..lineTo(6, radius * 0.3)
+      ..moveTo(center.dx, center.dy - radius + 4)
+      ..lineTo(center.dx - 6, center.dy + radius * 0.3)
+      ..lineTo(center.dx, center.dy + radius * 0.15)
+      ..lineTo(center.dx + 6, center.dy + radius * 0.3)
       ..close();
 
     canvas.drawPath(path, arrowPaint);
-    canvas.restore();
   }
 
   @override
   bool shouldRepaint(_WindArrowPainter oldDelegate) {
-    return direction != oldDelegate.direction || color != oldDelegate.color;
+    return color != oldDelegate.color;
   }
 }

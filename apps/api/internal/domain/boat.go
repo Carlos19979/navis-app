@@ -5,6 +5,7 @@ import "time"
 // BoatType represents the type of boat.
 type BoatType string
 
+// BoatType values.
 const (
 	BoatTypeSailboat   BoatType = "sailboat"
 	BoatTypeMotorboat  BoatType = "motorboat"

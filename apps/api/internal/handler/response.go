@@ -72,10 +72,10 @@ func MapDomainError(w http.ResponseWriter, err error) {
 		Error(w, http.StatusNotFound, err.Error(), "NOT_FOUND")
 
 	case errors.Is(err, domain.ErrUnauthorized):
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
+		Error(w, http.StatusUnauthorized, err.Error(), "UNAUTHORIZED")
 
 	case errors.Is(err, domain.ErrForbidden):
-		Error(w, http.StatusForbidden, "forbidden", "FORBIDDEN")
+		Error(w, http.StatusForbidden, err.Error(), "FORBIDDEN")
 
 	case errors.Is(err, domain.ErrValidation):
 		Error(w, http.StatusUnprocessableEntity, err.Error(), "VALIDATION_ERROR")

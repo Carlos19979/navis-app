@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -6,10 +7,11 @@ import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
 import 'package:navis_mobile/features/logbook/presentation/widgets/stats_summary.dart';
 import 'package:navis_mobile/features/logbook/presentation/widgets/trip_card.dart';
+import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_empty_state.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
-import 'package:navis_mobile/shared/widgets/navis_loading.dart';
+import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
 
 class LogbookScreen extends ConsumerWidget {
   const LogbookScreen({super.key, required this.boatId});
@@ -20,45 +22,103 @@ class LogbookScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tripsAsync = ref.watch(boatTripsProvider(boatId));
 
-    return Scaffold(
-      appBar: const NavisAppBar(title: 'Logbook', showBack: true),
-      body: tripsAsync.when(
-        loading: () => const NavisLoading(),
-        error: (error, stack) => NavisErrorWidget(
-          message: error.toString(),
-          onRetry: () => ref.invalidate(boatTripsProvider(boatId)),
-        ),
-        data: (trips) {
-          if (trips.isEmpty) {
-            return NavisEmptyState(
-              icon: Icons.route_outlined,
-              message: 'No trips recorded yet. Start your first trip!',
-              actionLabel: 'Record Trip',
-              onAction: () => context.go('/trips/record'),
-            );
-          }
-
-          final stats = ref.watch(tripStatsProvider(trips));
-
-          return RefreshIndicator(
-            color: AppColors.cyan,
-            onRefresh: () async {
-              ref.invalidate(boatTripsProvider(boatId));
-            },
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                StatsSummary(stats: stats),
-                const SizedBox(height: 16),
-                ...trips.map((trip) => TripCard(trip: trip)),
-              ],
+    return GradientBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: NavisAppBar(
+          title: 'Logbook',
+          showBack: true,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.bar_chart_outlined),
+              tooltip: 'Statistics',
+              onPressed: () => context.push('/boats/$boatId/stats'),
             ),
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.go('/trips/record'),
-        child: const Icon(Icons.play_arrow),
+          ],
+        ),
+        body: tripsAsync.when(
+          loading: () => const NavisShimmer(itemCount: 4, itemHeight: 100),
+          error: (error, stack) => NavisErrorWidget(
+            message: error.toString(),
+            onRetry: () => ref.invalidate(boatTripsProvider(boatId)),
+          ),
+          data: (trips) {
+            if (trips.isEmpty) {
+              return NavisEmptyState(
+                icon: Icons.route_outlined,
+                message: 'No trips recorded yet. Start your first trip!',
+                actionLabel: 'Record Trip',
+                onAction: () => context.push('/boats/$boatId/record'),
+              );
+            }
+
+            final stats = ref.watch(tripStatsProvider(trips));
+
+            return RefreshIndicator(
+              color: AppColors.cyan,
+              backgroundColor: AppColors.darkSurface,
+              onRefresh: () async {
+                ref.invalidate(boatTripsProvider(boatId));
+              },
+              child: ListView.builder(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                itemCount: trips.length + 1,
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: StatsSummary(stats: stats)
+                          .animate()
+                          .fadeIn(duration: 400.ms)
+                          .slideY(
+                            begin: -0.1,
+                            end: 0,
+                            duration: 400.ms,
+                          ),
+                    );
+                  }
+                  return TripCard(trip: trips[index - 1])
+                      .animate()
+                      .fadeIn(
+                        delay: (100 * index).ms,
+                        duration: 400.ms,
+                      )
+                      .slideX(
+                        begin: 0.05,
+                        end: 0,
+                        delay: (100 * index).ms,
+                        duration: 400.ms,
+                        curve: Curves.easeOut,
+                      );
+                },
+              ),
+            );
+          },
+        ),
+        floatingActionButton: Container(
+          decoration: BoxDecoration(
+            gradient: AppColors.cyanGradient,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.cyan.withValues(alpha: 0.4),
+                blurRadius: 16,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: FloatingActionButton(
+            onPressed: () => context.push('/boats/$boatId/record'),
+            tooltip: 'Record trip',
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            child: const Icon(
+              Icons.play_arrow,
+              color: Colors.white,
+              semanticLabel: 'Record trip',
+            ),
+          ),
+        ),
       ),
     );
   }

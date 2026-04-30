@@ -5,6 +5,7 @@ import "time"
 // EventType represents the category of an event.
 type EventType string
 
+// EventType values.
 const (
 	EventTypeRegatta    EventType = "regatta"
 	EventTypeCruise     EventType = "cruise"

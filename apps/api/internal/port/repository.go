@@ -30,7 +30,7 @@ type DocumentRepository interface {
 type TripRepository interface {
 	Create(ctx context.Context, trip *domain.Trip) (*domain.Trip, error)
 	GetByID(ctx context.Context, userID, id string) (*domain.Trip, error)
-	List(ctx context.Context, userID, cursor string, limit int) ([]domain.Trip, string, error)
+	List(ctx context.Context, userID, boatID, cursor string, limit int) ([]domain.Trip, string, error)
 	Update(ctx context.Context, userID string, trip *domain.Trip) (*domain.Trip, error)
 	Delete(ctx context.Context, userID, id string) error
 }
@@ -59,4 +59,11 @@ type EventInterestRepository interface {
 type NotificationLogRepository interface {
 	Exists(ctx context.Context, userID, documentID string, daysBefore int) (bool, error)
 	Create(ctx context.Context, userID, documentID string, daysBefore int) error
+}
+
+// DeviceTokenRepository defines persistence operations for push notification device tokens.
+type DeviceTokenRepository interface {
+	Upsert(ctx context.Context, userID, token string, platform domain.Platform) error
+	Delete(ctx context.Context, token string) error
+	GetByUserID(ctx context.Context, userID string) ([]domain.DeviceToken, error)
 }

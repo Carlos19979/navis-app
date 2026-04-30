@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
     branches: [main, develop]
 
@@ -23,7 +23,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: "1.26"
           cache-dependency-path: apps/api/go.sum
 
       - name: Download dependencies
@@ -32,7 +32,8 @@ jobs:
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.57
+          version: v1.64.8
+          install-mode: goinstall
           working-directory: apps/api
           args: --timeout=5m
 
@@ -62,15 +63,21 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.22.0"
+          flutter-version: "3.41.7"
           channel: stable
           cache: true
 
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Generate l10n
+        run: flutter gen-l10n
+
+      - name: Run build_runner code generation
+        run: dart run build_runner build --delete-conflicting-outputs
+
       - name: Verify formatting
-        run: dart format --output=none --set-exit-if-changed .
+        run: dart format --output=none --set-exit-if-changed --line-length=80 lib/ test/
 
       - name: Run analyzer
         run: flutter analyze --fatal-infos
@@ -84,3 +91,7 @@ jobs:
         with:
           name: flutter-coverage
           path: apps/mobile/coverage/lcov.info
+
+      - name: Build APK (compile check)
+        if: github.ref == 'refs/heads/main'
+        run: flutter build apk --debug

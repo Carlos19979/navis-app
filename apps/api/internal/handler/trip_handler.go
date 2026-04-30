@@ -2,10 +2,13 @@ package handler
 
 import (
 	"encoding/json"
+	"math"
 	"net/http"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 	"github.com/Carlos19979/navis-app/apps/api/internal/dto"
 	"github.com/Carlos19979/navis-app/apps/api/internal/middleware"
 	"github.com/Carlos19979/navis-app/apps/api/internal/service"
@@ -36,6 +39,8 @@ func (h *TripHandler) Create(w http.ResponseWriter, r *http.Request) {
 		Error(w, http.StatusBadRequest, "invalid request body", "BAD_REQUEST")
 		return
 	}
+
+	validator.TrimStrings(&req)
 
 	// Override BoatID from URL parameter.
 	boatID := chi.URLParam(r, "boatId")
@@ -84,8 +89,9 @@ func (h *TripHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	boatID := chi.URLParam(r, "boatId")
 	cursor, limit := pagination.ParseCursor(r)
-	trips, nextCursor, err := h.svc.List(r.Context(), userID, cursor, limit)
+	trips, nextCursor, err := h.svc.List(r.Context(), userID, boatID, cursor, limit)
 	if err != nil {
 		MapDomainError(w, err)
 		return
@@ -169,6 +175,8 @@ func (h *TripHandler) Complete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	validator.TrimStrings(&req)
+
 	if errs := validator.Validate(req); errs != nil {
 		ValidationError(w, errs)
 		return
@@ -216,4 +224,87 @@ func (h *TripHandler) AddTracks(w http.ResponseWriter, r *http.Request) {
 	}
 
 	JSON(w, http.StatusCreated, map[string]int{"count": len(tracks)})
+}
+
+// GetTracks handles GET /trips/{id}/tracks?simplify=0.0001.
+// Returns track points, optionally simplified with Douglas-Peucker.
+func (h *TripHandler) GetTracks(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok {
+		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
+		return
+	}
+
+	tripID := chi.URLParam(r, "id")
+	tracks, err := h.svc.GetTrackPoints(r.Context(), userID, tripID)
+	if err != nil {
+		MapDomainError(w, err)
+		return
+	}
+
+	if epsilon := r.URL.Query().Get("simplify"); epsilon != "" {
+		if eps, err := strconv.ParseFloat(epsilon, 64); err == nil && eps > 0 {
+			tracks = simplifyTracks(tracks, eps)
+		}
+	}
+
+	JSON(w, http.StatusOK, dto.TrackPointListResponseFromDomain(tracks))
+}
+
+type point2D struct {
+	lat, lon float64
+	idx      int
+}
+
+func simplifyTracks(tracks []domain.TripTrack, epsilon float64) []domain.TripTrack {
+	if len(tracks) <= 2 {
+		return tracks
+	}
+
+	pts := make([]point2D, len(tracks))
+	for i, t := range tracks {
+		pts[i] = point2D{lat: t.Lat, lon: t.Lon, idx: i}
+	}
+
+	kept := dpSimplify(pts, epsilon)
+	result := make([]domain.TripTrack, len(kept))
+	for i, p := range kept {
+		result[i] = tracks[p.idx]
+	}
+	return result
+}
+
+func dpSimplify(points []point2D, epsilon float64) []point2D {
+	if len(points) <= 2 {
+		return points
+	}
+
+	maxDist := 0.0
+	maxIdx := 0
+	for i := 1; i < len(points)-1; i++ {
+		d := perpDist(points[i], points[0], points[len(points)-1])
+		if d > maxDist {
+			maxDist = d
+			maxIdx = i
+		}
+	}
+
+	if maxDist > epsilon {
+		left := dpSimplify(points[:maxIdx+1], epsilon)
+		right := dpSimplify(points[maxIdx:], epsilon)
+		return append(left[:len(left)-1], right...)
+	}
+
+	return []point2D{points[0], points[len(points)-1]}
+}
+
+func perpDist(p, a, b point2D) float64 {
+	dx := b.lon - a.lon
+	dy := b.lat - a.lat
+	if dx == 0 && dy == 0 {
+		return math.Hypot(p.lon-a.lon, p.lat-a.lat)
+	}
+	num := math.Abs(dy*p.lon - dx*p.lat + b.lon*a.lat - b.lat*a.lon)
+	den := math.Hypot(dx, dy)
+	return num / den
 }

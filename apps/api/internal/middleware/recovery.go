@@ -14,11 +14,15 @@ func Recovery(logger *slog.Logger) func(http.Handler) http.Handler {
 			defer func() {
 				if rec := recover(); rec != nil {
 					stack := debug.Stack()
+					requestID := RequestIDFromContext(r.Context())
+					userID, _ := UserIDFromContext(r.Context())
 					logger.Error("panic recovered",
 						slog.Any("panic", rec),
 						slog.String("stack", string(stack)),
 						slog.String("method", r.Method),
 						slog.String("path", r.URL.Path),
+						slog.String("request_id", requestID),
+						slog.String("user_id", userID),
 					)
 
 					w.Header().Set("Content-Type", "application/json")

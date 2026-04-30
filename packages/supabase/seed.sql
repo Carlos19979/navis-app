@@ -12,19 +12,47 @@
 -- Example: SELECT id FROM auth.users WHERE email = 'test@navis.app';
 DO $$
 DECLARE
-  test_user_id UUID := '00000000-0000-0000-0000-000000000001'; -- REPLACE with real auth.users ID
+  test_user_id UUID := '00000000-0000-0000-0000-000000000001';
   boat_1_id    UUID := 'b0000000-0000-0000-0000-000000000001';
   boat_2_id    UUID := 'b0000000-0000-0000-0000-000000000002';
   doc_1_id     UUID := 'd0000000-0000-0000-0000-000000000001';
   doc_2_id     UUID := 'd0000000-0000-0000-0000-000000000002';
   doc_3_id     UUID := 'd0000000-0000-0000-0000-000000000003';
   doc_4_id     UUID := 'd0000000-0000-0000-0000-000000000004';
-  trip_1_id    UUID := 't0000000-0000-0000-0000-000000000001';
-  trip_2_id    UUID := 't0000000-0000-0000-0000-000000000002';
-  event_1_id   UUID := 'e0000000-0000-0000-0000-000000000001';
-  event_2_id   UUID := 'e0000000-0000-0000-0000-000000000002';
-  event_3_id   UUID := 'e0000000-0000-0000-0000-000000000003';
+  trip_1_id    UUID := 'e0000000-0000-0000-0000-000000000001';
+  trip_2_id    UUID := 'e0000000-0000-0000-0000-000000000002';
+  event_1_id   UUID := 'f0000000-0000-0000-0000-000000000001';
+  event_2_id   UUID := 'f0000000-0000-0000-0000-000000000002';
+  event_3_id   UUID := 'f0000000-0000-0000-0000-000000000003';
 BEGIN
+
+-- Create test user in auth.users
+INSERT INTO auth.users (
+  id, instance_id, aud, role, email,
+  encrypted_password, email_confirmed_at,
+  created_at, updated_at,
+  confirmation_token, email_change, email_change_token_new,
+  recovery_token, phone, phone_change, phone_change_token,
+  raw_app_meta_data, raw_user_meta_data
+) VALUES (
+  test_user_id,
+  '00000000-0000-0000-0000-000000000000',
+  'authenticated', 'authenticated', 'test@navis.app',
+  crypt('password123', gen_salt('bf')),
+  now(), now(), now(),
+  '', '', '', '', '', '', '',
+  '{"provider":"email","providers":["email"]}'::jsonb,
+  '{"name":"Test User"}'::jsonb
+) ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO auth.identities (
+  id, user_id, provider_id, provider,
+  identity_data, last_sign_in_at, created_at, updated_at
+) VALUES (
+  test_user_id, test_user_id, test_user_id::text, 'email',
+  jsonb_build_object('sub', test_user_id::text, 'email', 'test@navis.app'),
+  now(), now(), now()
+) ON CONFLICT DO NOTHING;
 
 -- ─── Boats ─────────────────────────────────────────────────────────
 INSERT INTO boats (id, user_id, name, registration, type, length_m, home_port, home_port_location, engine_hours) VALUES
@@ -75,29 +103,29 @@ INSERT INTO trips (id, boat_id, user_id, departure_port, departure_time, crew_me
    'recording');
 
 -- ─── Trip Tracks (GPS breadcrumbs for trip 1) ──────────────────────
-INSERT INTO trip_tracks (trip_id, location, speed_knots, heading, recorded_at) VALUES
-  (trip_1_id, ST_MakePoint(2.6347, 39.5696)::geography, 0.0, 315.0,
+INSERT INTO trip_tracks (trip_id, lat, lon, speed_knots, heading, recorded_at) VALUES
+  (trip_1_id, 39.5696, 2.6347, 0.0, 315.0,
     (CURRENT_TIMESTAMP - INTERVAL '3 days')::timestamptz),
-  (trip_1_id, ST_MakePoint(2.6200, 39.5800)::geography, 5.2, 320.0,
+  (trip_1_id, 39.5800, 2.6200, 5.2, 320.0,
     (CURRENT_TIMESTAMP - INTERVAL '3 days' + INTERVAL '30 minutes')::timestamptz),
-  (trip_1_id, ST_MakePoint(2.5900, 39.6100)::geography, 6.8, 325.0,
+  (trip_1_id, 39.6100, 2.5900, 6.8, 325.0,
     (CURRENT_TIMESTAMP - INTERVAL '3 days' + INTERVAL '1 hour')::timestamptz),
-  (trip_1_id, ST_MakePoint(2.5500, 39.6500)::geography, 7.1, 330.0,
+  (trip_1_id, 39.6500, 2.5500, 7.1, 330.0,
     (CURRENT_TIMESTAMP - INTERVAL '3 days' + INTERVAL '2 hours')::timestamptz),
-  (trip_1_id, ST_MakePoint(2.5100, 39.7000)::geography, 6.5, 340.0,
+  (trip_1_id, 39.7000, 2.5100, 6.5, 340.0,
     (CURRENT_TIMESTAMP - INTERVAL '3 days' + INTERVAL '3 hours')::timestamptz),
-  (trip_1_id, ST_MakePoint(2.4900, 39.7500)::geography, 4.2, 350.0,
+  (trip_1_id, 39.7500, 2.4900, 4.2, 350.0,
     (CURRENT_TIMESTAMP - INTERVAL '3 days' + INTERVAL '4 hours')::timestamptz),
-  (trip_1_id, ST_MakePoint(2.4800, 39.7700)::geography, 1.0, 0.0,
+  (trip_1_id, 39.7700, 2.4800, 1.0, 0.0,
     (CURRENT_TIMESTAMP - INTERVAL '3 days' + INTERVAL '4 hours 30 minutes')::timestamptz);
 
 -- Track for trip 2 (in progress — just departed)
-INSERT INTO trip_tracks (trip_id, location, speed_knots, heading, recorded_at) VALUES
-  (trip_2_id, ST_MakePoint(2.2008, 41.3877)::geography, 0.0, 180.0,
+INSERT INTO trip_tracks (trip_id, lat, lon, speed_knots, heading, recorded_at) VALUES
+  (trip_2_id, 41.3877, 2.2008, 0.0, 180.0,
     (CURRENT_TIMESTAMP - INTERVAL '1 hour')::timestamptz),
-  (trip_2_id, ST_MakePoint(2.2050, 41.3800)::geography, 8.5, 170.0,
+  (trip_2_id, 41.3800, 2.2050, 8.5, 170.0,
     (CURRENT_TIMESTAMP - INTERVAL '45 minutes')::timestamptz),
-  (trip_2_id, ST_MakePoint(2.2100, 41.3700)::geography, 12.3, 165.0,
+  (trip_2_id, 41.3700, 2.2100, 12.3, 165.0,
     (CURRENT_TIMESTAMP - INTERVAL '30 minutes')::timestamptz);
 
 -- ─── Events ────────────────────────────────────────────────────────

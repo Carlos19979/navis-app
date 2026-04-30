@@ -86,6 +86,8 @@ type TripResponse struct {
 	DepartureTime     time.Time         `json:"departure_time"`
 	ArrivalTime       *time.Time        `json:"arrival_time,omitempty"`
 	DistanceNM        *float64          `json:"distance_nm,omitempty"`
+	MaxSpeedKnots     *float64          `json:"max_speed_knots,omitempty"`
+	AvgSpeedKnots     *float64          `json:"avg_speed_knots,omitempty"`
 	EngineHours       *float64          `json:"engine_hours,omitempty"`
 	FuelConsumedL     *float64          `json:"fuel_consumed_l,omitempty"`
 	DurationMinutes   *int              `json:"duration_minutes,omitempty"`
@@ -116,6 +118,8 @@ func TripResponseFromDomain(t *domain.Trip) *TripResponse {
 		DepartureTime:     t.DepartureTime,
 		ArrivalTime:       t.ArrivalTime,
 		DistanceNM:        t.DistanceNM,
+		MaxSpeedKnots:     t.MaxSpeedKnots,
+		AvgSpeedKnots:     t.AvgSpeedKnots,
 		EngineHours:       t.EngineHours,
 		FuelConsumedL:     t.FuelConsumedL,
 		DurationMinutes:   t.DurationMinutes,
