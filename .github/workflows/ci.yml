@@ -92,6 +92,7 @@ jobs:
           name: flutter-coverage
           path: apps/mobile/coverage/lcov.info
 
-      - name: Build APK (compile check)
-        if: github.ref == 'refs/heads/main'
-        run: flutter build apk --debug
+      # APK build disabled until google-services.json is added as a CI secret
+      # - name: Build APK (compile check)
+      #   if: github.ref == 'refs/heads/main'
+      #   run: flutter build apk --debug
