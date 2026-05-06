@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/logbook/domain/entities/trip.dart';
 
 class RecordingControls extends StatelessWidget {
@@ -21,6 +22,7 @@ class RecordingControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     switch (status) {
       case TripStatus.completed:
         return _StartButton(onPressed: onStart);
@@ -30,7 +32,7 @@ class RecordingControls extends StatelessWidget {
           children: [
             _GradientControlButton(
               icon: Icons.pause,
-              label: 'Pause',
+              label: l.pauseTrip,
               gradient: AppColors.amberGradient,
               glowColor: AppColors.amber,
               onPressed: onPause,
@@ -38,7 +40,7 @@ class RecordingControls extends StatelessWidget {
             const SizedBox(width: 24),
             _GradientControlButton(
               icon: Icons.stop,
-              label: 'Stop',
+              label: l.stopTrip,
               gradient: AppColors.redGradient,
               glowColor: AppColors.red,
               onPressed: onStop,
@@ -51,7 +53,7 @@ class RecordingControls extends StatelessWidget {
           children: [
             _GradientControlButton(
               icon: Icons.play_arrow,
-              label: 'Resume',
+              label: l.resumeTrip,
               gradient: AppColors.greenGradient,
               glowColor: AppColors.green,
               onPressed: onResume,
@@ -59,7 +61,7 @@ class RecordingControls extends StatelessWidget {
             const SizedBox(width: 24),
             _GradientControlButton(
               icon: Icons.stop,
-              label: 'Stop',
+              label: l.stopTrip,
               gradient: AppColors.redGradient,
               glowColor: AppColors.red,
               onPressed: onStop,
@@ -117,8 +119,8 @@ class _StartButtonState extends State<_StartButton>
           animation: _pulseAnimation,
           builder: (context, child) {
             return Container(
-              width: 100,
-              height: 100,
+              width: 72,
+              height: 72,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: AppColors.cyanGradient,
@@ -127,14 +129,14 @@ class _StartButtonState extends State<_StartButton>
                     color: AppColors.cyan.withValues(
                       alpha: 0.25 + (_pulseAnimation.value * 0.25),
                     ),
-                    blurRadius: 20 + (_pulseAnimation.value * 12),
-                    spreadRadius: 2 + (_pulseAnimation.value * 6),
+                    blurRadius: 16 + (_pulseAnimation.value * 8),
+                    spreadRadius: 2 + (_pulseAnimation.value * 4),
                   ),
                 ],
               ),
               child: const Icon(
                 Icons.play_arrow,
-                size: 48,
+                size: 36,
                 color: Colors.white,
                 semanticLabel: 'Start recording',
               ),

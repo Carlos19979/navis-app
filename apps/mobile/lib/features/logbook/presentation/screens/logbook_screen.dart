@@ -8,6 +8,7 @@ import 'package:navis_mobile/features/logbook/presentation/providers/logbook_pro
 import 'package:navis_mobile/features/logbook/presentation/widgets/stats_summary.dart';
 import 'package:navis_mobile/features/logbook/presentation/widgets/trip_card.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_empty_state.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
@@ -20,18 +21,19 @@ class LogbookScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final tripsAsync = ref.watch(boatTripsProvider(boatId));
 
     return GradientBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: NavisAppBar(
-          title: 'Logbook',
+          title: l.logbook,
           showBack: true,
           actions: [
             IconButton(
               icon: const Icon(Icons.bar_chart_outlined),
-              tooltip: 'Statistics',
+              tooltip: l.statistics,
               onPressed: () => context.push('/boats/$boatId/stats'),
             ),
           ],
@@ -46,8 +48,8 @@ class LogbookScreen extends ConsumerWidget {
             if (trips.isEmpty) {
               return NavisEmptyState(
                 icon: Icons.route_outlined,
-                message: 'No trips recorded yet. Start your first trip!',
-                actionLabel: 'Record Trip',
+                message: l.noTrips,
+                actionLabel: l.recordTrip,
                 onAction: () => context.push('/boats/$boatId/record'),
               );
             }
@@ -98,24 +100,33 @@ class LogbookScreen extends ConsumerWidget {
         floatingActionButton: Container(
           decoration: BoxDecoration(
             gradient: AppColors.cyanGradient,
-            shape: BoxShape.circle,
+            borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
                 color: AppColors.cyan.withValues(alpha: 0.4),
                 blurRadius: 16,
-                spreadRadius: 2,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
-          child: FloatingActionButton(
+          child: FloatingActionButton.extended(
+            heroTag: 'record_trip',
             onPressed: () => context.push('/boats/$boatId/record'),
-            tooltip: 'Record trip',
             backgroundColor: Colors.transparent,
             elevation: 0,
-            child: const Icon(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            icon: const Icon(
               Icons.play_arrow,
               color: Colors.white,
-              semanticLabel: 'Record trip',
+            ),
+            label: Text(
+              l.startTrip,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ),

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/events/domain/entities/event.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
 
 class EventCard extends StatelessWidget {
@@ -13,6 +15,8 @@ class EventCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
     return NavisCard(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -45,7 +49,7 @@ class EventCard extends StatelessWidget {
                       ),
                 ),
                 Text(
-                  _monthAbbr(event.startDate.month),
+                  DateFormat.MMM(locale).format(event.startDate).toUpperCase(),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Colors.white.withValues(alpha: 0.85),
                         fontSize: 11,
@@ -121,11 +125,11 @@ class EventCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.star,
                       size: 16,
                       color: AppColors.amber,
-                      semanticLabel: 'Featured',
+                      semanticLabel: l.featured,
                     ),
                   ),
                 ),
@@ -143,9 +147,9 @@ class EventCard extends StatelessWidget {
                       width: 0.5,
                     ),
                   ),
-                  child: const Text(
-                    'Interested',
-                    style: TextStyle(
+                  child: Text(
+                    l.interested,
+                    style: const TextStyle(
                       color: AppColors.green,
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
@@ -157,23 +161,5 @@ class EventCard extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String _monthAbbr(int month) {
-    const months = [
-      'JAN',
-      'FEB',
-      'MAR',
-      'APR',
-      'MAY',
-      'JUN',
-      'JUL',
-      'AUG',
-      'SEP',
-      'OCT',
-      'NOV',
-      'DEC',
-    ];
-    return months[month - 1];
   }
 }

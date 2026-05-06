@@ -1,12 +1,17 @@
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
+import 'package:navis_mobile/features/boat/presentation/screens/map_picker_screen.dart';
+import 'package:navis_mobile/features/ports/domain/entities/port.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 
 class TripCompletionData {
   const TripCompletionData({
+    this.departurePort,
     this.arrivalPort,
     this.engineHours,
     this.fuelConsumedL,
@@ -14,6 +19,7 @@ class TripCompletionData {
     this.notes,
   });
 
+  final String? departurePort;
   final String? arrivalPort;
   final double? engineHours;
   final double? fuelConsumedL;
@@ -27,11 +33,21 @@ class TripCompletionDialog extends StatefulWidget {
     this.distanceNm,
     this.duration,
     this.avgSpeed,
+    this.nearbyPorts = const [],
+    this.startLat,
+    this.startLon,
+    this.endLat,
+    this.endLon,
   });
 
   final double? distanceNm;
   final Duration? duration;
   final double? avgSpeed;
+  final List<Port> nearbyPorts;
+  final double? startLat;
+  final double? startLon;
+  final double? endLat;
+  final double? endLon;
 
   @override
   State<TripCompletionDialog> createState() => _TripCompletionDialogState();
@@ -39,15 +55,83 @@ class TripCompletionDialog extends StatefulWidget {
 
 class _TripCompletionDialogState extends State<TripCompletionDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _arrivalPortCtrl = TextEditingController();
   final _engineHoursCtrl = TextEditingController();
   final _fuelCtrl = TextEditingController();
   final _crewCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
 
+  Port? _selectedDeparturePort;
+  bool _useCustomDeparture = false;
+  String? _customDepartureName;
+
+  Port? _selectedArrivalPort;
+  bool _useCustomArrival = false;
+  String? _customArrivalName;
+
+  List<Port> _departurePorts = [];
+  List<Port> _arrivalPorts = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _departurePorts = _sortedByDistance(widget.startLat, widget.startLon);
+    _arrivalPorts = _sortedByDistance(widget.endLat, widget.endLon);
+
+    if (_departurePorts.isNotEmpty) {
+      _selectedDeparturePort = _departurePorts.first;
+    } else {
+      _useCustomDeparture = true;
+    }
+
+    if (_arrivalPorts.isNotEmpty) {
+      _selectedArrivalPort = _arrivalPorts.first;
+    } else {
+      _useCustomArrival = true;
+    }
+  }
+
+  List<Port> _sortedByDistance(double? lat, double? lon) {
+    if (lat == null || lon == null) return widget.nearbyPorts;
+    final sorted = List<Port>.from(widget.nearbyPorts);
+    sorted.sort((a, b) {
+      final dA = _haversine(lat, lon, a.lat, a.lon);
+      final dB = _haversine(lat, lon, b.lat, b.lon);
+      return dA.compareTo(dB);
+    });
+    return sorted;
+  }
+
+  Future<void> _openMapPicker({required bool isDeparture}) async {
+    final l = AppLocalizations.of(context)!;
+    final lat = isDeparture ? widget.startLat : widget.endLat;
+    final lon = isDeparture ? widget.startLon : widget.endLon;
+    final result = await Navigator.of(context).push<MapPickerResult>(
+      MaterialPageRoute(
+        builder: (_) => MapPickerScreen(
+          title: isDeparture ? l.departurePort : l.selectArrivalPort,
+          showNameField: true,
+          initialLatitude: lat,
+          initialLongitude: lon,
+        ),
+      ),
+    );
+    if (result != null && mounted) {
+      setState(() {
+        if (isDeparture) {
+          _useCustomDeparture = true;
+          _selectedDeparturePort = null;
+          _customDepartureName = result.name;
+        } else {
+          _useCustomArrival = true;
+          _selectedArrivalPort = null;
+          _customArrivalName = result.name;
+        }
+      });
+    }
+  }
+
   @override
   void dispose() {
-    _arrivalPortCtrl.dispose();
     _engineHoursCtrl.dispose();
     _fuelCtrl.dispose();
     _crewCtrl.dispose();
@@ -55,13 +139,45 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
     super.dispose();
   }
 
+  double _haversine(double lat1, double lon1, double lat2, double lon2) {
+    const r = 3440.065;
+    final dLat = _toRad(lat2 - lat1);
+    final dLon = _toRad(lon2 - lon1);
+    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(_toRad(lat1)) *
+            math.cos(_toRad(lat2)) *
+            math.sin(dLon / 2) *
+            math.sin(dLon / 2);
+    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+    return r * c;
+  }
+
+  double? _distanceFromPoint(Port port, double? lat, double? lon) {
+    if (lat == null || lon == null) return null;
+    return _haversine(lat, lon, port.lat, port.lon);
+  }
+
+  double _toRad(double deg) => deg * math.pi / 180;
+
+  IconData _portIcon(PortType type) => switch (type) {
+        PortType.marina => Icons.anchor,
+        PortType.anchorage => Icons.water,
+        PortType.fuel => Icons.local_gas_station,
+        PortType.commercial => Icons.business,
+        PortType.fishing => Icons.phishing,
+        PortType.other => Icons.location_on,
+      };
+
   @override
   Widget build(BuildContext context) {
     return BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
       child: Dialog(
         backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        insetPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 24,
+        ),
         child: Container(
           constraints: const BoxConstraints(maxWidth: 420),
           decoration: BoxDecoration(
@@ -85,34 +201,7 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: AppColors.glassWhite,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: AppColors.glassBorder,
-                          width: 0.5,
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.flag_rounded,
-                        color: AppColors.green,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Complete Trip',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                    ),
-                  ],
-                ),
+                _buildHeader(context),
                 if (widget.distanceNm != null ||
                     widget.duration != null ||
                     widget.avgSpeed != null) ...[
@@ -125,20 +214,45 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      TextFormField(
-                        controller: _arrivalPortCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'Arrival Port',
-                          prefixIcon: Icon(Icons.anchor),
-                        ),
-                        textCapitalization: TextCapitalization.words,
+                      _buildPortSection(
+                        context,
+                        label: AppLocalizations.of(context)!.departurePort,
+                        icon: Icons.flight_takeoff,
+                        ports: _departurePorts,
+                        refLat: widget.startLat,
+                        refLon: widget.startLon,
+                        selectedPort: _selectedDeparturePort,
+                        useCustom: _useCustomDeparture,
+                        customName: _customDepartureName,
+                        onSelectPort: (port) => setState(() {
+                          _selectedDeparturePort = port;
+                          _useCustomDeparture = false;
+                        }),
+                        onPickMap: () => _openMapPicker(isDeparture: true),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildPortSection(
+                        context,
+                        label: AppLocalizations.of(context)!.arrivalPort,
+                        icon: Icons.flight_land,
+                        ports: _arrivalPorts,
+                        refLat: widget.endLat,
+                        refLon: widget.endLon,
+                        selectedPort: _selectedArrivalPort,
+                        useCustom: _useCustomArrival,
+                        customName: _customArrivalName,
+                        onSelectPort: (port) => setState(() {
+                          _selectedArrivalPort = port;
+                          _useCustomArrival = false;
+                        }),
+                        onPickMap: () => _openMapPicker(isDeparture: false),
                       ),
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: _engineHoursCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'Engine Hours',
-                          prefixIcon: Icon(Icons.engineering),
+                        decoration: InputDecoration(
+                          labelText: AppLocalizations.of(context)!.engineHours,
+                          prefixIcon: const Icon(Icons.engineering),
                           suffixText: 'h',
                         ),
                         keyboardType: const TextInputType.numberWithOptions(
@@ -148,7 +262,8 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
                           if (v == null || v.isEmpty) return null;
                           final n = double.tryParse(v);
                           if (n == null || n < 0) {
-                            return 'Enter a valid number';
+                            return AppLocalizations.of(context)!
+                                .enterValidNumber;
                           }
                           return null;
                         },
@@ -156,9 +271,9 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: _fuelCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'Fuel Used',
-                          prefixIcon: Icon(Icons.local_gas_station),
+                        decoration: InputDecoration(
+                          labelText: AppLocalizations.of(context)!.fuelUsed,
+                          prefixIcon: const Icon(Icons.local_gas_station),
                           suffixText: 'L',
                         ),
                         keyboardType: const TextInputType.numberWithOptions(
@@ -168,7 +283,8 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
                           if (v == null || v.isEmpty) return null;
                           final n = double.tryParse(v);
                           if (n == null || n < 0) {
-                            return 'Enter a valid number';
+                            return AppLocalizations.of(context)!
+                                .enterValidNumber;
                           }
                           return null;
                         },
@@ -176,19 +292,20 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: _crewCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'Crew Members',
-                          prefixIcon: Icon(Icons.group),
-                          hintText: 'Comma-separated names',
+                        decoration: InputDecoration(
+                          labelText: AppLocalizations.of(context)!.crewMembers,
+                          prefixIcon: const Icon(Icons.group),
+                          hintText:
+                              AppLocalizations.of(context)!.commaSeparatedNames,
                         ),
                         textCapitalization: TextCapitalization.words,
                       ),
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: _notesCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'Notes',
-                          prefixIcon: Icon(Icons.notes),
+                        decoration: InputDecoration(
+                          labelText: AppLocalizations.of(context)!.notes,
+                          prefixIcon: const Icon(Icons.notes),
                         ),
                         maxLines: 3,
                         textCapitalization: TextCapitalization.sentences,
@@ -201,7 +318,7 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
                   children: [
                     Expanded(
                       child: NavisButton(
-                        label: 'Cancel',
+                        label: AppLocalizations.of(context)!.cancel,
                         variant: NavisButtonVariant.secondary,
                         compact: true,
                         onPressed: () => Navigator.of(context).pop(),
@@ -210,7 +327,7 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: NavisButton(
-                        label: 'Save Trip',
+                        label: AppLocalizations.of(context)!.saveTrip,
                         icon: Icons.check,
                         onPressed: _submit,
                       ),
@@ -220,6 +337,186 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: AppColors.glassWhite,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: AppColors.glassBorder,
+              width: 0.5,
+            ),
+          ),
+          child: const Icon(
+            Icons.flag_rounded,
+            color: AppColors.green,
+            size: 20,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          AppLocalizations.of(context)!.completeTrip,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPortSection(
+    BuildContext context, {
+    required String label,
+    required IconData icon,
+    required List<Port> ports,
+    required double? refLat,
+    required double? refLon,
+    required Port? selectedPort,
+    required bool useCustom,
+    required String? customName,
+    required ValueChanged<Port> onSelectPort,
+    required VoidCallback onPickMap,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 16, color: AppColors.textSecondary),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                    letterSpacing: 0.5,
+                  ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 72,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: ports.length + 1,
+            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            itemBuilder: (context, index) {
+              if (index == ports.length) {
+                return _buildCustomChip(
+                  context,
+                  isSelected: useCustom,
+                  onTap: onPickMap,
+                );
+              }
+              final port = ports[index];
+              final isSelected = !useCustom && selectedPort == port;
+              final dist = _distanceFromPoint(port, refLat, refLon);
+              return _PortChip(
+                port: port,
+                isSelected: isSelected,
+                distance: dist,
+                icon: _portIcon(port.portType),
+                onTap: () => onSelectPort(port),
+              );
+            },
+          ),
+        ),
+        if (useCustom && customName != null) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 8,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.cyan.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: AppColors.cyan.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.location_on,
+                  color: AppColors.cyan,
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    customName,
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(color: AppColors.cyan),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: onPickMap,
+                  child: const Icon(
+                    Icons.edit,
+                    color: AppColors.textSecondary,
+                    size: 16,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildCustomChip(
+    BuildContext context, {
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    final l = AppLocalizations.of(context)!;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 80,
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.cyan.withValues(alpha: 0.15)
+              : AppColors.glassWhite,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? AppColors.cyan : AppColors.glassBorder,
+            width: isSelected ? 1.5 : 0.5,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.edit_location_alt,
+              size: 20,
+              color: isSelected ? AppColors.cyan : AppColors.textSecondary,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              l.other,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color:
+                        isSelected ? AppColors.cyan : AppColors.textSecondary,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ),
       ),
     );
@@ -259,10 +556,16 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
             .where((s) => s.isNotEmpty)
             .toList();
 
+    final departure = _useCustomDeparture
+        ? _customDepartureName
+        : _selectedDeparturePort?.name;
+
+    final arrival =
+        _useCustomArrival ? _customArrivalName : _selectedArrivalPort?.name;
+
     final data = TripCompletionData(
-      arrivalPort: _arrivalPortCtrl.text.trim().isEmpty
-          ? null
-          : _arrivalPortCtrl.text.trim(),
+      departurePort: departure,
+      arrivalPort: arrival,
       engineHours: double.tryParse(_engineHoursCtrl.text),
       fuelConsumedL: double.tryParse(_fuelCtrl.text),
       crewMembers: crew,
@@ -273,8 +576,89 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
   }
 }
 
+class _PortChip extends StatelessWidget {
+  const _PortChip({
+    required this.port,
+    required this.isSelected,
+    required this.icon,
+    required this.onTap,
+    this.distance,
+  });
+
+  final Port port;
+  final bool isSelected;
+  final double? distance;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 120,
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.cyan.withValues(alpha: 0.15)
+              : AppColors.glassWhite,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? AppColors.cyan : AppColors.glassBorder,
+            width: isSelected ? 1.5 : 0.5,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  icon,
+                  size: 14,
+                  color: isSelected ? AppColors.cyan : AppColors.textSecondary,
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    port.name,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: isSelected
+                              ? AppColors.cyan
+                              : AppColors.textPrimary,
+                          fontWeight:
+                              isSelected ? FontWeight.w700 : FontWeight.w500,
+                          fontSize: 11,
+                        ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            if (distance != null) ...[
+              const SizedBox(height: 2),
+              Text(
+                '${distance!.toStringAsFixed(1)} NM',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: AppColors.textSecondary,
+                      fontSize: 10,
+                    ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _SummaryPill extends StatelessWidget {
-  const _SummaryPill({required this.icon, required this.value});
+  const _SummaryPill({
+    required this.icon,
+    required this.value,
+  });
 
   final IconData icon;
   final String value;
@@ -284,7 +668,10 @@ class _SummaryPill extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 10,
+          vertical: 6,
+        ),
         decoration: BoxDecoration(
           color: AppColors.glassWhite,
           borderRadius: BorderRadius.circular(20),

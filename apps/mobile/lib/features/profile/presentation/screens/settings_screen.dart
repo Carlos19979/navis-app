@@ -4,10 +4,11 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/core/config/settings_service.dart';
 import 'package:navis_mobile/core/database/local_database.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
-import 'package:navis_mobile/features/profile/presentation/providers/profile_provider.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
@@ -18,104 +19,97 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDarkMode = ref.watch(themeModeProvider);
+    final l = AppLocalizations.of(context)!;
+    final themeMode = ref.watch(themeModeProvider);
+    final locale = ref.watch(localeProvider);
+    final expiryAlerts = ref.watch(expiryAlertsProvider);
+    final eventReminders = ref.watch(eventRemindersProvider);
+
+    final languageLabel = switch (locale?.languageCode) {
+      'es' => 'Español',
+      'en' => 'English',
+      _ => l.systemDefault,
+    };
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
-      appBar: const NavisAppBar(title: 'Settings', showBack: true),
+      appBar: NavisAppBar(title: l.settings, showBack: true),
       body: GradientBackground(
         child: SafeArea(
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              // Appearance section
               NavisCard(
                 padding: EdgeInsets.zero,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                      child: Text(
-                        'APPEARANCE',
-                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                              color: AppColors.cyan,
-                              letterSpacing: 1.2,
-                            ),
-                      ),
+                    _SectionHeader(
+                      label: l.appearance.toUpperCase(),
                     ),
                     SwitchListTile(
-                      title: const Text('Dark Mode'),
-                      subtitle: const Text('Use dark theme'),
-                      value: isDarkMode,
+                      title: Text(l.darkMode),
+                      subtitle: Text(
+                        themeMode == ThemeMode.dark
+                            ? l.darkThemeActive
+                            : l.lightThemeActive,
+                      ),
+                      value: themeMode == ThemeMode.dark,
                       activeTrackColor: AppColors.cyan.withValues(alpha: 0.5),
                       activeThumbColor: AppColors.cyan,
                       onChanged: (value) {
-                        ref.read(themeModeProvider.notifier).state = value;
+                        ref.read(themeModeProvider.notifier).set(
+                              value ? ThemeMode.dark : ThemeMode.light,
+                            );
                       },
                     ),
                   ],
                 ),
               ),
-
               const SizedBox(height: 12),
-
-              // Language section
               NavisCard(
                 padding: EdgeInsets.zero,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                      child: Text(
-                        'LANGUAGE',
-                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                              color: AppColors.cyan,
-                              letterSpacing: 1.2,
-                            ),
-                      ),
+                    _SectionHeader(
+                      label: l.language.toUpperCase(),
                     ),
                     ListTile(
-                      title: const Text('Language'),
-                      subtitle: const Text('English'),
+                      title: Text(l.language),
+                      subtitle: Text(languageLabel),
                       trailing: Icon(
                         Icons.chevron_right,
                         color: AppColors.textSecondary.withValues(alpha: 0.5),
                       ),
-                      onTap: () {},
+                      onTap: () => _showLanguagePicker(
+                        context,
+                        ref,
+                        locale,
+                      ),
                     ),
                   ],
                 ),
               ),
-
               const SizedBox(height: 12),
-
-              // Notifications section
               NavisCard(
                 padding: EdgeInsets.zero,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                      child: Text(
-                        'NOTIFICATIONS',
-                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                              color: AppColors.cyan,
-                              letterSpacing: 1.2,
-                            ),
-                      ),
+                    _SectionHeader(
+                      label: l.notifications.toUpperCase(),
                     ),
                     SwitchListTile(
-                      title: const Text('Document Expiry Alerts'),
-                      subtitle:
-                          const Text('Get notified before documents expire'),
-                      value: true,
+                      title: Text(l.documentExpiryAlerts),
+                      subtitle: Text(l.expiryAlertsSubtitle),
+                      value: expiryAlerts,
                       activeTrackColor: AppColors.cyan.withValues(alpha: 0.5),
                       activeThumbColor: AppColors.cyan,
-                      onChanged: (value) {},
+                      onChanged: (value) {
+                        ref.read(expiryAlertsProvider.notifier).set(value);
+                      },
                     ),
                     Divider(
                       height: 1,
@@ -124,49 +118,42 @@ class SettingsScreen extends ConsumerWidget {
                       endIndent: 16,
                     ),
                     SwitchListTile(
-                      title: const Text('Event Reminders'),
-                      subtitle:
-                          const Text('Get reminded about upcoming events'),
-                      value: true,
+                      title: Text(l.eventReminders),
+                      subtitle: Text(l.eventRemindersSubtitle),
+                      value: eventReminders,
                       activeTrackColor: AppColors.cyan.withValues(alpha: 0.5),
                       activeThumbColor: AppColors.cyan,
-                      onChanged: (value) {},
+                      onChanged: (value) {
+                        ref.read(eventRemindersProvider.notifier).set(value);
+                      },
                     ),
                   ],
                 ),
               ),
-
               const SizedBox(height: 12),
-
-              // Data & Storage section
               NavisCard(
                 padding: EdgeInsets.zero,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                      child: Text(
-                        'DATA & STORAGE',
-                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                              color: AppColors.cyan,
-                              letterSpacing: 1.2,
-                            ),
-                      ),
+                    _SectionHeader(
+                      label: l.dataAndStorage.toUpperCase(),
                     ),
                     ListTile(
-                      leading: const Icon(Icons.cached,
-                          color: AppColors.textSecondary),
-                      title: const Text('Clear Image Cache'),
-                      subtitle:
-                          const Text('Remove cached photos and map tiles'),
+                      leading: const Icon(
+                        Icons.cached,
+                        color: AppColors.textSecondary,
+                      ),
+                      title: Text(l.clearImageCache),
+                      subtitle: Text(l.clearImageCacheSubtitle),
                       onTap: () async {
                         await CachedNetworkImage.evictFromCache('');
                         await DefaultCacheManager().emptyCache();
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Image cache cleared')),
+                            SnackBar(
+                              content: Text(l.imageCacheCleared),
+                            ),
                           );
                         }
                       },
@@ -177,11 +164,12 @@ class SettingsScreen extends ConsumerWidget {
                       indent: 56,
                     ),
                     ListTile(
-                      leading: const Icon(Icons.delete_sweep,
-                          color: AppColors.textSecondary),
-                      title: const Text('Clear Offline Data'),
-                      subtitle:
-                          const Text('Remove cached boats, documents, trips'),
+                      leading: const Icon(
+                        Icons.delete_sweep,
+                        color: AppColors.textSecondary,
+                      ),
+                      title: Text(l.clearOfflineData),
+                      subtitle: Text(l.clearOfflineDataSubtitle),
                       onTap: () async {
                         final db = ref.read(localDatabaseProvider);
                         await db.clearTable('boats');
@@ -189,8 +177,9 @@ class SettingsScreen extends ConsumerWidget {
                         await db.clearTable('trips');
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Offline data cleared')),
+                            SnackBar(
+                              content: Text(l.offlineDataCleared),
+                            ),
                           );
                         }
                       },
@@ -198,51 +187,40 @@ class SettingsScreen extends ConsumerWidget {
                   ],
                 ),
               ),
-
               const SizedBox(height: 12),
-
-              // Danger zone
               NavisCard(
                 padding: EdgeInsets.zero,
                 borderColor: AppColors.red.withValues(alpha: 0.2),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                      child: Text(
-                        'ACCOUNT',
-                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                              color: AppColors.red.withValues(alpha: 0.8),
-                              letterSpacing: 1.2,
-                            ),
-                      ),
+                    _SectionHeader(
+                      label: l.account.toUpperCase(),
+                      color: AppColors.red.withValues(alpha: 0.8),
                     ),
                     Padding(
                       padding: const EdgeInsets.all(16),
                       child: NavisButton(
-                        label: 'Log Out',
+                        label: l.logout,
                         icon: Icons.logout,
                         variant: NavisButtonVariant.danger,
                         onPressed: () async {
                           final confirmed = await showDialog<bool>(
                             context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Log Out'),
-                              content: const Text(
-                                  'Are you sure you want to log out?'),
+                            builder: (ctx) => AlertDialog(
+                              title: Text(l.logout),
+                              content: Text(l.logoutConfirm),
                               actions: [
                                 TextButton(
-                                  onPressed: () =>
-                                      Navigator.pop(context, false),
-                                  child: const Text('Cancel'),
+                                  onPressed: () => Navigator.pop(ctx, false),
+                                  child: Text(l.cancel),
                                 ),
                                 TextButton(
-                                  onPressed: () => Navigator.pop(context, true),
+                                  onPressed: () => Navigator.pop(ctx, true),
                                   style: TextButton.styleFrom(
                                     foregroundColor: AppColors.red,
                                   ),
-                                  child: const Text('Log Out'),
+                                  child: Text(l.logout),
                                 ),
                               ],
                             ),
@@ -263,6 +241,118 @@ class SettingsScreen extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+
+  void _showLanguagePicker(
+    BuildContext context,
+    WidgetRef ref,
+    Locale? currentLocale,
+  ) {
+    final l = AppLocalizations.of(context)!;
+    final currentCode = currentLocale?.languageCode;
+
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Text(l.selectLanguage),
+        contentPadding: const EdgeInsets.symmetric(vertical: 8),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _LanguageOption(
+              label: l.systemDefault,
+              selected: currentCode == null,
+              onTap: () {
+                ref.read(localeProvider.notifier).set(null);
+                Navigator.pop(ctx);
+              },
+            ),
+            _LanguageOption(
+              label: 'English',
+              flag: '🇬🇧',
+              selected: currentCode == 'en',
+              onTap: () {
+                ref.read(localeProvider.notifier).set(const Locale('en'));
+                Navigator.pop(ctx);
+              },
+            ),
+            _LanguageOption(
+              label: 'Español',
+              flag: '🇪🇸',
+              selected: currentCode == 'es',
+              onTap: () {
+                ref.read(localeProvider.notifier).set(const Locale('es'));
+                Navigator.pop(ctx);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({
+    required this.label,
+    this.color = AppColors.cyan,
+  });
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              color: color,
+              letterSpacing: 1.2,
+            ),
+      ),
+    );
+  }
+}
+
+class _LanguageOption extends StatelessWidget {
+  const _LanguageOption({
+    required this.label,
+    this.flag,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final String? flag;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: flag != null
+          ? Text(
+              flag!,
+              style: const TextStyle(fontSize: 24),
+            )
+          : const Icon(
+              Icons.phone_android,
+              color: AppColors.textSecondary,
+            ),
+      title: Text(label),
+      trailing: selected
+          ? const Icon(
+              Icons.check_circle,
+              color: AppColors.cyan,
+            )
+          : null,
+      onTap: onTap,
     );
   }
 }

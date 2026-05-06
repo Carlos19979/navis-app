@@ -26,7 +26,8 @@ class NavisCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget content = blur ? _buildGlassCard() : _buildSolidCard();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    Widget content = blur ? _buildGlassCard(isDark) : _buildSolidCard(isDark);
 
     if (margin != null) {
       content = Padding(padding: margin!, child: content);
@@ -39,17 +40,26 @@ class NavisCard extends StatelessWidget {
     return content;
   }
 
-  Widget _buildGlassCard() {
+  Widget _buildGlassCard(bool isDark) {
+    final defaultBorder =
+        isDark ? AppColors.glassBorder : AppColors.lightDivider;
+    final defaultGradient = isDark
+        ? AppColors.cardGradient
+        : const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xCCFFFFFF), Color(0x99FFFFFF)],
+          );
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
           decoration: BoxDecoration(
-            gradient: gradient ?? AppColors.cardGradient,
+            gradient: gradient ?? defaultGradient,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: borderColor ?? AppColors.glassBorder,
+              color: borderColor ?? defaultBorder,
               width: 0.5,
             ),
           ),
@@ -62,18 +72,21 @@ class NavisCard extends StatelessWidget {
     );
   }
 
-  Widget _buildSolidCard() {
+  Widget _buildSolidCard(bool isDark) {
+    final cardColor = isDark ? AppColors.darkCard : AppColors.lightCard;
+    final defaultBorder =
+        isDark ? AppColors.glassBorder : AppColors.lightDivider;
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.darkCard,
+        color: cardColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: borderColor ?? AppColors.glassBorder,
+          color: borderColor ?? defaultBorder,
           width: 0.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
+            color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.06),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),

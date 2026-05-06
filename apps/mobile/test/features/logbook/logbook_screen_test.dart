@@ -145,7 +145,7 @@ void main() {
         findsOneWidget,
       );
       expect(
-        find.byTooltip('Record trip'),
+        find.text('Start Trip'),
         findsOneWidget,
       );
     });

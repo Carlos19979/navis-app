@@ -8,6 +8,7 @@ import 'package:navis_mobile/features/weather/presentation/widgets/forecast_card
 import 'package:navis_mobile/features/weather/presentation/widgets/wave_chart.dart';
 import 'package:navis_mobile/features/weather/presentation/widgets/wind_indicator.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
@@ -18,13 +19,14 @@ class WeatherScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final currentWeather = ref.watch(currentWeatherProvider);
     final forecast = ref.watch(forecastProvider);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
-      appBar: const NavisAppBar(title: 'Weather', transparent: true),
+      appBar: NavisAppBar(title: l.weather, transparent: true),
       body: GradientBackground(
         child: currentWeather.when(
           loading: () => const NavisLoading(),
@@ -61,7 +63,7 @@ class WeatherScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 24),
                       Text(
-                        'Location access is needed\nfor weather data.',
+                        l.locationAccessNeeded,
                         textAlign: TextAlign.center,
                         style: Theme.of(context)
                             .textTheme
@@ -76,7 +78,7 @@ class WeatherScreen extends ConsumerWidget {
 
             return RefreshIndicator(
               color: AppColors.cyan,
-              backgroundColor: const Color(0xFF1B2A4A),
+              backgroundColor: AppColors.darkSurface,
               onRefresh: () async {
                 ref.invalidate(currentWeatherProvider);
                 ref.invalidate(forecastProvider);
@@ -114,16 +116,22 @@ class WeatherScreen extends ConsumerWidget {
                                 curve: Curves.easeOut,
                               ),
                           const SizedBox(height: 4),
-                          Text(
-                            weather.description,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
-                                  color: AppColors.textSecondary,
-                                  letterSpacing: 0.5,
-                                ),
-                          ).animate().fadeIn(
+                          Builder(builder: (context) {
+                            final isDark =
+                                Theme.of(context).brightness == Brightness.dark;
+                            return Text(
+                              weather.description,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(
+                                    color: isDark
+                                        ? AppColors.textSecondary
+                                        : AppColors.textLightSecondary,
+                                    letterSpacing: 0.5,
+                                  ),
+                            );
+                          }).animate().fadeIn(
                                 delay: 200.ms,
                                 duration: 500.ms,
                               ),
@@ -140,27 +148,40 @@ class WeatherScreen extends ConsumerWidget {
                           Expanded(
                             child: Column(
                               children: [
-                                Text(
-                                  'Current Conditions',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleSmall
-                                      ?.copyWith(
-                                        color: AppColors.textSecondary,
-                                        letterSpacing: 0.5,
+                                Builder(builder: (context) {
+                                  final isDark = Theme.of(context).brightness ==
+                                      Brightness.dark;
+                                  return Column(
+                                    children: [
+                                      Text(
+                                        l.currentConditions,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleSmall
+                                            ?.copyWith(
+                                              color: isDark
+                                                  ? AppColors.textSecondary
+                                                  : AppColors
+                                                      .textLightSecondary,
+                                              letterSpacing: 0.5,
+                                            ),
                                       ),
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  '${weather.temperature.toStringAsFixed(1)}°C',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headlineMedium
-                                      ?.copyWith(
-                                        color: AppColors.textPrimary,
-                                        fontWeight: FontWeight.w600,
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        '${weather.temperature.toStringAsFixed(1)}°C',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .headlineMedium
+                                            ?.copyWith(
+                                              color: isDark
+                                                  ? AppColors.textPrimary
+                                                  : AppColors.textLight,
+                                              fontWeight: FontWeight.w600,
+                                            ),
                                       ),
-                                ),
+                                    ],
+                                  );
+                                }),
                               ],
                             ),
                           ),
@@ -191,7 +212,7 @@ class WeatherScreen extends ConsumerWidget {
                         Expanded(
                           child: _WeatherStatPill(
                             icon: Icons.air,
-                            label: 'Wind',
+                            label: l.wind,
                             value: '${weather.windSpeed.toStringAsFixed(0)} kt',
                           ),
                         ),
@@ -199,7 +220,7 @@ class WeatherScreen extends ConsumerWidget {
                         Expanded(
                           child: _WeatherStatPill(
                             icon: Icons.waves,
-                            label: 'Waves',
+                            label: l.waves,
                             value: '${weather.waveHeight.toStringAsFixed(1)} m',
                           ),
                         ),
@@ -208,7 +229,7 @@ class WeatherScreen extends ConsumerWidget {
                           Expanded(
                             child: _WeatherStatPill(
                               icon: Icons.water_drop,
-                              label: 'Humidity',
+                              label: l.humidity,
                               value: '${weather.humidity}%',
                             ),
                           ),
@@ -230,14 +251,20 @@ class WeatherScreen extends ConsumerWidget {
                     // Forecast header
                     Padding(
                       padding: const EdgeInsets.only(left: 4),
-                      child: Text(
-                        '7-Day Forecast',
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  color: AppColors.textPrimary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                      ),
+                      child: Builder(builder: (context) {
+                        final isDark =
+                            Theme.of(context).brightness == Brightness.dark;
+                        return Text(
+                          l.sevenDayForecast,
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: isDark
+                                        ? AppColors.textPrimary
+                                        : AppColors.textLight,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                        );
+                      }),
                     ),
                     const SizedBox(height: 12),
 
@@ -250,34 +277,26 @@ class WeatherScreen extends ConsumerWidget {
                       ),
                       data: (days) {
                         if (days.isEmpty) {
-                          return const Padding(
-                            padding: EdgeInsets.all(16),
-                            child: Text(
-                              'Forecast data not available.',
-                              style: TextStyle(
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
+                          return Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Builder(builder: (context) {
+                              final isDark = Theme.of(context).brightness ==
+                                  Brightness.dark;
+                              return Text(
+                                l.forecastNotAvailable,
+                                style: TextStyle(
+                                  color: isDark
+                                      ? AppColors.textSecondary
+                                      : AppColors.textLightSecondary,
+                                ),
+                              );
+                            }),
                           );
                         }
-                        return Column(
-                          children: [
-                            for (int i = 0; i < days.length; i++)
-                              ForecastCard(weather: days[i])
-                                  .animate()
-                                  .fadeIn(
-                                    delay: (600 + i * 80).ms,
-                                    duration: 400.ms,
-                                  )
-                                  .slideX(
-                                    begin: 0.05,
-                                    end: 0,
-                                    delay: (600 + i * 80).ms,
-                                    duration: 400.ms,
-                                    curve: Curves.easeOut,
-                                  ),
-                          ],
-                        );
+                        return ForecastCard(days: days).animate().fadeIn(
+                              delay: 600.ms,
+                              duration: 400.ms,
+                            );
                       },
                     ),
                   ],
@@ -304,6 +323,7 @@ class _WeatherStatPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GlassContainer(
       borderRadius: 24,
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
@@ -317,14 +337,16 @@ class _WeatherStatPill extends StatelessWidget {
             value,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: isDark ? AppColors.textPrimary : AppColors.textLight,
                 ),
           ),
           const SizedBox(height: 2),
           Text(
             label,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: AppColors.textSecondary,
+                  color: isDark
+                      ? AppColors.textSecondary
+                      : AppColors.textLightSecondary,
                 ),
           ),
         ],

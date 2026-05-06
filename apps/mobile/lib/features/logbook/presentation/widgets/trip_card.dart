@@ -16,7 +16,7 @@ class TripCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return NavisCard(
       margin: const EdgeInsets.only(bottom: 10),
-      onTap: () => context.go('/trips/${trip.id}'),
+      onTap: () => context.push('/trips/${trip.id}'),
       padding: const EdgeInsets.all(14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

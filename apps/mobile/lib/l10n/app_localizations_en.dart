@@ -448,4 +448,490 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get featured => 'Featured';
+
+  @override
+  String get appearance => 'Appearance';
+
+  @override
+  String get darkThemeActive => 'Dark theme active';
+
+  @override
+  String get lightThemeActive => 'Light theme active';
+
+  @override
+  String get systemDefault => 'System default';
+
+  @override
+  String get selectLanguage => 'Select Language';
+
+  @override
+  String get documentExpiryAlerts => 'Document Expiry Alerts';
+
+  @override
+  String get expiryAlertsSubtitle => 'Get notified before documents expire';
+
+  @override
+  String get eventReminders => 'Event Reminders';
+
+  @override
+  String get eventRemindersSubtitle => 'Get reminded about upcoming events';
+
+  @override
+  String get dataAndStorage => 'Data & Storage';
+
+  @override
+  String get clearImageCache => 'Clear Image Cache';
+
+  @override
+  String get clearImageCacheSubtitle => 'Remove cached photos and map tiles';
+
+  @override
+  String get clearOfflineData => 'Clear Offline Data';
+
+  @override
+  String get clearOfflineDataSubtitle =>
+      'Remove cached boats, documents, trips';
+
+  @override
+  String get imageCacheCleared => 'Image cache cleared';
+
+  @override
+  String get offlineDataCleared => 'Offline data cleared';
+
+  @override
+  String get account => 'Account';
+
+  @override
+  String get deleteBoat => 'Delete Boat';
+
+  @override
+  String deleteBoatConfirm(String name) {
+    return 'Are you sure you want to delete \"$name\"? This will also remove all associated documents and trips.';
+  }
+
+  @override
+  String get certificates => 'Certificates, insurance, inspections';
+
+  @override
+  String get tripHistory => 'Trip history and statistics';
+
+  @override
+  String get modifyBoatDetails => 'Modify boat details';
+
+  @override
+  String get removePermanently => 'Remove this boat permanently';
+
+  @override
+  String get details => 'Details';
+
+  @override
+  String get type => 'Type';
+
+  @override
+  String get statistics => 'Statistics';
+
+  @override
+  String get recordTrip => 'Record Trip';
+
+  @override
+  String get boat => 'Boat';
+
+  @override
+  String get boatPhoto => 'Boat photo';
+
+  @override
+  String get goBack => 'Go back';
+
+  @override
+  String get addNewBoat => 'Add new boat';
+
+  @override
+  String get homePortOptional => 'Home Port (optional)';
+
+  @override
+  String get wind => 'Wind';
+
+  @override
+  String get waves => 'Waves';
+
+  @override
+  String get humidity => 'Humidity';
+
+  @override
+  String get currentConditions => 'Current Conditions';
+
+  @override
+  String get calm => 'Calm';
+
+  @override
+  String get moderate => 'Moderate';
+
+  @override
+  String get rough => 'Rough';
+
+  @override
+  String get sendResetLink => 'Send Reset Link';
+
+  @override
+  String get passwordResetSent =>
+      'Password reset email sent. Check your inbox.';
+
+  @override
+  String get failedToSendResetEmail => 'Failed to send reset email';
+
+  @override
+  String get tripSaved => 'Trip saved!';
+
+  @override
+  String get failedToSaveTrip => 'Failed to save trip';
+
+  @override
+  String get tripDeleted => 'Trip deleted';
+
+  @override
+  String get selectArrivalPort => 'Select Arrival Port';
+
+  @override
+  String get commaSeparatedNames => 'Comma-separated names';
+
+  @override
+  String get crewMembers => 'Crew Members';
+
+  @override
+  String get updateTrip => 'Update Trip';
+
+  @override
+  String get saveTrip => 'Save Trip';
+
+  @override
+  String get notLoggedIn => 'Not logged in';
+
+  @override
+  String get helpAndSupport => 'Help & Support';
+
+  @override
+  String get aboutNavis => 'About Navis';
+
+  @override
+  String get speedAbbr => 'SPD';
+
+  @override
+  String get headingAbbr => 'HDG';
+
+  @override
+  String get distanceAbbr => 'DIST';
+
+  @override
+  String get timeAbbr => 'TIME';
+
+  @override
+  String get alert => 'Alert';
+
+  @override
+  String get daysBeforeExpiry => 'days before expiry';
+
+  @override
+  String get selectLocation => 'Select Location';
+
+  @override
+  String get totalEngineHours => 'Total engine hours';
+
+  @override
+  String get averageSpeed => 'Average speed';
+
+  @override
+  String thisYear(String year) {
+    return 'This Year ($year)';
+  }
+
+  @override
+  String get locationAccessNeeded =>
+      'Location access is needed\nfor weather data.';
+
+  @override
+  String get sevenDayForecast => '7-Day Forecast';
+
+  @override
+  String get forecastNotAvailable => 'Forecast data not available.';
+
+  @override
+  String memberSince(String date) {
+    return 'Member since $date';
+  }
+
+  @override
+  String get deleteTrip => 'Delete Trip';
+
+  @override
+  String get deleteTripConfirm => 'Are you sure you want to delete this trip?';
+
+  @override
+  String get shareTrip => 'Share trip';
+
+  @override
+  String get editTrip => 'Edit trip';
+
+  @override
+  String get notRecorded => 'Not recorded';
+
+  @override
+  String get enterValidNumber => 'Enter a valid number';
+
+  @override
+  String get completeTrip => 'Complete Trip';
+
+  @override
+  String get arrivalPort => 'Arrival Port';
+
+  @override
+  String get savingTrip => 'Saving trip...';
+
+  @override
+  String get fuelUnit => 'L';
+
+  @override
+  String get locationPermissionRequired =>
+      'Location permission is required to record trips';
+
+  @override
+  String get locationPermissionDenied =>
+      'Location permission permanently denied. Enable in settings.';
+
+  @override
+  String get resetPassword => 'Reset Password';
+
+  @override
+  String get boatManagement => 'BOAT MANAGEMENT';
+
+  @override
+  String get showPassword => 'Show password';
+
+  @override
+  String get hidePassword => 'Hide password';
+
+  @override
+  String get pleaseEnterBoatName => 'Please enter the boat name';
+
+  @override
+  String get pleaseEnterRegistration => 'Please enter the registration number';
+
+  @override
+  String get pleaseEnterLength => 'Please enter the length';
+
+  @override
+  String get pleaseEnterEmail => 'Please enter your email';
+
+  @override
+  String get pleaseEnterPassword => 'Please enter your password';
+
+  @override
+  String get boatUpdated => 'Boat updated successfully';
+
+  @override
+  String get boatCreated => 'Boat created successfully';
+
+  @override
+  String get failedToSaveBoat => 'Failed to save boat';
+
+  @override
+  String get newBoat => 'New Boat';
+
+  @override
+  String get boatDetailsSection => 'Boat Details';
+
+  @override
+  String get pickLocationOnMap => 'Pick location on map';
+
+  @override
+  String get updateBoat => 'Update Boat';
+
+  @override
+  String get createBoat => 'Create Boat';
+
+  @override
+  String get createAccount => 'Create Account';
+
+  @override
+  String get joinNavisSubtitle => 'JOIN NAVIS AND MANAGE YOUR BOAT';
+
+  @override
+  String get pleaseConfirmPassword => 'Please confirm your password';
+
+  @override
+  String get confirm => 'Confirm';
+
+  @override
+  String get selectHomePort => 'Select Home Port';
+
+  @override
+  String get documentInfo => 'Document Info';
+
+  @override
+  String get alertsAndNotes => 'Alerts & Notes';
+
+  @override
+  String get renewalDetails => 'Renewal Details';
+
+  @override
+  String get documentScan => 'Document scan';
+
+  @override
+  String get saveDocument => 'Save Document';
+
+  @override
+  String get updateDocument => 'Update Document';
+
+  @override
+  String get interested => 'Interested';
+
+  @override
+  String get notInterested => 'Not Interested';
+
+  @override
+  String get eventDetails => 'Event Details';
+
+  @override
+  String get departurePort => 'Departure Port';
+
+  @override
+  String get pleaseEnterDeparturePort => 'Please enter the departure port';
+
+  @override
+  String get arrivalPortOptional => 'Arrival Port (optional)';
+
+  @override
+  String get engineHoursOptional => 'Engine Hours (optional)';
+
+  @override
+  String get fuelUsedOptional => 'Fuel Used (liters, optional)';
+
+  @override
+  String get crewMembersCommaSeparated => 'Crew Members (comma-separated)';
+
+  @override
+  String get tripUpdated => 'Trip updated';
+
+  @override
+  String get failedToUpdateTrip => 'Failed to update trip';
+
+  @override
+  String get somethingWentWrong => 'Something went wrong';
+
+  @override
+  String get navisUser => 'Navis User';
+
+  @override
+  String get previousMonth => 'Previous month';
+
+  @override
+  String get nextMonth => 'Next month';
+
+  @override
+  String get nearbyPorts => 'Nearby Ports';
+
+  @override
+  String get portTypeMarina => 'Marina';
+
+  @override
+  String get portTypeAnchorage => 'Anchorage';
+
+  @override
+  String get portTypeFuel => 'Fuel Station';
+
+  @override
+  String get portTypeCommercial => 'Commercial';
+
+  @override
+  String get portTypeFishing => 'Fishing Port';
+
+  @override
+  String get portTypeOther => 'Other';
+
+  @override
+  String depthLabel(Object depth) {
+    return 'Depth: ${depth}m';
+  }
+
+  @override
+  String vhfChannelLabel(Object channel) {
+    return 'VHF Ch $channel';
+  }
+
+  @override
+  String get portFacilities => 'Facilities';
+
+  @override
+  String get noNearbyPorts => 'No ports found nearby';
+
+  @override
+  String get tapPortForDetails => 'Tap a port marker for details';
+
+  @override
+  String get docTypeRegistration => 'Registration';
+
+  @override
+  String get docTypeInsurance => 'Insurance';
+
+  @override
+  String get docTypeInspection => 'Inspection';
+
+  @override
+  String get docTypeLicense => 'License';
+
+  @override
+  String get docTypeSafetyCertificate => 'Safety Certificate';
+
+  @override
+  String get docTypeRadioLicense => 'Radio License';
+
+  @override
+  String get docTypePollutionCertificate => 'Pollution Certificate';
+
+  @override
+  String get docTypeMedicalCertificate => 'Medical Certificate';
+
+  @override
+  String get docTypeLifeRaft => 'Life Raft';
+
+  @override
+  String get docTypeFireExtinguisher => 'Fire Extinguisher';
+
+  @override
+  String get docTypeFlares => 'Flares';
+
+  @override
+  String get docTypeFirstAidKit => 'First Aid Kit';
+
+  @override
+  String get docTypeFishingPermit => 'Fishing Permit';
+
+  @override
+  String get confirmLocation => 'Confirm location';
+
+  @override
+  String get portNameHint => 'Port name (e.g. Cala Blava)';
+
+  @override
+  String get tapMapToSelect => 'Tap the map to select a location';
+
+  @override
+  String get tapMapToSetHomePort => 'Tap the map to set your home port';
+
+  @override
+  String get zoomIn => 'Zoom in';
+
+  @override
+  String get zoomOut => 'Zoom out';
+
+  @override
+  String get centerOnGps => 'Center on GPS';
+
+  @override
+  String get toggleSeamarks => 'Toggle sea marks';
+
+  @override
+  String get togglePorts => 'Show ports';
+
+  @override
+  String get toggleTripTracks => 'Show trip tracks';
 }

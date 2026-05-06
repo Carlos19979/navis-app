@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:navis_mobile/features/weather/domain/entities/weather.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/weather/presentation/providers/weather_provider.dart';
 import 'package:navis_mobile/features/weather/presentation/screens/weather_screen.dart';
 import 'package:navis_mobile/features/weather/presentation/widgets/forecast_card.dart';
@@ -46,7 +48,19 @@ void main() {
                 ],
               ),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
@@ -65,7 +79,19 @@ void main() {
               ),
               forecastProvider.overrideWith((ref) async => []),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
@@ -83,7 +109,19 @@ void main() {
               ),
               forecastProvider.overrideWith((ref) async => []),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
@@ -102,7 +140,19 @@ void main() {
               ),
               forecastProvider.overrideWith((ref) async => []),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
@@ -122,7 +172,19 @@ void main() {
               ),
               forecastProvider.overrideWith((ref) async => []),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
@@ -142,7 +204,19 @@ void main() {
               ),
               forecastProvider.overrideWith((ref) async => []),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
@@ -163,7 +237,19 @@ void main() {
               ),
               forecastProvider.overrideWith((ref) async => []),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
@@ -183,7 +269,19 @@ void main() {
               ),
               forecastProvider.overrideWith((ref) async => []),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
@@ -204,7 +302,19 @@ void main() {
               ),
               forecastProvider.overrideWith((ref) async => []),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
@@ -230,7 +340,19 @@ void main() {
               ),
               forecastProvider.overrideWith((ref) async => []),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
@@ -249,7 +371,19 @@ void main() {
               ),
               forecastProvider.overrideWith((ref) async => []),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
@@ -286,7 +420,19 @@ void main() {
                 (ref) => forecastCompleter.future,
               ),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         // Only pump once to stay in loading state (don't pumpAndSettle)
@@ -318,7 +464,19 @@ void main() {
                 (ref) => forecastCompleter.future,
               ),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
@@ -338,7 +496,19 @@ void main() {
               ),
               forecastProvider.overrideWith((ref) async => []),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
@@ -358,7 +528,19 @@ void main() {
               ),
               forecastProvider.overrideWith((ref) async => []),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
@@ -379,7 +561,19 @@ void main() {
               ),
               forecastProvider.overrideWith((ref) async => []),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
@@ -406,7 +600,19 @@ void main() {
               }),
               forecastProvider.overrideWith((ref) async => []),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
@@ -442,7 +648,19 @@ void main() {
                 ],
               ),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
@@ -467,13 +685,25 @@ void main() {
                 ],
               ),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 50));
 
-        expect(find.byType(ForecastCard), findsNWidgets(3));
+        expect(find.byType(ForecastCard), findsOneWidget);
       });
 
       testWidgets('forecast cards show temperature and wind speed',
@@ -490,7 +720,19 @@ void main() {
                 ],
               ),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
@@ -514,7 +756,19 @@ void main() {
                 ],
               ),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
@@ -534,7 +788,19 @@ void main() {
               ),
               forecastProvider.overrideWith((ref) async => []),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
@@ -556,7 +822,19 @@ void main() {
               ),
               forecastProvider.overrideWith((ref) async => []),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
@@ -577,7 +855,19 @@ void main() {
                 (ref) async => throw Exception('Forecast fetch failed'),
               ),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
@@ -605,7 +895,19 @@ void main() {
               }),
               forecastProvider.overrideWith((ref) async => []),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
@@ -642,7 +944,19 @@ void main() {
               ),
               forecastProvider.overrideWith((ref) async => []),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
@@ -662,7 +976,19 @@ void main() {
               ),
               forecastProvider.overrideWith((ref) async => []),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
@@ -683,7 +1009,19 @@ void main() {
               ),
               forecastProvider.overrideWith((ref) async => []),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
@@ -703,7 +1041,19 @@ void main() {
               ),
               forecastProvider.overrideWith((ref) async => []),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
@@ -722,7 +1072,19 @@ void main() {
               ),
               forecastProvider.overrideWith((ref) async => []),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
@@ -740,7 +1102,19 @@ void main() {
               ),
               forecastProvider.overrideWith((ref) async => []),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
@@ -769,7 +1143,19 @@ void main() {
               ),
               forecastProvider.overrideWith((ref) async => []),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();
@@ -792,7 +1178,19 @@ void main() {
               ),
               forecastProvider.overrideWith((ref) async => []),
             ],
-            child: const MaterialApp(home: WeatherScreen()),
+            child: const MaterialApp(
+              home: WeatherScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pump();

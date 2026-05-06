@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/features/events/domain/entities/event.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
 
 class CalendarView extends StatefulWidget {
@@ -48,12 +50,19 @@ class _CalendarViewState extends State<CalendarView> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
     final daysInMonth =
         DateTime(_currentMonth.year, _currentMonth.month + 1, 0).day;
     final firstWeekday =
         DateTime(_currentMonth.year, _currentMonth.month).weekday;
     final eventDays = _eventDaysInMonth();
     final today = DateTime.now();
+
+    final weekdayNames = List.generate(7, (i) {
+      final date = DateTime(2024, 1, i + 1); // 2024-01-01 is a Monday
+      return DateFormat.E(locale).format(date);
+    });
 
     return Column(
       children: [
@@ -67,14 +76,14 @@ class _CalendarViewState extends State<CalendarView> {
               children: [
                 IconButton(
                   onPressed: _previousMonth,
-                  tooltip: 'Previous month',
+                  tooltip: l.previousMonth,
                   icon: const Icon(
                     Icons.chevron_left,
                     color: AppColors.textPrimary,
                   ),
                 ),
                 Text(
-                  '${_monthName(_currentMonth.month)} ${_currentMonth.year}',
+                  DateFormat.yMMMM(locale).format(_currentMonth),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: AppColors.textPrimary,
                         fontWeight: FontWeight.w600,
@@ -82,7 +91,7 @@ class _CalendarViewState extends State<CalendarView> {
                 ),
                 IconButton(
                   onPressed: _nextMonth,
-                  tooltip: 'Next month',
+                  tooltip: l.nextMonth,
                   icon: const Icon(
                     Icons.chevron_right,
                     color: AppColors.textPrimary,
@@ -98,7 +107,7 @@ class _CalendarViewState extends State<CalendarView> {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+            children: weekdayNames
                 .map((day) => SizedBox(
                       width: 40,
                       child: Text(
@@ -221,23 +230,5 @@ class _CalendarViewState extends State<CalendarView> {
         ),
       ],
     );
-  }
-
-  String _monthName(int month) {
-    const months = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
-    return months[month - 1];
   }
 }

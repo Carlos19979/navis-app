@@ -14,6 +14,10 @@ import 'package:navis_mobile/features/charts/presentation/providers/chart_provid
 import 'package:navis_mobile/features/charts/presentation/widgets/map_controls.dart';
 import 'package:navis_mobile/features/charts/presentation/widgets/position_indicator.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
+import 'package:navis_mobile/features/ports/domain/entities/port.dart';
+import 'package:navis_mobile/features/ports/presentation/providers/port_provider.dart';
+import 'package:navis_mobile/features/ports/presentation/widgets/port_info_sheet.dart';
+import 'package:navis_mobile/features/ports/presentation/widgets/port_markers_layer.dart';
 
 class ChartScreen extends ConsumerStatefulWidget {
   const ChartScreen({super.key});
@@ -83,54 +87,19 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
               children: [
                 OpenSeaMapTileProvider.baseLayer,
                 if (mapState.showSeamarks) OpenSeaMapTileProvider.seamarkLayer,
+                if (mapState.showPorts)
+                  if (ref.watch(allPortsProvider) case AsyncData(:final value))
+                    PortMarkersLayer(
+                      ports: value,
+                      userPosition: _currentPosition,
+                    ),
                 if (_currentPosition != null && mapState.showPosition)
                   PositionIndicator(position: _currentPosition!),
                 if (boatsAsync case AsyncData(:final value))
-                  MarkerLayer(
-                    markers: [
-                      for (final boat in value)
-                        if (boat.homePortLat != null &&
-                            boat.homePortLon != null)
-                          Marker(
-                            point: LatLng(
-                              boat.homePortLat!,
-                              boat.homePortLon!,
-                            ),
-                            width: 48,
-                            height: 48,
-                            child: Tooltip(
-                              message: '${boat.name}'
-                                  ' \u2014 '
-                                  '${boat.homePort ?? "Home port"}',
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: AppColors.navy.withValues(alpha: 0.7),
-                                  border: Border.all(
-                                    color:
-                                        AppColors.cyan.withValues(alpha: 0.6),
-                                    width: 1.5,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color:
-                                          AppColors.cyan.withValues(alpha: 0.3),
-                                      blurRadius: 8,
-                                      spreadRadius: 1,
-                                    ),
-                                  ],
-                                ),
-                                child: const Center(
-                                  child: Icon(
-                                    Icons.anchor,
-                                    color: AppColors.cyan,
-                                    size: 22,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                    ],
+                  _HomePortMarkers(
+                    boats: value,
+                    nearbyPorts: ref.watch(allPortsProvider).valueOrNull ?? [],
+                    userPosition: _currentPosition,
                   ),
                 if (mapState.showTracks)
                   if (boatsAsync case AsyncData(:final value))
@@ -218,10 +187,10 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
               ref.read(chartProvider.notifier).toggleSeamarks();
             },
             showSeamarks: mapState.showSeamarks,
-            onToggleTracks: () {
-              ref.read(chartProvider.notifier).toggleTracks();
+            onTogglePorts: () {
+              ref.read(chartProvider.notifier).togglePorts();
             },
-            showTracks: mapState.showTracks,
+            showPorts: mapState.showPorts,
           ),
         ],
       ),
@@ -260,5 +229,85 @@ class _TripTracksLayer extends ConsumerWidget {
     if (polylines.isEmpty) return const SizedBox.shrink();
 
     return PolylineLayer(polylines: polylines);
+  }
+}
+
+class _HomePortMarkers extends StatelessWidget {
+  const _HomePortMarkers({
+    required this.boats,
+    required this.nearbyPorts,
+    this.userPosition,
+  });
+
+  final List<Boat> boats;
+  final List<Port> nearbyPorts;
+  final LatLng? userPosition;
+
+  Port? _findMatchingPort(double lat, double lon) {
+    for (final port in nearbyPorts) {
+      final dLat = (port.lat - lat).abs();
+      final dLon = (port.lon - lon).abs();
+      if (dLat < 0.01 && dLon < 0.01) return port;
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MarkerLayer(
+      markers: [
+        for (final boat in boats)
+          if (boat.homePortLat != null && boat.homePortLon != null)
+            Marker(
+              point: LatLng(boat.homePortLat!, boat.homePortLon!),
+              width: 48,
+              height: 48,
+              child: GestureDetector(
+                onTap: () {
+                  final port = _findMatchingPort(
+                    boat.homePortLat!,
+                    boat.homePortLon!,
+                  );
+                  if (port != null) {
+                    showPortInfoSheet(
+                      context,
+                      port: port,
+                      userPosition: userPosition,
+                    );
+                  }
+                },
+                child: Tooltip(
+                  message: '${boat.name}'
+                      ' \u2014 '
+                      '${boat.homePort ?? "Home port"}',
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.navy.withValues(alpha: 0.85),
+                      border: Border.all(
+                        color: AppColors.amber.withValues(alpha: 0.8),
+                        width: 2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.amber.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.sailing,
+                        color: AppColors.amber,
+                        size: 22,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+      ],
+    );
   }
 }

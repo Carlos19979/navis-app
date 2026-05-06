@@ -76,7 +76,12 @@ class TripRepository {
       final data = envelope['data'] as Map<String, dynamic>;
 
       if (offlineRepo != null) {
-        await offlineRepo!.cacheItem('trips', id, data);
+        await offlineRepo!.cacheItem(
+          'trips',
+          id,
+          data,
+          boatId: data['boat_id'] as String?,
+        );
       }
 
       final trip = TripModel.fromJson(data).toEntity();
@@ -216,8 +221,14 @@ class TripRepository {
   Future<void> deleteTrip(String id) async {
     try {
       await _apiClient.delete<void>('/api/v1/trips/$id');
+      if (offlineRepo != null) {
+        await offlineRepo!.removeItem('trips', id);
+      }
     } catch (e) {
       if (_canEnqueue(e)) {
+        if (offlineRepo != null) {
+          await offlineRepo!.removeItem('trips', id);
+        }
         await mutationQueue!.enqueue(
           method: 'DELETE',
           path: '/api/v1/trips/$id',

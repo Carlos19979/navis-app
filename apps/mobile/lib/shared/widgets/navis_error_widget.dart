@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
 
@@ -47,7 +48,7 @@ class NavisErrorWidget extends StatelessWidget {
                   .fadeIn(duration: 300.ms),
               const SizedBox(height: 20),
               Text(
-                'Something went wrong',
+                AppLocalizations.of(context)!.somethingWentWrong,
                 style: Theme.of(context).textTheme.titleMedium,
                 textAlign: TextAlign.center,
               ),
@@ -62,7 +63,7 @@ class NavisErrorWidget extends StatelessWidget {
               if (onRetry != null) ...[
                 const SizedBox(height: 24),
                 NavisButton(
-                  label: 'Retry',
+                  label: AppLocalizations.of(context)!.retry,
                   icon: Icons.refresh_rounded,
                   variant: NavisButtonVariant.secondary,
                   onPressed: onRetry!,

@@ -9,6 +9,7 @@ import 'package:navis_mobile/core/network/notification_service.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/features/auth/domain/auth_state.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 
@@ -52,18 +53,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           borderRadius: BorderRadius.circular(16),
           side: const BorderSide(color: AppColors.glassBorder),
         ),
-        title: const Text(
-          'Reset Password',
-          style: TextStyle(color: AppColors.textPrimary),
+        title: Text(
+          AppLocalizations.of(context)!.resetPassword,
+          style: const TextStyle(color: AppColors.textPrimary),
         ),
         content: TextField(
           controller: emailCtrl,
           autofocus: true,
           keyboardType: TextInputType.emailAddress,
           style: const TextStyle(color: AppColors.textPrimary),
-          decoration: const InputDecoration(
-            labelText: 'Email',
-            prefixIcon: Icon(Icons.email_outlined),
+          decoration: InputDecoration(
+            labelText: AppLocalizations.of(context)!.email,
+            prefixIcon: const Icon(Icons.email_outlined),
           ),
           onSubmitted: (v) => Navigator.of(ctx).pop(v.trim()),
         ),
@@ -71,7 +72,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
             child: Text(
-              'Cancel',
+              AppLocalizations.of(context)!.cancel,
               style: TextStyle(
                 color: AppColors.textSecondary.withValues(alpha: 0.8),
               ),
@@ -82,7 +83,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               backgroundColor: AppColors.cyan,
             ),
             onPressed: () => Navigator.of(ctx).pop(emailCtrl.text.trim()),
-            child: const Text('Send Reset Link'),
+            child: Text(AppLocalizations.of(context)!.sendResetLink),
           ),
         ],
       ),
@@ -93,15 +94,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await ref.read(authRepositoryProvider).resetPassword(email);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Password reset email sent. Check your inbox.'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.passwordResetSent),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send reset email: $e')),
+          SnackBar(
+              content:
+                  Text(AppLocalizations.of(context)!.failedToSendResetEmail)),
         );
       }
     }
@@ -111,6 +114,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final textTheme = Theme.of(context).textTheme;
+    final l = AppLocalizations.of(context)!;
 
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (next.status == AuthStatus.authenticated) {
@@ -184,7 +188,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ).animate().fadeIn(delay: 200.ms, duration: 500.ms),
                     const SizedBox(height: 4),
                     Text(
-                      'BOAT MANAGEMENT',
+                      l.boatManagement,
                       textAlign: TextAlign.center,
                       style: textTheme.bodyMedium?.copyWith(
                         color: AppColors.textSecondary,
@@ -234,14 +238,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
-                      labelText: 'Email',
+                      labelText: l.email,
                       prefixIconData: Icons.email_outlined,
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'Please enter your email';
+                          return l.pleaseEnterEmail;
                         }
                         if (!value.contains('@')) {
-                          return 'Please enter a valid email';
+                          return l.invalidEmail;
                         }
                         return null;
                       },
@@ -260,7 +264,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       obscureText: _obscurePassword,
                       textInputAction: TextInputAction.done,
                       onFieldSubmitted: (_) => _onLogin(),
-                      labelText: 'Password',
+                      labelText: l.password,
                       prefixIconData: Icons.lock_outlined,
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -270,9 +274,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           color: AppColors.textSecondary,
                           size: 20,
                         ),
-                        tooltip: _obscurePassword
-                            ? 'Show password'
-                            : 'Hide password',
+                        tooltip:
+                            _obscurePassword ? l.showPassword : l.hidePassword,
                         onPressed: () {
                           setState(() {
                             _obscurePassword = !_obscurePassword;
@@ -281,10 +284,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter your password';
+                          return l.pleaseEnterPassword;
                         }
                         if (value.length < 6) {
-                          return 'Password must be at least 6 characters';
+                          return l.passwordTooShort;
                         }
                         return null;
                       },
@@ -299,7 +302,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                     // -- Login Button --
                     NavisButton(
-                      label: 'Log In',
+                      label: l.login,
                       onPressed: _onLogin,
                       isLoading: authState.status == AuthStatus.loading,
                     ).animate().fadeIn(delay: 600.ms, duration: 500.ms).slideY(
@@ -315,7 +318,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     GestureDetector(
                       onTap: _onForgotPassword,
                       child: Text(
-                        'Forgot Password?',
+                        l.forgotPassword,
                         textAlign: TextAlign.center,
                         style: textTheme.bodyMedium?.copyWith(
                           color: AppColors.cyan,
@@ -329,14 +332,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       onTap: () => context.go('/register'),
                       child: Text.rich(
                         TextSpan(
-                          text: "Don't have an account? ",
+                          text: '${l.noAccount} ',
                           style: textTheme.bodyMedium?.copyWith(
                             color: AppColors.textSecondary,
                           ),
-                          children: const [
+                          children: [
                             TextSpan(
-                              text: 'Register',
-                              style: TextStyle(
+                              text: l.register,
+                              style: const TextStyle(
                                 color: AppColors.cyan,
                                 fontWeight: FontWeight.w600,
                               ),

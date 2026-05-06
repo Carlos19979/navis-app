@@ -43,7 +43,7 @@ func (h *TripHandler) Create(w http.ResponseWriter, r *http.Request) {
 	validator.TrimStrings(&req)
 
 	// Override BoatID from URL parameter.
-	boatID := chi.URLParam(r, "boatId")
+	boatID := chi.URLParam(r, "id")
 	if boatID != "" {
 		req.BoatID = boatID
 	}
@@ -89,7 +89,7 @@ func (h *TripHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	boatID := chi.URLParam(r, "boatId")
+	boatID := chi.URLParam(r, "id")
 	cursor, limit := pagination.ParseCursor(r)
 	trips, nextCursor, err := h.svc.List(r.Context(), userID, boatID, cursor, limit)
 	if err != nil {
@@ -189,6 +189,23 @@ func (h *TripHandler) Complete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	JSON(w, http.StatusOK, dto.TripResponseFromDomain(trip))
+}
+
+// Delete handles DELETE /trips/{id}.
+func (h *TripHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok {
+		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
+		return
+	}
+
+	id := chi.URLParam(r, "id")
+	if err := h.svc.Delete(r.Context(), userID, id); err != nil {
+		MapDomainError(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // AddTracks handles POST /trips/{id}/tracks.

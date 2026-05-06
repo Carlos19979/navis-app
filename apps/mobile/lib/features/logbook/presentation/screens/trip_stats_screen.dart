@@ -25,6 +25,7 @@ class TripStatsScreen extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         appBar: NavisAppBar(
           title: l10n?.tripStatistics ?? 'Trip Statistics',
+          showBack: true,
         ),
         body: tripsAsync.when(
           loading: () => const NavisShimmer(itemHeight: 120),
@@ -112,7 +113,7 @@ class TripStatsScreen extends ConsumerWidget {
                 if (totalEngine > 0) ...[
                   _StatRow(
                     icon: Icons.engineering,
-                    label: 'Total engine hours',
+                    label: l10n?.totalEngineHours ?? 'Total engine hours',
                     value: '${totalEngine.toStringAsFixed(1)} h',
                   ),
                   const SizedBox(height: 8),
@@ -120,7 +121,7 @@ class TripStatsScreen extends ConsumerWidget {
                 if (stats.totalDistanceNm > 0 && stats.totalHours > 0) ...[
                   _StatRow(
                     icon: Icons.speed,
-                    label: 'Average speed',
+                    label: l10n?.averageSpeed ?? 'Average speed',
                     value:
                         '${(stats.totalDistanceNm / stats.totalHours).toStringAsFixed(1)} kn',
                   ),
@@ -128,7 +129,8 @@ class TripStatsScreen extends ConsumerWidget {
                 ],
                 const SizedBox(height: 16),
                 _SectionTitle(
-                  label: 'This Year ($thisYear)',
+                  label: l10n?.thisYear(thisYear.toString()) ??
+                      'This Year ($thisYear)',
                 ),
                 const SizedBox(height: 8),
                 _StatsGrid(children: [
@@ -190,18 +192,25 @@ class _StatsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: children
-          .map(
-            (child) => SizedBox(
-              width: (MediaQuery.of(context).size.width - 42) / 3,
-              child: child,
+    final rows = <Widget>[];
+    for (var i = 0; i < children.length; i += 3) {
+      final end = (i + 3).clamp(0, children.length);
+      final slice = children.sublist(i, end);
+      rows.add(Row(
+        children: [
+          for (var j = 0; j < 3; j++) ...[
+            if (j > 0) const SizedBox(width: 10),
+            Expanded(
+              child: j < slice.length ? slice[j] : const SizedBox.shrink(),
             ),
-          )
-          .toList(),
-    );
+          ],
+        ],
+      ));
+      if (end < children.length) {
+        rows.add(const SizedBox(height: 10));
+      }
+    }
+    return Column(children: rows);
   }
 }
 

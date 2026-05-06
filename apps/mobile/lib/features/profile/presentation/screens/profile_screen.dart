@@ -8,6 +8,7 @@ import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
 import 'package:navis_mobile/features/profile/presentation/providers/profile_provider.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
@@ -18,18 +19,19 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final profile = ref.watch(profileProvider);
 
     if (profile == null) {
-      return const Scaffold(
-        body: Center(child: Text('Not logged in')),
+      return Scaffold(
+        body: Center(child: Text(l.notLoggedIn)),
       );
     }
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
-      appBar: const NavisAppBar(title: 'Profile', showBack: true),
+      appBar: NavisAppBar(title: l.profile, showBack: true),
       body: GradientBackground(
         child: SafeArea(
           child: SingleChildScrollView(
@@ -75,7 +77,7 @@ class ProfileScreen extends ConsumerWidget {
                 const SizedBox(height: 16),
 
                 Text(
-                  profile.displayName ?? 'Navis User',
+                  profile.displayName ?? l.navisUser,
                   style: Theme.of(context)
                       .textTheme
                       .headlineMedium
@@ -100,7 +102,8 @@ class ProfileScreen extends ConsumerWidget {
                 if (profile.createdAt != null) ...[
                   const SizedBox(height: 4),
                   Text(
-                    'Member since ${NavisDateUtils.formatDate(profile.createdAt!)}',
+                    l.memberSince(
+                        NavisDateUtils.formatDate(profile.createdAt!)),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppColors.textSecondary.withValues(alpha: 0.7),
                         ),
@@ -119,7 +122,7 @@ class ProfileScreen extends ConsumerWidget {
                     children: [
                       _ProfileTile(
                         icon: Icons.settings_outlined,
-                        title: 'Settings',
+                        title: l.settings,
                         onTap: () => context.push('/settings'),
                       ),
                       Divider(
@@ -129,7 +132,7 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                       _ProfileTile(
                         icon: Icons.help_outline,
-                        title: 'Help & Support',
+                        title: l.helpAndSupport,
                         onTap: () {},
                       ),
                       Divider(
@@ -139,7 +142,7 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                       _ProfileTile(
                         icon: Icons.info_outline,
-                        title: 'About Navis',
+                        title: l.aboutNavis,
                         onTap: () {},
                       ),
                     ],
@@ -162,7 +165,7 @@ class ProfileScreen extends ConsumerWidget {
 
                 // Logout button
                 NavisButton(
-                  label: 'Log Out',
+                  label: l.logout,
                   icon: Icons.logout,
                   variant: NavisButtonVariant.danger,
                   onPressed: () => _confirmLogout(context, ref),
@@ -179,15 +182,16 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   void _confirmLogout(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Log Out'),
-        content: const Text('Are you sure you want to log out?'),
+        title: Text(l.logout),
+        content: Text(l.logoutConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+            child: Text(l.cancel),
           ),
           FilledButton(
             onPressed: () async {
@@ -202,7 +206,7 @@ class ProfileScreen extends ConsumerWidget {
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.red,
             ),
-            child: const Text('Log Out'),
+            child: Text(l.logout),
           ),
         ],
       ),

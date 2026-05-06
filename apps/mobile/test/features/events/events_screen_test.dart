@@ -250,7 +250,7 @@ void main() {
       await tester.pump(const Duration(seconds: 1));
 
       expect(
-        find.text('No events match your search.'),
+        find.text('No events found'),
         findsOneWidget,
       );
     });

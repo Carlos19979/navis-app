@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 
 class DocumentStatusBadge extends StatelessWidget {
   const DocumentStatusBadge({super.key, required this.expiryDate});
@@ -13,21 +14,22 @@ class DocumentStatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final Color color;
     final String label;
 
     if (NavisDateUtils.isExpired(expiryDate)) {
       color = AppColors.red;
-      label = 'Expired';
+      label = l.expired;
     } else if (NavisDateUtils.isCritical(expiryDate)) {
       color = AppColors.red;
-      label = 'Critical';
+      label = l.critical;
     } else if (NavisDateUtils.isWarning(expiryDate)) {
       color = AppColors.amber;
-      label = 'Warning';
+      label = l.warning;
     } else {
       color = AppColors.green;
-      label = 'Valid';
+      label = l.valid;
     }
 
     final shouldGlow = NavisDateUtils.isExpired(expiryDate) ||

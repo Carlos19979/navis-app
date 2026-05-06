@@ -16,9 +16,12 @@ class GradientBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final defaultGradient =
+        isDark ? AppColors.oceanGradient : AppColors.lightOceanGradient;
     return Container(
       decoration: BoxDecoration(
-        gradient: gradient ?? AppColors.oceanGradient,
+        gradient: gradient ?? defaultGradient,
       ),
       child: child,
     );

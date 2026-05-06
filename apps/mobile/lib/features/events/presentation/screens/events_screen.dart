@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:navis_mobile/l10n/app_localizations.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -75,12 +77,13 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
   @override
   Widget build(BuildContext context) {
     final eventsAsync = ref.watch(eventsProvider);
+    final l = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
       appBar: NavisAppBar(
-        title: 'Events',
+        title: l.events,
         actions: [
           IconButton(
             icon: Icon(
@@ -105,9 +108,9 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
             ),
             data: (events) {
               if (events.isEmpty) {
-                return const NavisEmptyState(
+                return NavisEmptyState(
                   icon: Icons.event_outlined,
-                  message: 'No upcoming events.',
+                  message: l.noEvents,
                 );
               }
 
@@ -134,7 +137,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                           color: AppColors.textPrimary,
                         ),
                         decoration: InputDecoration(
-                          hintText: 'Search events...',
+                          hintText: l.searchEvents,
                           hintStyle: TextStyle(
                             color:
                                 AppColors.textSecondary.withValues(alpha: 0.6),
@@ -228,9 +231,9 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                   else
                     Expanded(
                       child: filtered.isEmpty
-                          ? const NavisEmptyState(
+                          ? NavisEmptyState(
                               icon: Icons.search_off,
-                              message: 'No events match your search.',
+                              message: l.noEventsFound,
                             )
                           : RefreshIndicator(
                               color: AppColors.cyan,

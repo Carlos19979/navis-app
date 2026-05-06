@@ -79,6 +79,7 @@ func main() {
 	eventRepo := postgres.NewEventRepo(pool)
 	interestRepo := postgres.NewEventInterestRepo(pool)
 	notifLogRepo := postgres.NewNotificationLogRepo(pool)
+	portRepo := postgres.NewPortRepo(pool)
 	deviceTokenRepo := postgres.NewDeviceTokenRepo(pool)
 
 	// Create adapters.
@@ -90,6 +91,7 @@ func main() {
 	docSvc := service.NewDocumentService(docRepo, boatRepo)
 	tripSvc := service.NewTripService(tripRepo, trackRepo)
 	eventSvc := service.NewEventService(eventRepo, interestRepo)
+	portSvc := service.NewPortService(portRepo)
 	weatherSvc := service.NewWeatherService(weatherProvider)
 
 	// Create and start expiration checker cron.
@@ -102,6 +104,7 @@ func main() {
 	docH := handler.NewDocumentHandler(docSvc)
 	tripH := handler.NewTripHandler(tripSvc)
 	eventH := handler.NewEventHandler(eventSvc)
+	portH := handler.NewPortHandler(portSvc)
 	weatherH := handler.NewWeatherHandler(weatherSvc)
 	deviceH := handler.NewDeviceHandler(deviceTokenRepo, notifier)
 	userH := handler.NewUserHandler(boatRepo, docRepo, tripRepo, trackRepo, deviceTokenRepo)
@@ -110,7 +113,7 @@ func main() {
 	jwksURL := cfg.SupabaseURL + "/auth/v1/.well-known/jwks.json"
 
 	r := router.New(
-		boatH, docH, tripH, eventH, weatherH, deviceH, userH,
+		boatH, docH, tripH, eventH, portH, weatherH, deviceH, userH,
 		cfg.SupabaseJWTSecret,
 		jwksURL,
 		cfg.CORSAllowedOrigins,

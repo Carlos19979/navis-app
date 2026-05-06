@@ -1,5 +1,6 @@
 // ignore_for_file: lines_longer_than_80_chars
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +8,7 @@ import 'package:mocktail/mocktail.dart';
 
 import 'package:navis_mobile/features/documents/domain/entities/document.dart';
 import 'package:navis_mobile/features/documents/domain/repositories/document_repository.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
 import 'package:navis_mobile/features/documents/presentation/screens/document_list_screen.dart';
 
@@ -106,7 +108,19 @@ void main() {
           },
         ),
       ],
-      child: MaterialApp.router(routerConfig: router),
+      child: MaterialApp.router(
+        routerConfig: router,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('en'),
+          Locale('es'),
+        ],
+      ),
     );
   }
 
@@ -170,7 +184,7 @@ void main() {
       expect(fab, findsOneWidget);
 
       final fabWidget = tester.widget<FloatingActionButton>(fab);
-      expect(fabWidget.tooltip, 'Add document');
+      expect(fabWidget.tooltip, 'New Document');
     });
 
     testWidgets('FAB navigates to new document page', (tester) async {
@@ -193,7 +207,7 @@ void main() {
         find.text('No documents yet. Add your first document!'),
         findsOneWidget,
       );
-      expect(find.text('Add Document'), findsOneWidget);
+      expect(find.text('New Document'), findsOneWidget);
     });
 
     testWidgets('empty state Add Document button navigates', (tester) async {
@@ -201,7 +215,7 @@ void main() {
       await tester.pumpWidget(buildSubject(docs: []));
       await pumpScreen(tester);
 
-      await tester.tap(find.text('Add Document'));
+      await tester.tap(find.text('New Document'));
       await pumpScreen(tester);
 
       expect(find.text('New Document Page'), findsOneWidget);
@@ -249,7 +263,19 @@ void main() {
                   Future<List<Document>>.delayed(const Duration(days: 1)),
             ),
           ],
-          child: MaterialApp.router(routerConfig: router),
+          child: MaterialApp.router(
+            routerConfig: router,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('en'),
+              Locale('es'),
+            ],
+          ),
         ),
       );
       await tester.pump();

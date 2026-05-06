@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
 
 class WaveChart extends StatefulWidget {
@@ -100,12 +101,18 @@ class _WaveChartState extends State<WaveChart>
             ),
           ),
           const SizedBox(height: 10),
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _WaveLabel(label: 'Calm', color: AppColors.green),
-              _WaveLabel(label: 'Moderate', color: AppColors.amber),
-              _WaveLabel(label: 'Rough', color: AppColors.red),
+              _WaveLabel(
+                  label: AppLocalizations.of(context)!.calm,
+                  color: AppColors.green),
+              _WaveLabel(
+                  label: AppLocalizations.of(context)!.moderate,
+                  color: AppColors.amber),
+              _WaveLabel(
+                  label: AppLocalizations.of(context)!.rough,
+                  color: AppColors.red),
             ],
           ),
         ],

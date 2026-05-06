@@ -6,6 +6,7 @@ import 'package:navis_mobile/features/logbook/presentation/providers/logbook_pro
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
@@ -89,12 +90,14 @@ class _TripEditScreenState extends ConsumerState<TripEditScreen> {
       ref.invalidate(boatTripsProvider(trip.boatId));
 
       if (mounted) {
-        NavisSnackbar.success(context, 'Trip updated');
+        NavisSnackbar.success(
+            context, AppLocalizations.of(context)!.tripUpdated);
         context.pop();
       }
     } catch (e) {
       if (mounted) {
-        NavisSnackbar.error(context, 'Failed to update trip');
+        NavisSnackbar.error(
+            context, AppLocalizations.of(context)!.failedToUpdateTrip);
       }
     } finally {
       if (mounted) {
@@ -114,11 +117,13 @@ class _TripEditScreenState extends ConsumerState<TripEditScreen> {
       );
     }
 
+    final l = AppLocalizations.of(context)!;
+
     return GradientBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: const NavisAppBar(
-          title: 'Edit Trip',
+        appBar: NavisAppBar(
+          title: l.editTrip,
           showBack: true,
         ),
         body: SingleChildScrollView(
@@ -135,13 +140,13 @@ class _TripEditScreenState extends ConsumerState<TripEditScreen> {
                       TextFormField(
                         controller: _departurePortController,
                         textInputAction: TextInputAction.next,
-                        decoration: const InputDecoration(
-                          labelText: 'Departure Port',
-                          prefixIcon: Icon(Icons.flight_takeoff),
+                        decoration: InputDecoration(
+                          labelText: l.departurePort,
+                          prefixIcon: const Icon(Icons.flight_takeoff),
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Please enter the departure port';
+                            return l.pleaseEnterDeparturePort;
                           }
                           return null;
                         },
@@ -150,9 +155,9 @@ class _TripEditScreenState extends ConsumerState<TripEditScreen> {
                       TextFormField(
                         controller: _arrivalPortController,
                         textInputAction: TextInputAction.next,
-                        decoration: const InputDecoration(
-                          labelText: 'Arrival Port (optional)',
-                          prefixIcon: Icon(Icons.flight_land),
+                        decoration: InputDecoration(
+                          labelText: l.arrivalPortOptional,
+                          prefixIcon: const Icon(Icons.flight_land),
                         ),
                       ),
                     ],
@@ -167,14 +172,14 @@ class _TripEditScreenState extends ConsumerState<TripEditScreen> {
                         controller: _engineHoursController,
                         keyboardType: TextInputType.number,
                         textInputAction: TextInputAction.next,
-                        decoration: const InputDecoration(
-                          labelText: 'Engine Hours (optional)',
-                          prefixIcon: Icon(Icons.engineering),
+                        decoration: InputDecoration(
+                          labelText: l.engineHoursOptional,
+                          prefixIcon: const Icon(Icons.engineering),
                         ),
                         validator: (value) {
                           if (value != null && value.isNotEmpty) {
                             if (double.tryParse(value.trim()) == null) {
-                              return 'Please enter a valid number';
+                              return l.validNumber;
                             }
                           }
                           return null;
@@ -185,14 +190,14 @@ class _TripEditScreenState extends ConsumerState<TripEditScreen> {
                         controller: _fuelController,
                         keyboardType: TextInputType.number,
                         textInputAction: TextInputAction.next,
-                        decoration: const InputDecoration(
-                          labelText: 'Fuel Used (liters, optional)',
-                          prefixIcon: Icon(Icons.local_gas_station),
+                        decoration: InputDecoration(
+                          labelText: l.fuelUsedOptional,
+                          prefixIcon: const Icon(Icons.local_gas_station),
                         ),
                         validator: (value) {
                           if (value != null && value.isNotEmpty) {
                             if (double.tryParse(value.trim()) == null) {
-                              return 'Please enter a valid number';
+                              return l.validNumber;
                             }
                           }
                           return null;
@@ -209,9 +214,9 @@ class _TripEditScreenState extends ConsumerState<TripEditScreen> {
                       TextFormField(
                         controller: _crewController,
                         textInputAction: TextInputAction.next,
-                        decoration: const InputDecoration(
-                          labelText: 'Crew Members (comma-separated)',
-                          prefixIcon: Icon(Icons.group),
+                        decoration: InputDecoration(
+                          labelText: l.crewMembersCommaSeparated,
+                          prefixIcon: const Icon(Icons.group),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -219,9 +224,9 @@ class _TripEditScreenState extends ConsumerState<TripEditScreen> {
                         controller: _notesController,
                         maxLines: 3,
                         textInputAction: TextInputAction.done,
-                        decoration: const InputDecoration(
-                          labelText: 'Notes (optional)',
-                          prefixIcon: Icon(Icons.notes),
+                        decoration: InputDecoration(
+                          labelText: l.notesOptional,
+                          prefixIcon: const Icon(Icons.notes),
                           alignLabelWithHint: true,
                         ),
                       ),
@@ -230,7 +235,7 @@ class _TripEditScreenState extends ConsumerState<TripEditScreen> {
                 ),
                 const SizedBox(height: 32),
                 NavisButton(
-                  label: 'Update Trip',
+                  label: l.updateTrip,
                   onPressed: _onSave,
                   isLoading: _isLoading,
                 ),

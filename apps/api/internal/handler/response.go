@@ -68,6 +68,7 @@ func MapDomainError(w http.ResponseWriter, err error) {
 		errors.Is(err, domain.ErrDocumentNotFound),
 		errors.Is(err, domain.ErrTripNotFound),
 		errors.Is(err, domain.ErrEventNotFound),
+		errors.Is(err, domain.ErrPortNotFound),
 		errors.Is(err, domain.ErrNotFound):
 		Error(w, http.StatusNotFound, err.Error(), "NOT_FOUND")
 

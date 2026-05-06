@@ -8,6 +8,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/core/utils/distance_utils.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/charts/data/tile_provider.dart';
@@ -33,17 +34,17 @@ class TripDetailScreen extends ConsumerWidget {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: NavisAppBar(
-          title: 'Trip Details',
+          title: AppLocalizations.of(context)!.tripDetails,
           showBack: true,
           actions: [
             IconButton(
               icon: const Icon(Icons.share_outlined),
-              tooltip: 'Share trip',
+              tooltip: AppLocalizations.of(context)!.shareTrip,
               onPressed: () => _shareTrip(context, ref),
             ),
             IconButton(
               icon: const Icon(Icons.edit_outlined),
-              tooltip: 'Edit trip',
+              tooltip: AppLocalizations.of(context)!.editTrip,
               onPressed: () => context.push('/trips/$tripId/edit'),
             ),
             IconButton(
@@ -51,7 +52,7 @@ class TripDetailScreen extends ConsumerWidget {
                 Icons.delete_outlined,
                 color: AppColors.red,
               ),
-              tooltip: 'Delete trip',
+              tooltip: AppLocalizations.of(context)!.deleteTrip,
               onPressed: () => _confirmDelete(context, ref),
             ),
           ],
@@ -206,7 +207,7 @@ class TripDetailScreen extends ConsumerWidget {
         children: [
           _DetailRow(
             icon: Icons.flight_takeoff,
-            label: 'Departure',
+            label: AppLocalizations.of(context)!.departure,
             value:
                 '${trip.departurePort}\n${NavisDateUtils.formatDateTime(trip.departureTime)}',
           ),
@@ -219,11 +220,11 @@ class TripDetailScreen extends ConsumerWidget {
           ),
           _DetailRow(
             icon: Icons.flight_land,
-            label: 'Arrival',
+            label: AppLocalizations.of(context)!.arrival,
             value: trip.arrivalPort != null
                 ? '${trip.arrivalPort}'
                     '${trip.arrivalTime != null ? '\n${NavisDateUtils.formatDateTime(trip.arrivalTime!)}' : ''}'
-                : 'Not recorded',
+                : AppLocalizations.of(context)!.notRecorded,
           ),
         ],
       ),
@@ -237,7 +238,7 @@ class TripDetailScreen extends ConsumerWidget {
           if (trip.distanceNm != null)
             Expanded(
               child: _StatBox(
-                label: 'Distance',
+                label: AppLocalizations.of(context)!.distance,
                 value: DistanceUtils.formatDistance(
                   trip.distanceNm!,
                 ),
@@ -247,7 +248,7 @@ class TripDetailScreen extends ConsumerWidget {
           if (trip.duration != null)
             Expanded(
               child: _StatBox(
-                label: 'Duration',
+                label: AppLocalizations.of(context)!.duration,
                 value: NavisDateUtils.formatDuration(
                   trip.duration!,
                 ),
@@ -257,7 +258,7 @@ class TripDetailScreen extends ConsumerWidget {
           if (trip.avgSpeedKnots != null)
             Expanded(
               child: _StatBox(
-                label: 'Avg Speed',
+                label: AppLocalizations.of(context)!.avgSpeed,
                 value: DistanceUtils.formatSpeed(
                   trip.avgSpeedKnots!,
                 ),
@@ -267,7 +268,7 @@ class TripDetailScreen extends ConsumerWidget {
           if (trip.maxSpeedKnots != null)
             Expanded(
               child: _StatBox(
-                label: 'Max Speed',
+                label: AppLocalizations.of(context)!.maxSpeed,
                 value: DistanceUtils.formatSpeed(
                   trip.maxSpeedKnots!,
                 ),
@@ -286,7 +287,7 @@ class TripDetailScreen extends ConsumerWidget {
           if (trip.engineHours != null)
             _DetailRow(
               icon: Icons.engineering,
-              label: 'Engine Hours',
+              label: AppLocalizations.of(context)!.engineHours,
               value: '${trip.engineHours!.toStringAsFixed(1)} h',
             ),
           if (trip.engineHours != null && trip.fuelConsumedL != null) ...[
@@ -300,7 +301,7 @@ class TripDetailScreen extends ConsumerWidget {
           if (trip.fuelConsumedL != null)
             _DetailRow(
               icon: Icons.local_gas_station,
-              label: 'Fuel Consumed',
+              label: AppLocalizations.of(context)!.fuelConsumed,
               value: '${trip.fuelConsumedL!.toStringAsFixed(1)} L',
             ),
         ],
@@ -312,7 +313,7 @@ class TripDetailScreen extends ConsumerWidget {
     return NavisCard(
       child: _DetailRow(
         icon: Icons.group,
-        label: 'Crew',
+        label: AppLocalizations.of(context)!.crew,
         value: trip.crewMembers!.join(', '),
       ),
     );
@@ -322,7 +323,7 @@ class TripDetailScreen extends ConsumerWidget {
     return NavisCard(
       child: _DetailRow(
         icon: Icons.notes,
-        label: 'Notes',
+        label: AppLocalizations.of(context)!.notes,
         value: trip.notes!,
       ),
     );
@@ -424,7 +425,7 @@ class TripDetailScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Delete Trip',
+                  AppLocalizations.of(context)!.deleteTrip,
                   style: Theme.of(ctx)
                       .textTheme
                       .titleLarge
@@ -432,7 +433,7 @@ class TripDetailScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Are you sure you want to delete this trip?',
+                  AppLocalizations.of(context)!.deleteTripConfirm,
                   textAlign: TextAlign.center,
                   style: Theme.of(ctx)
                       .textTheme
@@ -444,7 +445,7 @@ class TripDetailScreen extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: NavisButton(
-                        label: 'Cancel',
+                        label: AppLocalizations.of(context)!.cancel,
                         variant: NavisButtonVariant.secondary,
                         compact: true,
                         onPressed: () => Navigator.of(ctx).pop(),
@@ -453,20 +454,30 @@ class TripDetailScreen extends ConsumerWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: NavisButton(
-                        label: 'Delete',
+                        label: AppLocalizations.of(context)!.delete,
                         variant: NavisButtonVariant.danger,
                         icon: Icons.delete_outline,
                         onPressed: () async {
                           Navigator.of(ctx).pop();
+                          final trip =
+                              ref.read(tripProvider(tripId)).valueOrNull;
                           try {
                             final repo = ref.read(
                               tripRepositoryProvider,
                             );
                             await repo.deleteTrip(tripId);
+                            if (trip != null) {
+                              ref.invalidate(
+                                boatTripsProvider(trip.boatId),
+                              );
+                            }
+                            ref.invalidate(tripProvider(tripId));
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Trip deleted'),
+                                SnackBar(
+                                  content: Text(
+                                    AppLocalizations.of(context)!.tripDeleted,
+                                  ),
                                 ),
                               );
                               context.pop();
@@ -476,7 +487,7 @@ class TripDetailScreen extends ConsumerWidget {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    'Failed to delete: $e',
+                                    '${AppLocalizations.of(context)!.failedToDelete}: $e',
                                   ),
                                 ),
                               );

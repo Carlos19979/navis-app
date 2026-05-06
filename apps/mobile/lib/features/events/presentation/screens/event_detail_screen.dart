@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -44,12 +45,13 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final eventAsync = ref.watch(eventProvider(widget.eventId));
+    final l = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
-      appBar: const NavisAppBar(
-        title: 'Event Details',
+      appBar: NavisAppBar(
+        title: l.eventDetails,
         showBack: true,
       ),
       body: GradientBackground(
@@ -149,11 +151,11 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                     ),
                                   ],
                                 ),
-                                child: const Icon(
+                                child: Icon(
                                   Icons.star,
                                   color: AppColors.amber,
                                   size: 20,
-                                  semanticLabel: 'Featured',
+                                  semanticLabel: l.featured,
                                 ),
                               ),
                           ],
@@ -212,7 +214,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
 
                   // Action button
                   NavisButton(
-                    label: event.isInterested ? 'Not Interested' : 'Interested',
+                    label: event.isInterested ? l.notInterested : l.interested,
                     icon: event.isInterested
                         ? Icons.close
                         : Icons.favorite_outline,

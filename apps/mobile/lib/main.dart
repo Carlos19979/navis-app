@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:navis_mobile/app/app.dart';
 import 'package:navis_mobile/app/router.dart';
 import 'package:navis_mobile/core/config/env.dart';
+import 'package:navis_mobile/core/config/settings_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(
@@ -49,6 +51,8 @@ Future<void> main() async {
     // Firebase not configured — push notifications disabled
   }
 
+  final prefs = await SharedPreferences.getInstance();
+
   await Supabase.initialize(
     url: Env.supabaseUrl,
     anonKey: Env.supabaseAnonKey,
@@ -81,15 +85,21 @@ Future<void> main() async {
         };
       },
       appRunner: () => runApp(
-        const ProviderScope(
-          child: NavisApp(),
+        ProviderScope(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
+          ],
+          child: const NavisApp(),
         ),
       ),
     );
   } else {
     runApp(
-      const ProviderScope(
-        child: NavisApp(),
+      ProviderScope(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+        ],
+        child: const NavisApp(),
       ),
     );
   }

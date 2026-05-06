@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:navis_mobile/app/router.dart';
+import 'package:navis_mobile/core/config/settings_service.dart';
 import 'package:navis_mobile/core/database/mutation_queue.dart';
 import 'package:navis_mobile/core/database/sync_auth_listener.dart';
 import 'package:navis_mobile/core/theme/app_theme.dart';
@@ -19,13 +20,16 @@ class NavisApp extends ConsumerWidget {
     ref.watch(syncAuthListenerProvider);
     ref.watch(mutationQueueProvider);
     final router = ref.watch(routerProvider);
+    final themeMode = ref.watch(themeModeProvider);
+    final locale = ref.watch(localeProvider);
 
     return MaterialApp.router(
       title: 'Navis',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.dark,
+      themeMode: themeMode,
+      locale: locale,
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,

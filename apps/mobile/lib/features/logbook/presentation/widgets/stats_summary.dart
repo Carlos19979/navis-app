@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
 
@@ -11,12 +12,13 @@ class StatsSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return NavisCard(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _StatItem(
-            label: 'Trips',
+            label: l.tripsLabel,
             value: '${stats.totalTrips}',
             icon: Icons.route,
           ),
@@ -26,7 +28,7 @@ class StatsSummary extends StatelessWidget {
             color: AppColors.glassBorder,
           ),
           _StatItem(
-            label: 'Distance',
+            label: l.distance,
             value: '${stats.totalDistanceNm.toStringAsFixed(0)} NM',
             icon: Icons.straighten,
           ),
@@ -36,7 +38,7 @@ class StatsSummary extends StatelessWidget {
             color: AppColors.glassBorder,
           ),
           _StatItem(
-            label: 'Hours',
+            label: l.hoursLabel,
             value: stats.totalHours.toStringAsFixed(0),
             icon: Icons.schedule,
           ),

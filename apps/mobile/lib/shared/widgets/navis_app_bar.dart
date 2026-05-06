@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 
 class NavisAppBar extends StatelessWidget implements PreferredSizeWidget {
   const NavisAppBar({
@@ -41,15 +42,21 @@ class NavisAppBar extends StatelessWidget implements PreferredSizeWidget {
       );
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final barColor = isDark
+        ? AppColors.navy.withValues(alpha: 0.7)
+        : Colors.white.withValues(alpha: 0.85);
+    final borderColor = isDark ? AppColors.glassBorder : AppColors.lightDivider;
+
     return ClipRRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors.navy.withValues(alpha: 0.7),
-            border: const Border(
+            color: barColor,
+            border: Border(
               bottom: BorderSide(
-                color: AppColors.glassBorder,
+                color: borderColor,
                 width: 0.5,
               ),
             ),
@@ -76,7 +83,7 @@ class NavisAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget _buildBackButton(BuildContext context) {
     return IconButton(
       icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-      tooltip: 'Go back',
+      tooltip: AppLocalizations.of(context)!.goBack,
       onPressed: () {
         if (context.canPop()) {
           context.pop();
@@ -99,7 +106,7 @@ class NavisAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
           child: IconButton(
             icon: const Icon(Icons.person_outline_rounded, size: 22),
-            tooltip: 'Profile',
+            tooltip: AppLocalizations.of(context)!.profile,
             onPressed: () => context.go('/profile'),
           ),
         ),

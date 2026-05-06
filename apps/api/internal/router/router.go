@@ -17,6 +17,7 @@ func New(
 	docH *handler.DocumentHandler,
 	tripH *handler.TripHandler,
 	eventH *handler.EventHandler,
+	portH *handler.PortHandler,
 	weatherH *handler.WeatherHandler,
 	deviceH *handler.DeviceHandler,
 	userH *handler.UserHandler,
@@ -67,18 +68,16 @@ func New(
 				r.Get("/", boatH.GetByID)
 				r.Put("/", boatH.Update)
 				r.Delete("/", boatH.Delete)
-			})
 
-			// Documents nested under boats (create and list).
-			r.Route("/{boatId}/documents", func(r chi.Router) {
-				r.Post("/", docH.Create)
-				r.Get("/", docH.ListByBoat)
-			})
+				r.Route("/documents", func(r chi.Router) {
+					r.Post("/", docH.Create)
+					r.Get("/", docH.ListByBoat)
+				})
 
-			// Trips nested under boats (create and list).
-			r.Route("/{boatId}/trips", func(r chi.Router) {
-				r.Post("/", tripH.Create)
-				r.Get("/", tripH.List)
+				r.Route("/trips", func(r chi.Router) {
+					r.Post("/", tripH.Create)
+					r.Get("/", tripH.List)
+				})
 			})
 		})
 
@@ -96,9 +95,19 @@ func New(
 			r.Route("/{id}", func(r chi.Router) {
 				r.Get("/", tripH.GetByID)
 				r.Put("/", tripH.Update)
+				r.Delete("/", tripH.Delete)
 				r.Put("/complete", tripH.Complete)
 				r.Get("/tracks", tripH.GetTracks)
 				r.Post("/tracks", tripH.AddTracks)
+			})
+		})
+
+		// Ports (nearby search).
+		r.Route("/ports", func(r chi.Router) {
+			r.Get("/nearby", portH.Nearby)
+
+			r.Route("/{id}", func(r chi.Router) {
+				r.Get("/", portH.GetByID)
 			})
 		})
 

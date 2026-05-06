@@ -7,6 +7,7 @@ import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/features/documents/domain/entities/document.dart';
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
 import 'package:navis_mobile/features/documents/presentation/widgets/document_status_badge.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
@@ -22,11 +23,12 @@ class DocumentListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final docsAsync = ref.watch(boatDocumentsProvider(boatId));
+    final l = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
-      appBar: const NavisAppBar(title: 'Documents', showBack: true),
+      appBar: NavisAppBar(title: l.documents, showBack: true),
       body: GradientBackground(
         child: SafeArea(
           child: docsAsync.when(
@@ -39,8 +41,8 @@ class DocumentListScreen extends ConsumerWidget {
               if (docs.isEmpty) {
                 return NavisEmptyState(
                   icon: Icons.description_outlined,
-                  message: 'No documents yet. Add your first document!',
-                  actionLabel: 'Add Document',
+                  message: l.noDocuments,
+                  actionLabel: l.newDocument,
                   onAction: () => context.push('/boats/$boatId/documents/new'),
                 );
               }
@@ -92,13 +94,13 @@ class DocumentListScreen extends ConsumerWidget {
         ),
         child: FloatingActionButton(
           onPressed: () => context.push('/boats/$boatId/documents/new'),
-          tooltip: 'Add document',
+          tooltip: l.newDocument,
           elevation: 0,
           backgroundColor: Colors.transparent,
-          child: const Icon(
+          child: Icon(
             Icons.add,
             color: Colors.white,
-            semanticLabel: 'Add document',
+            semanticLabel: l.newDocument,
           ),
         ),
       ),

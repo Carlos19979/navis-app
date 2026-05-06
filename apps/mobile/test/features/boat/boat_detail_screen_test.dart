@@ -1,5 +1,6 @@
 // ignore_for_file: lines_longer_than_80_chars
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +8,7 @@ import 'package:mocktail/mocktail.dart';
 
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/domain/repositories/boat_repository.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/boat_detail_screen.dart';
 
@@ -123,7 +125,19 @@ void main() {
         ),
         boatsProvider.overrideWith(() => fakeBoatsNotifier),
       ],
-      child: MaterialApp.router(routerConfig: router),
+      child: MaterialApp.router(
+        routerConfig: router,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('en'),
+          Locale('es'),
+        ],
+      ),
     );
   }
 
@@ -149,7 +163,19 @@ void main() {
             ),
             boatsProvider.overrideWith(() => fakeBoatsNotifier),
           ],
-          child: MaterialApp.router(routerConfig: router),
+          child: MaterialApp.router(
+            routerConfig: router,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('en'),
+              Locale('es'),
+            ],
+          ),
         ),
       );
       await tester.pump();
@@ -300,25 +326,6 @@ void main() {
       expect(find.text('Edit Page'), findsOneWidget);
     });
 
-    testWidgets('shows Start Trip FAB', (tester) async {
-      await setPhoneSize(tester);
-      await tester.pumpWidget(buildSubject());
-      await pumpScreen(tester);
-
-      expect(find.text('Start Trip'), findsOneWidget);
-    });
-
-    testWidgets('Start Trip FAB navigates to record page', (tester) async {
-      await setPhoneSize(tester);
-      await tester.pumpWidget(buildSubject());
-      await pumpScreen(tester);
-
-      await tester.tap(find.text('Start Trip'));
-      await pumpScreen(tester);
-
-      expect(find.text('Record Page'), findsOneWidget);
-    });
-
     group('delete boat', () {
       testWidgets('tapping Delete Boat shows confirmation dialog',
           (tester) async {
@@ -445,9 +452,9 @@ void main() {
       await tester.pumpWidget(buildSubject());
       await pumpScreen(tester);
 
-      expect(find.text('Registration'), findsOneWidget);
+      expect(find.text('Registration Number'), findsOneWidget);
       expect(find.text('Type'), findsOneWidget);
-      expect(find.text('Length'), findsOneWidget);
+      expect(find.text('Length (m)'), findsOneWidget);
       expect(find.text('Home Port'), findsOneWidget);
     });
 

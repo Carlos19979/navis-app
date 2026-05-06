@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
 import 'package:navis_mobile/features/documents/presentation/widgets/document_status_badge.dart';
@@ -23,18 +24,19 @@ class DocumentDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final docAsync = ref.watch(documentProvider(documentId));
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
       appBar: NavisAppBar(
-        title: 'Document Details',
+        title: l.documentDetails,
         showBack: true,
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_outlined),
-            tooltip: 'Edit document',
+            tooltip: l.editDocument,
             onPressed: () {
               final doc = ref.read(documentProvider(documentId)).valueOrNull;
               if (doc != null) {
@@ -46,7 +48,7 @@ class DocumentDetailScreen extends ConsumerWidget {
           ),
           IconButton(
             icon: const Icon(Icons.autorenew, color: AppColors.cyan),
-            tooltip: 'Renew document',
+            tooltip: l.renewDocument,
             onPressed: () {
               final doc = ref.read(documentProvider(documentId)).valueOrNull;
               if (doc != null) {
@@ -58,7 +60,7 @@ class DocumentDetailScreen extends ConsumerWidget {
           ),
           IconButton(
             icon: const Icon(Icons.delete_outlined, color: AppColors.red),
-            tooltip: 'Delete document',
+            tooltip: l.delete,
             onPressed: () => _confirmDelete(context, ref),
           ),
         ],
@@ -180,14 +182,14 @@ class DocumentDetailScreen extends ConsumerWidget {
                           const SizedBox(height: 16),
                           _DetailRow(
                             icon: Icons.calendar_today_outlined,
-                            label: 'Expiry Date',
+                            label: l.expiryDate,
                             value: NavisDateUtils.formatDate(doc.expiryDate),
                           ),
                           if (doc.alertDaysBefore != null) ...[
                             const SizedBox(height: 12),
                             _DetailRow(
                               icon: Icons.notifications_outlined,
-                              label: 'Alert',
+                              label: l.alert,
                               value:
                                   '${doc.alertDaysBefore} days before expiry',
                             ),
@@ -196,7 +198,7 @@ class DocumentDetailScreen extends ConsumerWidget {
                             const SizedBox(height: 12),
                             _DetailRow(
                               icon: Icons.notes_outlined,
-                              label: 'Notes',
+                              label: l.notes,
                               value: doc.notes!,
                             ),
                           ],
@@ -224,7 +226,7 @@ class DocumentDetailScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Last Renewal',
+                              l.lastRenewal,
                               style: Theme.of(context)
                                   .textTheme
                                   .titleSmall
@@ -236,7 +238,7 @@ class DocumentDetailScreen extends ConsumerWidget {
                             const SizedBox(height: 16),
                             _DetailRow(
                               icon: Icons.event_outlined,
-                              label: 'Date',
+                              label: l.date,
                               value: NavisDateUtils.formatDate(
                                 doc.lastRenewalDate!,
                               ),
@@ -245,7 +247,7 @@ class DocumentDetailScreen extends ConsumerWidget {
                               const SizedBox(height: 12),
                               _DetailRow(
                                 icon: Icons.euro_outlined,
-                                label: 'Cost',
+                                label: l.cost,
                                 value:
                                     '\u20AC${doc.lastRenewalCost!.toStringAsFixed(2)}',
                               ),
@@ -254,7 +256,7 @@ class DocumentDetailScreen extends ConsumerWidget {
                               const SizedBox(height: 12),
                               _DetailRow(
                                 icon: Icons.business_outlined,
-                                label: 'Provider',
+                                label: l.provider,
                                 value: doc.lastRenewalProvider!,
                               ),
                             ],
@@ -332,7 +334,7 @@ class DocumentDetailScreen extends ConsumerWidget {
                       children: [
                         Expanded(
                           child: NavisButton(
-                            label: 'Renew',
+                            label: l.renewDocument,
                             icon: Icons.autorenew,
                             variant: NavisButtonVariant.secondary,
                             compact: true,
@@ -346,7 +348,7 @@ class DocumentDetailScreen extends ConsumerWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: NavisButton(
-                            label: 'Delete',
+                            label: l.delete,
                             icon: Icons.delete_outlined,
                             variant: NavisButtonVariant.danger,
                             compact: true,
@@ -369,17 +371,16 @@ class DocumentDetailScreen extends ConsumerWidget {
   }
 
   void _confirmDelete(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Document'),
-        content: const Text(
-          'Are you sure you want to delete this document?',
-        ),
+        title: Text(l.deleteDocument),
+        content: Text(l.deleteDocumentConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+            child: Text(l.cancel),
           ),
           FilledButton(
             onPressed: () async {
@@ -389,14 +390,14 @@ class DocumentDetailScreen extends ConsumerWidget {
                 await repo.deleteDocument(documentId);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Document deleted')),
+                    SnackBar(content: Text(l.documentDeleted)),
                   );
                   context.pop();
                 }
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to delete: $e')),
+                    SnackBar(content: Text(l.failedToDelete)),
                   );
                 }
               }
@@ -404,7 +405,7 @@ class DocumentDetailScreen extends ConsumerWidget {
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.red,
             ),
-            child: const Text('Delete'),
+            child: Text(l.delete),
           ),
         ],
       ),
