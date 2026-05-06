@@ -6,9 +6,9 @@ import 'package:go_router/go_router.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
-import 'package:navis_mobile/features/weather/presentation/providers/weather_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/widgets/boat_header.dart';
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
@@ -49,10 +49,11 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final boatsAsync = ref.watch(boatsProvider);
+    final l = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: const NavisAppBar(title: 'My Boats'),
+      appBar: NavisAppBar(title: l.myBoats),
       body: boatsAsync.when(
         loading: () => const NavisShimmer(itemHeight: 180),
         error: (error, stack) => NavisErrorWidget(
@@ -63,8 +64,8 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
           if (boats.isEmpty) {
             return NavisEmptyState(
               icon: Icons.sailing_outlined,
-              message: 'No boats yet. Add your first boat!',
-              actionLabel: 'Add Boat',
+              message: l.noBoats,
+              actionLabel: l.addBoat,
               onAction: () => context.go('/boats/new'),
             );
           }
@@ -77,42 +78,42 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
             child: ListView.builder(
               controller: _scrollController,
               padding: const EdgeInsets.all(16),
-              itemCount: boats.length + 2,
+              itemCount: boats.length + 1,
               itemBuilder: (context, index) {
-                if (index == 0) {
-                  return const _WeatherSummary();
-                }
-                if (index == boats.length + 1) {
+                if (index == boats.length) {
                   return const SizedBox(height: 100);
                 }
-                final boat = boats[index - 1];
-                return _BoatCard(boat: boat, index: index - 1);
+                final boat = boats[index];
+                return _BoatCard(boat: boat, index: index);
               },
             ),
           );
         },
       ),
-      floatingActionButton: Container(
-        decoration: BoxDecoration(
-          gradient: AppColors.cyanGradient,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.cyan.withValues(alpha: 0.4),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 100),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: AppColors.cyanGradient,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.cyan.withValues(alpha: 0.4),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: FloatingActionButton(
+            onPressed: () => context.go('/boats/new'),
+            tooltip: l.addNewBoat,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            child: Icon(
+              Icons.add,
+              color: Colors.white,
+              semanticLabel: l.addNewBoat,
             ),
-          ],
-        ),
-        child: FloatingActionButton(
-          onPressed: () => context.go('/boats/new'),
-          tooltip: 'Add new boat',
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          child: const Icon(
-            Icons.add,
-            color: Colors.white,
-            semanticLabel: 'Add new boat',
           ),
         ),
       ),
@@ -120,113 +121,13 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
   }
 }
 
-class _WeatherSummary extends ConsumerWidget {
-  const _WeatherSummary();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final weatherAsync = ref.watch(currentWeatherProvider);
-
-    return weatherAsync.when(
-      loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
-      data: (weather) {
-        if (weather == null) return const SizedBox.shrink();
-
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: NavisCard(
-            borderColor: AppColors.cyan.withValues(alpha: 0.3),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.cloud_outlined,
-                  color: AppColors.cyan.withValues(alpha: 0.7),
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.baseline,
-                        textBaseline: TextBaseline.alphabetic,
-                        children: [
-                          Text(
-                            '${weather.temperature.toStringAsFixed(0)}\u00B0',
-                            style: Theme.of(context)
-                                .textTheme
-                                .displaySmall
-                                ?.copyWith(
-                                  color: AppColors.cyan,
-                                  fontWeight: FontWeight.w700,
-                                  height: 1,
-                                ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              weather.description,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    color: AppColors.textSecondary,
-                                  ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.air,
-                            size: 14,
-                            color:
-                                AppColors.textSecondary.withValues(alpha: 0.7),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${weather.windSpeed.toStringAsFixed(0)} kt',
-                            style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: AppColors.textSecondary,
-                                    ),
-                          ),
-                          const SizedBox(width: 12),
-                          Icon(
-                            Icons.waves,
-                            size: 14,
-                            color:
-                                AppColors.textSecondary.withValues(alpha: 0.7),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${weather.waveHeight.toStringAsFixed(1)} m',
-                            style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: AppColors.textSecondary,
-                                    ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        )
-            .animate()
-            .fadeIn(duration: 400.ms)
-            .slideY(begin: -0.1, end: 0, duration: 400.ms);
-      },
-    );
-  }
-}
+String _localizedBoatType(AppLocalizations l, String type) => switch (type) {
+      'sailboat' => l.sailboat,
+      'motorboat' => l.motorboat,
+      'catamaran' => l.catamaran,
+      'other' => l.other,
+      _ => type[0].toUpperCase() + type.substring(1),
+    };
 
 class _BoatCard extends ConsumerWidget {
   const _BoatCard({required this.boat, required this.index});
@@ -236,6 +137,7 @@ class _BoatCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final summaryAsync = ref.watch(boatDocumentSummaryProvider(boat.id));
 
     return Padding(
@@ -260,7 +162,7 @@ class _BoatCard extends ConsumerWidget {
                   ),
                   _InfoChip(
                     icon: Icons.category_outlined,
-                    label: boat.type[0].toUpperCase() + boat.type.substring(1),
+                    label: _localizedBoatType(l, boat.type),
                   ),
                   if (boat.homePort != null)
                     _InfoChip(
@@ -282,25 +184,25 @@ class _BoatCard extends ConsumerWidget {
                       if (value.expired > 0)
                         _StatusBadge(
                           count: value.expired,
-                          label: 'Expired',
+                          label: l.expired,
                           color: AppColors.red,
                         ),
                       if (value.critical > 0)
                         _StatusBadge(
                           count: value.critical,
-                          label: 'Critical',
+                          label: l.critical,
                           color: AppColors.red,
                         ),
                       if (value.warning > 0)
                         _StatusBadge(
                           count: value.warning,
-                          label: 'Warning',
+                          label: l.warning,
                           color: AppColors.amber,
                         ),
                       if (value.ok > 0)
                         _StatusBadge(
                           count: value.ok,
-                          label: 'Valid',
+                          label: l.valid,
                           color: AppColors.green,
                         ),
                     ],
@@ -313,7 +215,7 @@ class _BoatCard extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: NavisButton(
-                      label: 'Documents',
+                      label: l.documents,
                       icon: Icons.description_outlined,
                       variant: NavisButtonVariant.secondary,
                       compact: true,
@@ -324,7 +226,7 @@ class _BoatCard extends ConsumerWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: NavisButton(
-                      label: 'Logbook',
+                      label: l.logbook,
                       icon: Icons.route_outlined,
                       variant: NavisButtonVariant.secondary,
                       compact: true,

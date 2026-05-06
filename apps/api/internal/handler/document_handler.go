@@ -40,7 +40,7 @@ func (h *DocumentHandler) Create(w http.ResponseWriter, r *http.Request) {
 	validator.TrimStrings(&req)
 
 	// Override BoatID from URL parameter.
-	boatID := chi.URLParam(r, "boatId")
+	boatID := chi.URLParam(r, "id")
 	if boatID != "" {
 		req.BoatID = boatID
 	}
@@ -86,7 +86,7 @@ func (h *DocumentHandler) ListByBoat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	boatID := chi.URLParam(r, "boatId")
+	boatID := chi.URLParam(r, "id")
 	cursor, limit := pagination.ParseCursor(r)
 
 	docs, nextCursor, err := h.svc.ListByBoat(r.Context(), userID, boatID, cursor, limit)

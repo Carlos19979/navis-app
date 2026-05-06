@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:navis_mobile/core/analytics/analytics_service.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/auth/data/auth_repository.dart';
 import 'package:navis_mobile/features/auth/domain/auth_state.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
@@ -51,7 +53,19 @@ void main() {
         authRepositoryProvider.overrideWithValue(mockAuthRepository),
         analyticsProvider.overrideWithValue(mockAnalyticsService),
       ],
-      child: const MaterialApp(home: RegisterScreen()),
+      child: const MaterialApp(
+        home: RegisterScreen(),
+        localizationsDelegates: [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: [
+          Locale('en'),
+          Locale('es'),
+        ],
+      ),
     );
   }
 
@@ -259,7 +273,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(
-          find.text('Please enter a password'),
+          find.text('Please enter your password'),
           findsOneWidget,
         );
       });

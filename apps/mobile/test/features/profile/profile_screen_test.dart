@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:navis_mobile/core/analytics/analytics_service.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/core/network/notification_service.dart';
 import 'package:navis_mobile/features/auth/data/auth_repository.dart';
 import 'package:navis_mobile/features/auth/domain/auth_state.dart';
@@ -102,6 +104,16 @@ void main() {
             ),
           ],
         ),
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('en'),
+          Locale('es'),
+        ],
       ),
     );
   }
@@ -300,7 +312,19 @@ void main() {
               notificationServiceProvider
                   .overrideWithValue(mockNotificationService),
             ],
-            child: const MaterialApp(home: ProfileScreen()),
+            child: const MaterialApp(
+              home: ProfileScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pumpAndSettle();
@@ -320,7 +344,19 @@ void main() {
               notificationServiceProvider
                   .overrideWithValue(mockNotificationService),
             ],
-            child: const MaterialApp(home: ProfileScreen()),
+            child: const MaterialApp(
+              home: ProfileScreen(),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en'),
+                Locale('es'),
+              ],
+            ),
           ),
         );
         await tester.pumpAndSettle();

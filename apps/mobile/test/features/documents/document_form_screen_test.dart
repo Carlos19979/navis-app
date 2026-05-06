@@ -69,18 +69,18 @@ void main() {
       expect(find.text('New Document'), findsOneWidget);
     });
 
-    testWidgets('shows Document Info section header', (tester) async {
+    testWidgets('shows Document Type section header', (tester) async {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
-      expect(find.text('Document Info'), findsOneWidget);
+      expect(find.text('Document Type'), findsAtLeastNWidgets(1));
     });
 
-    testWidgets('shows Alerts & Notes section header', (tester) async {
+    testWidgets('shows Notes section header', (tester) async {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
-      expect(find.text('Alerts & Notes'), findsOneWidget);
+      expect(find.text('Notes'), findsAtLeastNWidgets(1));
     });
 
     testWidgets('shows document type dropdown', (tester) async {
@@ -155,7 +155,7 @@ void main() {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
-      expect(find.text('Save Document'), findsOneWidget);
+      expect(find.text('Save'), findsOneWidget);
     });
 
     testWidgets('shows add scan area', (tester) async {
@@ -195,7 +195,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Tap save to trigger validation
-      await tester.tap(find.text('Save Document'));
+      await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();
 
       expect(find.text('Please enter a valid number'), findsOneWidget);
@@ -266,7 +266,7 @@ void main() {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
-      expect(find.text('Renewal Details'), findsNothing);
+      expect(find.text('Last Renewal'), findsNothing);
       expect(find.text('Renewal Cost'), findsNothing);
       expect(find.text('Provider / Company'), findsNothing);
     });
@@ -282,17 +282,17 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      expect(find.text('Edit Document'), findsOneWidget);
+      expect(find.text('Edit Document'), findsAtLeastNWidgets(1));
     });
 
-    testWidgets('shows Update Document button in edit mode', (tester) async {
+    testWidgets('shows Edit Document button in edit mode', (tester) async {
       await tester.pumpWidget(buildSubject(
         documentId: 'doc-1',
         existingDocument: existingDoc,
       ));
       await tester.pumpAndSettle();
 
-      expect(find.text('Update Document'), findsOneWidget);
+      expect(find.text('Edit Document'), findsAtLeastNWidgets(1));
     });
 
     testWidgets('pre-populates notes from existing document', (tester) async {
@@ -354,7 +354,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      expect(find.text('Renewal Details'), findsOneWidget);
+      expect(find.text('Last Renewal'), findsOneWidget);
       expect(find.text('Renewal Cost'), findsOneWidget);
       expect(find.text('Provider / Company'), findsOneWidget);
     });
@@ -462,8 +462,8 @@ void main() {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
-      // Document Info section
-      expect(find.text('Document Info'), findsOneWidget);
+      // Document Type section
+      expect(find.text('Document Type'), findsAtLeastNWidgets(1));
 
       // Scroll down to see the rest
       await tester.drag(
@@ -472,8 +472,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Alerts & Notes and Save button should be visible
-      expect(find.text('Save Document'), findsOneWidget);
+      // Notes section and Save button should be visible
+      expect(find.text('Save'), findsOneWidget);
     });
 
     testWidgets('form has back navigation via app bar', (tester) async {

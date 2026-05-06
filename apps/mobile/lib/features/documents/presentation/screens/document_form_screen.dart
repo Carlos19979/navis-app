@@ -11,6 +11,7 @@ import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/documents/domain/entities/document.dart';
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
@@ -66,6 +67,25 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
     'Fishing Permit',
     'Other',
   ];
+
+  static String _localizedDocType(AppLocalizations l, String type) =>
+      switch (type) {
+        'Registration' => l.docTypeRegistration,
+        'Insurance' => l.docTypeInsurance,
+        'Inspection' => l.docTypeInspection,
+        'License' => l.docTypeLicense,
+        'Safety Certificate' => l.docTypeSafetyCertificate,
+        'Radio License' => l.docTypeRadioLicense,
+        'Pollution Certificate' => l.docTypePollutionCertificate,
+        'Medical Certificate' => l.docTypeMedicalCertificate,
+        'Life Raft' => l.docTypeLifeRaft,
+        'Fire Extinguisher' => l.docTypeFireExtinguisher,
+        'Flares' => l.docTypeFlares,
+        'First Aid Kit' => l.docTypeFirstAidKit,
+        'Fishing Permit' => l.docTypeFishingPermit,
+        'Other' => l.other,
+        _ => type,
+      };
 
   @override
   void initState() {
@@ -140,12 +160,12 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
           children: [
             ListTile(
               leading: const Icon(Icons.camera_alt),
-              title: const Text('Take Photo'),
+              title: Text(AppLocalizations.of(context)!.takePhoto),
               onTap: () => Navigator.pop(context, ImageSource.camera),
             ),
             ListTile(
               leading: const Icon(Icons.photo_library),
-              title: const Text('Choose from Gallery'),
+              title: Text(AppLocalizations.of(context)!.chooseFromGallery),
               onTap: () => Navigator.pop(context, ImageSource.gallery),
             ),
           ],
@@ -220,19 +240,21 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
       ref.invalidate(boatDocumentsProvider(widget.boatId));
 
       if (mounted) {
+        final l = AppLocalizations.of(context)!;
         NavisSnackbar.success(
           context,
           widget.isRenew
-              ? 'Document renewed'
+              ? l.documentRenewed
               : _isEdit
-                  ? 'Document updated'
-                  : 'Document saved',
+                  ? l.documentUpdated
+                  : l.documentSaved,
         );
         context.pop();
       }
     } catch (e) {
       if (mounted) {
-        NavisSnackbar.error(context, 'Failed to save document');
+        NavisSnackbar.error(
+            context, AppLocalizations.of(context)!.failedToSave);
       }
     } finally {
       if (mounted) {
@@ -244,15 +266,16 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
       appBar: NavisAppBar(
         title: widget.isRenew
-            ? 'Renew Document'
+            ? l.renewDocument
             : _isEdit
-                ? 'Edit Document'
-                : 'New Document',
+                ? l.editDocument
+                : l.newDocument,
         showBack: true,
       ),
       body: GradientBackground(
@@ -270,7 +293,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Document Info',
+                          l.documentType,
                           style:
                               Theme.of(context).textTheme.labelLarge?.copyWith(
                                     color: AppColors.cyan,
@@ -280,14 +303,16 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                         const SizedBox(height: 16),
                         DropdownButtonFormField<String>(
                           initialValue: _selectedType,
-                          decoration: const InputDecoration(
-                            labelText: 'Document Type',
-                            prefixIcon: Icon(Icons.description_outlined),
+                          decoration: InputDecoration(
+                            labelText: l.documentType,
+                            prefixIcon: const Icon(Icons.description_outlined),
                           ),
                           items: _documentTypes.map((type) {
                             return DropdownMenuItem(
                               value: type,
-                              child: Text(type),
+                              child: Text(
+                                _localizedDocType(l, type),
+                              ),
                             );
                           }).toList(),
                           onChanged: widget.isRenew
@@ -304,7 +329,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                           child: AbsorbPointer(
                             child: TextFormField(
                               decoration: InputDecoration(
-                                labelText: 'Expiry Date',
+                                labelText: l.expiryDate,
                                 prefixIcon: const Icon(Icons.calendar_today),
                                 hintText:
                                     NavisDateUtils.formatDate(_expiryDate),
@@ -327,7 +352,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Alerts & Notes',
+                          l.notes,
                           style:
                               Theme.of(context).textTheme.labelLarge?.copyWith(
                                     color: AppColors.cyan,
@@ -338,14 +363,15 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                         TextFormField(
                           controller: _alertDaysController,
                           keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: 'Alert Days Before Expiry',
-                            prefixIcon: Icon(Icons.notifications_outlined),
+                          decoration: InputDecoration(
+                            labelText: l.alertDaysBeforeExpiry,
+                            prefixIcon:
+                                const Icon(Icons.notifications_outlined),
                           ),
                           validator: (value) {
                             if (value != null && value.isNotEmpty) {
                               if (int.tryParse(value) == null) {
-                                return 'Please enter a valid number';
+                                return l.validNumber;
                               }
                             }
                             return null;
@@ -355,9 +381,9 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                         TextFormField(
                           controller: _notesController,
                           maxLines: 3,
-                          decoration: const InputDecoration(
-                            labelText: 'Notes (optional)',
-                            prefixIcon: Icon(Icons.notes_outlined),
+                          decoration: InputDecoration(
+                            labelText: l.notesOptional,
+                            prefixIcon: const Icon(Icons.notes_outlined),
                             alignLabelWithHint: true,
                           ),
                         ),
@@ -373,7 +399,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Renewal Details',
+                            l.lastRenewal,
                             style: Theme.of(context)
                                 .textTheme
                                 .labelLarge
@@ -387,17 +413,17 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                             controller: _renewalCostController,
                             keyboardType: const TextInputType.numberWithOptions(
                                 decimal: true),
-                            decoration: const InputDecoration(
-                              labelText: 'Renewal Cost',
-                              prefixIcon: Icon(Icons.euro),
+                            decoration: InputDecoration(
+                              labelText: l.renewalCost,
+                              prefixIcon: const Icon(Icons.euro),
                             ),
                           ),
                           const SizedBox(height: 16),
                           TextFormField(
                             controller: _renewalProviderController,
-                            decoration: const InputDecoration(
-                              labelText: 'Provider / Company',
-                              prefixIcon: Icon(Icons.business_outlined),
+                            decoration: InputDecoration(
+                              labelText: l.renewalProvider,
+                              prefixIcon: const Icon(Icons.business_outlined),
                             ),
                           ),
                         ],
@@ -477,7 +503,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      'Add Scan',
+                                      l.addScan,
                                       style: TextStyle(
                                         color: AppColors.textSecondary
                                             .withValues(alpha: 0.8),
@@ -494,10 +520,10 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
 
                   NavisButton(
                     label: widget.isRenew
-                        ? 'Renew Document'
+                        ? l.renewDocument
                         : _isEdit
-                            ? 'Update Document'
-                            : 'Save Document',
+                            ? l.editDocument
+                            : l.save,
                     onPressed: _onSave,
                     isLoading: _isLoading,
                   ),

@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 
 class BoatHeader extends StatelessWidget {
@@ -20,7 +21,7 @@ class BoatHeader extends StatelessWidget {
           children: [
             if (boat.photoUrl != null && boat.photoUrl!.isNotEmpty)
               Semantics(
-                label: 'Boat photo',
+                label: AppLocalizations.of(context)!.boatPhoto,
                 child: CachedNetworkImage(
                   imageUrl: boat.photoUrl!,
                   fit: BoxFit.cover,

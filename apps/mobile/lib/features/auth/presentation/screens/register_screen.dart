@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/features/auth/domain/auth_state.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 
@@ -46,6 +47,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final textTheme = Theme.of(context).textTheme;
+    final l = AppLocalizations.of(context)!;
 
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (next.status == AuthStatus.authenticated) {
@@ -106,7 +108,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                     const SizedBox(height: 20),
                     Text(
-                      'Create Account',
+                      l.createAccount,
                       textAlign: TextAlign.center,
                       style: textTheme.displayMedium?.copyWith(
                         color: AppColors.textPrimary,
@@ -115,7 +117,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ).animate().fadeIn(delay: 200.ms, duration: 500.ms),
                     const SizedBox(height: 4),
                     Text(
-                      'JOIN NAVIS AND MANAGE YOUR BOAT',
+                      l.joinNavisSubtitle,
                       textAlign: TextAlign.center,
                       style: textTheme.bodyMedium?.copyWith(
                         color: AppColors.textSecondary,
@@ -165,14 +167,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
-                      labelText: 'Email',
+                      labelText: l.email,
                       prefixIconData: Icons.email_outlined,
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'Please enter your email';
+                          return l.pleaseEnterEmail;
                         }
                         if (!value.contains('@')) {
-                          return 'Please enter a valid email';
+                          return l.invalidEmail;
                         }
                         return null;
                       },
@@ -190,7 +192,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       controller: _passwordController,
                       obscureText: _obscurePassword,
                       textInputAction: TextInputAction.next,
-                      labelText: 'Password',
+                      labelText: l.password,
                       prefixIconData: Icons.lock_outlined,
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -200,9 +202,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           color: AppColors.textSecondary,
                           size: 20,
                         ),
-                        tooltip: _obscurePassword
-                            ? 'Show password'
-                            : 'Hide password',
+                        tooltip:
+                            _obscurePassword ? l.showPassword : l.hidePassword,
                         onPressed: () {
                           setState(() {
                             _obscurePassword = !_obscurePassword;
@@ -211,10 +212,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter a password';
+                          return l.pleaseEnterPassword;
                         }
                         if (value.length < 6) {
-                          return 'Password must be at least 6 characters';
+                          return l.passwordTooShort;
                         }
                         return null;
                       },
@@ -233,7 +234,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       obscureText: _obscureConfirmPassword,
                       textInputAction: TextInputAction.done,
                       onFieldSubmitted: (_) => _onRegister(),
-                      labelText: 'Confirm Password',
+                      labelText: l.confirmPassword,
                       prefixIconData: Icons.lock_outlined,
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -244,8 +245,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           size: 20,
                         ),
                         tooltip: _obscureConfirmPassword
-                            ? 'Show password'
-                            : 'Hide password',
+                            ? l.showPassword
+                            : l.hidePassword,
                         onPressed: () {
                           setState(() {
                             _obscureConfirmPassword = !_obscureConfirmPassword;
@@ -254,10 +255,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please confirm your password';
+                          return l.pleaseConfirmPassword;
                         }
                         if (value != _passwordController.text) {
-                          return 'Passwords do not match';
+                          return l.passwordsDoNotMatch;
                         }
                         return null;
                       },
@@ -272,7 +273,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
                     // -- Register Button --
                     NavisButton(
-                      label: 'Register',
+                      label: l.register,
                       onPressed: _onRegister,
                       isLoading: authState.status == AuthStatus.loading,
                     ).animate().fadeIn(delay: 700.ms, duration: 500.ms).slideY(
@@ -289,14 +290,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       onTap: () => context.go('/login'),
                       child: Text.rich(
                         TextSpan(
-                          text: 'Already have an account? ',
+                          text: '${l.hasAccount} ',
                           style: textTheme.bodyMedium?.copyWith(
                             color: AppColors.textSecondary,
                           ),
-                          children: const [
+                          children: [
                             TextSpan(
-                              text: 'Log In',
-                              style: TextStyle(
+                              text: l.login,
+                              style: const TextStyle(
                                 color: AppColors.cyan,
                                 fontWeight: FontWeight.w600,
                               ),

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 
 class NavisBottomNav extends ConsumerWidget {
@@ -12,21 +13,33 @@ class NavisBottomNav extends ConsumerWidget {
 
   final StatefulNavigationShell navigationShell;
 
-  static const _items = [
-    _NavItem(
-        icon: Icons.sailing_outlined,
-        activeIcon: Icons.sailing,
-        label: 'Boats'),
-    _NavItem(icon: Icons.map_outlined, activeIcon: Icons.map, label: 'Charts'),
-    _NavItem(
-        icon: Icons.cloud_outlined, activeIcon: Icons.cloud, label: 'Weather'),
-    _NavItem(
-        icon: Icons.event_outlined, activeIcon: Icons.event, label: 'Events'),
-  ];
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
+
+    final items = [
+      _NavItem(
+        icon: Icons.sailing_outlined,
+        activeIcon: Icons.sailing,
+        label: l.boats,
+      ),
+      _NavItem(
+        icon: Icons.map_outlined,
+        activeIcon: Icons.map,
+        label: l.charts,
+      ),
+      _NavItem(
+        icon: Icons.cloud_outlined,
+        activeIcon: Icons.cloud,
+        label: l.weather,
+      ),
+      _NavItem(
+        icon: Icons.event_outlined,
+        activeIcon: Icons.event,
+        label: l.events,
+      ),
+    ];
 
     return GradientBackground(
       child: Scaffold(
@@ -62,8 +75,8 @@ class NavisBottomNav extends ConsumerWidget {
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: List.generate(_items.length, (index) {
-                    final item = _items[index];
+                  children: List.generate(items.length, (index) {
+                    final item = items[index];
                     final isActive = navigationShell.currentIndex == index;
                     return _NavBarItem(
                       item: item,
@@ -119,7 +132,10 @@ class _NavBarItem extends StatelessWidget {
           children: [
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 4,
+              ),
               decoration: BoxDecoration(
                 color: isActive
                     ? AppColors.cyan.withValues(alpha: 0.15)

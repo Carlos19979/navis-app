@@ -340,7 +340,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get crew => 'Tripulacion';
 
   @override
-  String get logbook => 'Cuaderno de Bitacora';
+  String get logbook => 'Bitácora';
 
   @override
   String get tripDetails => 'Detalles del Viaje';
@@ -451,4 +451,495 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get featured => 'Destacado';
+
+  @override
+  String get appearance => 'Apariencia';
+
+  @override
+  String get darkThemeActive => 'Tema oscuro activo';
+
+  @override
+  String get lightThemeActive => 'Tema claro activo';
+
+  @override
+  String get systemDefault => 'Predeterminado del sistema';
+
+  @override
+  String get selectLanguage => 'Seleccionar idioma';
+
+  @override
+  String get documentExpiryAlerts => 'Alertas de vencimiento';
+
+  @override
+  String get expiryAlertsSubtitle =>
+      'Recibe alertas antes de que venzan los documentos';
+
+  @override
+  String get eventReminders => 'Recordatorios de eventos';
+
+  @override
+  String get eventRemindersSubtitle =>
+      'Recibe recordatorios de eventos próximos';
+
+  @override
+  String get dataAndStorage => 'Datos y almacenamiento';
+
+  @override
+  String get clearImageCache => 'Limpiar caché de imágenes';
+
+  @override
+  String get clearImageCacheSubtitle => 'Eliminar fotos y mapas en caché';
+
+  @override
+  String get clearOfflineData => 'Limpiar datos offline';
+
+  @override
+  String get clearOfflineDataSubtitle =>
+      'Eliminar barcos, documentos y viajes en caché';
+
+  @override
+  String get imageCacheCleared => 'Caché de imágenes limpiada';
+
+  @override
+  String get offlineDataCleared => 'Datos offline eliminados';
+
+  @override
+  String get account => 'Cuenta';
+
+  @override
+  String get deleteBoat => 'Eliminar barco';
+
+  @override
+  String deleteBoatConfirm(String name) {
+    return '¿Estás seguro de que deseas eliminar \"$name\"? También se eliminarán todos los documentos y viajes asociados.';
+  }
+
+  @override
+  String get certificates => 'Certificados, seguros, inspecciones';
+
+  @override
+  String get tripHistory => 'Historial de viajes y estadísticas';
+
+  @override
+  String get modifyBoatDetails => 'Modificar detalles del barco';
+
+  @override
+  String get removePermanently => 'Eliminar este barco permanentemente';
+
+  @override
+  String get details => 'Detalles';
+
+  @override
+  String get type => 'Tipo';
+
+  @override
+  String get statistics => 'Estadísticas';
+
+  @override
+  String get recordTrip => 'Registrar viaje';
+
+  @override
+  String get boat => 'Barco';
+
+  @override
+  String get boatPhoto => 'Foto del barco';
+
+  @override
+  String get goBack => 'Volver';
+
+  @override
+  String get addNewBoat => 'Agregar nuevo barco';
+
+  @override
+  String get homePortOptional => 'Puerto Base (opcional)';
+
+  @override
+  String get wind => 'Viento';
+
+  @override
+  String get waves => 'Olas';
+
+  @override
+  String get humidity => 'Humedad';
+
+  @override
+  String get currentConditions => 'Condiciones Actuales';
+
+  @override
+  String get calm => 'Calma';
+
+  @override
+  String get moderate => 'Moderado';
+
+  @override
+  String get rough => 'Fuerte';
+
+  @override
+  String get sendResetLink => 'Enviar enlace';
+
+  @override
+  String get passwordResetSent =>
+      'Email de restablecimiento enviado. Revisa tu bandeja.';
+
+  @override
+  String get failedToSendResetEmail =>
+      'Error al enviar email de restablecimiento';
+
+  @override
+  String get tripSaved => '¡Viaje guardado!';
+
+  @override
+  String get failedToSaveTrip => 'Error al guardar viaje';
+
+  @override
+  String get tripDeleted => 'Viaje eliminado';
+
+  @override
+  String get selectArrivalPort => 'Seleccionar Puerto de Llegada';
+
+  @override
+  String get commaSeparatedNames => 'Nombres separados por comas';
+
+  @override
+  String get crewMembers => 'Miembros de la Tripulación';
+
+  @override
+  String get updateTrip => 'Actualizar Viaje';
+
+  @override
+  String get saveTrip => 'Guardar Viaje';
+
+  @override
+  String get notLoggedIn => 'No has iniciado sesión';
+
+  @override
+  String get helpAndSupport => 'Ayuda y Soporte';
+
+  @override
+  String get aboutNavis => 'Acerca de Navis';
+
+  @override
+  String get speedAbbr => 'VEL';
+
+  @override
+  String get headingAbbr => 'RUM';
+
+  @override
+  String get distanceAbbr => 'DIST';
+
+  @override
+  String get timeAbbr => 'TIEMPO';
+
+  @override
+  String get alert => 'Alerta';
+
+  @override
+  String get daysBeforeExpiry => 'días antes del vencimiento';
+
+  @override
+  String get selectLocation => 'Seleccionar Ubicación';
+
+  @override
+  String get totalEngineHours => 'Total horas de motor';
+
+  @override
+  String get averageSpeed => 'Velocidad promedio';
+
+  @override
+  String thisYear(String year) {
+    return 'Este Año ($year)';
+  }
+
+  @override
+  String get locationAccessNeeded =>
+      'Se necesita acceso a la ubicación\npara datos meteorológicos.';
+
+  @override
+  String get sevenDayForecast => 'Pronóstico de 7 días';
+
+  @override
+  String get forecastNotAvailable => 'Datos de pronóstico no disponibles.';
+
+  @override
+  String memberSince(String date) {
+    return 'Miembro desde $date';
+  }
+
+  @override
+  String get deleteTrip => 'Eliminar Viaje';
+
+  @override
+  String get deleteTripConfirm =>
+      '¿Estás seguro de que deseas eliminar este viaje?';
+
+  @override
+  String get shareTrip => 'Compartir viaje';
+
+  @override
+  String get editTrip => 'Editar viaje';
+
+  @override
+  String get notRecorded => 'No registrado';
+
+  @override
+  String get enterValidNumber => 'Ingresa un número válido';
+
+  @override
+  String get completeTrip => 'Completar Viaje';
+
+  @override
+  String get arrivalPort => 'Puerto de Llegada';
+
+  @override
+  String get savingTrip => 'Guardando viaje...';
+
+  @override
+  String get fuelUnit => 'L';
+
+  @override
+  String get locationPermissionRequired =>
+      'Se requiere permiso de ubicación para grabar viajes';
+
+  @override
+  String get locationPermissionDenied =>
+      'Permiso de ubicación denegado. Habilita en ajustes.';
+
+  @override
+  String get resetPassword => 'Restablecer Contraseña';
+
+  @override
+  String get boatManagement => 'GESTIÓN NÁUTICA';
+
+  @override
+  String get showPassword => 'Mostrar contraseña';
+
+  @override
+  String get hidePassword => 'Ocultar contraseña';
+
+  @override
+  String get pleaseEnterBoatName => 'Ingresa el nombre del barco';
+
+  @override
+  String get pleaseEnterRegistration => 'Ingresa el número de registro';
+
+  @override
+  String get pleaseEnterLength => 'Ingresa la eslora';
+
+  @override
+  String get pleaseEnterEmail => 'Ingresa tu correo electrónico';
+
+  @override
+  String get pleaseEnterPassword => 'Ingresa tu contraseña';
+
+  @override
+  String get boatUpdated => 'Barco actualizado correctamente';
+
+  @override
+  String get boatCreated => 'Barco creado correctamente';
+
+  @override
+  String get failedToSaveBoat => 'Error al guardar barco';
+
+  @override
+  String get newBoat => 'Nuevo Barco';
+
+  @override
+  String get boatDetailsSection => 'Detalles del Barco';
+
+  @override
+  String get pickLocationOnMap => 'Seleccionar ubicación en mapa';
+
+  @override
+  String get updateBoat => 'Actualizar Barco';
+
+  @override
+  String get createBoat => 'Crear Barco';
+
+  @override
+  String get createAccount => 'Crear Cuenta';
+
+  @override
+  String get joinNavisSubtitle => 'ÚNETE A NAVIS Y GESTIONA TU BARCO';
+
+  @override
+  String get pleaseConfirmPassword => 'Por favor confirma tu contraseña';
+
+  @override
+  String get confirm => 'Confirmar';
+
+  @override
+  String get selectHomePort => 'Seleccionar Puerto Base';
+
+  @override
+  String get documentInfo => 'Información del Documento';
+
+  @override
+  String get alertsAndNotes => 'Alertas y Notas';
+
+  @override
+  String get renewalDetails => 'Detalles de Renovación';
+
+  @override
+  String get documentScan => 'Escaneo de documento';
+
+  @override
+  String get saveDocument => 'Guardar Documento';
+
+  @override
+  String get updateDocument => 'Actualizar Documento';
+
+  @override
+  String get interested => 'Me interesa';
+
+  @override
+  String get notInterested => 'No me interesa';
+
+  @override
+  String get eventDetails => 'Detalles del Evento';
+
+  @override
+  String get departurePort => 'Puerto de Salida';
+
+  @override
+  String get pleaseEnterDeparturePort => 'Ingresa el puerto de salida';
+
+  @override
+  String get arrivalPortOptional => 'Puerto de Llegada (opcional)';
+
+  @override
+  String get engineHoursOptional => 'Horas de Motor (opcional)';
+
+  @override
+  String get fuelUsedOptional => 'Combustible Usado (litros, opcional)';
+
+  @override
+  String get crewMembersCommaSeparated => 'Tripulación (separados por comas)';
+
+  @override
+  String get tripUpdated => 'Viaje actualizado';
+
+  @override
+  String get failedToUpdateTrip => 'Error al actualizar viaje';
+
+  @override
+  String get somethingWentWrong => 'Algo salió mal';
+
+  @override
+  String get navisUser => 'Usuario Navis';
+
+  @override
+  String get previousMonth => 'Mes anterior';
+
+  @override
+  String get nextMonth => 'Mes siguiente';
+
+  @override
+  String get nearbyPorts => 'Puertos Cercanos';
+
+  @override
+  String get portTypeMarina => 'Marina';
+
+  @override
+  String get portTypeAnchorage => 'Fondeo';
+
+  @override
+  String get portTypeFuel => 'Gasolinera';
+
+  @override
+  String get portTypeCommercial => 'Comercial';
+
+  @override
+  String get portTypeFishing => 'Puerto Pesquero';
+
+  @override
+  String get portTypeOther => 'Otro';
+
+  @override
+  String depthLabel(Object depth) {
+    return 'Calado: ${depth}m';
+  }
+
+  @override
+  String vhfChannelLabel(Object channel) {
+    return 'VHF Ch $channel';
+  }
+
+  @override
+  String get portFacilities => 'Servicios';
+
+  @override
+  String get noNearbyPorts => 'No se encontraron puertos cercanos';
+
+  @override
+  String get tapPortForDetails => 'Toca un marcador para ver detalles';
+
+  @override
+  String get docTypeRegistration => 'Matrícula';
+
+  @override
+  String get docTypeInsurance => 'Seguro';
+
+  @override
+  String get docTypeInspection => 'Inspección';
+
+  @override
+  String get docTypeLicense => 'Licencia';
+
+  @override
+  String get docTypeSafetyCertificate => 'Certificado de Seguridad';
+
+  @override
+  String get docTypeRadioLicense => 'Licencia de Radio';
+
+  @override
+  String get docTypePollutionCertificate => 'Certificado Anticontaminación';
+
+  @override
+  String get docTypeMedicalCertificate => 'Certificado Médico';
+
+  @override
+  String get docTypeLifeRaft => 'Balsa Salvavidas';
+
+  @override
+  String get docTypeFireExtinguisher => 'Extintor';
+
+  @override
+  String get docTypeFlares => 'Bengalas';
+
+  @override
+  String get docTypeFirstAidKit => 'Botiquín';
+
+  @override
+  String get docTypeFishingPermit => 'Permiso de Pesca';
+
+  @override
+  String get confirmLocation => 'Confirmar ubicación';
+
+  @override
+  String get portNameHint => 'Nombre del puerto (ej. Cala Blava)';
+
+  @override
+  String get tapMapToSelect => 'Toca el mapa para seleccionar una ubicación';
+
+  @override
+  String get tapMapToSetHomePort =>
+      'Toca el mapa para establecer tu puerto base';
+
+  @override
+  String get zoomIn => 'Acercar';
+
+  @override
+  String get zoomOut => 'Alejar';
+
+  @override
+  String get centerOnGps => 'Centrar en GPS';
+
+  @override
+  String get toggleSeamarks => 'Señales marítimas';
+
+  @override
+  String get togglePorts => 'Mostrar puertos';
+
+  @override
+  String get toggleTripTracks => 'Mostrar rutas';
 }

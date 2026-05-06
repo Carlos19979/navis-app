@@ -30,5 +30,3 @@ final profileProvider = Provider<UserProfile?>((ref) {
     createdAt: DateTime.tryParse(user.createdAt),
   );
 });
-
-final themeModeProvider = StateProvider<bool>((ref) => true);

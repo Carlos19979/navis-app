@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 
 class MapControls extends StatelessWidget {
   const MapControls({
@@ -14,6 +15,8 @@ class MapControls extends StatelessWidget {
     required this.showSeamarks,
     this.onToggleTracks,
     this.showTracks = false,
+    this.onTogglePorts,
+    this.showPorts = false,
   });
 
   final VoidCallback onZoomIn;
@@ -23,6 +26,8 @@ class MapControls extends StatelessWidget {
   final bool showSeamarks;
   final VoidCallback? onToggleTracks;
   final bool showTracks;
+  final VoidCallback? onTogglePorts;
+  final bool showPorts;
 
   @override
   Widget build(BuildContext context) {
@@ -49,44 +54,56 @@ class MapControls extends StatelessWidget {
                 ),
               ],
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _ControlButton(
-                  icon: Icons.add,
-                  tooltip: 'Zoom in',
-                  onPressed: onZoomIn,
-                ),
-                _buildDivider(),
-                _ControlButton(
-                  icon: Icons.remove,
-                  tooltip: 'Zoom out',
-                  onPressed: onZoomOut,
-                ),
-                _buildDivider(),
-                _ControlButton(
-                  icon: Icons.my_location,
-                  tooltip: 'Center on GPS',
-                  onPressed: onCenterGps,
-                ),
-                _buildDivider(),
-                _ControlButton(
-                  icon: showSeamarks ? Icons.layers : Icons.layers_outlined,
-                  tooltip: 'Toggle layers',
-                  onPressed: onToggleLayers,
-                  isActive: showSeamarks,
-                ),
-                if (onToggleTracks != null) ...[
+            child: Builder(builder: (context) {
+              final l = AppLocalizations.of(context)!;
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _ControlButton(
+                    icon: Icons.add,
+                    tooltip: l.zoomIn,
+                    onPressed: onZoomIn,
+                  ),
                   _buildDivider(),
                   _ControlButton(
-                    icon: Icons.route,
-                    tooltip: 'Toggle trip tracks',
-                    onPressed: onToggleTracks!,
-                    isActive: showTracks,
+                    icon: Icons.remove,
+                    tooltip: l.zoomOut,
+                    onPressed: onZoomOut,
                   ),
+                  _buildDivider(),
+                  _ControlButton(
+                    icon: Icons.my_location,
+                    tooltip: l.centerOnGps,
+                    onPressed: onCenterGps,
+                  ),
+                  _buildDivider(),
+                  _ControlButton(
+                    icon: showSeamarks ? Icons.layers : Icons.layers_outlined,
+                    tooltip: l.toggleSeamarks,
+                    onPressed: onToggleLayers,
+                    isActive: showSeamarks,
+                  ),
+                  if (onTogglePorts != null) ...[
+                    _buildDivider(),
+                    _ControlButton(
+                      icon: Icons.anchor,
+                      tooltip: l.togglePorts,
+                      onPressed: onTogglePorts!,
+                      isActive: showPorts,
+                    ),
+                  ],
+                  if (onToggleTracks != null) ...[
+                    _buildDivider(),
+                    _ControlButton(
+                      icon: Icons.route,
+                      tooltip: l.toggleTripTracks,
+                      onPressed: onToggleTracks!,
+                      isActive: showTracks,
+                    ),
+                  ],
                 ],
-              ],
-            ),
+              );
+            }),
           ),
         ),
       ),

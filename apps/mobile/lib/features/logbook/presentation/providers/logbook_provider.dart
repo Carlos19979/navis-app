@@ -16,7 +16,7 @@ final boatTripsProvider =
     FutureProvider.family<List<Trip>, String>((ref, boatId) async {
   final repository = ref.watch(tripRepositoryProvider);
   final response = await repository.getTrips(boatId);
-  return response.items;
+  return response.items.where((t) => t.status == TripStatus.completed).toList();
 });
 
 final tripProvider = FutureProvider.family<Trip, String>((ref, id) async {

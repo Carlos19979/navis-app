@@ -12,6 +12,7 @@ var (
 	ErrDocumentNotFound      = errors.New("document not found")
 	ErrTripNotFound          = errors.New("trip not found")
 	ErrEventNotFound         = errors.New("event not found")
+	ErrPortNotFound          = errors.New("port not found")
 	ErrUnauthorized          = errors.New("unauthorized")
 	ErrForbidden             = errors.New("forbidden")
 	ErrValidation            = errors.New("validation error")

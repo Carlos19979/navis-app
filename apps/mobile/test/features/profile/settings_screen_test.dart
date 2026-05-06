@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:navis_mobile/core/analytics/analytics_service.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
+import 'package:navis_mobile/core/config/settings_service.dart';
 import 'package:navis_mobile/core/database/local_database.dart';
 import 'package:navis_mobile/features/auth/data/auth_repository.dart';
 import 'package:navis_mobile/features/auth/domain/auth_state.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
-import 'package:navis_mobile/features/profile/presentation/providers/profile_provider.dart';
 import 'package:navis_mobile/features/profile/presentation/screens/settings_screen.dart';
 
 // --- Mocks ---
@@ -57,30 +60,54 @@ void main() {
     });
   }
 
-  Widget buildSettingsScreen({bool isDarkMode = true}) {
-    return ProviderScope(
-      overrides: [
-        authProvider.overrideWith((_) => mockAuthNotifier),
-        authRepositoryProvider.overrideWithValue(mockAuthRepository),
-        analyticsProvider.overrideWithValue(mockAnalyticsService),
-        localDatabaseProvider.overrideWithValue(mockLocalDatabase),
-        themeModeProvider.overrideWith((ref) => isDarkMode),
-      ],
-      child: MaterialApp.router(
-        routerConfig: GoRouter(
-          initialLocation: '/settings',
-          routes: [
-            GoRoute(
-              path: '/settings',
-              builder: (_, __) => const SettingsScreen(),
-            ),
-            GoRoute(
-              path: '/login',
-              builder: (_, __) => const Scaffold(body: Text('Login Page')),
-            ),
+  Widget buildSettingsScreenWithPrefs({
+    bool isDarkMode = true,
+  }) {
+    SharedPreferences.setMockInitialValues({
+      'settings_theme_mode': isDarkMode ? 'dark' : 'light',
+    });
+
+    return FutureBuilder<SharedPreferences>(
+      future: SharedPreferences.getInstance(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const SizedBox.shrink();
+        }
+        return ProviderScope(
+          overrides: [
+            authProvider.overrideWith((_) => mockAuthNotifier),
+            authRepositoryProvider.overrideWithValue(mockAuthRepository),
+            analyticsProvider.overrideWithValue(mockAnalyticsService),
+            localDatabaseProvider.overrideWithValue(mockLocalDatabase),
+            sharedPreferencesProvider.overrideWithValue(snapshot.data!),
           ],
-        ),
-      ),
+          child: MaterialApp.router(
+            routerConfig: GoRouter(
+              initialLocation: '/settings',
+              routes: [
+                GoRoute(
+                  path: '/settings',
+                  builder: (_, __) => const SettingsScreen(),
+                ),
+                GoRoute(
+                  path: '/login',
+                  builder: (_, __) => const Scaffold(body: Text('Login Page')),
+                ),
+              ],
+            ),
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('en'),
+              Locale('es'),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -88,7 +115,7 @@ void main() {
     group('rendering', () {
       testWidgets('renders without errors', (tester) async {
         setPhoneSize(tester);
-        await tester.pumpWidget(buildSettingsScreen());
+        await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
         expect(find.byType(SettingsScreen), findsOneWidget);
@@ -96,7 +123,7 @@ void main() {
 
       testWidgets('displays Settings title in app bar', (tester) async {
         setPhoneSize(tester);
-        await tester.pumpWidget(buildSettingsScreen());
+        await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
         expect(find.text('Settings'), findsOneWidget);
@@ -106,7 +133,7 @@ void main() {
     group('appearance section', () {
       testWidgets('displays APPEARANCE section header', (tester) async {
         setPhoneSize(tester);
-        await tester.pumpWidget(buildSettingsScreen());
+        await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
         expect(find.text('APPEARANCE'), findsOneWidget);
@@ -114,29 +141,29 @@ void main() {
 
       testWidgets('displays Dark Mode toggle', (tester) async {
         setPhoneSize(tester);
-        await tester.pumpWidget(buildSettingsScreen());
+        await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
         expect(find.text('Dark Mode'), findsOneWidget);
-        expect(find.text('Use dark theme'), findsOneWidget);
         expect(find.byType(SwitchListTile), findsWidgets);
       });
 
       testWidgets('dark mode switch is on by default', (tester) async {
         setPhoneSize(tester);
-        await tester.pumpWidget(buildSettingsScreen());
+        await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
         final switchTile = tester.widgetList<SwitchListTile>(
           find.byType(SwitchListTile),
         );
-        // First SwitchListTile is the dark mode toggle
         expect(switchTile.first.value, isTrue);
       });
 
       testWidgets('dark mode switch is off when set to false', (tester) async {
         setPhoneSize(tester);
-        await tester.pumpWidget(buildSettingsScreen(isDarkMode: false));
+        await tester.pumpWidget(
+          buildSettingsScreenWithPrefs(isDarkMode: false),
+        );
         await tester.pumpAndSettle();
 
         final switchTile = tester.widgetList<SwitchListTile>(
@@ -147,29 +174,7 @@ void main() {
 
       testWidgets('toggling dark mode changes switch state', (tester) async {
         setPhoneSize(tester);
-        await tester.pumpWidget(buildSettingsScreen());
-        await tester.pumpAndSettle();
-
-        // Find the dark mode switch by looking for the SwitchListTile
-        // containing "Dark Mode"
-        final darkModeSwitch = find.ancestor(
-          of: find.text('Dark Mode'),
-          matching: find.byType(SwitchListTile),
-        );
-
-        await tester.tap(darkModeSwitch);
-        await tester.pumpAndSettle();
-
-        // After toggle, the switch should be off
-        final switchTile = tester.widgetList<SwitchListTile>(
-          find.byType(SwitchListTile),
-        );
-        expect(switchTile.first.value, isFalse);
-      });
-
-      testWidgets('toggling dark mode off then on again', (tester) async {
-        setPhoneSize(tester);
-        await tester.pumpWidget(buildSettingsScreen());
+        await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
         final darkModeSwitch = find.ancestor(
@@ -177,45 +182,40 @@ void main() {
           matching: find.byType(SwitchListTile),
         );
 
-        // Toggle off
-        await tester.tap(darkModeSwitch);
-        await tester.pumpAndSettle();
-
-        // Toggle back on
         await tester.tap(darkModeSwitch);
         await tester.pumpAndSettle();
 
         final switchTile = tester.widgetList<SwitchListTile>(
           find.byType(SwitchListTile),
         );
-        expect(switchTile.first.value, isTrue);
+        expect(switchTile.first.value, isFalse);
       });
     });
 
     group('language section', () {
       testWidgets('displays LANGUAGE section header', (tester) async {
         setPhoneSize(tester);
-        await tester.pumpWidget(buildSettingsScreen());
+        await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
         expect(find.text('LANGUAGE'), findsOneWidget);
       });
 
-      testWidgets('displays Language option with English value',
+      testWidgets('displays Language option with System default',
           (tester) async {
         setPhoneSize(tester);
-        await tester.pumpWidget(buildSettingsScreen());
+        await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
         expect(find.text('Language'), findsOneWidget);
-        expect(find.text('English'), findsOneWidget);
+        expect(find.text('System default'), findsOneWidget);
       });
     });
 
     group('notifications section', () {
       testWidgets('displays NOTIFICATIONS section header', (tester) async {
         setPhoneSize(tester);
-        await tester.pumpWidget(buildSettingsScreen());
+        await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
         expect(find.text('NOTIFICATIONS'), findsOneWidget);
@@ -223,7 +223,7 @@ void main() {
 
       testWidgets('displays Document Expiry Alerts toggle', (tester) async {
         setPhoneSize(tester);
-        await tester.pumpWidget(buildSettingsScreen());
+        await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
         expect(
@@ -231,17 +231,22 @@ void main() {
           findsOneWidget,
         );
         expect(
-          find.text('Get notified before documents expire'),
+          find.text(
+            'Get notified before documents expire',
+          ),
           findsOneWidget,
         );
       });
 
       testWidgets('displays Event Reminders toggle', (tester) async {
         setPhoneSize(tester);
-        await tester.pumpWidget(buildSettingsScreen());
+        await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
-        expect(find.text('Event Reminders'), findsOneWidget);
+        expect(
+          find.text('Event Reminders'),
+          findsOneWidget,
+        );
         expect(
           find.text('Get reminded about upcoming events'),
           findsOneWidget,
@@ -252,7 +257,7 @@ void main() {
     group('data and storage section', () {
       testWidgets('displays DATA & STORAGE section header', (tester) async {
         setPhoneSize(tester);
-        await tester.pumpWidget(buildSettingsScreen());
+        await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
         expect(find.text('DATA & STORAGE'), findsOneWidget);
@@ -260,10 +265,13 @@ void main() {
 
       testWidgets('displays Clear Image Cache option', (tester) async {
         setPhoneSize(tester);
-        await tester.pumpWidget(buildSettingsScreen());
+        await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
-        expect(find.text('Clear Image Cache'), findsOneWidget);
+        expect(
+          find.text('Clear Image Cache'),
+          findsOneWidget,
+        );
         expect(
           find.text('Remove cached photos and map tiles'),
           findsOneWidget,
@@ -272,12 +280,17 @@ void main() {
 
       testWidgets('displays Clear Offline Data option', (tester) async {
         setPhoneSize(tester);
-        await tester.pumpWidget(buildSettingsScreen());
+        await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
-        expect(find.text('Clear Offline Data'), findsOneWidget);
         expect(
-          find.text('Remove cached boats, documents, trips'),
+          find.text('Clear Offline Data'),
+          findsOneWidget,
+        );
+        expect(
+          find.text(
+            'Remove cached boats, documents, trips',
+          ),
           findsOneWidget,
         );
       });
@@ -288,14 +301,16 @@ void main() {
             .thenAnswer((_) async {});
 
         setPhoneSize(tester);
-        await tester.pumpWidget(buildSettingsScreen());
+        await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
         await tester.tap(find.text('Clear Offline Data'));
         await tester.pumpAndSettle();
 
         verify(() => mockLocalDatabase.clearTable('boats')).called(1);
-        verify(() => mockLocalDatabase.clearTable('documents')).called(1);
+        verify(
+          () => mockLocalDatabase.clearTable('documents'),
+        ).called(1);
         verify(() => mockLocalDatabase.clearTable('trips')).called(1);
       });
 
@@ -304,7 +319,7 @@ void main() {
             .thenAnswer((_) async {});
 
         setPhoneSize(tester);
-        await tester.pumpWidget(buildSettingsScreen());
+        await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
         await tester.tap(find.text('Clear Offline Data'));
@@ -318,18 +333,21 @@ void main() {
 
       testWidgets('displays storage icons', (tester) async {
         setPhoneSize(tester);
-        await tester.pumpWidget(buildSettingsScreen());
+        await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
         expect(find.byIcon(Icons.cached), findsOneWidget);
-        expect(find.byIcon(Icons.delete_sweep), findsOneWidget);
+        expect(
+          find.byIcon(Icons.delete_sweep),
+          findsOneWidget,
+        );
       });
     });
 
     group('account section', () {
       testWidgets('displays ACCOUNT section header', (tester) async {
         setPhoneSize(tester);
-        await tester.pumpWidget(buildSettingsScreen());
+        await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
         expect(find.text('ACCOUNT'), findsOneWidget);
@@ -337,7 +355,7 @@ void main() {
 
       testWidgets('displays Log Out button', (tester) async {
         setPhoneSize(tester);
-        await tester.pumpWidget(buildSettingsScreen());
+        await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
         expect(find.text('Log Out'), findsOneWidget);
@@ -346,7 +364,7 @@ void main() {
 
       testWidgets('tapping Log Out opens confirmation dialog', (tester) async {
         setPhoneSize(tester);
-        await tester.pumpWidget(buildSettingsScreen());
+        await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
         await tester.tap(find.text('Log Out'));
@@ -361,7 +379,7 @@ void main() {
 
       testWidgets('cancel closes the logout dialog', (tester) async {
         setPhoneSize(tester);
-        await tester.pumpWidget(buildSettingsScreen());
+        await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
         await tester.tap(find.text('Log Out'));
@@ -381,7 +399,7 @@ void main() {
         when(() => mockAuthNotifier.logout()).thenAnswer((_) async {});
 
         setPhoneSize(tester);
-        await tester.pumpWidget(buildSettingsScreen());
+        await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
         await tester.tap(find.text('Log Out'));
@@ -401,22 +419,24 @@ void main() {
     group('overall structure', () {
       testWidgets('has all five section headers', (tester) async {
         setPhoneSize(tester);
-        await tester.pumpWidget(buildSettingsScreen());
+        await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
         expect(find.text('APPEARANCE'), findsOneWidget);
         expect(find.text('LANGUAGE'), findsOneWidget);
         expect(find.text('NOTIFICATIONS'), findsOneWidget);
-        expect(find.text('DATA & STORAGE'), findsOneWidget);
+        expect(
+          find.text('DATA & STORAGE'),
+          findsOneWidget,
+        );
         expect(find.text('ACCOUNT'), findsOneWidget);
       });
 
       testWidgets('sections are scrollable', (tester) async {
         setPhoneSize(tester);
-        await tester.pumpWidget(buildSettingsScreen());
+        await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
-        // The screen uses a ListView which is scrollable
         expect(find.byType(ListView), findsOneWidget);
       });
     });

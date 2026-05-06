@@ -47,6 +47,12 @@ class AppColors {
     colors: [Color(0xFF0A1628), Color(0xFF0D2137)],
   );
 
+  static const lightOceanGradient = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [Color(0xFFF5F7FA), Color(0xFFE8EDF3)],
+  );
+
   static const surfaceGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,

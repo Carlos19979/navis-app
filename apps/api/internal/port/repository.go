@@ -41,6 +41,12 @@ type TripTrackRepository interface {
 	ListByTrip(ctx context.Context, tripID string) ([]domain.TripTrack, error)
 }
 
+// NauticalPortRepository defines persistence operations for ports.
+type NauticalPortRepository interface {
+	GetByID(ctx context.Context, id string) (*domain.Port, error)
+	NearLocation(ctx context.Context, lat, lon, radiusKM float64, cursor string, limit int) ([]domain.Port, string, error)
+}
+
 // EventRepository defines persistence operations for events.
 type EventRepository interface {
 	GetByID(ctx context.Context, id string) (*domain.Event, error)

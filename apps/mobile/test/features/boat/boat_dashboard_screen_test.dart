@@ -1,11 +1,13 @@
 // ignore_for_file: lines_longer_than_80_chars
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/boat/domain/repositories/boat_repository.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/boat_dashboard_screen.dart';
@@ -136,6 +138,16 @@ void main() {
       ],
       child: MaterialApp.router(
         routerConfig: router,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('en'),
+          Locale('es'),
+        ],
       ),
     );
   }
@@ -276,7 +288,19 @@ void main() {
               (ref, boatId) async => const DocumentSummary(),
             ),
           ],
-          child: MaterialApp.router(routerConfig: router),
+          child: MaterialApp.router(
+            routerConfig: router,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('en'),
+              Locale('es'),
+            ],
+          ),
         ),
       );
       // Pump multiple frames to let flutter_animate's zero-duration
@@ -344,55 +368,25 @@ void main() {
               ),
             ),
           ],
-          child: MaterialApp.router(routerConfig: router),
+          child: MaterialApp.router(
+            routerConfig: router,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('en'),
+              Locale('es'),
+            ],
+          ),
         ),
       );
       await pumpScreen(tester);
 
       expect(find.text('2 Valid'), findsNWidgets(2));
       expect(find.text('1 Warning'), findsNWidgets(2));
-    });
-
-    testWidgets('weather summary hidden when weather is null', (tester) async {
-      await setPhoneSize(tester);
-      await tester.pumpWidget(buildSubject(boats: testBoats));
-      await pumpScreen(tester);
-
-      expect(find.textContaining('kt'), findsNothing);
-    });
-
-    testWidgets('weather summary shown when weather data is available',
-        (tester) async {
-      await setPhoneSize(tester);
-      final weather = makeWeather();
-      final router = _testRouter(const BoatDashboardScreen());
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            boatsProvider.overrideWith(
-              () => FakeBoatsNotifier(testBoats),
-            ),
-            currentWeatherProvider.overrideWith(
-              (ref) async => weather,
-            ),
-            boatDocumentSummaryProvider.overrideWith(
-              (ref, boatId) async => const DocumentSummary(),
-            ),
-          ],
-          child: MaterialApp.router(routerConfig: router),
-        ),
-      );
-      await pumpScreen(tester);
-
-      expect(find.text('12 kt'), findsOneWidget);
-      expect(find.text('0.8 m'), findsOneWidget);
-
-      // Dispose widget tree and drain pending flutter_animate timers.
-      await tester.pumpWidget(const SizedBox());
-      await tester.pump();
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
     });
 
     testWidgets('pull to refresh works on boat list', (tester) async {

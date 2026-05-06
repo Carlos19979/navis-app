@@ -100,7 +100,7 @@ void main() {
       expect(find.text('All Time'), findsOneWidget);
 
       // Stat card labels
-      expect(find.text('Trips'), findsWidgets);
+      expect(find.text('Total Trips'), findsWidgets);
       expect(find.text('NM sailed'), findsWidgets);
       expect(find.text('Hours at sea'), findsWidgets);
       expect(find.text('Ports visited'), findsWidgets);

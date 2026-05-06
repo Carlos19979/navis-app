@@ -8,6 +8,7 @@ class MapState {
     this.showSeamarks = true,
     this.showPosition = true,
     this.showTracks = false,
+    this.showPorts = true,
   });
 
   final LatLng center;
@@ -15,6 +16,7 @@ class MapState {
   final bool showSeamarks;
   final bool showPosition;
   final bool showTracks;
+  final bool showPorts;
 
   MapState copyWith({
     LatLng? center,
@@ -22,6 +24,7 @@ class MapState {
     bool? showSeamarks,
     bool? showPosition,
     bool? showTracks,
+    bool? showPorts,
   }) {
     return MapState(
       center: center ?? this.center,
@@ -29,6 +32,7 @@ class MapState {
       showSeamarks: showSeamarks ?? this.showSeamarks,
       showPosition: showPosition ?? this.showPosition,
       showTracks: showTracks ?? this.showTracks,
+      showPorts: showPorts ?? this.showPorts,
     );
   }
 }
@@ -74,6 +78,10 @@ class ChartNotifier extends StateNotifier<MapState> {
 
   void toggleTracks() {
     state = state.copyWith(showTracks: !state.showTracks);
+  }
+
+  void togglePorts() {
+    state = state.copyWith(showPorts: !state.showPorts);
   }
 
   void centerOnPosition(LatLng position) {

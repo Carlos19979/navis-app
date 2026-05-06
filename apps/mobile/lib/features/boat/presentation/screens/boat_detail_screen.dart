@@ -7,10 +7,20 @@ import 'package:go_router/go_router.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
+import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
+
+String _localizedBoatType(AppLocalizations l, String type) => switch (type) {
+      'sailboat' => l.sailboat,
+      'motorboat' => l.motorboat,
+      'catamaran' => l.catamaran,
+      'other' => l.other,
+      _ => type[0].toUpperCase() + type.substring(1),
+    };
 
 class BoatDetailScreen extends ConsumerWidget {
   const BoatDetailScreen({super.key, required this.boatId});
@@ -19,19 +29,24 @@ class BoatDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final boatAsync = ref.watch(boatProvider(boatId));
 
     return boatAsync.when(
-      loading: () => const Scaffold(
-        backgroundColor: Colors.transparent,
-        body: NavisLoading(),
+      loading: () => const GradientBackground(
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: NavisLoading(),
+        ),
       ),
-      error: (error, stack) => Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: const NavisAppBar(title: 'Boat', showBack: true),
-        body: NavisErrorWidget(
-          message: error.toString(),
-          onRetry: () => ref.invalidate(boatProvider(boatId)),
+      error: (error, stack) => GradientBackground(
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: NavisAppBar(title: l.boat, showBack: true),
+          body: NavisErrorWidget(
+            message: error.toString(),
+            onRetry: () => ref.invalidate(boatProvider(boatId)),
+          ),
         ),
       ),
       data: (boat) => _BoatDetailView(boat: boat),
@@ -46,107 +61,85 @@ class _BoatDetailView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: CustomScrollView(
-        slivers: [
-          _BoatSliverAppBar(boat: boat),
-          SliverPadding(
-            padding: const EdgeInsets.all(16),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                _InfoSection(boat: boat)
-                    .animate()
-                    .fadeIn(duration: 400.ms)
-                    .slideY(begin: 0.05, end: 0, duration: 400.ms),
-                const SizedBox(height: 16),
-                _ActionTile(
-                  icon: Icons.description_outlined,
-                  title: 'Documents',
-                  subtitle: 'Certificates, insurance, inspections',
-                  color: AppColors.cyan,
-                  onTap: () => context.push('/boats/${boat.id}/documents'),
-                ).animate().fadeIn(duration: 400.ms, delay: 50.ms).slideY(
-                      begin: 0.05,
-                      end: 0,
-                      duration: 400.ms,
-                      delay: 50.ms,
-                    ),
-                const SizedBox(height: 10),
-                _ActionTile(
-                  icon: Icons.route_outlined,
-                  title: 'Logbook',
-                  subtitle: 'Trip history and statistics',
-                  color: AppColors.green,
-                  onTap: () => context.push('/boats/${boat.id}/trips'),
-                ).animate().fadeIn(duration: 400.ms, delay: 100.ms).slideY(
-                      begin: 0.05,
-                      end: 0,
-                      duration: 400.ms,
-                      delay: 100.ms,
-                    ),
-                const SizedBox(height: 10),
-                _ActionTile(
-                  icon: Icons.edit_outlined,
-                  title: 'Edit Boat',
-                  subtitle: 'Modify boat details',
-                  color: AppColors.amber,
-                  onTap: () => context.push('/boats/${boat.id}/edit'),
-                ).animate().fadeIn(duration: 400.ms, delay: 150.ms).slideY(
-                      begin: 0.05,
-                      end: 0,
-                      duration: 400.ms,
-                      delay: 150.ms,
-                    ),
-                const SizedBox(height: 10),
-                _ActionTile(
-                  icon: Icons.delete_outlined,
-                  title: 'Delete Boat',
-                  subtitle: 'Remove this boat permanently',
-                  color: AppColors.red,
-                  onTap: () => _confirmDelete(context, ref),
-                ).animate().fadeIn(duration: 400.ms, delay: 200.ms).slideY(
-                      begin: 0.05,
-                      end: 0,
-                      duration: 400.ms,
-                      delay: 200.ms,
-                    ),
-                const SizedBox(height: 100),
-              ]),
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: Container(
-        decoration: BoxDecoration(
-          gradient: AppColors.cyanGradient,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.cyan.withValues(alpha: 0.4),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
+    final l = AppLocalizations.of(context)!;
+    return GradientBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: CustomScrollView(
+          slivers: [
+            _BoatSliverAppBar(boat: boat),
+            SliverPadding(
+              padding: const EdgeInsets.all(16),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  _InfoSection(boat: boat)
+                      .animate()
+                      .fadeIn(duration: 400.ms)
+                      .slideY(begin: 0.05, end: 0, duration: 400.ms),
+                  const SizedBox(height: 16),
+                  _ActionTile(
+                    icon: Icons.description_outlined,
+                    title: l.documents,
+                    subtitle: l.certificates,
+                    color: AppColors.cyan,
+                    onTap: () => context.push('/boats/${boat.id}/documents'),
+                  ).animate().fadeIn(duration: 400.ms, delay: 50.ms).slideY(
+                        begin: 0.05,
+                        end: 0,
+                        duration: 400.ms,
+                        delay: 50.ms,
+                      ),
+                  const SizedBox(height: 10),
+                  _ActionTile(
+                    icon: Icons.route_outlined,
+                    title: l.logbook,
+                    subtitle: l.tripHistory,
+                    color: AppColors.green,
+                    onTap: () => context.push('/boats/${boat.id}/trips'),
+                  ).animate().fadeIn(duration: 400.ms, delay: 100.ms).slideY(
+                        begin: 0.05,
+                        end: 0,
+                        duration: 400.ms,
+                        delay: 100.ms,
+                      ),
+                  const SizedBox(height: 10),
+                  _ActionTile(
+                    icon: Icons.edit_outlined,
+                    title: l.editBoat,
+                    subtitle: l.modifyBoatDetails,
+                    color: AppColors.amber,
+                    onTap: () => context.push('/boats/${boat.id}/edit'),
+                  ).animate().fadeIn(duration: 400.ms, delay: 150.ms).slideY(
+                        begin: 0.05,
+                        end: 0,
+                        duration: 400.ms,
+                        delay: 150.ms,
+                      ),
+                  const SizedBox(height: 10),
+                  _ActionTile(
+                    icon: Icons.delete_outlined,
+                    title: l.deleteBoat,
+                    subtitle: l.removePermanently,
+                    color: AppColors.red,
+                    onTap: () => _confirmDelete(context, ref),
+                  ).animate().fadeIn(duration: 400.ms, delay: 200.ms).slideY(
+                        begin: 0.05,
+                        end: 0,
+                        duration: 400.ms,
+                        delay: 200.ms,
+                      ),
+                  const SizedBox(height: 100),
+                ]),
+              ),
             ),
           ],
-        ),
-        child: FloatingActionButton.extended(
-          onPressed: () => context.push('/boats/${boat.id}/record'),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          icon: const Icon(Icons.play_arrow, color: Colors.white),
-          label: const Text(
-            'Start Trip',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
         ),
       ),
     );
   }
 
   void _confirmDelete(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -158,15 +151,12 @@ class _BoatDetailView extends ConsumerWidget {
             width: 0.5,
           ),
         ),
-        title: const Text('Delete Boat'),
-        content: Text(
-          'Are you sure you want to delete "${boat.name}"? '
-          'This will also remove all associated documents and trips.',
-        ),
+        title: Text(l.deleteBoat),
+        content: Text(l.deleteBoatConfirm(boat.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+            child: Text(l.cancel),
           ),
           FilledButton(
             onPressed: () async {
@@ -180,7 +170,7 @@ class _BoatDetailView extends ConsumerWidget {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Failed to delete: $e'),
+                      content: Text('${l.failedToDelete}: $e'),
                     ),
                   );
                 }
@@ -189,7 +179,7 @@ class _BoatDetailView extends ConsumerWidget {
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.red,
             ),
-            child: const Text('Delete'),
+            child: Text(l.delete),
           ),
         ],
       ),
@@ -219,7 +209,7 @@ class _BoatSliverAppBar extends StatelessWidget {
             Icons.arrow_back_ios_new_rounded,
             size: 18,
           ),
-          tooltip: 'Go back',
+          tooltip: AppLocalizations.of(context)!.goBack,
           onPressed: () {
             if (context.canPop()) {
               context.pop();
@@ -247,7 +237,7 @@ class _BoatSliverAppBar extends StatelessWidget {
           children: [
             if (boat.photoUrl != null && boat.photoUrl!.isNotEmpty)
               Semantics(
-                label: 'Boat photo',
+                label: AppLocalizations.of(context)!.boatPhoto,
                 child: CachedNetworkImage(
                   imageUrl: boat.photoUrl!,
                   fit: BoxFit.cover,
@@ -312,7 +302,7 @@ class _InfoSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Details',
+            AppLocalizations.of(context)!.details,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -320,26 +310,26 @@ class _InfoSection extends StatelessWidget {
           const SizedBox(height: 12),
           _DetailRow(
             icon: Icons.tag,
-            label: 'Registration',
+            label: AppLocalizations.of(context)!.registration,
             value: boat.registration,
           ),
           _glassDivider(),
           _DetailRow(
             icon: Icons.category_outlined,
-            label: 'Type',
-            value: boat.type[0].toUpperCase() + boat.type.substring(1),
+            label: AppLocalizations.of(context)!.type,
+            value: _localizedBoatType(AppLocalizations.of(context)!, boat.type),
           ),
           _glassDivider(),
           _DetailRow(
             icon: Icons.straighten,
-            label: 'Length',
+            label: AppLocalizations.of(context)!.length,
             value: '${boat.lengthMeters} m',
           ),
           if (boat.homePort != null) ...[
             _glassDivider(),
             _DetailRow(
               icon: Icons.anchor,
-              label: 'Home Port',
+              label: AppLocalizations.of(context)!.homePort,
               value: boat.homePort!,
             ),
           ],
