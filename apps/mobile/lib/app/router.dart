@@ -17,6 +17,9 @@ import 'package:navis_mobile/features/events/presentation/screens/events_screen.
 import 'package:navis_mobile/features/groups/presentation/screens/group_detail_screen.dart';
 import 'package:navis_mobile/features/groups/presentation/screens/group_form_screen.dart';
 import 'package:navis_mobile/features/groups/presentation/screens/groups_screen.dart';
+import 'package:navis_mobile/features/regattas/presentation/screens/pre_trip_checklist_screen.dart';
+import 'package:navis_mobile/features/regattas/presentation/screens/regatta_detail_screen.dart';
+import 'package:navis_mobile/features/regattas/presentation/screens/schedule_regatta_screen.dart';
 import 'package:navis_mobile/features/logbook/presentation/screens/logbook_screen.dart';
 import 'package:navis_mobile/features/logbook/presentation/screens/trip_detail_screen.dart';
 import 'package:navis_mobile/features/logbook/presentation/screens/trip_edit_screen.dart';
@@ -132,10 +135,35 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const GroupFormScreen(),
       ),
       GoRoute(
+        path: '/groups/:id/schedule',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return ScheduleRegattaScreen(groupId: id);
+        },
+      ),
+      GoRoute(
         path: '/groups/:id',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
           return GroupDetailScreen(groupId: id);
+        },
+      ),
+      GoRoute(
+        path: '/regattas/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return RegattaDetailScreen(regattaId: id);
+        },
+      ),
+      GoRoute(
+        path: '/trips/:id/checklist',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          final groupId = state.uri.queryParameters['groupId'];
+          return PreTripChecklistScreen(
+            tripId: id,
+            groupId: (groupId != null && groupId.isNotEmpty) ? groupId : null,
+          );
         },
       ),
       GoRoute(

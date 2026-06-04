@@ -81,6 +81,7 @@ func (r *BatchTrackRequest) ToDomain(tripID string) ([]domain.TripTrack, error) 
 type TripResponse struct {
 	ID                   string            `json:"id"`
 	BoatID               string            `json:"boat_id"`
+	OwnerID              string            `json:"owner_id"`
 	GroupID              *string           `json:"group_id,omitempty"`
 	Title                *string           `json:"title,omitempty"`
 	Kind                 domain.TripKind   `json:"kind"`
@@ -122,6 +123,7 @@ func TripResponseFromDomain(t *domain.Trip) *TripResponse {
 	return &TripResponse{
 		ID:                   t.ID,
 		BoatID:               t.BoatID,
+		OwnerID:              t.UserID,
 		GroupID:              t.GroupID,
 		Title:                t.Title,
 		Kind:                 kind,
