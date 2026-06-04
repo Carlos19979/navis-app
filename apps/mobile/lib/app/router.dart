@@ -14,6 +14,9 @@ import 'package:navis_mobile/features/documents/presentation/screens/document_fo
 import 'package:navis_mobile/features/documents/presentation/screens/document_list_screen.dart';
 import 'package:navis_mobile/features/events/presentation/screens/event_detail_screen.dart';
 import 'package:navis_mobile/features/events/presentation/screens/events_screen.dart';
+import 'package:navis_mobile/features/groups/presentation/screens/group_detail_screen.dart';
+import 'package:navis_mobile/features/groups/presentation/screens/group_form_screen.dart';
+import 'package:navis_mobile/features/groups/presentation/screens/groups_screen.dart';
 import 'package:navis_mobile/features/logbook/presentation/screens/logbook_screen.dart';
 import 'package:navis_mobile/features/logbook/presentation/screens/trip_detail_screen.dart';
 import 'package:navis_mobile/features/logbook/presentation/screens/trip_edit_screen.dart';
@@ -114,7 +117,26 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/groups',
+                builder: (context, state) => const GroupsScreen(),
+              ),
+            ],
+          ),
         ],
+      ),
+      GoRoute(
+        path: '/groups/new',
+        builder: (context, state) => const GroupFormScreen(),
+      ),
+      GoRoute(
+        path: '/groups/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return GroupDetailScreen(groupId: id);
+        },
       ),
       GoRoute(
         path: '/boats/new',

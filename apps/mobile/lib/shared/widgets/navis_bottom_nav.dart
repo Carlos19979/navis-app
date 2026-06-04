@@ -39,6 +39,11 @@ class NavisBottomNav extends ConsumerWidget {
         activeIcon: Icons.event,
         label: l.events,
       ),
+      const _NavItem(
+        icon: Icons.groups_outlined,
+        activeIcon: Icons.groups,
+        label: 'Grupos',
+      ),
     ];
 
     return GradientBackground(
