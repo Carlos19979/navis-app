@@ -80,6 +80,8 @@ func main() {
 	interestRepo := postgres.NewEventInterestRepo(pool)
 	groupRepo := postgres.NewGroupRepo(pool)
 	groupMemberRepo := postgres.NewGroupMemberRepo(pool)
+	participantRepo := postgres.NewTripParticipantRepo(pool)
+	checklistRepo := postgres.NewTripChecklistRepo(pool)
 	notifLogRepo := postgres.NewNotificationLogRepo(pool)
 	portRepo := postgres.NewPortRepo(pool)
 	deviceTokenRepo := postgres.NewDeviceTokenRepo(pool)
@@ -94,6 +96,7 @@ func main() {
 	tripSvc := service.NewTripService(tripRepo, trackRepo)
 	eventSvc := service.NewEventService(eventRepo, interestRepo)
 	groupSvc := service.NewGroupService(groupRepo, groupMemberRepo)
+	regattaSvc := service.NewRegattaService(tripRepo, participantRepo, checklistRepo, groupMemberRepo)
 	portSvc := service.NewPortService(portRepo)
 	weatherSvc := service.NewWeatherService(weatherProvider)
 
@@ -108,6 +111,7 @@ func main() {
 	tripH := handler.NewTripHandler(tripSvc)
 	eventH := handler.NewEventHandler(eventSvc)
 	groupH := handler.NewGroupHandler(groupSvc)
+	regattaH := handler.NewRegattaHandler(regattaSvc)
 	portH := handler.NewPortHandler(portSvc)
 	weatherH := handler.NewWeatherHandler(weatherSvc)
 	deviceH := handler.NewDeviceHandler(deviceTokenRepo, notifier)
@@ -117,7 +121,7 @@ func main() {
 	jwksURL := cfg.SupabaseURL + "/auth/v1/.well-known/jwks.json"
 
 	r := router.New(
-		boatH, docH, tripH, eventH, groupH, portH, weatherH, deviceH, userH,
+		boatH, docH, tripH, eventH, groupH, regattaH, portH, weatherH, deviceH, userH,
 		cfg.SupabaseJWTSecret,
 		jwksURL,
 		cfg.CORSAllowedOrigins,

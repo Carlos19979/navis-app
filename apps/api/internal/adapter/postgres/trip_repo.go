@@ -22,35 +22,61 @@ func NewTripRepo(pool *pgxpool.Pool) *TripRepo {
 	return &TripRepo{pool: pool}
 }
 
-const tripColumns = `id, boat_id, user_id, departure_port, arrival_port, departure_time,
+const tripColumns = `id, boat_id, user_id, group_id, title, kind, scheduled_at,
+	checklist_completed_at, departure_port, arrival_port, departure_time,
 	arrival_time, distance_nm, max_speed_knots, avg_speed_knots, engine_hours, fuel_consumed_l,
 	duration_minutes, crew_members, weather_conditions, notes, photos, status, created_at, updated_at`
+
+// tripScanDest returns the scan destinations for tripColumns, in order.
+func tripScanDest(t *domain.Trip) []any {
+	return []any{
+		&t.ID, &t.BoatID, &t.UserID, &t.GroupID, &t.Title, &t.Kind, &t.ScheduledAt,
+		&t.ChecklistCompletedAt, &t.DeparturePort, &t.ArrivalPort, &t.DepartureTime,
+		&t.ArrivalTime, &t.DistanceNM, &t.MaxSpeedKnots, &t.AvgSpeedKnots, &t.EngineHours,
+		&t.FuelConsumedL, &t.DurationMinutes, &t.CrewMembers, &t.WeatherConditions,
+		&t.Notes, &t.Photos, &t.Status, &t.CreatedAt, &t.UpdatedAt,
+	}
+}
 
 // scanTrip scans a single row into a domain.Trip.
 func scanTrip(row pgx.Row) (*domain.Trip, error) {
 	t := &domain.Trip{}
-	err := row.Scan(
-		&t.ID, &t.BoatID, &t.UserID, &t.DeparturePort, &t.ArrivalPort,
-		&t.DepartureTime, &t.ArrivalTime, &t.DistanceNM, &t.MaxSpeedKnots,
-		&t.AvgSpeedKnots, &t.EngineHours, &t.FuelConsumedL, &t.DurationMinutes,
-		&t.CrewMembers, &t.WeatherConditions, &t.Notes, &t.Photos, &t.Status,
-		&t.CreatedAt, &t.UpdatedAt,
-	)
+	err := row.Scan(tripScanDest(t)...)
 	return t, err
+}
+
+// scanTrips scans multiple rows into a slice of domain.Trip.
+func scanTrips(rows pgx.Rows) ([]domain.Trip, error) {
+	trips := make([]domain.Trip, 0)
+	for rows.Next() {
+		t := domain.Trip{}
+		if err := rows.Scan(tripScanDest(&t)...); err != nil {
+			return nil, err
+		}
+		trips = append(trips, t)
+	}
+	return trips, rows.Err()
 }
 
 // Create inserts a new trip and returns the created record.
 func (r *TripRepo) Create(ctx context.Context, trip *domain.Trip) (*domain.Trip, error) {
+	kind := trip.Kind
+	if kind == "" {
+		kind = domain.TripKindTrip
+	}
+
 	query := `
-		INSERT INTO trips (boat_id, user_id, departure_port, arrival_port, departure_time,
+		INSERT INTO trips (boat_id, user_id, group_id, title, kind, scheduled_at,
+			departure_port, arrival_port, departure_time,
 			arrival_time, distance_nm, max_speed_knots, avg_speed_knots, engine_hours,
 			fuel_consumed_l, duration_minutes, crew_members, weather_conditions, notes, photos, status)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
 		RETURNING ` + tripColumns
 
 	t, err := scanTrip(r.pool.QueryRow(ctx, query,
-		trip.BoatID, trip.UserID, trip.DeparturePort, trip.ArrivalPort,
-		trip.DepartureTime, trip.ArrivalTime, trip.DistanceNM, trip.MaxSpeedKnots,
+		trip.BoatID, trip.UserID, trip.GroupID, trip.Title, kind, trip.ScheduledAt,
+		trip.DeparturePort, trip.ArrivalPort, trip.DepartureTime,
+		trip.ArrivalTime, trip.DistanceNM, trip.MaxSpeedKnots,
 		trip.AvgSpeedKnots, trip.EngineHours, trip.FuelConsumedL, trip.DurationMinutes,
 		trip.CrewMembers, trip.WeatherConditions, trip.Notes, trip.Photos, trip.Status,
 	))
@@ -65,6 +91,21 @@ func (r *TripRepo) GetByID(ctx context.Context, userID, id string) (*domain.Trip
 	query := `SELECT ` + tripColumns + ` FROM trips WHERE user_id = $1 AND id = $2`
 
 	t, err := scanTrip(r.pool.QueryRow(ctx, query, userID, id))
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrTripNotFound
+		}
+		return nil, fmt.Errorf("getting trip %s: %w", id, err)
+	}
+	return t, nil
+}
+
+// GetByIDUnscoped retrieves a trip by ID without an owner filter. Callers must
+// enforce their own authorization (e.g., group membership for regattas).
+func (r *TripRepo) GetByIDUnscoped(ctx context.Context, id string) (*domain.Trip, error) {
+	query := `SELECT ` + tripColumns + ` FROM trips WHERE id = $1`
+
+	t, err := scanTrip(r.pool.QueryRow(ctx, query, id))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, domain.ErrTripNotFound
@@ -123,22 +164,9 @@ func (r *TripRepo) List(ctx context.Context, userID, boatID, cursor string, limi
 	}
 	defer rows.Close()
 
-	trips := make([]domain.Trip, 0, limit)
-	for rows.Next() {
-		t := domain.Trip{}
-		if err := rows.Scan(
-			&t.ID, &t.BoatID, &t.UserID, &t.DeparturePort, &t.ArrivalPort,
-			&t.DepartureTime, &t.ArrivalTime, &t.DistanceNM, &t.MaxSpeedKnots,
-			&t.AvgSpeedKnots, &t.EngineHours, &t.FuelConsumedL, &t.DurationMinutes,
-			&t.CrewMembers, &t.WeatherConditions, &t.Notes, &t.Photos, &t.Status,
-			&t.CreatedAt, &t.UpdatedAt,
-		); err != nil {
-			return nil, "", fmt.Errorf("scanning trip row: %w", err)
-		}
-		trips = append(trips, t)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, "", fmt.Errorf("iterating trip rows: %w", err)
+	trips, err := scanTrips(rows)
+	if err != nil {
+		return nil, "", fmt.Errorf("scanning trips: %w", err)
 	}
 
 	var nextCursor string
@@ -158,7 +186,8 @@ func (r *TripRepo) Update(ctx context.Context, userID string, trip *domain.Trip)
 			arrival_time = $6, distance_nm = $7, max_speed_knots = $8,
 			avg_speed_knots = $9, engine_hours = $10, fuel_consumed_l = $11,
 			duration_minutes = $12, crew_members = $13, weather_conditions = $14,
-			notes = $15, photos = $16, status = $17, updated_at = now()
+			notes = $15, photos = $16, status = $17, title = $18,
+			scheduled_at = $19, checklist_completed_at = $20, updated_at = now()
 		WHERE user_id = $1 AND id = $2
 		RETURNING ` + tripColumns
 
@@ -167,6 +196,7 @@ func (r *TripRepo) Update(ctx context.Context, userID string, trip *domain.Trip)
 		trip.DepartureTime, trip.ArrivalTime, trip.DistanceNM, trip.MaxSpeedKnots,
 		trip.AvgSpeedKnots, trip.EngineHours, trip.FuelConsumedL, trip.DurationMinutes,
 		trip.CrewMembers, trip.WeatherConditions, trip.Notes, trip.Photos, trip.Status,
+		trip.Title, trip.ScheduledAt, trip.ChecklistCompletedAt,
 	))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -188,6 +218,53 @@ func (r *TripRepo) Delete(ctx context.Context, userID, id string) error {
 		return domain.ErrTripNotFound
 	}
 	return nil
+}
+
+// ListByGroup returns a paginated list of a group's trips/regattas, ordered by
+// scheduled date (falling back to creation time) descending.
+func (r *TripRepo) ListByGroup(ctx context.Context, groupID, cursor string, limit int) ([]domain.Trip, string, error) {
+	var (
+		rows pgx.Rows
+		err  error
+	)
+
+	if cursor == "" {
+		query := `SELECT ` + tripColumns + ` FROM trips
+			WHERE group_id = $1
+			ORDER BY COALESCE(scheduled_at, created_at) DESC, id DESC
+			LIMIT $2`
+		rows, err = r.pool.Query(ctx, query, groupID, limit+1)
+	} else {
+		var cursorTime time.Time
+		cErr := r.pool.QueryRow(ctx,
+			`SELECT COALESCE(scheduled_at, created_at) FROM trips WHERE id = $1`, cursor,
+		).Scan(&cursorTime)
+		if cErr != nil {
+			return r.ListByGroup(ctx, groupID, "", limit)
+		}
+
+		query := `SELECT ` + tripColumns + ` FROM trips
+			WHERE group_id = $1 AND (COALESCE(scheduled_at, created_at), id) < ($2, $3)
+			ORDER BY COALESCE(scheduled_at, created_at) DESC, id DESC
+			LIMIT $4`
+		rows, err = r.pool.Query(ctx, query, groupID, cursorTime, cursor, limit+1)
+	}
+	if err != nil {
+		return nil, "", fmt.Errorf("listing group trips: %w", err)
+	}
+	defer rows.Close()
+
+	trips, err := scanTrips(rows)
+	if err != nil {
+		return nil, "", fmt.Errorf("scanning group trips: %w", err)
+	}
+
+	var nextCursor string
+	if len(trips) > limit {
+		nextCursor = trips[limit].ID
+		trips = trips[:limit]
+	}
+	return trips, nextCursor, nil
 }
 
 // TripTrackRepo implements port.TripTrackRepository using PostgreSQL.

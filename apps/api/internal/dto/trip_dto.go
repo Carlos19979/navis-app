@@ -79,9 +79,14 @@ func (r *BatchTrackRequest) ToDomain(tripID string) ([]domain.TripTrack, error) 
 
 // TripResponse is the API response for a trip.
 type TripResponse struct {
-	ID                string            `json:"id"`
-	BoatID            string            `json:"boat_id"`
-	DeparturePort     string            `json:"departure_port"`
+	ID                   string            `json:"id"`
+	BoatID               string            `json:"boat_id"`
+	GroupID              *string           `json:"group_id,omitempty"`
+	Title                *string           `json:"title,omitempty"`
+	Kind                 domain.TripKind   `json:"kind"`
+	ScheduledAt          *time.Time        `json:"scheduled_at,omitempty"`
+	ChecklistCompletedAt *time.Time        `json:"checklist_completed_at,omitempty"`
+	DeparturePort        string            `json:"departure_port"`
 	ArrivalPort       *string           `json:"arrival_port,omitempty"`
 	DepartureTime     time.Time         `json:"departure_time"`
 	ArrivalTime       *time.Time        `json:"arrival_time,omitempty"`
@@ -110,10 +115,19 @@ func TripResponseFromDomain(t *domain.Trip) *TripResponse {
 	if photos == nil {
 		photos = []string{}
 	}
+	kind := t.Kind
+	if kind == "" {
+		kind = domain.TripKindTrip
+	}
 	return &TripResponse{
-		ID:                t.ID,
-		BoatID:            t.BoatID,
-		DeparturePort:     t.DeparturePort,
+		ID:                   t.ID,
+		BoatID:               t.BoatID,
+		GroupID:              t.GroupID,
+		Title:                t.Title,
+		Kind:                 kind,
+		ScheduledAt:          t.ScheduledAt,
+		ChecklistCompletedAt: t.ChecklistCompletedAt,
+		DeparturePort:        t.DeparturePort,
 		ArrivalPort:       t.ArrivalPort,
 		DepartureTime:     t.DepartureTime,
 		ArrivalTime:       t.ArrivalTime,
@@ -169,6 +183,101 @@ func TrackPointListResponseFromDomain(tracks []domain.TripTrack) []TrackPointRes
 	out := make([]TrackPointResponse, len(tracks))
 	for i := range tracks {
 		out[i] = *TrackPointResponseFromDomain(&tracks[i])
+	}
+	return out
+}
+
+// ScheduleRegattaRequest is the payload for scheduling a group regatta/outing.
+type ScheduleRegattaRequest struct {
+	BoatID        string     `json:"boat_id"        validate:"required,uuid"`
+	Title         *string    `json:"title"          validate:"omitempty,max=120"`
+	DeparturePort string     `json:"departure_port" validate:"required,min=1,max=100"`
+	ScheduledAt   *time.Time `json:"scheduled_at"`
+	CrewMembers   []string   `json:"crew_members"   validate:"omitempty,dive,min=1,max=100"`
+	Notes         *string    `json:"notes"          validate:"omitempty,max=1000"`
+}
+
+// ToDomain converts the request DTO to a partial domain Trip (group/status are
+// set by the service).
+func (r *ScheduleRegattaRequest) ToDomain() *domain.Trip {
+	crew := r.CrewMembers
+	if crew == nil {
+		crew = []string{}
+	}
+	return &domain.Trip{
+		BoatID:        r.BoatID,
+		Title:         r.Title,
+		DeparturePort: r.DeparturePort,
+		ScheduledAt:   r.ScheduledAt,
+		CrewMembers:   crew,
+		Notes:         r.Notes,
+		Photos:        []string{},
+	}
+}
+
+// RSVPRequest is the payload for answering attendance to a regatta.
+type RSVPRequest struct {
+	RSVP string `json:"rsvp" validate:"required,oneof=going maybe not_going"`
+}
+
+// ChecklistAddItemRequest is the payload for adding a custom checklist item.
+type ChecklistAddItemRequest struct {
+	Label string `json:"label" validate:"required,min=1,max=200"`
+}
+
+// ChecklistSetCheckedRequest is the payload for toggling a checklist item.
+type ChecklistSetCheckedRequest struct {
+	IsChecked bool `json:"is_checked"`
+}
+
+// ChecklistItemResponse is the API response for a checklist item.
+type ChecklistItemResponse struct {
+	ID        string `json:"id"`
+	Label     string `json:"label"`
+	IsChecked bool   `json:"is_checked"`
+	Position  int    `json:"position"`
+}
+
+// ChecklistItemResponseFromDomain builds a ChecklistItemResponse from a domain item.
+func ChecklistItemResponseFromDomain(i *domain.ChecklistItem) *ChecklistItemResponse {
+	return &ChecklistItemResponse{
+		ID:        i.ID,
+		Label:     i.Label,
+		IsChecked: i.IsChecked,
+		Position:  i.Position,
+	}
+}
+
+// ChecklistItemListResponseFromDomain converts a slice of domain items to response DTOs.
+func ChecklistItemListResponseFromDomain(items []domain.ChecklistItem) []ChecklistItemResponse {
+	out := make([]ChecklistItemResponse, len(items))
+	for i := range items {
+		out[i] = *ChecklistItemResponseFromDomain(&items[i])
+	}
+	return out
+}
+
+// TripParticipantResponse is the API response for a regatta RSVP.
+type TripParticipantResponse struct {
+	UserID      string      `json:"user_id"`
+	RSVP        domain.RSVP `json:"rsvp"`
+	RespondedAt time.Time   `json:"responded_at"`
+}
+
+// TripParticipantResponseFromDomain builds a response from a domain participant.
+func TripParticipantResponseFromDomain(p *domain.TripParticipant) *TripParticipantResponse {
+	return &TripParticipantResponse{
+		UserID:      p.UserID,
+		RSVP:        p.RSVP,
+		RespondedAt: p.RespondedAt,
+	}
+}
+
+// TripParticipantListResponseFromDomain converts a slice of participants to DTOs.
+func TripParticipantListResponseFromDomain(participants []domain.TripParticipant) []TripParticipantResponse {
+	out := make([]TripParticipantResponse, len(participants))
+	for i := range participants {
+		out[i] = *TripParticipantResponseFromDomain(&participants[i])
 	}
 	return out
 }

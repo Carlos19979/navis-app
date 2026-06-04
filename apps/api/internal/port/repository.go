@@ -30,9 +30,28 @@ type DocumentRepository interface {
 type TripRepository interface {
 	Create(ctx context.Context, trip *domain.Trip) (*domain.Trip, error)
 	GetByID(ctx context.Context, userID, id string) (*domain.Trip, error)
+	GetByIDUnscoped(ctx context.Context, id string) (*domain.Trip, error)
 	List(ctx context.Context, userID, boatID, cursor string, limit int) ([]domain.Trip, string, error)
+	ListByGroup(ctx context.Context, groupID, cursor string, limit int) ([]domain.Trip, string, error)
 	Update(ctx context.Context, userID string, trip *domain.Trip) (*domain.Trip, error)
 	Delete(ctx context.Context, userID, id string) error
+}
+
+// TripParticipantRepository tracks RSVP answers to planned group trips/regattas.
+type TripParticipantRepository interface {
+	SetRSVP(ctx context.Context, tripID, userID string, rsvp domain.RSVP) error
+	Remove(ctx context.Context, tripID, userID string) error
+	ListByTrip(ctx context.Context, tripID string) ([]domain.TripParticipant, error)
+}
+
+// TripChecklistRepository manages a trip's pre-departure safety checklist.
+type TripChecklistRepository interface {
+	CopyDefaults(ctx context.Context, tripID string) error
+	Count(ctx context.Context, tripID string) (int, error)
+	ListByTrip(ctx context.Context, tripID string) ([]domain.ChecklistItem, error)
+	AddItem(ctx context.Context, tripID, label string, position int) (*domain.ChecklistItem, error)
+	SetChecked(ctx context.Context, tripID, itemID string, checked bool) (*domain.ChecklistItem, error)
+	RemoveItem(ctx context.Context, tripID, itemID string) error
 }
 
 // TripTrackRepository defines persistence operations for trip GPS track points.
