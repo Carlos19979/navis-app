@@ -61,6 +61,27 @@ type EventInterestRepository interface {
 	IsInterested(ctx context.Context, userID, eventID string) (bool, error)
 }
 
+// GroupRepository defines persistence operations for groups (clubs/crews).
+type GroupRepository interface {
+	Create(ctx context.Context, group *domain.Group) (*domain.Group, error)
+	GetByID(ctx context.Context, userID, id string) (*domain.Group, error)
+	GetByInviteCode(ctx context.Context, userID, code string) (*domain.Group, error)
+	List(ctx context.Context, userID, cursor string, limit int) ([]domain.Group, string, error)
+	ListPublic(ctx context.Context, userID, cursor string, limit int) ([]domain.Group, string, error)
+	Update(ctx context.Context, userID string, group *domain.Group) (*domain.Group, error)
+	Delete(ctx context.Context, userID, id string) error
+}
+
+// GroupMemberRepository defines persistence operations for group membership.
+type GroupMemberRepository interface {
+	Add(ctx context.Context, groupID, userID string, role domain.GroupMemberRole, status domain.GroupMemberStatus) error
+	Get(ctx context.Context, groupID, userID string) (*domain.GroupMember, error)
+	SetStatus(ctx context.Context, groupID, userID string, status domain.GroupMemberStatus) error
+	Remove(ctx context.Context, groupID, userID string) error
+	ListMembers(ctx context.Context, groupID string) ([]domain.GroupMember, error)
+	ListPending(ctx context.Context, groupID string) ([]domain.GroupMember, error)
+}
+
 // NotificationLogRepository tracks sent document-expiry notifications to avoid duplicates.
 type NotificationLogRepository interface {
 	Exists(ctx context.Context, userID, documentID string, daysBefore int) (bool, error)

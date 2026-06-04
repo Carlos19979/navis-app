@@ -24,6 +24,8 @@ DECLARE
   event_1_id   UUID := 'f0000000-0000-0000-0000-000000000001';
   event_2_id   UUID := 'f0000000-0000-0000-0000-000000000002';
   event_3_id   UUID := 'f0000000-0000-0000-0000-000000000003';
+  group_1_id   UUID := 'a1000000-0000-0000-0000-000000000001';
+  regatta_1_id UUID := 'e0000000-0000-0000-0000-000000000003';
 BEGIN
 
 -- Create test user in auth.users
@@ -195,5 +197,36 @@ INSERT INTO ports (name, location, country, port_type, depth_m, facilities, vhf_
     3.0, ARRAY['fuel'], '09', NULL),
   ('Port de Valencia', ST_MakePoint(-0.3200, 39.4500)::geography, 'ES', 'marina',
     6.0, ARRAY['fuel', 'water', 'electricity', 'wifi', 'showers', 'restaurant', 'repair', 'crane'], '09', 'https://marinarealjuancarlos.com');
+
+-- ─── Groups (club / crew) ──────────────────────────────────────────
+INSERT INTO groups (id, owner_id, name, description, visibility) VALUES
+  (group_1_id, test_user_id, 'Club Nautico Mediterraneo',
+   'Grupo de prueba para regatas y salidas en grupo.', 'public');
+
+INSERT INTO group_members (group_id, user_id, role, status) VALUES
+  (group_1_id, test_user_id, 'owner', 'active');
+
+-- ─── Group regatta (planned, scheduled for next week) ──────────────
+INSERT INTO trips (id, boat_id, user_id, group_id, title, kind,
+  departure_port, departure_time, scheduled_at, status) VALUES
+  (regatta_1_id, boat_1_id, test_user_id, group_1_id,
+   'Regata de Primavera', 'regatta', 'Marina Port de Mallorca',
+   now() + INTERVAL '7 days', now() + INTERVAL '7 days', 'planned');
+
+INSERT INTO trip_participants (trip_id, user_id, rsvp) VALUES
+  (regatta_1_id, test_user_id, 'going');
+
+-- ─── Default safety checklist items ────────────────────────────────
+INSERT INTO checklist_default_items (label, position) VALUES
+  ('Chalecos salvavidas para toda la tripulacion', 1),
+  ('Bengalas y senales pirotecnicas en vigor', 2),
+  ('Radio VHF operativa', 3),
+  ('Nivel de combustible suficiente', 4),
+  ('Bomba de achique funcionando', 5),
+  ('Botiquin de primeros auxilios', 6),
+  ('Ancla y cabos en buen estado', 7),
+  ('Luces de navegacion operativas', 8),
+  ('Prevision meteorologica revisada', 9),
+  ('Plan de navegacion compartido en tierra', 10);
 
 END $$;
