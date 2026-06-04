@@ -17,6 +17,7 @@ func New(
 	docH *handler.DocumentHandler,
 	tripH *handler.TripHandler,
 	eventH *handler.EventHandler,
+	groupH *handler.GroupHandler,
 	portH *handler.PortHandler,
 	weatherH *handler.WeatherHandler,
 	deviceH *handler.DeviceHandler,
@@ -118,6 +119,32 @@ func New(
 			r.Route("/{id}", func(r chi.Router) {
 				r.Get("/", eventH.GetByID)
 				r.Post("/interest", eventH.ToggleInterest)
+			})
+		})
+
+		// Groups (clubs / crews).
+		r.Route("/groups", func(r chi.Router) {
+			r.Post("/", groupH.Create)
+			r.Get("/", groupH.List)
+			r.Post("/join", groupH.JoinByCode)
+
+			r.Route("/{id}", func(r chi.Router) {
+				r.Get("/", groupH.GetByID)
+				r.Put("/", groupH.Update)
+				r.Delete("/", groupH.Delete)
+				r.Post("/join", groupH.RequestJoin)
+				r.Post("/leave", groupH.Leave)
+
+				r.Route("/members", func(r chi.Router) {
+					r.Get("/", groupH.ListMembers)
+					r.Delete("/{userId}", groupH.RemoveMember)
+				})
+
+				r.Route("/requests", func(r chi.Router) {
+					r.Get("/", groupH.ListRequests)
+					r.Post("/{userId}/approve", groupH.ApproveRequest)
+					r.Post("/{userId}/reject", groupH.RejectRequest)
+				})
 			})
 		})
 
