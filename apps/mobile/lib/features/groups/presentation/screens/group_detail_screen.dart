@@ -8,6 +8,8 @@ import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/features/groups/domain/entities/group.dart';
 import 'package:navis_mobile/features/groups/domain/entities/group_member.dart';
 import 'package:navis_mobile/features/groups/presentation/providers/group_provider.dart';
+import 'package:navis_mobile/features/regattas/domain/entities/regatta.dart';
+import 'package:navis_mobile/features/regattas/presentation/providers/regatta_provider.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
@@ -58,6 +60,23 @@ class GroupDetailScreen extends ConsumerWidget {
                       group.inviteCode != null)
                     _inviteCode(context, group.inviteCode!),
                   if (group.isOwner) _RequestsSection(groupId: groupId),
+                  if (group.isActiveMember) ...[
+                    Row(
+                      children: [
+                        const Expanded(
+                            child: _SectionTitle('Regatas y salidas')),
+                        TextButton.icon(
+                          icon: const Icon(Icons.add,
+                              color: AppColors.cyan, size: 18),
+                          label: const Text('Programar',
+                              style: TextStyle(color: AppColors.cyan)),
+                          onPressed: () =>
+                              context.push('/groups/$groupId/schedule'),
+                        ),
+                      ],
+                    ),
+                    _RegattasSection(groupId: groupId),
+                  ],
                   const SizedBox(height: 8),
                   const _SectionTitle('Miembros'),
                   _MembersSection(
@@ -334,6 +353,99 @@ class _RequestsSection extends ConsumerWidget {
       if (!context.mounted) return;
       NavisSnackbar.error(context, 'No se pudo procesar');
     }
+  }
+}
+
+class _RegattasSection extends ConsumerWidget {
+  const _RegattasSection({required this.groupId});
+  final String groupId;
+
+  static const _statusLabels = {
+    'planned': 'Programada',
+    'recording': 'En curso',
+    'completed': 'Completada',
+    'cancelled': 'Cancelada',
+  };
+  static const _statusColors = {
+    'planned': AppColors.cyan,
+    'recording': AppColors.green,
+    'completed': AppColors.textSecondary,
+    'cancelled': AppColors.red,
+  };
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(groupRegattasProvider(groupId));
+    return async.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.all(12),
+        child: Center(child: CircularProgressIndicator(color: AppColors.cyan)),
+      ),
+      error: (e, _) => NavisErrorWidget(
+        message: e.toString(),
+        onRetry: () => ref.invalidate(groupRegattasProvider(groupId)),
+      ),
+      data: (regattas) {
+        if (regattas.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Text('No hay regatas programadas.',
+                style: TextStyle(color: AppColors.textSecondary)),
+          );
+        }
+        return Column(
+          children: regattas.map((r) => _tile(context, r)).toList(),
+        );
+      },
+    );
+  }
+
+  Widget _tile(BuildContext context, Regatta r) {
+    final color = _statusColors[r.status] ?? AppColors.textSecondary;
+    return NavisCard(
+      margin: const EdgeInsets.only(bottom: 8),
+      onTap: () => context.push('/regattas/${r.id}'),
+      child: Row(
+        children: [
+          Icon(
+            r.kind == 'regatta' ? Icons.emoji_events_outlined : Icons.sailing,
+            color: AppColors.cyan,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(r.displayTitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600)),
+                if (r.scheduledAt != null)
+                  Text(
+                    '${r.scheduledAt!.day}/${r.scheduledAt!.month}/${r.scheduledAt!.year}',
+                    style: const TextStyle(
+                        color: AppColors.textSecondary, fontSize: 12),
+                  ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              _statusLabels[r.status] ?? r.status,
+              style: TextStyle(
+                  color: color, fontSize: 11, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
