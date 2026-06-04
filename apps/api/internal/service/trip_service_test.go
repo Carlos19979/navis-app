@@ -12,11 +12,13 @@ import (
 // --- mock TripRepository ---
 
 type mockTripRepo struct {
-	createFn  func(ctx context.Context, trip *domain.Trip) (*domain.Trip, error)
-	getByIDFn func(ctx context.Context, userID, id string) (*domain.Trip, error)
-	listFn    func(ctx context.Context, userID, boatID, cursor string, limit int) ([]domain.Trip, string, error)
-	updateFn  func(ctx context.Context, userID string, trip *domain.Trip) (*domain.Trip, error)
-	deleteFn  func(ctx context.Context, userID, id string) error
+	createFn          func(ctx context.Context, trip *domain.Trip) (*domain.Trip, error)
+	getByIDFn         func(ctx context.Context, userID, id string) (*domain.Trip, error)
+	getByIDUnscopedFn func(ctx context.Context, id string) (*domain.Trip, error)
+	listFn            func(ctx context.Context, userID, boatID, cursor string, limit int) ([]domain.Trip, string, error)
+	listByGroupFn     func(ctx context.Context, groupID, cursor string, limit int) ([]domain.Trip, string, error)
+	updateFn          func(ctx context.Context, userID string, trip *domain.Trip) (*domain.Trip, error)
+	deleteFn          func(ctx context.Context, userID, id string) error
 }
 
 func (m *mockTripRepo) Create(ctx context.Context, trip *domain.Trip) (*domain.Trip, error) {
@@ -25,6 +27,14 @@ func (m *mockTripRepo) Create(ctx context.Context, trip *domain.Trip) (*domain.T
 
 func (m *mockTripRepo) GetByID(ctx context.Context, userID, id string) (*domain.Trip, error) {
 	return m.getByIDFn(ctx, userID, id)
+}
+
+func (m *mockTripRepo) GetByIDUnscoped(ctx context.Context, id string) (*domain.Trip, error) {
+	return m.getByIDUnscopedFn(ctx, id)
+}
+
+func (m *mockTripRepo) ListByGroup(ctx context.Context, groupID, cursor string, limit int) ([]domain.Trip, string, error) {
+	return m.listByGroupFn(ctx, groupID, cursor, limit)
 }
 
 func (m *mockTripRepo) List(ctx context.Context, userID, boatID, cursor string, limit int) ([]domain.Trip, string, error) {

@@ -18,6 +18,7 @@ func New(
 	tripH *handler.TripHandler,
 	eventH *handler.EventHandler,
 	groupH *handler.GroupHandler,
+	regattaH *handler.RegattaHandler,
 	portH *handler.PortHandler,
 	weatherH *handler.WeatherHandler,
 	deviceH *handler.DeviceHandler,
@@ -100,6 +101,21 @@ func New(
 				r.Put("/complete", tripH.Complete)
 				r.Get("/tracks", tripH.GetTracks)
 				r.Post("/tracks", tripH.AddTracks)
+
+				// Regatta lifecycle + RSVP.
+				r.Put("/start", regattaH.Start)
+				r.Put("/cancel", regattaH.Cancel)
+				r.Post("/rsvp", regattaH.SetRSVP)
+				r.Get("/participants", regattaH.ListParticipants)
+
+				// Pre-departure safety checklist.
+				r.Route("/checklist", func(r chi.Router) {
+					r.Get("/", regattaH.GetChecklist)
+					r.Post("/", regattaH.AddChecklistItem)
+					r.Put("/complete", regattaH.CompleteChecklist)
+					r.Put("/{itemId}", regattaH.SetChecklistItem)
+					r.Delete("/{itemId}", regattaH.RemoveChecklistItem)
+				})
 			})
 		})
 
@@ -145,6 +161,10 @@ func New(
 					r.Post("/{userId}/approve", groupH.ApproveRequest)
 					r.Post("/{userId}/reject", groupH.RejectRequest)
 				})
+
+				// Group regattas / outings.
+				r.Get("/trips", regattaH.ListGroupTrips)
+				r.Post("/trips", regattaH.Schedule)
 			})
 		})
 
