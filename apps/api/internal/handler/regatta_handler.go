@@ -142,6 +142,22 @@ func (h *RegattaHandler) Start(w http.ResponseWriter, r *http.Request) {
 	JSON(w, http.StatusOK, dto.TripResponseFromDomain(trip))
 }
 
+// Revert handles PUT /trips/{id}/revert (recording -> planned).
+func (h *RegattaHandler) Revert(w http.ResponseWriter, r *http.Request) {
+	uid, ok := requireUserID(w, r)
+	if !ok {
+		return
+	}
+
+	trip, err := h.svc.RevertToPlanned(r.Context(), uid, chi.URLParam(r, "id"))
+	if err != nil {
+		MapDomainError(w, err)
+		return
+	}
+
+	JSON(w, http.StatusOK, dto.TripResponseFromDomain(trip))
+}
+
 // Cancel handles PUT /trips/{id}/cancel.
 func (h *RegattaHandler) Cancel(w http.ResponseWriter, r *http.Request) {
 	uid, ok := requireUserID(w, r)

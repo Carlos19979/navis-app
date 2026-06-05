@@ -14,17 +14,25 @@ import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 
-/// Mandatory pre-departure safety checklist. When all items are checked the
-/// skipper can complete the checklist and start recording the trip/regatta.
+/// Pre-departure safety checklist.
+///
+/// Two modes:
+/// - Regatta ([tripId] set): items are persisted; all must be checked to
+///   complete the checklist and start recording the regatta's trip.
+/// - Boat ([boatId] set, [tripId] null): a local, skippable checklist shown
+///   before starting a solo trip recording. Items are not persisted.
 class PreTripChecklistScreen extends ConsumerStatefulWidget {
   const PreTripChecklistScreen({
-    required this.tripId,
+    this.tripId,
     this.groupId,
+    this.boatId,
     super.key,
-  });
+  }) : assert(tripId != null || boatId != null,
+            'Either tripId (regatta) or boatId (solo trip) is required');
 
-  final String tripId;
+  final String? tripId;
   final String? groupId;
+  final String? boatId;
 
   @override
   ConsumerState<PreTripChecklistScreen> createState() =>
@@ -33,13 +41,41 @@ class PreTripChecklistScreen extends ConsumerStatefulWidget {
 
 class _PreTripChecklistScreenState
     extends ConsumerState<PreTripChecklistScreen> {
+  static const _defaultSafetyItems = [
+    'Chalecos salvavidas para toda la tripulación',
+    'Bengalas y señales pirotécnicas en vigor',
+    'Radio VHF operativa',
+    'Nivel de combustible suficiente',
+    'Bomba de achique funcionando',
+    'Botiquín de primeros auxilios',
+    'Ancla y cabos en buen estado',
+    'Luces de navegación operativas',
+    'Previsión meteorológica revisada',
+    'Plan de navegación compartido en tierra',
+  ];
+
   List<ChecklistItem>? _items;
   bool _busy = false;
+  int _localCounter = 0;
+
+  bool get _isLocal => widget.tripId == null;
 
   RegattaRepository get _repo => ref.read(regattaRepositoryProvider);
 
   bool get _allChecked =>
       _items != null && _items!.isNotEmpty && _items!.every((i) => i.isChecked);
+
+  List<ChecklistItem> _defaultItems() {
+    return [
+      for (var i = 0; i < _defaultSafetyItems.length; i++)
+        ChecklistItem(
+          id: 'local-$i',
+          label: _defaultSafetyItems[i],
+          isChecked: false,
+          position: i,
+        ),
+    ];
+  }
 
   Future<void> _toggle(ChecklistItem item, bool value) async {
     setState(() {
@@ -47,8 +83,9 @@ class _PreTripChecklistScreenState
           .map((i) => i.id == item.id ? i.copyWith(isChecked: value) : i)
           .toList();
     });
+    if (_isLocal) return;
     try {
-      await _repo.setChecklistItem(widget.tripId, item.id, value);
+      await _repo.setChecklistItem(widget.tripId!, item.id, value);
     } catch (_) {
       if (!mounted) return;
       setState(() {
@@ -84,8 +121,20 @@ class _PreTripChecklistScreenState
       ),
     );
     if (label == null || label.isEmpty) return;
+    if (_isLocal) {
+      setState(() => _items = [
+            ...?_items,
+            ChecklistItem(
+              id: 'local-new-${_localCounter++}',
+              label: label,
+              isChecked: false,
+              position: (_items?.length ?? 0),
+            ),
+          ]);
+      return;
+    }
     try {
-      final item = await _repo.addChecklistItem(widget.tripId, label);
+      final item = await _repo.addChecklistItem(widget.tripId!, label);
       setState(() => _items = [...?_items, item]);
     } catch (_) {
       if (!mounted) return;
@@ -96,8 +145,9 @@ class _PreTripChecklistScreenState
   Future<void> _remove(ChecklistItem item) async {
     final prev = _items;
     setState(() => _items = _items!.where((i) => i.id != item.id).toList());
+    if (_isLocal) return;
     try {
-      await _repo.removeChecklistItem(widget.tripId, item.id);
+      await _repo.removeChecklistItem(widget.tripId!, item.id);
     } catch (_) {
       if (!mounted) return;
       setState(() => _items = prev);
@@ -105,18 +155,21 @@ class _PreTripChecklistScreenState
     }
   }
 
+  /// Regatta: persist + start the planned trip, then open recording.
   Future<void> _completeAndStart() async {
     setState(() => _busy = true);
     try {
-      await _repo.completeChecklist(widget.tripId);
-      await _repo.start(widget.tripId);
+      await _repo.completeChecklist(widget.tripId!);
+      final regatta = await _repo.start(widget.tripId!);
       if (widget.groupId != null) {
         ref.invalidate(groupRegattasProvider(widget.groupId!));
       }
-      ref.invalidate(regattaProvider(widget.tripId));
+      ref.invalidate(regattaProvider(widget.tripId!));
       if (!mounted) return;
-      NavisSnackbar.success(context, '¡Buen viaje! Grabación iniciada');
-      context.pop();
+      context.pushReplacement(
+        '/boats/${regatta.boatId}/record'
+        '?tripId=${widget.tripId}&regatta=true',
+      );
     } catch (_) {
       if (!mounted) return;
       setState(() => _busy = false);
@@ -124,15 +177,13 @@ class _PreTripChecklistScreenState
     }
   }
 
+  /// Boat: no persistence — just go straight to recording (auto-start).
+  void _startSoloTrip() {
+    context.pushReplacement('/boats/${widget.boatId}/record?autostart=true');
+  }
+
   @override
   Widget build(BuildContext context) {
-    final async = ref.watch(regattaChecklistProvider(widget.tripId));
-
-    // Seed local state from the provider the first time it loads.
-    if (_items == null && async.hasValue) {
-      _items = List.of(async.value!);
-    }
-
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
@@ -148,86 +199,112 @@ class _PreTripChecklistScreenState
         ],
       ),
       body: GradientBackground(
-        child: SafeArea(
-          child: async.when(
-            loading: () => const NavisLoading(),
-            error: (e, _) => NavisErrorWidget(
-              message: e.toString(),
-              onRetry: () =>
-                  ref.invalidate(regattaChecklistProvider(widget.tripId)),
-            ),
-            data: (_) {
-              final items = _items ?? const <ChecklistItem>[];
-              return Column(
-                children: [
-                  Expanded(
-                    child: ListView(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                      children: [
-                        for (final item in items)
-                          NavisCard(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            child: Row(
-                              children: [
-                                Checkbox(
-                                  value: item.isChecked,
-                                  activeColor: AppColors.green,
-                                  onChanged: (v) => _toggle(item, v ?? false),
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    item.label,
-                                    style: TextStyle(
-                                      color: item.isChecked
-                                          ? AppColors.textSecondary
-                                          : AppColors.textPrimary,
-                                      decoration: item.isChecked
-                                          ? TextDecoration.lineThrough
-                                          : null,
-                                    ),
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.close,
-                                      size: 18, color: AppColors.textSecondary),
-                                  tooltip: 'Eliminar',
-                                  onPressed: () => _remove(item),
-                                ),
-                              ],
-                            ),
+        child: SafeArea(child: _isLocal ? _buildLocal() : _buildRegatta()),
+      ),
+    );
+  }
+
+  Widget _buildLocal() {
+    _items ??= _defaultItems();
+    return _content(
+      items: _items!,
+      primaryLabel: 'Empezar viaje',
+      gated: false,
+      onPrimary: _startSoloTrip,
+    );
+  }
+
+  Widget _buildRegatta() {
+    final async = ref.watch(regattaChecklistProvider(widget.tripId!));
+    if (_items == null && async.hasValue) {
+      _items = List.of(async.value!);
+    }
+    return async.when(
+      loading: () => const NavisLoading(),
+      error: (e, _) => NavisErrorWidget(
+        message: e.toString(),
+        onRetry: () =>
+            ref.invalidate(regattaChecklistProvider(widget.tripId!)),
+      ),
+      data: (_) => _content(
+        items: _items ?? const <ChecklistItem>[],
+        primaryLabel: 'Completar y zarpar',
+        gated: true,
+        onPrimary: _completeAndStart,
+      ),
+    );
+  }
+
+  Widget _content({
+    required List<ChecklistItem> items,
+    required String primaryLabel,
+    required bool gated,
+    required VoidCallback onPrimary,
+  }) {
+    return Column(
+      children: [
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            children: [
+              for (final item in items)
+                NavisCard(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    children: [
+                      Checkbox(
+                        value: item.isChecked,
+                        activeColor: AppColors.green,
+                        onChanged: (v) => _toggle(item, v ?? false),
+                      ),
+                      Expanded(
+                        child: Text(
+                          item.label,
+                          style: TextStyle(
+                            color: item.isChecked
+                                ? AppColors.textSecondary
+                                : AppColors.textPrimary,
+                            decoration: item.isChecked
+                                ? TextDecoration.lineThrough
+                                : null,
                           ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                    child: Column(
-                      children: [
-                        if (!_allChecked)
-                          const Padding(
-                            padding: EdgeInsets.only(bottom: 8),
-                            child: Text(
-                              'Marca todos los ítems de seguridad para zarpar.',
-                              style: TextStyle(
-                                  color: AppColors.amber, fontSize: 13),
-                            ),
-                          ),
-                        NavisButton(
-                          label: 'Completar y zarpar',
-                          icon: Icons.sailing,
-                          isLoading: _busy,
-                          isDisabled: _busy || !_allChecked,
-                          onPressed: _completeAndStart,
                         ),
-                      ],
-                    ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close,
+                            size: 18, color: AppColors.textSecondary),
+                        tooltip: 'Eliminar',
+                        onPressed: () => _remove(item),
+                      ),
+                    ],
                   ),
-                ],
-              );
-            },
+                ),
+            ],
           ),
         ),
-      ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+          child: Column(
+            children: [
+              if (gated && !_allChecked)
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    'Marca todos los ítems de seguridad para zarpar.',
+                    style: TextStyle(color: AppColors.amber, fontSize: 13),
+                  ),
+                ),
+              NavisButton(
+                label: primaryLabel,
+                icon: Icons.sailing,
+                isLoading: _busy,
+                isDisabled: _busy || (gated && !_allChecked),
+                onPressed: onPrimary,
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

@@ -12,6 +12,7 @@ class RecordingControls extends StatelessWidget {
     required this.onPause,
     required this.onResume,
     required this.onStop,
+    this.onCancel,
   });
 
   final TripStatus status;
@@ -19,6 +20,7 @@ class RecordingControls extends StatelessWidget {
   final VoidCallback onPause;
   final VoidCallback onResume;
   final VoidCallback onStop;
+  final VoidCallback? onCancel;
 
   @override
   Widget build(BuildContext context) {
@@ -27,48 +29,71 @@ class RecordingControls extends StatelessWidget {
       case TripStatus.completed:
         return _StartButton(onPressed: onStart);
       case TripStatus.recording:
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _GradientControlButton(
-              icon: Icons.pause,
-              label: l.pauseTrip,
-              gradient: AppColors.amberGradient,
-              glowColor: AppColors.amber,
-              onPressed: onPause,
-            ),
-            const SizedBox(width: 24),
-            _GradientControlButton(
-              icon: Icons.stop,
-              label: l.stopTrip,
-              gradient: AppColors.redGradient,
-              glowColor: AppColors.red,
-              onPressed: onStop,
-            ),
-          ],
+        return _controlsColumn(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _GradientControlButton(
+                icon: Icons.pause,
+                label: l.pauseTrip,
+                gradient: AppColors.amberGradient,
+                glowColor: AppColors.amber,
+                onPressed: onPause,
+              ),
+              const SizedBox(width: 24),
+              _GradientControlButton(
+                icon: Icons.stop,
+                label: l.stopTrip,
+                gradient: AppColors.redGradient,
+                glowColor: AppColors.red,
+                onPressed: onStop,
+              ),
+            ],
+          ),
         );
       case TripStatus.paused:
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _GradientControlButton(
-              icon: Icons.play_arrow,
-              label: l.resumeTrip,
-              gradient: AppColors.greenGradient,
-              glowColor: AppColors.green,
-              onPressed: onResume,
-            ),
-            const SizedBox(width: 24),
-            _GradientControlButton(
-              icon: Icons.stop,
-              label: l.stopTrip,
-              gradient: AppColors.redGradient,
-              glowColor: AppColors.red,
-              onPressed: onStop,
-            ),
-          ],
+        return _controlsColumn(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _GradientControlButton(
+                icon: Icons.play_arrow,
+                label: l.resumeTrip,
+                gradient: AppColors.greenGradient,
+                glowColor: AppColors.green,
+                onPressed: onResume,
+              ),
+              const SizedBox(width: 24),
+              _GradientControlButton(
+                icon: Icons.stop,
+                label: l.stopTrip,
+                gradient: AppColors.redGradient,
+                glowColor: AppColors.red,
+                onPressed: onStop,
+              ),
+            ],
+          ),
         );
     }
+  }
+
+  Widget _controlsColumn(Widget mainRow) {
+    if (onCancel == null) return mainRow;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        mainRow,
+        const SizedBox(height: 6),
+        TextButton.icon(
+          onPressed: onCancel,
+          icon: const Icon(Icons.close, size: 16, color: AppColors.textSecondary),
+          label: const Text(
+            'Cancelar viaje',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+          ),
+        ),
+      ],
+    );
   }
 }
 
