@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/groups/presentation/providers/group_provider.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
@@ -77,10 +78,10 @@ class _GroupFormScreenState extends ConsumerState<GroupFormScreen> {
                   maxLines: 3,
                 ),
                 const SizedBox(height: 20),
-                const Text(
+                Text(
                   'Visibilidad',
                   style: TextStyle(
-                    color: AppColors.textPrimary,
+                    color: context.txtPrimary,
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                   ),
@@ -124,16 +125,15 @@ class _GroupFormScreenState extends ConsumerState<GroupFormScreen> {
       controller: controller,
       validator: validator,
       maxLines: maxLines,
-      style: const TextStyle(color: AppColors.textPrimary),
+      style: TextStyle(color: context.txtPrimary),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: AppColors.textSecondary),
+        labelStyle: TextStyle(color: context.txtSecondary),
         filled: true,
-        fillColor: AppColors.glassWhite,
+        fillColor: context.glassBg,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide:
-              const BorderSide(color: AppColors.glassBorder, width: 0.5),
+          borderSide: BorderSide(color: context.glassBorderColor, width: 0.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
@@ -155,8 +155,7 @@ class _GroupFormScreenState extends ConsumerState<GroupFormScreen> {
       borderColor: selected ? AppColors.cyan : null,
       child: Row(
         children: [
-          Icon(icon,
-              color: selected ? AppColors.cyan : AppColors.textSecondary),
+          Icon(icon, color: selected ? AppColors.cyan : context.txtSecondary),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -164,16 +163,16 @@ class _GroupFormScreenState extends ConsumerState<GroupFormScreen> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
+                  style: TextStyle(
+                    color: context.txtPrimary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: context.txtSecondary,
                     fontSize: 12,
                   ),
                 ),

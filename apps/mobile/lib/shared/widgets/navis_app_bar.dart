@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 
 class NavisAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -46,7 +47,8 @@ class NavisAppBar extends StatelessWidget implements PreferredSizeWidget {
     final barColor = isDark
         ? AppColors.navy.withValues(alpha: 0.7)
         : Colors.white.withValues(alpha: 0.85);
-    final borderColor = isDark ? AppColors.glassBorder : AppColors.lightDivider;
+    final borderColor =
+        isDark ? context.glassBorderColor : AppColors.lightDivider;
 
     return ClipRRect(
       child: BackdropFilter(
@@ -100,8 +102,8 @@ class NavisAppBar extends StatelessWidget implements PreferredSizeWidget {
       Padding(
         padding: const EdgeInsets.only(right: 8),
         child: Container(
-          decoration: const BoxDecoration(
-            color: AppColors.glassWhite,
+          decoration: BoxDecoration(
+            color: context.glassBg,
             shape: BoxShape.circle,
           ),
           child: IconButton(

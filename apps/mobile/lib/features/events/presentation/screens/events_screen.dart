@@ -7,6 +7,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/events/domain/entities/event.dart';
 import 'package:navis_mobile/features/events/presentation/providers/event_provider.dart';
 import 'package:navis_mobile/features/events/presentation/widgets/calendar_view.dart';
@@ -88,7 +89,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
           IconButton(
             icon: Icon(
               _showCalendar ? Icons.list : Icons.calendar_month,
-              color: AppColors.textPrimary,
+              color: context.txtPrimary,
             ),
             tooltip: 'Toggle view',
             onPressed: () {
@@ -123,35 +124,33 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: AppColors.glassWhite,
+                        color: context.glassBg,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: AppColors.glassBorder,
+                          color: context.glassBorderColor,
                           width: 0.5,
                         ),
                       ),
                       child: TextField(
                         controller: _searchController,
                         onChanged: _onSearchChanged,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
+                        style: TextStyle(
+                          color: context.txtPrimary,
                         ),
                         decoration: InputDecoration(
                           hintText: l.searchEvents,
                           hintStyle: TextStyle(
-                            color:
-                                AppColors.textSecondary.withValues(alpha: 0.6),
+                            color: context.txtSecondary.withValues(alpha: 0.6),
                           ),
                           prefixIcon: Icon(
                             Icons.search,
-                            color:
-                                AppColors.textSecondary.withValues(alpha: 0.6),
+                            color: context.txtSecondary.withValues(alpha: 0.6),
                           ),
                           suffixIcon: _searchQuery.isNotEmpty
                               ? IconButton(
-                                  icon: const Icon(
+                                  icon: Icon(
                                     Icons.clear,
-                                    color: AppColors.textSecondary,
+                                    color: context.txtSecondary,
                                   ),
                                   tooltip: 'Clear search',
                                   onPressed: () {
@@ -194,12 +193,12 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                               decoration: BoxDecoration(
                                 gradient:
                                     isSelected ? AppColors.cyanGradient : null,
-                                color: isSelected ? null : AppColors.glassWhite,
+                                color: isSelected ? null : context.glassBg,
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
                                   color: isSelected
                                       ? AppColors.cyan.withValues(alpha: 0.6)
-                                      : AppColors.glassBorder,
+                                      : context.glassBorderColor,
                                   width: isSelected ? 1 : 0.5,
                                 ),
                               ),
@@ -208,7 +207,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                                 style: TextStyle(
                                   color: isSelected
                                       ? Colors.white
-                                      : AppColors.textSecondary,
+                                      : context.txtSecondary,
                                   fontSize: 13,
                                   fontWeight: isSelected
                                       ? FontWeight.w600
@@ -237,7 +236,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                             )
                           : RefreshIndicator(
                               color: AppColors.cyan,
-                              backgroundColor: AppColors.darkSurface,
+                              backgroundColor: context.dialogSurface,
                               onRefresh: () async {
                                 ref.invalidate(eventsProvider);
                               },

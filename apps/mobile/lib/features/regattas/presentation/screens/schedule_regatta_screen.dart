@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/ports/presentation/providers/port_provider.dart';
@@ -142,8 +143,8 @@ class _ScheduleRegattaScreenState extends ConsumerState<ScheduleRegattaScreen> {
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Text(b.name,
-                                        style: const TextStyle(
-                                            color: AppColors.textPrimary)),
+                                        style: TextStyle(
+                                            color: context.txtPrimary)),
                                   ),
                                   if (_boatId == b.id)
                                     const Icon(Icons.check_circle,
@@ -158,10 +159,10 @@ class _ScheduleRegattaScreenState extends ConsumerState<ScheduleRegattaScreen> {
                 const _Label('Puerto de salida'),
                 const SizedBox(height: 8),
                 if (selectedBoat == null)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                     child: Text('Selecciona un barco primero.',
-                        style: TextStyle(color: AppColors.textSecondary)),
+                        style: TextStyle(color: context.txtSecondary)),
                   )
                 else
                   _DeparturePortPicker(
@@ -181,11 +182,10 @@ class _ScheduleRegattaScreenState extends ConsumerState<ScheduleRegattaScreen> {
                           'Fecha: ${_scheduledAt.day}/${_scheduledAt.month}/${_scheduledAt.year} '
                           '${_scheduledAt.hour.toString().padLeft(2, '0')}:'
                           '${_scheduledAt.minute.toString().padLeft(2, '0')}',
-                          style: const TextStyle(color: AppColors.textPrimary),
+                          style: TextStyle(color: context.txtPrimary),
                         ),
                       ),
-                      const Icon(Icons.edit,
-                          color: AppColors.textSecondary, size: 18),
+                      Icon(Icons.edit, color: context.txtSecondary, size: 18),
                     ],
                   ),
                 ),
@@ -212,16 +212,15 @@ class _ScheduleRegattaScreenState extends ConsumerState<ScheduleRegattaScreen> {
     return TextFormField(
       controller: controller,
       validator: validator,
-      style: const TextStyle(color: AppColors.textPrimary),
+      style: TextStyle(color: context.txtPrimary),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: AppColors.textSecondary),
+        labelStyle: TextStyle(color: context.txtSecondary),
         filled: true,
-        fillColor: AppColors.glassWhite,
+        fillColor: context.glassBg,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide:
-              const BorderSide(color: AppColors.glassBorder, width: 0.5),
+          borderSide: BorderSide(color: context.glassBorderColor, width: 0.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
@@ -240,8 +239,7 @@ class _Label extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: const TextStyle(
-          color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+      style: TextStyle(color: context.txtPrimary, fontWeight: FontWeight.w600),
     );
   }
 }

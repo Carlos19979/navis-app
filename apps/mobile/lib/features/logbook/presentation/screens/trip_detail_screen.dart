@@ -8,6 +8,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/core/utils/distance_utils.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
@@ -115,7 +116,7 @@ class TripDetailScreen extends ConsumerWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: AppColors.glassBorder,
+            color: context.glassBorderColor,
             width: 0.5,
           ),
         ),
@@ -215,7 +216,7 @@ class TripDetailScreen extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Container(
               height: 0.5,
-              color: AppColors.glassBorder,
+              color: context.glassBorderColor,
             ),
           ),
           _DetailRow(
@@ -294,7 +295,7 @@ class TripDetailScreen extends ConsumerWidget {
             const SizedBox(height: 12),
             Container(
               height: 0.5,
-              color: AppColors.glassBorder,
+              color: context.glassBorderColor,
             ),
             const SizedBox(height: 12),
           ],
@@ -403,7 +404,7 @@ class TripDetailScreen extends ConsumerWidget {
               gradient: AppColors.surfaceGradient,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: AppColors.glassBorder,
+                color: context.glassBorderColor,
                 width: 0.5,
               ),
             ),
@@ -438,7 +439,7 @@ class TripDetailScreen extends ConsumerWidget {
                   style: Theme.of(ctx)
                       .textTheme
                       .bodyMedium
-                      ?.copyWith(color: AppColors.textSecondary),
+                      ?.copyWith(color: context.txtSecondary),
                 ),
                 const SizedBox(height: 24),
                 Row(
@@ -556,7 +557,7 @@ class _LegendDot extends StatelessWidget {
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
+                color: context.txtSecondary,
               ),
         ),
       ],
@@ -584,10 +585,10 @@ class _DetailRow extends StatelessWidget {
           width: 32,
           height: 32,
           decoration: BoxDecoration(
-            color: AppColors.glassWhite,
+            color: context.glassBg,
             shape: BoxShape.circle,
             border: Border.all(
-              color: AppColors.glassBorder,
+              color: context.glassBorderColor,
               width: 0.5,
             ),
           ),
@@ -601,7 +602,7 @@ class _DetailRow extends StatelessWidget {
               Text(
                 label,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textSecondary,
+                      color: context.txtSecondary,
                     ),
               ),
               const SizedBox(height: 2),
@@ -646,7 +647,7 @@ class _StatBox extends StatelessWidget {
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
+                color: context.txtSecondary,
                 fontSize: 11,
               ),
         ),

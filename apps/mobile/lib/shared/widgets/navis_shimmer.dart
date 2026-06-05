@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 
 class NavisShimmer extends StatefulWidget {
   const NavisShimmer({
@@ -84,14 +85,14 @@ class _ShimmerItem extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment(animationValue - 1, 0),
           end: Alignment(animationValue, 0),
-          colors: const [
-            AppColors.glassWhite,
+          colors: [
+            context.glassBg,
             AppColors.glassHighlight,
-            AppColors.glassWhite,
+            context.glassBg,
           ],
         ),
         border: Border.all(
-          color: AppColors.glassBorder,
+          color: context.glassBorderColor,
           width: 0.5,
         ),
       ),
@@ -102,7 +103,7 @@ class _ShimmerItem extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: AppColors.glassWhite,
+              color: context.glassBg,
               borderRadius: BorderRadius.circular(12),
             ),
           ),
@@ -116,7 +117,7 @@ class _ShimmerItem extends StatelessWidget {
                   height: 14,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: AppColors.glassWhite,
+                    color: context.glassBg,
                     borderRadius: BorderRadius.circular(6),
                   ),
                 ),
@@ -125,7 +126,7 @@ class _ShimmerItem extends StatelessWidget {
                   height: 10,
                   width: 120,
                   decoration: BoxDecoration(
-                    color: AppColors.glassWhite,
+                    color: context.glassBg,
                     borderRadius: BorderRadius.circular(6),
                   ),
                 ),

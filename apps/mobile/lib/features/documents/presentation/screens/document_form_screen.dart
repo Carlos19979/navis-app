@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:navis_mobile/core/network/storage_service.dart';
 import 'package:navis_mobile/core/network/supabase_client.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/documents/domain/entities/document.dart';
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
@@ -442,8 +443,8 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                         borderRadius: BorderRadius.circular(16),
                         child: Container(
                           height: 160,
-                          decoration: const BoxDecoration(
-                            color: AppColors.glassWhite,
+                          decoration: BoxDecoration(
+                            color: context.glassBg,
                           ),
                           child: _photoPath != null || _existingPhotoUrl != null
                               ? Stack(
@@ -460,12 +461,11 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                                         _existingPhotoUrl!,
                                         fit: BoxFit.cover,
                                         semanticLabel: 'Document scan',
-                                        errorBuilder: (_, __, ___) =>
-                                            const Center(
+                                        errorBuilder: (_, __, ___) => Center(
                                           child: Icon(
                                             Icons.broken_image_outlined,
                                             size: 48,
-                                            color: AppColors.textSecondary,
+                                            color: context.txtSecondary,
                                           ),
                                         ),
                                       ),
@@ -480,7 +480,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                                               .withValues(alpha: 0.7),
                                           shape: BoxShape.circle,
                                           border: Border.all(
-                                            color: AppColors.glassBorder,
+                                            color: context.glassBorderColor,
                                           ),
                                         ),
                                         child: const Icon(
@@ -498,14 +498,14 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                                     Icon(
                                       Icons.document_scanner_outlined,
                                       size: 48,
-                                      color: AppColors.textSecondary
+                                      color: context.txtSecondary
                                           .withValues(alpha: 0.6),
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
                                       l.addScan,
                                       style: TextStyle(
-                                        color: AppColors.textSecondary
+                                        color: context.txtSecondary
                                             .withValues(alpha: 0.8),
                                       ),
                                     ),

@@ -11,6 +11,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:navis_mobile/core/network/storage_service.dart';
 import 'package:navis_mobile/core/network/supabase_client.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/map_picker_screen.dart';
@@ -234,12 +235,11 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                                       _existingPhotoUrl!,
                                       fit: BoxFit.cover,
                                       semanticLabel: l.boatPhoto,
-                                      errorBuilder: (_, __, ___) =>
-                                          const Center(
+                                      errorBuilder: (_, __, ___) => Center(
                                         child: Icon(
                                           Icons.broken_image_outlined,
                                           size: 48,
-                                          color: AppColors.textSecondary,
+                                          color: context.txtSecondary,
                                         ),
                                       ),
                                     ),
@@ -263,10 +263,10 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                                       width: 36,
                                       height: 36,
                                       decoration: BoxDecoration(
-                                        color: AppColors.glassWhite,
+                                        color: context.glassBg,
                                         shape: BoxShape.circle,
                                         border: Border.all(
-                                          color: AppColors.glassBorder,
+                                          color: context.glassBorderColor,
                                           width: 0.5,
                                         ),
                                       ),
@@ -280,17 +280,17 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                                 ],
                               )
                             : CustomPaint(
-                                painter: const _DashedBorderPainter(
-                                  color: AppColors.glassBorder,
+                                painter: _DashedBorderPainter(
+                                  color: context.glassBorderColor,
                                   borderRadius: 16,
                                 ),
                                 child: Container(
                                   decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
+                                    gradient: LinearGradient(
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
                                       colors: [
-                                        AppColors.glassWhite,
+                                        context.glassBg,
                                         AppColors.glassOverlay,
                                       ],
                                     ),
@@ -303,10 +303,10 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                                         width: 56,
                                         height: 56,
                                         decoration: BoxDecoration(
-                                          color: AppColors.glassWhite,
+                                          color: context.glassBg,
                                           shape: BoxShape.circle,
                                           border: Border.all(
-                                            color: AppColors.glassBorder,
+                                            color: context.glassBorderColor,
                                             width: 0.5,
                                           ),
                                         ),
@@ -323,7 +323,7 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                                             .textTheme
                                             .bodyMedium
                                             ?.copyWith(
-                                              color: AppColors.textSecondary,
+                                              color: context.txtSecondary,
                                             ),
                                       ),
                                     ],
@@ -506,11 +506,11 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                       final confirmed = await showDialog<bool>(
                         context: context,
                         builder: (context) => AlertDialog(
-                          backgroundColor: AppColors.darkSurfaceElevated,
+                          backgroundColor: context.dialogSurfaceElevated,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
-                            side: const BorderSide(
-                              color: AppColors.glassBorder,
+                            side: BorderSide(
+                              color: context.glassBorderColor,
                               width: 0.5,
                             ),
                           ),

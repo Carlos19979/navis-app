@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/events/domain/entities/event.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
@@ -77,24 +78,24 @@ class _CalendarViewState extends State<CalendarView> {
                 IconButton(
                   onPressed: _previousMonth,
                   tooltip: l.previousMonth,
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.chevron_left,
-                    color: AppColors.textPrimary,
+                    color: context.txtPrimary,
                   ),
                 ),
                 Text(
                   DateFormat.yMMMM(locale).format(_currentMonth),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppColors.textPrimary,
+                        color: context.txtPrimary,
                         fontWeight: FontWeight.w600,
                       ),
                 ),
                 IconButton(
                   onPressed: _nextMonth,
                   tooltip: l.nextMonth,
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.chevron_right,
-                    color: AppColors.textPrimary,
+                    color: context.txtPrimary,
                   ),
                 ),
               ],
@@ -114,7 +115,7 @@ class _CalendarViewState extends State<CalendarView> {
                         day,
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppColors.textSecondary,
+                              color: context.txtSecondary,
                               fontWeight: FontWeight.w500,
                             ),
                       ),
@@ -163,7 +164,7 @@ class _CalendarViewState extends State<CalendarView> {
                     color: isToday
                         ? null
                         : hasEvent
-                            ? AppColors.glassWhite
+                            ? context.glassBg
                             : Colors.transparent,
                     gradient: isToday ? AppColors.cyanGradient : null,
                     borderRadius: BorderRadius.circular(10),
@@ -174,7 +175,7 @@ class _CalendarViewState extends State<CalendarView> {
                           )
                         : hasEvent
                             ? Border.all(
-                                color: AppColors.glassBorder,
+                                color: context.glassBorderColor,
                                 width: 0.5,
                               )
                             : null,
@@ -196,8 +197,8 @@ class _CalendarViewState extends State<CalendarView> {
                           color: isToday
                               ? Colors.white
                               : hasEvent
-                                  ? AppColors.textPrimary
-                                  : AppColors.textSecondary,
+                                  ? context.txtPrimary
+                                  : context.txtSecondary,
                           fontWeight: isToday || hasEvent
                               ? FontWeight.w600
                               : FontWeight.w400,

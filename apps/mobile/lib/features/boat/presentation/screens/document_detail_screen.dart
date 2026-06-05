@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
@@ -298,14 +299,13 @@ class DocumentDetailScreen extends ConsumerWidget {
                                   ),
                                 ),
                               ),
-                              errorWidget: (context, url, error) =>
-                                  const AspectRatio(
+                              errorWidget: (context, url, error) => AspectRatio(
                                 aspectRatio: 4 / 3,
                                 child: Center(
                                   child: Icon(
                                     Icons.broken_image_outlined,
                                     size: 48,
-                                    color: AppColors.textSecondary,
+                                    color: context.txtSecondary,
                                   ),
                                 ),
                               ),
@@ -433,7 +433,7 @@ class _DetailRow extends StatelessWidget {
           Icon(
             icon,
             size: 18,
-            color: AppColors.textSecondary,
+            color: context.txtSecondary,
           ),
           const SizedBox(width: 10),
         ],
@@ -442,7 +442,7 @@ class _DetailRow extends StatelessWidget {
           child: Text(
             label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textSecondary,
+                  color: context.txtSecondary,
                 ),
           ),
         ),

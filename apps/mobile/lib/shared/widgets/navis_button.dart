@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 
 enum NavisButtonVariant { primary, secondary, danger }
 
@@ -33,8 +34,8 @@ class _NavisButtonState extends State<NavisButton> {
 
   LinearGradient get _gradient => switch (widget.variant) {
         NavisButtonVariant.primary => AppColors.cyanGradient,
-        NavisButtonVariant.secondary => const LinearGradient(
-            colors: [AppColors.glassWhite, AppColors.glassWhite],
+        NavisButtonVariant.secondary => LinearGradient(
+            colors: [context.glassBg, context.glassBg],
           ),
         NavisButtonVariant.danger => AppColors.redGradient,
       };
@@ -74,7 +75,7 @@ class _NavisButtonState extends State<NavisButton> {
                 gradient: _gradient,
                 borderRadius: BorderRadius.circular(14),
                 border: widget.variant == NavisButtonVariant.secondary
-                    ? Border.all(color: AppColors.glassBorder)
+                    ? Border.all(color: context.glassBorderColor)
                     : null,
                 boxShadow: widget.variant != NavisButtonVariant.secondary
                     ? [

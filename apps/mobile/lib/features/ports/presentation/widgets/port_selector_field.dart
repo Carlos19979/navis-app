@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/map_picker_screen.dart';
 import 'package:navis_mobile/features/ports/domain/entities/port.dart';
 import 'package:navis_mobile/features/ports/presentation/providers/port_provider.dart';
@@ -179,12 +180,12 @@ class _PortSelectorFieldState extends State<PortSelectorField> {
         if (widget.label.isNotEmpty) ...[
           Row(
             children: [
-              Icon(widget.icon, size: 16, color: AppColors.textSecondary),
+              Icon(widget.icon, size: 16, color: context.txtSecondary),
               const SizedBox(width: 6),
               Text(
                 widget.label,
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: AppColors.textSecondary,
+                      color: context.txtSecondary,
                       letterSpacing: 0.5,
                     ),
               ),
@@ -257,8 +258,8 @@ class _PortSelectorFieldState extends State<PortSelectorField> {
                 ),
                 GestureDetector(
                   onTap: _openMapPicker,
-                  child: const Icon(Icons.edit,
-                      color: AppColors.textSecondary, size: 16),
+                  child:
+                      Icon(Icons.edit, color: context.txtSecondary, size: 16),
                 ),
               ],
             ),
@@ -292,10 +293,10 @@ class _ActionChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.cyan.withValues(alpha: 0.15)
-              : AppColors.glassWhite,
+              : context.glassBg,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? AppColors.cyan : AppColors.glassBorder,
+            color: isSelected ? AppColors.cyan : context.glassBorderColor,
             width: isSelected ? 1.5 : 0.5,
           ),
         ),
@@ -305,13 +306,13 @@ class _ActionChip extends StatelessWidget {
             Icon(
               icon,
               size: 20,
-              color: isSelected ? AppColors.cyan : AppColors.textSecondary,
+              color: isSelected ? AppColors.cyan : context.txtSecondary,
             ),
             const SizedBox(height: 4),
             Text(
               label,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: isSelected ? AppColors.cyan : AppColors.textSecondary,
+                    color: isSelected ? AppColors.cyan : context.txtSecondary,
                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                   ),
               overflow: TextOverflow.ellipsis,
@@ -341,9 +342,9 @@ class _PortSearchSheetState extends ConsumerState<_PortSearchSheet> {
 
     return Container(
       margin: EdgeInsets.only(bottom: bottomInset),
-      decoration: const BoxDecoration(
-        color: AppColors.darkSurface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: context.dialogSurface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       height: MediaQuery.of(context).size.height * 0.7,
       child: Column(
@@ -353,7 +354,7 @@ class _PortSearchSheetState extends ConsumerState<_PortSearchSheet> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.glassBorder,
+              color: context.glassBorderColor,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -361,15 +362,14 @@ class _PortSearchSheetState extends ConsumerState<_PortSearchSheet> {
             padding: const EdgeInsets.all(16),
             child: TextField(
               autofocus: true,
-              style: const TextStyle(color: AppColors.textPrimary),
+              style: TextStyle(color: context.txtPrimary),
               onChanged: (v) => setState(() => _query = v.toLowerCase()),
               decoration: InputDecoration(
                 hintText: 'Buscar puerto por nombre…',
-                hintStyle: const TextStyle(color: AppColors.textSecondary),
-                prefixIcon:
-                    const Icon(Icons.search, color: AppColors.textSecondary),
+                hintStyle: TextStyle(color: context.txtSecondary),
+                prefixIcon: Icon(Icons.search, color: context.txtSecondary),
                 filled: true,
-                fillColor: AppColors.glassWhite,
+                fillColor: context.glassBg,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
                   borderSide: BorderSide.none,
@@ -391,9 +391,9 @@ class _PortSearchSheetState extends ConsumerState<_PortSearchSheet> {
                         .where((p) => p.name.toLowerCase().contains(_query))
                         .toList();
                 if (filtered.isEmpty) {
-                  return const Center(
+                  return Center(
                     child: Text('Sin resultados',
-                        style: TextStyle(color: AppColors.textSecondary)),
+                        style: TextStyle(color: context.txtSecondary)),
                   );
                 }
                 return ListView.builder(
@@ -401,14 +401,11 @@ class _PortSearchSheetState extends ConsumerState<_PortSearchSheet> {
                   itemBuilder: (context, i) {
                     final p = filtered[i];
                     return ListTile(
-                      leading:
-                          const Icon(Icons.anchor, color: AppColors.cyan),
+                      leading: const Icon(Icons.anchor, color: AppColors.cyan),
                       title: Text(p.name,
-                          style:
-                              const TextStyle(color: AppColors.textPrimary)),
+                          style: TextStyle(color: context.txtPrimary)),
                       subtitle: Text(p.country,
-                          style: const TextStyle(
-                              color: AppColors.textSecondary)),
+                          style: TextStyle(color: context.txtSecondary)),
                       onTap: () => Navigator.of(context).pop(p),
                     );
                   },
@@ -447,10 +444,10 @@ class _PortChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.cyan.withValues(alpha: 0.15)
-              : AppColors.glassWhite,
+              : context.glassBg,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? AppColors.cyan : AppColors.glassBorder,
+            color: isSelected ? AppColors.cyan : context.glassBorderColor,
             width: isSelected ? 1.5 : 0.5,
           ),
         ),
@@ -462,16 +459,14 @@ class _PortChip extends StatelessWidget {
               children: [
                 Icon(icon,
                     size: 14,
-                    color:
-                        isSelected ? AppColors.cyan : AppColors.textSecondary),
+                    color: isSelected ? AppColors.cyan : context.txtSecondary),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
                     port.name,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: isSelected
-                              ? AppColors.cyan
-                              : AppColors.textPrimary,
+                          color:
+                              isSelected ? AppColors.cyan : context.txtPrimary,
                           fontWeight:
                               isSelected ? FontWeight.w700 : FontWeight.w500,
                           fontSize: 11,
@@ -487,7 +482,7 @@ class _PortChip extends StatelessWidget {
               Text(
                 '${distance!.toStringAsFixed(1)} NM',
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: AppColors.textSecondary,
+                      color: context.txtSecondary,
                       fontSize: 10,
                     ),
               ),

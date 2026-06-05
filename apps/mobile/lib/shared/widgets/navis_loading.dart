@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 
 class NavisLoading extends StatefulWidget {
   const NavisLoading({super.key, this.message});
@@ -72,7 +73,7 @@ class _NavisLoadingState extends State<NavisLoading>
             Text(
               widget.message!,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
+                    color: context.txtSecondary,
                   ),
             ),
           ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 
 class WindIndicator extends StatelessWidget {
@@ -47,7 +48,7 @@ class WindIndicator extends StatelessWidget {
           '${speed.toStringAsFixed(0)} kt',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: context.txtPrimary,
               ),
         ),
 
@@ -56,10 +57,10 @@ class WindIndicator extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
-            color: AppColors.glassWhite,
+            color: context.glassBg,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: AppColors.glassBorder,
+              color: context.glassBorderColor,
               width: 0.5,
             ),
           ),

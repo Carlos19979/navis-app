@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/auth/domain/auth_state.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -74,9 +75,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         height: 120,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppColors.glassWhite,
+                          color: context.glassBg,
                           border: Border.all(
-                            color: AppColors.glassBorder,
+                            color: context.glassBorderColor,
                           ),
                           boxShadow: [
                             BoxShadow(
@@ -111,7 +112,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       l.createAccount,
                       textAlign: TextAlign.center,
                       style: textTheme.displayMedium?.copyWith(
-                        color: AppColors.textPrimary,
+                        color: context.txtPrimary,
                         fontWeight: FontWeight.w700,
                       ),
                     ).animate().fadeIn(delay: 200.ms, duration: 500.ms),
@@ -120,7 +121,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       l.joinNavisSubtitle,
                       textAlign: TextAlign.center,
                       style: textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
+                        color: context.txtSecondary,
                         letterSpacing: 2.0,
                         fontWeight: FontWeight.w400,
                       ),
@@ -199,7 +200,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           _obscurePassword
                               ? Icons.visibility_outlined
                               : Icons.visibility_off_outlined,
-                          color: AppColors.textSecondary,
+                          color: context.txtSecondary,
                           size: 20,
                         ),
                         tooltip:
@@ -241,7 +242,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           _obscureConfirmPassword
                               ? Icons.visibility_outlined
                               : Icons.visibility_off_outlined,
-                          color: AppColors.textSecondary,
+                          color: context.txtSecondary,
                           size: 20,
                         ),
                         tooltip: _obscureConfirmPassword
@@ -292,7 +293,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         TextSpan(
                           text: '${l.hasAccount} ',
                           style: textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textSecondary,
+                            color: context.txtSecondary,
                           ),
                           children: [
                             TextSpan(
@@ -350,7 +351,7 @@ class _GlassTextField extends StatelessWidget {
       textInputAction: textInputAction,
       obscureText: obscureText,
       onFieldSubmitted: onFieldSubmitted,
-      style: const TextStyle(color: AppColors.textPrimary),
+      style: TextStyle(color: context.txtPrimary),
       validator: validator,
       decoration: InputDecoration(
         labelText: labelText,
@@ -360,8 +361,8 @@ class _GlassTextField extends StatelessWidget {
           margin: const EdgeInsets.only(left: 8, right: 4),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AppColors.glassWhite,
-            border: Border.all(color: AppColors.glassBorder),
+            color: context.glassBg,
+            border: Border.all(color: context.glassBorderColor),
           ),
           child: Icon(
             prefixIconData,

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/events/domain/entities/event.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -69,7 +70,7 @@ class EventCard extends StatelessWidget {
                 Text(
                   event.name,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: AppColors.textPrimary,
+                        color: context.txtPrimary,
                         fontWeight: FontWeight.w600,
                       ),
                   maxLines: 2,
@@ -79,7 +80,7 @@ class EventCard extends StatelessWidget {
                 Text(
                   NavisDateUtils.formatTime(event.startDate),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
+                        color: context.txtSecondary,
                       ),
                 ),
                 const SizedBox(height: 6),
@@ -95,7 +96,7 @@ class EventCard extends StatelessWidget {
                       child: Text(
                         event.locationName,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppColors.textSecondary,
+                              color: context.txtSecondary,
                             ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

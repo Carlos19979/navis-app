@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -143,11 +144,11 @@ class _BoatDetailView extends ConsumerWidget {
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.darkSurfaceElevated,
+        backgroundColor: context.dialogSurfaceElevated,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(
-            color: AppColors.glassBorder,
+          side: BorderSide(
+            color: context.glassBorderColor,
             width: 0.5,
           ),
         ),
@@ -200,8 +201,8 @@ class _BoatSliverAppBar extends StatelessWidget {
       backgroundColor: AppColors.deepNavy,
       leading: Container(
         margin: const EdgeInsets.all(8),
-        decoration: const BoxDecoration(
-          color: AppColors.glassWhite,
+        decoration: BoxDecoration(
+          color: context.glassBg,
           shape: BoxShape.circle,
         ),
         child: IconButton(
@@ -313,20 +314,20 @@ class _InfoSection extends StatelessWidget {
             label: AppLocalizations.of(context)!.registration,
             value: boat.registration,
           ),
-          _glassDivider(),
+          _glassDivider(context),
           _DetailRow(
             icon: Icons.category_outlined,
             label: AppLocalizations.of(context)!.type,
             value: _localizedBoatType(AppLocalizations.of(context)!, boat.type),
           ),
-          _glassDivider(),
+          _glassDivider(context),
           _DetailRow(
             icon: Icons.straighten,
             label: AppLocalizations.of(context)!.length,
             value: '${boat.lengthMeters} m',
           ),
           if (boat.homePort != null) ...[
-            _glassDivider(),
+            _glassDivider(context),
             _DetailRow(
               icon: Icons.anchor,
               label: AppLocalizations.of(context)!.homePort,
@@ -338,11 +339,11 @@ class _InfoSection extends StatelessWidget {
     );
   }
 
-  Widget _glassDivider() {
+  Widget _glassDivider(BuildContext context) {
     return Container(
       height: 0.5,
       margin: const EdgeInsets.symmetric(vertical: 10),
-      color: AppColors.glassBorder,
+      color: context.glassBorderColor,
     );
   }
 }
@@ -366,7 +367,7 @@ class _DetailRow extends StatelessWidget {
           width: 32,
           height: 32,
           decoration: BoxDecoration(
-            color: AppColors.glassWhite,
+            color: context.glassBg,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, size: 16, color: AppColors.cyan),
@@ -375,7 +376,7 @@ class _DetailRow extends StatelessWidget {
         Text(
           label,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.textSecondary,
+                color: context.txtSecondary,
               ),
         ),
         const Spacer(),
@@ -446,7 +447,7 @@ class _ActionTile extends StatelessWidget {
                 Text(
                   subtitle,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
+                        color: context.txtSecondary,
                       ),
                 ),
               ],
@@ -454,7 +455,7 @@ class _ActionTile extends StatelessWidget {
           ),
           Icon(
             Icons.chevron_right_rounded,
-            color: AppColors.textSecondary.withValues(alpha: 0.5),
+            color: context.txtSecondary.withValues(alpha: 0.5),
           ),
         ],
       ),
