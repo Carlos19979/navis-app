@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/weather/domain/entities/weather.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
@@ -20,7 +21,7 @@ class ForecastCard extends StatelessWidget {
             if (i > 0)
               Divider(
                 height: 1,
-                color: AppColors.glassBorder.withValues(alpha: 0.3),
+                color: context.glassBorderColor.withValues(alpha: 0.3),
                 indent: 16,
                 endIndent: 16,
               ),
@@ -40,9 +41,9 @@ class _ForecastRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryColor = isDark ? AppColors.textPrimary : AppColors.textLight;
+    final primaryColor = isDark ? context.txtPrimary : AppColors.textLight;
     final secondaryColor =
-        isDark ? AppColors.textSecondary : AppColors.textLightSecondary;
+        isDark ? context.txtSecondary : AppColors.textLightSecondary;
     final dateLabel = weather.date != null
         ? NavisDateUtils.formatRelative(weather.date!)
         : '-';

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/groups/domain/entities/group.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
 
@@ -42,8 +43,8 @@ class GroupCard extends StatelessWidget {
                   group.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
+                  style: TextStyle(
+                    color: context.txtPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
@@ -54,24 +55,24 @@ class GroupCard extends StatelessWidget {
                     Icon(
                       group.isPublic ? Icons.public : Icons.lock_outline,
                       size: 14,
-                      color: AppColors.textSecondary,
+                      color: context.txtSecondary,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       group.isPublic ? 'Público' : 'Privado',
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
+                      style: TextStyle(
+                        color: context.txtSecondary,
                         fontSize: 12,
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const Icon(Icons.person_outline,
-                        size: 14, color: AppColors.textSecondary),
+                    Icon(Icons.person_outline,
+                        size: 14, color: context.txtSecondary),
                     const SizedBox(width: 4),
                     Text(
                       '${group.memberCount}',
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
+                      style: TextStyle(
+                        color: context.txtSecondary,
                         fontSize: 12,
                       ),
                     ),
@@ -102,7 +103,7 @@ class GroupCard extends StatelessWidget {
           if (trailing != null)
             trailing!
           else
-            const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+            Icon(Icons.chevron_right, color: context.txtSecondary),
         ],
       ),
     );

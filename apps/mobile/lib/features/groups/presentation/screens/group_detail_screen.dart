@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/network/supabase_client.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/groups/domain/entities/group.dart';
 import 'package:navis_mobile/features/groups/domain/entities/group_member.dart';
@@ -46,7 +47,7 @@ class GroupDetailScreen extends ConsumerWidget {
             ),
             data: (group) => RefreshIndicator(
               color: AppColors.cyan,
-              backgroundColor: AppColors.darkSurface,
+              backgroundColor: context.dialogSurface,
               onRefresh: () async {
                 ref.invalidate(groupProvider(groupId));
                 ref.invalidate(groupMembersProvider(groupId));
@@ -55,7 +56,7 @@ class GroupDetailScreen extends ConsumerWidget {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
                 children: [
-                  _header(group),
+                  _header(context, group),
                   if (group.isOwner &&
                       !group.isPublic &&
                       group.inviteCode != null)
@@ -96,7 +97,7 @@ class GroupDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _header(Group group) {
+  Widget _header(BuildContext context, Group group) {
     return NavisCard(
       margin: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -117,8 +118,8 @@ class GroupDetailScreen extends ConsumerWidget {
               children: [
                 Text(
                   group.name,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
+                  style: TextStyle(
+                    color: context.txtPrimary,
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
                   ),
@@ -126,16 +127,14 @@ class GroupDetailScreen extends ConsumerWidget {
                 const SizedBox(height: 4),
                 Text(
                   '${group.isPublic ? 'Público' : 'Privado'} · ${group.memberCount} miembros',
-                  style: const TextStyle(
-                      color: AppColors.textSecondary, fontSize: 13),
+                  style: TextStyle(color: context.txtSecondary, fontSize: 13),
                 ),
                 if (group.description != null &&
                     group.description!.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   Text(
                     group.description!,
-                    style: const TextStyle(
-                        color: AppColors.textSecondary, fontSize: 13),
+                    style: TextStyle(color: context.txtSecondary, fontSize: 13),
                   ),
                 ],
               ],
@@ -157,14 +156,14 @@ class GroupDetailScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Código de invitación',
-                    style: TextStyle(
-                        color: AppColors.textSecondary, fontSize: 12)),
+                Text('Código de invitación',
+                    style:
+                        TextStyle(color: context.txtSecondary, fontSize: 12)),
                 const SizedBox(height: 2),
                 Text(
                   code,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
+                  style: TextStyle(
+                    color: context.txtPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 2,
@@ -174,7 +173,7 @@ class GroupDetailScreen extends ConsumerWidget {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.copy, color: AppColors.textSecondary),
+            icon: Icon(Icons.copy, color: context.txtSecondary),
             tooltip: 'Copiar',
             onPressed: () {
               Clipboard.setData(ClipboardData(text: code));
@@ -243,11 +242,10 @@ class GroupDetailScreen extends ConsumerWidget {
     return await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            backgroundColor: AppColors.darkSurface,
-            title: Text(title,
-                style: const TextStyle(color: AppColors.textPrimary)),
-            content: Text(message,
-                style: const TextStyle(color: AppColors.textSecondary)),
+            backgroundColor: context.dialogSurface,
+            title: Text(title, style: TextStyle(color: context.txtPrimary)),
+            content:
+                Text(message, style: TextStyle(color: context.txtSecondary)),
             actions: [
               TextButton(
                 onPressed: () => context.pop(false),
@@ -275,8 +273,8 @@ class _SectionTitle extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Text(
         title,
-        style: const TextStyle(
-          color: AppColors.textPrimary,
+        style: TextStyle(
+          color: context.txtPrimary,
           fontSize: 16,
           fontWeight: FontWeight.w700,
         ),
@@ -317,7 +315,7 @@ class _RequestsSection extends ConsumerWidget {
           Expanded(
             child: Text(
               'Usuario ${m.userId.substring(0, 8)}',
-              style: const TextStyle(color: AppColors.textPrimary),
+              style: TextStyle(color: context.txtPrimary),
             ),
           ),
           IconButton(
@@ -388,10 +386,10 @@ class _RegattasSection extends ConsumerWidget {
       ),
       data: (regattas) {
         if (regattas.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 8),
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
             child: Text('No hay regatas programadas.',
-                style: TextStyle(color: AppColors.textSecondary)),
+                style: TextStyle(color: context.txtSecondary)),
           );
         }
         return Column(
@@ -402,7 +400,7 @@ class _RegattasSection extends ConsumerWidget {
   }
 
   Widget _tile(BuildContext context, Regatta r) {
-    final color = _statusColors[r.status] ?? AppColors.textSecondary;
+    final color = _statusColors[r.status] ?? context.txtSecondary;
     return NavisCard(
       margin: const EdgeInsets.only(bottom: 8),
       onTap: () => context.push('/regattas/${r.id}'),
@@ -420,14 +418,13 @@ class _RegattasSection extends ConsumerWidget {
                 Text(r.displayTitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        color: AppColors.textPrimary,
+                    style: TextStyle(
+                        color: context.txtPrimary,
                         fontWeight: FontWeight.w600)),
                 if (r.scheduledAt != null)
                   Text(
                     NavisDateUtils.formatDate(r.scheduledAt!),
-                    style: const TextStyle(
-                        color: AppColors.textSecondary, fontSize: 12),
+                    style: TextStyle(color: context.txtSecondary, fontSize: 12),
                   ),
               ],
             ),
@@ -488,13 +485,13 @@ class _MembersSection extends ConsumerWidget {
         children: [
           Icon(
             m.isOwner ? Icons.star : Icons.person,
-            color: m.isOwner ? AppColors.amber : AppColors.textSecondary,
+            color: m.isOwner ? AppColors.amber : context.txtSecondary,
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               '${isMe ? 'Tú' : 'Usuario ${m.userId.substring(0, 8)}'} · $label',
-              style: const TextStyle(color: AppColors.textPrimary),
+              style: TextStyle(color: context.txtPrimary),
             ),
           ),
           if (isOwner && !m.isOwner)

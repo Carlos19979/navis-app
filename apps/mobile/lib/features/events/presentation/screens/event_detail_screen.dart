@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/charts/data/tile_provider.dart';
 import 'package:navis_mobile/features/events/presentation/providers/event_provider.dart';
@@ -131,7 +132,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                     .textTheme
                                     .headlineMedium
                                     ?.copyWith(
-                                      color: AppColors.textPrimary,
+                                      color: context.txtPrimary,
                                       fontWeight: FontWeight.w700,
                                     ),
                               ),
@@ -190,7 +191,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                           const SizedBox(height: 16),
                           Container(
                             height: 0.5,
-                            color: AppColors.glassBorder,
+                            color: context.glassBorderColor,
                           ),
                           const SizedBox(height: 16),
                           Text(
@@ -199,7 +200,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                 .textTheme
                                 .bodyMedium
                                 ?.copyWith(
-                                  color: AppColors.textSecondary,
+                                  color: context.txtSecondary,
                                   height: 1.5,
                                 ),
                           ),
@@ -289,7 +290,7 @@ class _InfoRow extends StatelessWidget {
           width: 32,
           height: 32,
           decoration: BoxDecoration(
-            color: AppColors.glassWhite,
+            color: context.glassBg,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, size: 16, color: AppColors.cyan),
@@ -299,7 +300,7 @@ class _InfoRow extends StatelessWidget {
           child: Text(
             text,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textPrimary,
+                  color: context.txtPrimary,
                 ),
           ),
         ),

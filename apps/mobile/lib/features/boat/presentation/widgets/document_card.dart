@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/boat/presentation/widgets/expiry_indicator.dart';
 import 'package:navis_mobile/features/documents/domain/entities/document.dart';
@@ -74,7 +75,7 @@ class DocumentCard extends StatelessWidget {
                             NavisDateUtils.formatDate(document.expiryDate),
                             style:
                                 Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: AppColors.textSecondary,
+                                      color: context.txtSecondary,
                                     ),
                           ),
                         ],

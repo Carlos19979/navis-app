@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
@@ -178,7 +179,7 @@ class _SectionTitle extends StatelessWidget {
         label,
         style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
+              color: context.txtPrimary,
             ),
       ),
     );
@@ -260,7 +261,7 @@ class _StatCard extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textSecondary,
+                  color: context.txtSecondary,
                   fontSize: 10,
                 ),
             textAlign: TextAlign.center,
@@ -293,10 +294,10 @@ class _StatRow extends StatelessWidget {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: AppColors.glassWhite,
+              color: context.glassBg,
               shape: BoxShape.circle,
               border: Border.all(
-                color: AppColors.glassBorder,
+                color: context.glassBorderColor,
                 width: 0.5,
               ),
             ),
@@ -394,17 +395,16 @@ class _MonthlyChart extends StatelessWidget {
                                 : null,
                             color: monthCounts[i] > 0
                                 ? null
-                                : AppColors.textSecondary
-                                    .withValues(alpha: 0.15),
+                                : context.txtSecondary.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           months[i],
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 10,
-                            color: AppColors.textSecondary,
+                            color: context.txtSecondary,
                           ),
                         ),
                       ],

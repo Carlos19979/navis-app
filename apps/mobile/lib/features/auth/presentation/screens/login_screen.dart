@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/network/notification_service.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/auth/domain/auth_state.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -48,20 +49,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final email = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.darkSurface,
+        backgroundColor: context.dialogSurface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: AppColors.glassBorder),
+          side: BorderSide(color: context.glassBorderColor),
         ),
         title: Text(
           AppLocalizations.of(context)!.resetPassword,
-          style: const TextStyle(color: AppColors.textPrimary),
+          style: TextStyle(color: context.txtPrimary),
         ),
         content: TextField(
           controller: emailCtrl,
           autofocus: true,
           keyboardType: TextInputType.emailAddress,
-          style: const TextStyle(color: AppColors.textPrimary),
+          style: TextStyle(color: context.txtPrimary),
           decoration: InputDecoration(
             labelText: AppLocalizations.of(context)!.email,
             prefixIcon: const Icon(Icons.email_outlined),
@@ -74,7 +75,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             child: Text(
               AppLocalizations.of(context)!.cancel,
               style: TextStyle(
-                color: AppColors.textSecondary.withValues(alpha: 0.8),
+                color: context.txtSecondary.withValues(alpha: 0.8),
               ),
             ),
           ),
@@ -145,9 +146,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         height: 120,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppColors.glassWhite,
+                          color: context.glassBg,
                           border: Border.all(
-                            color: AppColors.glassBorder,
+                            color: context.glassBorderColor,
                           ),
                           boxShadow: [
                             BoxShadow(
@@ -182,7 +183,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       'Navis',
                       textAlign: TextAlign.center,
                       style: textTheme.displayMedium?.copyWith(
-                        color: AppColors.textPrimary,
+                        color: context.txtPrimary,
                         fontWeight: FontWeight.w700,
                       ),
                     ).animate().fadeIn(delay: 200.ms, duration: 500.ms),
@@ -191,7 +192,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       l.boatManagement,
                       textAlign: TextAlign.center,
                       style: textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
+                        color: context.txtSecondary,
                         letterSpacing: 2.0,
                         fontWeight: FontWeight.w400,
                       ),
@@ -271,7 +272,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           _obscurePassword
                               ? Icons.visibility_outlined
                               : Icons.visibility_off_outlined,
-                          color: AppColors.textSecondary,
+                          color: context.txtSecondary,
                           size: 20,
                         ),
                         tooltip:
@@ -334,7 +335,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         TextSpan(
                           text: '${l.noAccount} ',
                           style: textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textSecondary,
+                            color: context.txtSecondary,
                           ),
                           children: [
                             TextSpan(
@@ -392,7 +393,7 @@ class _GlassTextField extends StatelessWidget {
       textInputAction: textInputAction,
       obscureText: obscureText,
       onFieldSubmitted: onFieldSubmitted,
-      style: const TextStyle(color: AppColors.textPrimary),
+      style: TextStyle(color: context.txtPrimary),
       validator: validator,
       decoration: InputDecoration(
         labelText: labelText,
@@ -402,8 +403,8 @@ class _GlassTextField extends StatelessWidget {
           margin: const EdgeInsets.only(left: 8, right: 4),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AppColors.glassWhite,
-            border: Border.all(color: AppColors.glassBorder),
+            color: context.glassBg,
+            border: Border.all(color: context.glassBorderColor),
           ),
           child: Icon(
             prefixIconData,

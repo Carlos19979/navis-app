@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/distance_utils.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/logbook/domain/entities/trip.dart';
@@ -77,7 +78,7 @@ class TripCard extends StatelessWidget {
           Text(
             NavisDateUtils.formatDateTime(trip.departureTime),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textSecondary,
+                  color: context.txtSecondary,
                 ),
           ),
           const SizedBox(height: 10),
@@ -119,10 +120,10 @@ class _GlassPill extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-          color: AppColors.glassWhite,
+          color: context.glassBg,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: AppColors.glassBorder,
+            color: context.glassBorderColor,
             width: 0.5,
           ),
         ),
@@ -134,7 +135,7 @@ class _GlassPill extends StatelessWidget {
             Text(
               label,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary,
+                    color: context.txtSecondary,
                     fontSize: 11,
                   ),
             ),

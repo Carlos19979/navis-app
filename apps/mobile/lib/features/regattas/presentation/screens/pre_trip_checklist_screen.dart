@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/regattas/data/repositories/regatta_repository.dart';
 import 'package:navis_mobile/features/regattas/domain/entities/regatta.dart';
 import 'package:navis_mobile/features/regattas/presentation/providers/regatta_provider.dart';
@@ -102,13 +103,12 @@ class _PreTripChecklistScreenState
     final label = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.darkSurface,
-        title: const Text('Añadir ítem',
-            style: TextStyle(color: AppColors.textPrimary)),
+        backgroundColor: context.dialogSurface,
+        title: Text('Añadir ítem', style: TextStyle(color: context.txtPrimary)),
         content: TextField(
           controller: controller,
           autofocus: true,
-          style: const TextStyle(color: AppColors.textPrimary),
+          style: TextStyle(color: context.txtPrimary),
           decoration: const InputDecoration(hintText: 'Descripción'),
         ),
         actions: [
@@ -192,7 +192,7 @@ class _PreTripChecklistScreenState
         showBack: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.add, color: AppColors.textPrimary),
+            icon: Icon(Icons.add, color: context.txtPrimary),
             tooltip: 'Añadir ítem',
             onPressed: _addItem,
           ),
@@ -223,8 +223,7 @@ class _PreTripChecklistScreenState
       loading: () => const NavisLoading(),
       error: (e, _) => NavisErrorWidget(
         message: e.toString(),
-        onRetry: () =>
-            ref.invalidate(regattaChecklistProvider(widget.tripId!)),
+        onRetry: () => ref.invalidate(regattaChecklistProvider(widget.tripId!)),
       ),
       data: (_) => _content(
         items: _items ?? const <ChecklistItem>[],
@@ -262,8 +261,8 @@ class _PreTripChecklistScreenState
                           item.label,
                           style: TextStyle(
                             color: item.isChecked
-                                ? AppColors.textSecondary
-                                : AppColors.textPrimary,
+                                ? context.txtSecondary
+                                : context.txtPrimary,
                             decoration: item.isChecked
                                 ? TextDecoration.lineThrough
                                 : null,
@@ -271,8 +270,8 @@ class _PreTripChecklistScreenState
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.close,
-                            size: 18, color: AppColors.textSecondary),
+                        icon: Icon(Icons.close,
+                            size: 18, color: context.txtSecondary),
                         tooltip: 'Eliminar',
                         onPressed: () => _remove(item),
                       ),

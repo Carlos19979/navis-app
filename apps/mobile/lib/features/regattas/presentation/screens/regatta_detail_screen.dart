@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/network/supabase_client.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/regattas/domain/entities/regatta.dart';
 import 'package:navis_mobile/features/regattas/presentation/providers/regatta_provider.dart';
@@ -58,11 +59,11 @@ class RegattaDetailScreen extends ConsumerWidget {
             data: (regatta) => ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
               children: [
-                _summary(regatta),
+                _summary(context, regatta),
                 const SizedBox(height: 16),
-                const Text('¿Vas a ir?',
+                Text('¿Vas a ir?',
                     style: TextStyle(
-                        color: AppColors.textPrimary,
+                        color: context.txtPrimary,
                         fontWeight: FontWeight.w700)),
                 const SizedBox(height: 8),
                 _RsvpRow(regattaId: regattaId, currentUserId: _uid),
@@ -79,8 +80,8 @@ class RegattaDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _summary(Regatta r) {
-    final color = _statusColors[r.status] ?? AppColors.textSecondary;
+  Widget _summary(BuildContext context, Regatta r) {
+    final color = _statusColors[r.status] ?? context.txtSecondary;
     return NavisCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,8 +91,8 @@ class RegattaDetailScreen extends ConsumerWidget {
               Expanded(
                 child: Text(
                   r.displayTitle,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
+                  style: TextStyle(
+                    color: context.txtPrimary,
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
                   ),
@@ -113,22 +114,23 @@ class RegattaDetailScreen extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 10),
-          _row(Icons.place, r.departurePort),
+          _row(context, Icons.place, r.departurePort),
           if (r.scheduledAt != null)
-            _row(Icons.event, NavisDateUtils.formatDateTime(r.scheduledAt!)),
+            _row(context, Icons.event,
+                NavisDateUtils.formatDateTime(r.scheduledAt!)),
         ],
       ),
     );
   }
 
-  Widget _row(IconData icon, String text) {
+  Widget _row(BuildContext context, IconData icon, String text) {
     return Padding(
       padding: const EdgeInsets.only(top: 6),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: AppColors.textSecondary),
+          Icon(icon, size: 16, color: context.txtSecondary),
           const SizedBox(width: 8),
-          Text(text, style: const TextStyle(color: AppColors.textSecondary)),
+          Text(text, style: TextStyle(color: context.txtSecondary)),
         ],
       ),
     );
@@ -156,14 +158,14 @@ class RegattaDetailScreen extends ConsumerWidget {
       );
     }
     if (r.isRecording) {
-      return const NavisCard(
+      return NavisCard(
         child: Row(
           children: [
-            Icon(Icons.sailing, color: AppColors.green),
-            SizedBox(width: 12),
+            const Icon(Icons.sailing, color: AppColors.green),
+            const SizedBox(width: 12),
             Expanded(
               child: Text('La regata está en curso (grabando).',
-                  style: TextStyle(color: AppColors.textPrimary)),
+                  style: TextStyle(color: context.txtPrimary)),
             ),
           ],
         ),
@@ -222,24 +224,22 @@ class _RsvpRow extends ConsumerWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
-                color: selected
-                    ? color.withValues(alpha: 0.2)
-                    : AppColors.glassWhite,
+                color:
+                    selected ? color.withValues(alpha: 0.2) : context.glassBg,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: selected ? color : AppColors.glassBorder,
+                  color: selected ? color : context.glassBorderColor,
                   width: selected ? 1 : 0.5,
                 ),
               ),
               child: Column(
                 children: [
                   Icon(icon,
-                      color: selected ? color : AppColors.textSecondary,
-                      size: 20),
+                      color: selected ? color : context.txtSecondary, size: 20),
                   const SizedBox(height: 4),
                   Text(label,
                       style: TextStyle(
-                          color: selected ? color : AppColors.textSecondary,
+                          color: selected ? color : context.txtSecondary,
                           fontSize: 12)),
                 ],
               ),
@@ -277,9 +277,9 @@ class _Participants extends ConsumerWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _count('Van', going, AppColors.green),
-              _count('Quizá', maybe, AppColors.amber),
-              _count('No van', notGoing, AppColors.red),
+              _count(context, 'Van', going, AppColors.green),
+              _count(context, 'Quizá', maybe, AppColors.amber),
+              _count(context, 'No van', notGoing, AppColors.red),
             ],
           ),
         );
@@ -288,15 +288,14 @@ class _Participants extends ConsumerWidget {
     );
   }
 
-  Widget _count(String label, int n, Color color) {
+  Widget _count(BuildContext context, String label, int n, Color color) {
     return Column(
       children: [
         Text('$n',
             style: TextStyle(
                 color: color, fontSize: 20, fontWeight: FontWeight.w700)),
         Text(label,
-            style:
-                const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+            style: TextStyle(color: context.txtSecondary, fontSize: 12)),
       ],
     );
   }

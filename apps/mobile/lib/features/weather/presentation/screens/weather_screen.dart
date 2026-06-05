@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/weather/presentation/providers/weather_provider.dart';
 import 'package:navis_mobile/features/weather/presentation/widgets/forecast_card.dart';
 import 'package:navis_mobile/features/weather/presentation/widgets/wave_chart.dart';
@@ -49,16 +50,16 @@ class WeatherScreen extends ConsumerWidget {
                         width: 88,
                         height: 88,
                         decoration: BoxDecoration(
-                          color: AppColors.glassWhite,
+                          color: context.glassBg,
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: AppColors.glassBorder,
+                            color: context.glassBorderColor,
                           ),
                         ),
                         child: Icon(
                           Icons.location_off,
                           size: 40,
-                          color: AppColors.textSecondary.withValues(alpha: 0.6),
+                          color: context.txtSecondary.withValues(alpha: 0.6),
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -68,7 +69,7 @@ class WeatherScreen extends ConsumerWidget {
                         style: Theme.of(context)
                             .textTheme
                             .bodyMedium
-                            ?.copyWith(color: AppColors.textSecondary),
+                            ?.copyWith(color: context.txtSecondary),
                       ),
                     ],
                   ),
@@ -78,7 +79,7 @@ class WeatherScreen extends ConsumerWidget {
 
             return RefreshIndicator(
               color: AppColors.cyan,
-              backgroundColor: AppColors.darkSurface,
+              backgroundColor: context.dialogSurface,
               onRefresh: () async {
                 ref.invalidate(currentWeatherProvider);
                 ref.invalidate(forecastProvider);
@@ -126,7 +127,7 @@ class WeatherScreen extends ConsumerWidget {
                                   .titleMedium
                                   ?.copyWith(
                                     color: isDark
-                                        ? AppColors.textSecondary
+                                        ? context.txtSecondary
                                         : AppColors.textLightSecondary,
                                     letterSpacing: 0.5,
                                   ),
@@ -160,7 +161,7 @@ class WeatherScreen extends ConsumerWidget {
                                             .titleSmall
                                             ?.copyWith(
                                               color: isDark
-                                                  ? AppColors.textSecondary
+                                                  ? context.txtSecondary
                                                   : AppColors
                                                       .textLightSecondary,
                                               letterSpacing: 0.5,
@@ -174,7 +175,7 @@ class WeatherScreen extends ConsumerWidget {
                                             .headlineMedium
                                             ?.copyWith(
                                               color: isDark
-                                                  ? AppColors.textPrimary
+                                                  ? context.txtPrimary
                                                   : AppColors.textLight,
                                               fontWeight: FontWeight.w600,
                                             ),
@@ -188,7 +189,7 @@ class WeatherScreen extends ConsumerWidget {
                           Container(
                             width: 1,
                             height: 60,
-                            color: AppColors.glassBorder,
+                            color: context.glassBorderColor,
                           ),
                           Expanded(
                             child: Center(
@@ -259,7 +260,7 @@ class WeatherScreen extends ConsumerWidget {
                           style:
                               Theme.of(context).textTheme.titleMedium?.copyWith(
                                     color: isDark
-                                        ? AppColors.textPrimary
+                                        ? context.txtPrimary
                                         : AppColors.textLight,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -286,7 +287,7 @@ class WeatherScreen extends ConsumerWidget {
                                 l.forecastNotAvailable,
                                 style: TextStyle(
                                   color: isDark
-                                      ? AppColors.textSecondary
+                                      ? context.txtSecondary
                                       : AppColors.textLightSecondary,
                                 ),
                               );
@@ -337,7 +338,7 @@ class _WeatherStatPill extends StatelessWidget {
             value,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: isDark ? AppColors.textPrimary : AppColors.textLight,
+                  color: isDark ? context.txtPrimary : AppColors.textLight,
                 ),
           ),
           const SizedBox(height: 2),
@@ -345,7 +346,7 @@ class _WeatherStatPill extends StatelessWidget {
             label,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
                   color: isDark
-                      ? AppColors.textSecondary
+                      ? context.txtSecondary
                       : AppColors.textLightSecondary,
                 ),
           ),

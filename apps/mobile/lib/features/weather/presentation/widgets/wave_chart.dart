@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
 
@@ -56,7 +57,7 @@ class _WaveChartState extends State<WaveChart>
               Text(
                 'Wave Height',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: AppColors.textPrimary,
+                      color: context.txtPrimary,
                       fontWeight: FontWeight.w600,
                     ),
               ),
@@ -150,7 +151,7 @@ class _WaveLabel extends StatelessWidget {
         Text(
           label,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: AppColors.textSecondary,
+                color: context.txtSecondary,
               ),
         ),
       ],

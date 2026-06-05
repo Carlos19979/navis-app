@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/map_picker_screen.dart';
 import 'package:navis_mobile/features/ports/domain/entities/port.dart';
@@ -184,7 +185,7 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
             gradient: AppColors.surfaceGradient,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: AppColors.glassBorder,
+              color: context.glassBorderColor,
               width: 0.5,
             ),
             boxShadow: [
@@ -349,10 +350,10 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppColors.glassWhite,
+            color: context.glassBg,
             shape: BoxShape.circle,
             border: Border.all(
-              color: AppColors.glassBorder,
+              color: context.glassBorderColor,
               width: 0.5,
             ),
           ),
@@ -391,12 +392,12 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
       children: [
         Row(
           children: [
-            Icon(icon, size: 16, color: AppColors.textSecondary),
+            Icon(icon, size: 16, color: context.txtSecondary),
             const SizedBox(width: 6),
             Text(
               label,
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: AppColors.textSecondary,
+                    color: context.txtSecondary,
                     letterSpacing: 0.5,
                   ),
             ),
@@ -463,9 +464,9 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
                 ),
                 GestureDetector(
                   onTap: onPickMap,
-                  child: const Icon(
+                  child: Icon(
                     Icons.edit,
-                    color: AppColors.textSecondary,
+                    color: context.txtSecondary,
                     size: 16,
                   ),
                 ),
@@ -491,10 +492,10 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.cyan.withValues(alpha: 0.15)
-              : AppColors.glassWhite,
+              : context.glassBg,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? AppColors.cyan : AppColors.glassBorder,
+            color: isSelected ? AppColors.cyan : context.glassBorderColor,
             width: isSelected ? 1.5 : 0.5,
           ),
         ),
@@ -504,14 +505,13 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
             Icon(
               Icons.edit_location_alt,
               size: 20,
-              color: isSelected ? AppColors.cyan : AppColors.textSecondary,
+              color: isSelected ? AppColors.cyan : context.txtSecondary,
             ),
             const SizedBox(height: 4),
             Text(
               l.other,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color:
-                        isSelected ? AppColors.cyan : AppColors.textSecondary,
+                    color: isSelected ? AppColors.cyan : context.txtSecondary,
                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                   ),
               overflow: TextOverflow.ellipsis,
@@ -601,10 +601,10 @@ class _PortChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.cyan.withValues(alpha: 0.15)
-              : AppColors.glassWhite,
+              : context.glassBg,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? AppColors.cyan : AppColors.glassBorder,
+            color: isSelected ? AppColors.cyan : context.glassBorderColor,
             width: isSelected ? 1.5 : 0.5,
           ),
         ),
@@ -617,16 +617,15 @@ class _PortChip extends StatelessWidget {
                 Icon(
                   icon,
                   size: 14,
-                  color: isSelected ? AppColors.cyan : AppColors.textSecondary,
+                  color: isSelected ? AppColors.cyan : context.txtSecondary,
                 ),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
                     port.name,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: isSelected
-                              ? AppColors.cyan
-                              : AppColors.textPrimary,
+                          color:
+                              isSelected ? AppColors.cyan : context.txtPrimary,
                           fontWeight:
                               isSelected ? FontWeight.w700 : FontWeight.w500,
                           fontSize: 11,
@@ -642,7 +641,7 @@ class _PortChip extends StatelessWidget {
               Text(
                 '${distance!.toStringAsFixed(1)} NM',
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: AppColors.textSecondary,
+                      color: context.txtSecondary,
                       fontSize: 10,
                     ),
               ),
@@ -673,10 +672,10 @@ class _SummaryPill extends StatelessWidget {
           vertical: 6,
         ),
         decoration: BoxDecoration(
-          color: AppColors.glassWhite,
+          color: context.glassBg,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: AppColors.glassBorder,
+            color: context.glassBorderColor,
             width: 0.5,
           ),
         ),
@@ -688,7 +687,7 @@ class _SummaryPill extends StatelessWidget {
             Text(
               value,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textPrimary,
+                    color: context.txtPrimary,
                     fontWeight: FontWeight.w600,
                   ),
             ),

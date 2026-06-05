@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:navis_mobile/core/config/settings_service.dart';
 import 'package:navis_mobile/core/database/local_database.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
@@ -81,7 +82,7 @@ class SettingsScreen extends ConsumerWidget {
                       subtitle: Text(languageLabel),
                       trailing: Icon(
                         Icons.chevron_right,
-                        color: AppColors.textSecondary.withValues(alpha: 0.5),
+                        color: context.txtSecondary.withValues(alpha: 0.5),
                       ),
                       onTap: () => _showLanguagePicker(
                         context,
@@ -113,7 +114,7 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                     Divider(
                       height: 1,
-                      color: AppColors.glassBorder.withValues(alpha: 0.3),
+                      color: context.glassBorderColor.withValues(alpha: 0.3),
                       indent: 16,
                       endIndent: 16,
                     ),
@@ -140,9 +141,9 @@ class SettingsScreen extends ConsumerWidget {
                       label: l.dataAndStorage.toUpperCase(),
                     ),
                     ListTile(
-                      leading: const Icon(
+                      leading: Icon(
                         Icons.cached,
-                        color: AppColors.textSecondary,
+                        color: context.txtSecondary,
                       ),
                       title: Text(l.clearImageCache),
                       subtitle: Text(l.clearImageCacheSubtitle),
@@ -160,13 +161,13 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                     Divider(
                       height: 1,
-                      color: AppColors.glassBorder.withValues(alpha: 0.3),
+                      color: context.glassBorderColor.withValues(alpha: 0.3),
                       indent: 56,
                     ),
                     ListTile(
-                      leading: const Icon(
+                      leading: Icon(
                         Icons.delete_sweep,
-                        color: AppColors.textSecondary,
+                        color: context.txtSecondary,
                       ),
                       title: Text(l.clearOfflineData),
                       subtitle: Text(l.clearOfflineDataSubtitle),
@@ -341,9 +342,9 @@ class _LanguageOption extends StatelessWidget {
               flag!,
               style: const TextStyle(fontSize: 24),
             )
-          : const Icon(
+          : Icon(
               Icons.phone_android,
-              color: AppColors.textSecondary,
+              color: context.txtSecondary,
             ),
       title: Text(label),
       trailing: selected

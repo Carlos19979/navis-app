@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
@@ -25,7 +26,7 @@ class StatsSummary extends StatelessWidget {
           Container(
             width: 1,
             height: 40,
-            color: AppColors.glassBorder,
+            color: context.glassBorderColor,
           ),
           _StatItem(
             label: l.distance,
@@ -35,7 +36,7 @@ class StatsSummary extends StatelessWidget {
           Container(
             width: 1,
             height: 40,
-            color: AppColors.glassBorder,
+            color: context.glassBorderColor,
           ),
           _StatItem(
             label: l.hoursLabel,
@@ -67,10 +68,10 @@ class _StatItem extends StatelessWidget {
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: AppColors.glassWhite,
+            color: context.glassBg,
             shape: BoxShape.circle,
             border: Border.all(
-              color: AppColors.glassBorder,
+              color: context.glassBorderColor,
               width: 0.5,
             ),
           ),
@@ -88,7 +89,7 @@ class _StatItem extends StatelessWidget {
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
+                color: context.txtSecondary,
               ),
         ),
       ],

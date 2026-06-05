@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/groups/domain/entities/group.dart';
 import 'package:navis_mobile/features/groups/presentation/providers/group_provider.dart';
 import 'package:navis_mobile/features/groups/presentation/widgets/group_card.dart';
@@ -36,17 +37,17 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen>
     final code = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.darkSurface,
-        title: const Text('Unirse por código',
-            style: TextStyle(color: AppColors.textPrimary)),
+        backgroundColor: context.dialogSurface,
+        title: Text('Unirse por código',
+            style: TextStyle(color: context.txtPrimary)),
         content: TextField(
           controller: controller,
           autofocus: true,
           textCapitalization: TextCapitalization.characters,
-          style: const TextStyle(color: AppColors.textPrimary),
-          decoration: const InputDecoration(
+          style: TextStyle(color: context.txtPrimary),
+          decoration: InputDecoration(
             hintText: 'Código de invitación',
-            hintStyle: TextStyle(color: AppColors.textSecondary),
+            hintStyle: TextStyle(color: context.txtSecondary),
           ),
         ),
         actions: [
@@ -83,8 +84,7 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen>
         title: 'Grupos',
         actions: [
           IconButton(
-            icon: const Icon(Icons.vpn_key_outlined,
-                color: AppColors.textPrimary),
+            icon: Icon(Icons.vpn_key_outlined, color: context.txtPrimary),
             tooltip: 'Unirse por código',
             onPressed: _joinByCode,
           ),
@@ -128,7 +128,7 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen>
               TabBar(
                 controller: _tabController,
                 labelColor: AppColors.cyan,
-                unselectedLabelColor: AppColors.textSecondary,
+                unselectedLabelColor: context.txtSecondary,
                 indicatorColor: AppColors.cyan,
                 tabs: const [
                   Tab(text: 'Mis grupos'),
@@ -187,7 +187,7 @@ class _GroupList extends ConsumerWidget {
         }
         return RefreshIndicator(
           color: AppColors.cyan,
-          backgroundColor: AppColors.darkSurface,
+          backgroundColor: context.dialogSurface,
           onRefresh: () async => ref.invalidate(provider),
           child: ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 130),

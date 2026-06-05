@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/network/notification_service.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
 import 'package:navis_mobile/features/profile/presentation/providers/profile_provider.dart';
@@ -92,7 +93,7 @@ class ProfileScreen extends ConsumerWidget {
                 Text(
                   profile.email,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
+                        color: context.txtSecondary,
                       ),
                 ).animate().fadeIn(
                       duration: 400.ms,
@@ -105,7 +106,7 @@ class ProfileScreen extends ConsumerWidget {
                     l.memberSince(
                         NavisDateUtils.formatDate(profile.createdAt!)),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary.withValues(alpha: 0.7),
+                          color: context.txtSecondary.withValues(alpha: 0.7),
                         ),
                   ).animate().fadeIn(
                         duration: 400.ms,
@@ -127,7 +128,7 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                       Divider(
                         height: 1,
-                        color: AppColors.glassBorder.withValues(alpha: 0.3),
+                        color: context.glassBorderColor.withValues(alpha: 0.3),
                         indent: 56,
                       ),
                       _ProfileTile(
@@ -137,7 +138,7 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                       Divider(
                         height: 1,
-                        color: AppColors.glassBorder.withValues(alpha: 0.3),
+                        color: context.glassBorderColor.withValues(alpha: 0.3),
                         indent: 56,
                       ),
                       _ProfileTile(
@@ -228,11 +229,11 @@ class _ProfileTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Icon(icon, color: AppColors.textSecondary),
+      leading: Icon(icon, color: context.txtSecondary),
       title: Text(title),
       trailing: Icon(
         Icons.chevron_right,
-        color: AppColors.textSecondary.withValues(alpha: 0.5),
+        color: context.txtSecondary.withValues(alpha: 0.5),
       ),
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),

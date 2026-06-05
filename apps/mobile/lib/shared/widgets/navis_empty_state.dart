@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 
 class NavisEmptyState extends StatelessWidget {
@@ -33,16 +33,16 @@ class NavisEmptyState extends StatelessWidget {
                   width: 88,
                   height: 88,
                   decoration: BoxDecoration(
-                    color: AppColors.glassWhite,
+                    color: context.glassBg,
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: AppColors.glassBorder,
+                      color: context.glassBorderColor,
                     ),
                   ),
                   child: Icon(
                     icon,
                     size: 40,
-                    color: AppColors.textSecondary.withValues(alpha: 0.6),
+                    color: context.txtSecondary.withValues(alpha: 0.6),
                   ),
                 )
                     .animate(
@@ -60,7 +60,7 @@ class NavisEmptyState extends StatelessWidget {
                 message,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
+                      color: context.txtSecondary,
                     ),
               ),
               if (actionLabel != null && onAction != null) ...[
