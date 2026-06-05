@@ -12,6 +12,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/core/utils/distance_utils.dart';
+import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/charts/data/tile_provider.dart';
 import 'package:navis_mobile/features/charts/presentation/widgets/map_controls.dart';
 import 'package:navis_mobile/features/charts/presentation/widgets/position_indicator.dart';
@@ -261,6 +262,19 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
           );
           if (ports.isNotEmpty) departureName = ports.first.name;
         } catch (_) {}
+      }
+
+      // Fall back to the boat's home port rather than leaving it "Unknown".
+      if (departureName == 'Unknown') {
+        final boats = ref.read(boatsProvider).valueOrNull ?? const [];
+        for (final b in boats) {
+          if (b.id == widget.boatId &&
+              b.homePort != null &&
+              b.homePort!.isNotEmpty) {
+            departureName = b.homePort!;
+            break;
+          }
+        }
       }
 
       final trip = await repo.createTrip(Trip(
@@ -603,13 +617,6 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
                     onStop: _stopRecording,
                   ),
                 ),
-                if (isRecording && _trackPoints.length >= 2)
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: MediaQuery.of(context).padding.bottom + 90,
-                    child: const _SpeedLegend(),
-                  ),
               ],
             ),
     );
@@ -651,54 +658,3 @@ class _GlassIconButton extends StatelessWidget {
   }
 }
 
-class _SpeedLegend extends StatelessWidget {
-  const _SpeedLegend();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _LegendDot(color: AppColors.cyan, label: '<3 kn'),
-        SizedBox(width: 10),
-        _LegendDot(color: AppColors.green, label: '3-6 kn'),
-        SizedBox(width: 10),
-        _LegendDot(color: AppColors.amber, label: '6-12 kn'),
-        SizedBox(width: 10),
-        _LegendDot(color: AppColors.red, label: '>12 kn'),
-      ],
-    );
-  }
-}
-
-class _LegendDot extends StatelessWidget {
-  const _LegendDot({required this.color, required this.label});
-
-  final Color color;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: AppColors.textSecondary,
-                fontSize: 10,
-              ),
-        ),
-      ],
-    );
-  }
-}

@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
+import 'package:navis_mobile/features/ports/presentation/providers/port_provider.dart';
+import 'package:navis_mobile/features/ports/presentation/widgets/port_selector_field.dart';
 import 'package:navis_mobile/features/regattas/presentation/providers/regatta_provider.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
@@ -24,16 +27,22 @@ class ScheduleRegattaScreen extends ConsumerStatefulWidget {
 class _ScheduleRegattaScreenState extends ConsumerState<ScheduleRegattaScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
-  final _portController = TextEditingController();
   String? _boatId;
+  String? _departurePort;
   DateTime _scheduledAt = DateTime.now().add(const Duration(days: 1));
   bool _saving = false;
 
   @override
   void dispose() {
     _titleController.dispose();
-    _portController.dispose();
     super.dispose();
+  }
+
+  Boat? _boatById(List<Boat> boats) {
+    for (final b in boats) {
+      if (b.id == _boatId) return b;
+    }
+    return null;
   }
 
   Future<void> _pickDate() async {
@@ -66,12 +75,16 @@ class _ScheduleRegattaScreenState extends ConsumerState<ScheduleRegattaScreen> {
       NavisSnackbar.error(context, 'Selecciona un barco');
       return;
     }
+    if (_departurePort == null || _departurePort!.isEmpty) {
+      NavisSnackbar.error(context, 'Selecciona el puerto de salida');
+      return;
+    }
     setState(() => _saving = true);
     try {
       await ref.read(regattaRepositoryProvider).schedule(
             groupId: widget.groupId,
             boatId: _boatId!,
-            departurePort: _portController.text.trim(),
+            departurePort: _departurePort!,
             title: _titleController.text.trim(),
             scheduledAt: _scheduledAt,
           );
@@ -89,6 +102,9 @@ class _ScheduleRegattaScreenState extends ConsumerState<ScheduleRegattaScreen> {
   @override
   Widget build(BuildContext context) {
     final boatsAsync = ref.watch(boatsProvider);
+    final boats = boatsAsync.valueOrNull ?? const <Boat>[];
+    final selectedBoat = _boatById(boats);
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
@@ -101,18 +117,8 @@ class _ScheduleRegattaScreenState extends ConsumerState<ScheduleRegattaScreen> {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
               children: [
                 _field(_titleController, 'Título (p. ej. Regata de primavera)'),
-                const SizedBox(height: 16),
-                _field(
-                  _portController,
-                  'Puerto de salida',
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Obligatorio' : null,
-                ),
-                const SizedBox(height: 16),
-                const Text('Barco',
-                    style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600)),
+                const SizedBox(height: 20),
+                const _Label('Barco'),
                 const SizedBox(height: 8),
                 boatsAsync.when(
                   loading: () => const Center(
@@ -125,7 +131,10 @@ class _ScheduleRegattaScreenState extends ConsumerState<ScheduleRegattaScreen> {
                               margin: const EdgeInsets.only(bottom: 8),
                               borderColor:
                                   _boatId == b.id ? AppColors.cyan : null,
-                              onTap: () => setState(() => _boatId = b.id),
+                              onTap: () => setState(() {
+                                _boatId = b.id;
+                                _departurePort = null;
+                              }),
                               child: Row(
                                 children: [
                                   const Icon(Icons.sailing,
@@ -145,7 +154,22 @@ class _ScheduleRegattaScreenState extends ConsumerState<ScheduleRegattaScreen> {
                         .toList(),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
+                const _Label('Puerto de salida'),
+                const SizedBox(height: 8),
+                if (selectedBoat == null)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: Text('Selecciona un barco primero.',
+                        style: TextStyle(color: AppColors.textSecondary)),
+                  )
+                else
+                  _DeparturePortPicker(
+                    key: ValueKey(selectedBoat.id),
+                    boat: selectedBoat,
+                    onChanged: (name) => setState(() => _departurePort = name),
+                  ),
+                const SizedBox(height: 20),
                 NavisCard(
                   onTap: _pickDate,
                   child: Row(
@@ -203,6 +227,80 @@ class _ScheduleRegattaScreenState extends ConsumerState<ScheduleRegattaScreen> {
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: AppColors.cyan),
         ),
+      ),
+    );
+  }
+}
+
+class _Label extends StatelessWidget {
+  const _Label(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: const TextStyle(
+          color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+    );
+  }
+}
+
+/// Loads ports near the boat's home port and shows the shared PortSelectorField.
+class _DeparturePortPicker extends ConsumerWidget {
+  const _DeparturePortPicker({
+    required this.boat,
+    required this.onChanged,
+    super.key,
+  });
+
+  final Boat boat;
+  final ValueChanged<String?> onChanged;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lat = boat.homePortLat;
+    final lon = boat.homePortLon;
+
+    // No home-port coordinates: fall back to a map-only selector.
+    if (lat == null || lon == null) {
+      return PortSelectorField(
+        label: '',
+        icon: Icons.anchor,
+        ports: const [],
+        initialName: boat.homePort,
+        mapTitle: 'Puerto de salida',
+        onChanged: onChanged,
+      );
+    }
+
+    final params = roundedPortParams(lat: lat, lon: lon, radiusKm: 100);
+    final portsAsync = ref.watch(nearbyPortsProvider(params));
+
+    return portsAsync.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: Center(child: CircularProgressIndicator(color: AppColors.cyan)),
+      ),
+      error: (_, __) => PortSelectorField(
+        label: '',
+        icon: Icons.anchor,
+        ports: const [],
+        refLat: lat,
+        refLon: lon,
+        initialName: boat.homePort,
+        mapTitle: 'Puerto de salida',
+        onChanged: onChanged,
+      ),
+      data: (ports) => PortSelectorField(
+        label: '',
+        icon: Icons.anchor,
+        ports: ports,
+        refLat: lat,
+        refLon: lon,
+        initialName: boat.homePort,
+        mapTitle: 'Puerto de salida',
+        onChanged: onChanged,
       ),
     );
   }

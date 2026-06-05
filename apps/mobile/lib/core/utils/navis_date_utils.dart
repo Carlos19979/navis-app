@@ -11,19 +11,19 @@ class NavisDateUtils {
   }
 
   static String formatDate(DateTime date) {
-    return DateFormat('dd MMM yyyy').format(date);
+    return DateFormat('dd MMM yyyy').format(date.toLocal());
   }
 
   static String formatDateShort(DateTime date) {
-    return DateFormat('dd/MM/yy').format(date);
+    return DateFormat('dd/MM/yy').format(date.toLocal());
   }
 
   static String formatDateTime(DateTime date) {
-    return DateFormat('dd MMM yyyy HH:mm').format(date);
+    return DateFormat('dd MMM yyyy HH:mm').format(date.toLocal());
   }
 
   static String formatTime(DateTime date) {
-    return DateFormat('HH:mm').format(date);
+    return DateFormat('HH:mm').format(date.toLocal());
   }
 
   static String formatRelative(DateTime date) {

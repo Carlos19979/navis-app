@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -34,22 +36,35 @@ void _handleNotificationTap(RemoteMessage message) {
   }
 }
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
+// Initializes Firebase + push messaging. Firebase.initializeApp() is awaited
+// (the notification providers, watched from the app root, require the [DEFAULT]
+// app to exist). getInitialMessage() is intentionally NOT awaited: on devices
+// without a push entitlement (free provisioning) or GoogleService-Info.plist,
+// it waits for an APNs token that never arrives and would hang startup.
+Future<void> _initPushNotifications() async {
   try {
     await Firebase.initializeApp();
     FirebaseMessaging.onBackgroundMessage(
       _firebaseMessagingBackgroundHandler,
     );
     FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
-    final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
-    if (initialMessage != null) {
-      _handleNotificationTap(initialMessage);
-    }
+    unawaited(
+      FirebaseMessaging.instance.getInitialMessage().then((message) {
+        if (message != null) {
+          _handleNotificationTap(message);
+        }
+      }).catchError((_) {}),
+    );
   } catch (_) {
-    // Firebase not configured — push notifications disabled
+    // Firebase not configured / push unavailable — notifications disabled.
   }
+}
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Firebase must be ready before runApp; only the APNs-bound parts are deferred.
+  await _initPushNotifications();
 
   final prefs = await SharedPreferences.getInstance();
 
