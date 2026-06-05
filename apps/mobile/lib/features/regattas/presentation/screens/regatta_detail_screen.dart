@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/network/supabase_client.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/regattas/domain/entities/regatta.dart';
 import 'package:navis_mobile/features/regattas/presentation/providers/regatta_provider.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
@@ -114,12 +115,7 @@ class RegattaDetailScreen extends ConsumerWidget {
           const SizedBox(height: 10),
           _row(Icons.place, r.departurePort),
           if (r.scheduledAt != null)
-            _row(
-              Icons.event,
-              '${r.scheduledAt!.day}/${r.scheduledAt!.month}/${r.scheduledAt!.year} '
-              '${r.scheduledAt!.hour.toString().padLeft(2, '0')}:'
-              '${r.scheduledAt!.minute.toString().padLeft(2, '0')}',
-            ),
+            _row(Icons.event, NavisDateUtils.formatDateTime(r.scheduledAt!)),
         ],
       ),
     );

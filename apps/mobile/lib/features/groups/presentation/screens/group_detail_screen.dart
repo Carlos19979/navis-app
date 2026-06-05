@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/network/supabase_client.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/groups/domain/entities/group.dart';
 import 'package:navis_mobile/features/groups/domain/entities/group_member.dart';
 import 'package:navis_mobile/features/groups/presentation/providers/group_provider.dart';
@@ -424,7 +425,7 @@ class _RegattasSection extends ConsumerWidget {
                         fontWeight: FontWeight.w600)),
                 if (r.scheduledAt != null)
                   Text(
-                    '${r.scheduledAt!.day}/${r.scheduledAt!.month}/${r.scheduledAt!.year}',
+                    NavisDateUtils.formatDate(r.scheduledAt!),
                     style: const TextStyle(
                         color: AppColors.textSecondary, fontSize: 12),
                   ),

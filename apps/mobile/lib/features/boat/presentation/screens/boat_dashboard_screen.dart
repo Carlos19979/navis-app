@@ -91,11 +91,11 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
         },
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 100),
+        padding: const EdgeInsets.only(bottom: 124),
         child: Container(
           decoration: BoxDecoration(
             gradient: AppColors.cyanGradient,
-            shape: BoxShape.circle,
+            borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
                 color: AppColors.cyan.withValues(alpha: 0.4),
@@ -109,6 +109,9 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
             tooltip: l.addNewBoat,
             backgroundColor: Colors.transparent,
             elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             child: Icon(
               Icons.add,
               color: Colors.white,

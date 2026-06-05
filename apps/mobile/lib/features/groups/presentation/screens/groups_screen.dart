@@ -90,11 +90,35 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen>
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.cyan,
-        onPressed: () => context.push('/groups/new'),
-        tooltip: 'Crear grupo',
-        child: const Icon(Icons.add, color: Colors.white),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 124),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: AppColors.cyanGradient,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.cyan.withValues(alpha: 0.4),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: FloatingActionButton(
+            onPressed: () => context.push('/groups/new'),
+            tooltip: 'Crear grupo',
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(
+              Icons.add,
+              color: Colors.white,
+              semanticLabel: 'Crear grupo',
+            ),
+          ),
+        ),
       ),
       body: GradientBackground(
         child: SafeArea(
@@ -166,7 +190,7 @@ class _GroupList extends ConsumerWidget {
           backgroundColor: AppColors.darkSurface,
           onRefresh: () async => ref.invalidate(provider),
           child: ListView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 130),
             itemCount: groups.length,
             itemBuilder: (context, i) => GroupCard(
               group: groups[i],
