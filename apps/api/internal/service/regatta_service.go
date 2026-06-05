@@ -113,6 +113,26 @@ func (s *RegattaService) Cancel(ctx context.Context, userID, tripID string) (*do
 	return updated, nil
 }
 
+// RevertToPlanned moves a recording trip back to planned, discarding the
+// in-progress recording (e.g. the organiser cancelled mid-recording).
+func (s *RegattaService) RevertToPlanned(ctx context.Context, userID, tripID string) (*domain.Trip, error) {
+	trip, err := s.tripRepo.GetByID(ctx, userID, tripID)
+	if err != nil {
+		return nil, fmt.Errorf("reverting trip %s: %w", tripID, err)
+	}
+	if trip.Status != domain.TripStatusRecording {
+		return nil, fmt.Errorf("reverting trip %s: %w: not recording", tripID, domain.ErrConflict)
+	}
+	trip.Status = domain.TripStatusPlanned
+	trip.ArrivalTime = nil
+	trip.ArrivalPort = nil
+	updated, err := s.tripRepo.Update(ctx, userID, trip)
+	if err != nil {
+		return nil, fmt.Errorf("reverting trip %s: %w", tripID, err)
+	}
+	return updated, nil
+}
+
 // Start transitions a planned trip into recording. The safety checklist must be
 // completed first (the mandatory pre-departure gate).
 func (s *RegattaService) Start(ctx context.Context, userID, tripID string) (*domain.Trip, error) {

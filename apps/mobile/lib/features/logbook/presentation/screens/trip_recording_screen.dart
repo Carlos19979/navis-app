@@ -21,13 +21,30 @@ import 'package:navis_mobile/features/logbook/presentation/providers/logbook_pro
 import 'package:navis_mobile/features/logbook/presentation/widgets/navigation_hud.dart';
 import 'package:navis_mobile/features/logbook/presentation/widgets/recording_controls.dart';
 import 'package:navis_mobile/features/logbook/presentation/widgets/trip_completion_dialog.dart';
+import 'package:navis_mobile/features/regattas/presentation/providers/regatta_provider.dart';
 import 'package:navis_mobile/features/ports/presentation/providers/port_provider.dart';
 import 'package:navis_mobile/features/ports/presentation/widgets/port_markers_layer.dart';
 
 class TripRecordingScreen extends ConsumerStatefulWidget {
-  const TripRecordingScreen({super.key, required this.boatId});
+  const TripRecordingScreen({
+    super.key,
+    required this.boatId,
+    this.tripId,
+    this.isRegatta = false,
+    this.autoStart = false,
+  });
 
   final String boatId;
+
+  /// When set, records into this existing (already-started) trip instead of
+  /// creating a new one — used for group regattas after the safety checklist.
+  final String? tripId;
+
+  /// Whether [tripId] refers to a group regatta (affects cancel behaviour).
+  final bool isRegatta;
+
+  /// Begin recording immediately on open (e.g. after the pre-trip checklist).
+  final bool autoStart;
 
   @override
   ConsumerState<TripRecordingScreen> createState() =>
@@ -65,6 +82,12 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _acquireInitialPosition();
+    // Auto-start when coming from the checklist (regatta trip or solo autostart).
+    if (widget.tripId != null || widget.autoStart) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _startRecording();
+      });
+    }
   }
 
   @override
@@ -249,6 +272,18 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
 
     unawaited(HapticFeedback.mediumImpact());
 
+    // Recording into an existing regatta trip: it already exists on the server.
+    if (widget.tripId != null) {
+      setState(() => _createdTrip = Trip(
+            id: widget.tripId!,
+            boatId: widget.boatId,
+            departurePort: '',
+            departureTime: _startTime!,
+            status: TripStatus.recording,
+          ));
+      return;
+    }
+
     try {
       final repo = ref.read(tripRepositoryProvider);
       String departureName = 'Unknown';
@@ -304,6 +339,56 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
     });
     _startLocationStream();
     HapticFeedback.lightImpact();
+  }
+
+  Future<void> _cancelRecording() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.darkSurface,
+        title: const Text('Cancelar viaje',
+            style: TextStyle(color: AppColors.textPrimary)),
+        content: Text(
+          widget.isRegatta
+              ? 'La regata volverá a "programada" y se descartará la grabación.'
+              : 'Se descartará este viaje sin guardarlo.',
+          style: const TextStyle(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Seguir'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Cancelar viaje',
+                style: TextStyle(color: AppColors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    await _positionSubscription?.cancel();
+    _positionSubscription = null;
+    _elapsedTimer?.cancel();
+    _uploadTimer?.cancel();
+
+    try {
+      if (_createdTrip != null) {
+        if (widget.isRegatta) {
+          await ref
+              .read(regattaRepositoryProvider)
+              .revertToPlanned(_createdTrip!.id);
+        } else {
+          await ref.read(tripRepositoryProvider).deleteTrip(_createdTrip!.id);
+        }
+      }
+    } catch (_) {}
+
+    if (!mounted) return;
+    unawaited(HapticFeedback.heavyImpact());
+    context.pop();
   }
 
   Future<void> _stopRecording() async {
@@ -615,6 +700,7 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
                     onPause: _pauseRecording,
                     onResume: _resumeRecording,
                     onStop: _stopRecording,
+                    onCancel: _cancelRecording,
                   ),
                 ),
               ],

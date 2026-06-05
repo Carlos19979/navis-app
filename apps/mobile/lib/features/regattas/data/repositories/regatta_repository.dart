@@ -71,6 +71,14 @@ class RegattaRepository {
         response.data!['data'] as Map<String, dynamic>);
   }
 
+  /// Reverts a recording regatta back to "planned" (discards the recording).
+  Future<Regatta> revertToPlanned(String tripId) async {
+    final response = await _apiClient
+        .put<Map<String, dynamic>>('/api/v1/trips/$tripId/revert');
+    return RegattaModel.fromJson(
+        response.data!['data'] as Map<String, dynamic>);
+  }
+
   // --- Checklist ---
 
   Future<List<ChecklistItem>> getChecklist(String tripId) async {

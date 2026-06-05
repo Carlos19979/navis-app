@@ -206,10 +206,25 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
+        path: '/boats/:id/precheck',
+        builder: (context, state) {
+          final boatId = state.pathParameters['id']!;
+          return PreTripChecklistScreen(boatId: boatId);
+        },
+      ),
+      GoRoute(
         path: '/boats/:id/record',
         builder: (context, state) {
           final boatId = state.pathParameters['id']!;
-          return TripRecordingScreen(boatId: boatId);
+          final tripId = state.uri.queryParameters['tripId'];
+          final isRegatta = state.uri.queryParameters['regatta'] == 'true';
+          final autoStart = state.uri.queryParameters['autostart'] == 'true';
+          return TripRecordingScreen(
+            boatId: boatId,
+            tripId: tripId,
+            isRegatta: isRegatta,
+            autoStart: autoStart,
+          );
         },
       ),
       GoRoute(

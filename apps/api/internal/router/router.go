@@ -105,6 +105,7 @@ func New(
 				// Regatta lifecycle + RSVP.
 				r.Put("/start", regattaH.Start)
 				r.Put("/cancel", regattaH.Cancel)
+				r.Put("/revert", regattaH.Revert)
 				r.Post("/rsvp", regattaH.SetRSVP)
 				r.Get("/participants", regattaH.ListParticipants)
 

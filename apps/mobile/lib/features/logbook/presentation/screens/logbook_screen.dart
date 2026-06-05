@@ -50,7 +50,7 @@ class LogbookScreen extends ConsumerWidget {
                 icon: Icons.route_outlined,
                 message: l.noTrips,
                 actionLabel: l.recordTrip,
-                onAction: () => context.push('/boats/$boatId/record'),
+                onAction: () => context.push('/boats/$boatId/precheck'),
               );
             }
 
@@ -111,7 +111,7 @@ class LogbookScreen extends ConsumerWidget {
           ),
           child: FloatingActionButton.extended(
             heroTag: 'record_trip',
-            onPressed: () => context.push('/boats/$boatId/record'),
+            onPressed: () => context.push('/boats/$boatId/precheck'),
             backgroundColor: Colors.transparent,
             elevation: 0,
             shape: RoundedRectangleBorder(
