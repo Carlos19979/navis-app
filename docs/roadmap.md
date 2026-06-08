@@ -1,5 +1,10 @@
 # Roadmap de Implementación — Navis (Actualizado 2026-04-29)
 
+> **Nota (2026-06):** este roadmap es histórico. Para el estado real de lo
+> implementado (planes, compartir barco, mantenimiento, mareas, plan de
+> navegación, compartir viaje, Apple/Google) y lo pendiente, ver
+> **`docs/implemented-features.md`**.
+
 Estado actual: Fases 0-11 implementadas. Fase 12 en progreso. Este roadmap cubre todo lo que queda.
 
 ---

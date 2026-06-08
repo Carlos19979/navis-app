@@ -1,5 +1,11 @@
 # Navis Feature Roadmap
 
+> **Status (2026-06):** Phases 1–3 are largely implemented, plus a "pro features"
+> batch beyond this roadmap: **user plans/tiers**, **boat sharing** (crew/co-owners),
+> **maintenance & expenses**, **tides + navigation window**, **float plan**, and a
+> **public trip-share web page**. For the authoritative, up-to-date status of what is
+> built / verified / pending, see **`docs/implemented-features.md`**.
+
 ## Phase 1 — MVP (Minimum Viable Product)
 
 Target: First TestFlight / internal release.
@@ -86,11 +92,12 @@ Target: Public launch + monetization.
 - Annual sailing summary (year in review)
 - Boat profile page (shareable)
 
-### Premium Subscription (Future)
-- Free tier: 1 boat, basic document tracking
-- Premium tier: unlimited boats, advanced analytics, priority notifications, export logbook to PDF
-- Subscription via App Store / Google Play in-app purchase
-- Server-side entitlement validation
+### User Plans / Tiers (implemented; billing pending)
+- Tiers `normal` / `armador` / `gestor` with boat limits 1 / 2 / 15 and group
+  creation gated to armador+ (server-enforced, HTTP 402).
+- `profiles.plan`, `GET/PUT /me`, mobile FAB gating + plan badge + dev switcher.
+- **Pending:** real in-app purchase (App Store / Google Play) → payment webhook
+  writes `profiles.plan`; advanced analytics; logbook PDF export.
 
 ### Admin / Organizer Panel (Future)
 - Web dashboard for event organizers to create and manage events

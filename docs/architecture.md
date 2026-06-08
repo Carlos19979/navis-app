@@ -46,8 +46,11 @@
                +------------------+
                |   EXTERNAL APIs  |
                +------------------+
-               | Open-Meteo       |  <-- Weather data (free, no key)
-               | Firebase FCM     |  <-- Push notifications
+               | Open-Meteo       |  <-- Weather + marine/tides (free, no key)
+               | Novu             |  <-- Notification orchestration
+               | Firebase FCM     |  <-- Push transport
+               | Resend           |  <-- Email (via Novu)
+               | Sentry           |  <-- Error reporting (Go + Flutter)
                +------------------+
 ```
 
@@ -55,18 +58,18 @@
 
 ### Flutter App (`apps/mobile/`)
 
-- **Framework**: Flutter 3.22+ with Dart
-- **State management**: Riverpod (code generation)
+- **Framework**: Flutter 3.32 with Dart 3.x
+- **State management**: Riverpod (hand-written providers — no codegen)
 - **Architecture**: Feature-first with clean architecture layers
   - `data/` — Models, repositories (API calls, local cache)
   - `domain/` — Entities, repository interfaces
   - `presentation/` — Screens, widgets, providers
-- **Key packages**: go_router, dio, supabase_flutter, flutter_map, geolocator, hive (offline)
+- **Key packages**: go_router, dio, supabase_flutter, flutter_map, geolocator, drift/sqflite (offline), share_plus, url_launcher
 - **Localization**: ARB files (Spanish primary, English)
 
 ### Go API (`apps/api/`)
 
-- **Framework**: Fiber v2 (Express-like HTTP framework for Go)
+- **Framework**: Chi v5 (lightweight HTTP router for Go)
 - **Database**: pgx v5 (native PostgreSQL driver, no ORM)
 - **Architecture**: Hexagonal (ports & adapters)
   - `cmd/server/` — Entry point, server bootstrap
@@ -77,11 +80,15 @@
   - `internal/domain/` — Domain entities
   - `internal/dto/` — Data transfer objects
   - `internal/middleware/` — Auth verification, logging, CORS
-  - `internal/cron/` — Scheduled jobs (document expiry notifications)
+  - `internal/cron/` — Scheduled jobs (document expiry; regatta reminders;
+    live-event alerts; overdue float-plan alerts)
   - `internal/config/` — Environment configuration
   - `internal/router/` — Route registration
-- **Auth**: Validates Supabase JWT (RS256) in middleware
-- **Cron**: Checks document expiry dates daily, sends FCM push notifications
+- **Auth**: Validates Supabase JWT in middleware (provider-agnostic — email,
+  Apple, Google all produce a valid Supabase JWT)
+- **Cron** (robfig/cron, UTC): daily document-expiry check; daily regatta
+  reminders; every 15m live-event + overdue-float-plan alerts. Dedup via
+  `notification_logs` / `sent_notifications`. Push delivered via Novu → FCM.
 
 ### Supabase (`packages/supabase/`)
 
@@ -93,26 +100,30 @@
 ### PostgreSQL Schema
 
 ```
-  auth.users
+  auth.users ---1:1--- profiles (plan: normal|armador|gestor)
       |
+      | 1:N (owner)        N:M shared crew/co-owners (read-only)
+      v                     ^
+  +--------+ <--- boat_members (boat_id, user_id, role) ; boats.share_code
+  | boats  |
+  +--------+--1:N--> documents (status, renewal)
+      |    \--1:N--> maintenance_logs / expenses
       | 1:N
       v
-  +--------+     1:N     +-----------+     1:N     +-------------+
-  | boats  | ----------> | documents | <---------- | notification|
-  +--------+             +-----------+              |   _logs     |
-      |                                             +-------------+
-      | 1:N
-      v
-  +--------+     1:N     +-------------+
-  | trips  | ----------> | trip_tracks |
-  +--------+             | (GPS points)|
-                          +-------------+
+  +--------+--1:N--> trip_tracks (GPS, PostGIS)
+  | trips  |--1:N--> trip_participants (RSVP) / trip_checklist_items
+  +--------+  (regatta: group_id/kind/scheduled_at ; float plan: destination/eta/
+              shore_contact ; public: share_token)
 
-  +--------+     N:M     +-----------------+
-  | events | <---------> | event_interests |
-  +--------+             | (user_id, ...)  |
-                          +-----------------+
+  groups --1:N--> group_members (pending|active)     (clubs/crews, invite code)
+  events --N:M--> event_interests   (events carry stream_url / tracking_url)
+  notification_logs / sent_notifications             (push dedup)
 ```
+
+Key tables: `profiles`, `boats` (+`share_code`), `boat_members`, `documents`,
+`trips` (+regatta/float-plan/share fields), `trip_tracks`, `trip_participants`,
+`trip_checklist_items`, `maintenance_logs`, `expenses`, `groups`, `group_members`,
+`events`, `event_interests`, `notification_logs`, `sent_notifications`.
 
 ## Data Flow
 
@@ -132,9 +143,29 @@
 
 ### GPS Trip Recording
 1. Flutter uses `geolocator` to capture position every 10 seconds
-2. Points are batched locally (Hive) and sent to the API every 60 seconds
+2. Points are batched locally (drift/sqflite) and sent to the API every 60 seconds
 3. Go API inserts batch into `trip_tracks` with PostGIS GEOGRAPHY points
 4. On trip completion, the API calculates total `distance_nm` from the track
+
+### Plans / entitlements
+1. `profiles.plan` (normal/armador/gestor) is read by `BoatService.Create` and
+   `GroupService.Create` to enforce boat-count and group-creation limits
+2. Over-limit actions return HTTP 402 (`PLAN_LIMIT` / `PLAN_FORBIDDEN`)
+3. Flutter reads `GET /me` to gate the create FABs; a dev switcher writes
+   `PUT /me/plan` (replaced by a payment webhook in production)
+
+### Boat sharing (crew / co-owners)
+1. Owner generates `boats.share_code`; an invitee `POST /boats/join` is added to
+   `boat_members` as a read-only `viewer`
+2. Reads of a boat and its documents/trips/maintenance/expenses check
+   `boatRepo.HasAccess(userID, boatID)` and resolve to the **owner's** scope
+3. All writes remain strictly owner-scoped (members get 404), so sharing can
+   never escalate to write access
+
+### Float plan safety alert
+1. Before departure the skipper sets destination/ETA/shore contact on the trip
+2. A 15-minute cron finds recording trips past `eta + 30m` and pushes the owner
+   a "have you arrived?" alert (dedup via `sent_notifications`)
 
 ## Deployment
 
