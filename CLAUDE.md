@@ -426,8 +426,9 @@ Use these Dart 3.x features everywhere they apply:
 ## Database (Supabase)
 
 - PostgreSQL with PostGIS enabled.
-- Key tables: `boats`, `documents` (computed `status` column), `trips`, `trip_tracks` (PostGIS), `events`, `event_interests`, `notification_logs`.
-- RLS enforces `user_id = auth.uid()` on all user tables. Events readable by all, writable by admins.
+- Key tables: `profiles` (plan), `boats` (+`share_code`), `boat_members` (shared crew/co-owners), `documents` (computed `status` column), `trips` (+ group/regatta, float-plan, `share_token`), `trip_tracks` (PostGIS), `trip_participants` (RSVP), `trip_checklist_items`, `maintenance_logs`, `expenses`, `groups`, `group_members`, `events` (+ stream/tracking urls), `event_interests`, `notification_logs`, `sent_notifications`.
+- RLS enforces `user_id = auth.uid()` on user tables. Shared boats: members READ a boat + its sub-resources (enforced in the Go service via `boatRepo.HasAccess`, reading as the owner's scope); all WRITES stay owner-only. Events readable by all, writable by admins.
+- Plans: `profiles.plan` ∈ `normal|armador|gestor` gates boat count (1/2/15) and group creation (armador+); enforced in services, returns 402.
 - Migrations in `packages/supabase/migrations/` numbered `00001_`, `00002_`, etc.
 - Document types: itb, insurance_rc, insurance_full, life_raft, extinguisher, flares, first_aid, medical_cert, radio_cert, navigation_license, custom.
 - Document status is a computed column: expired / critical (30d) / warning (90d) / ok.
