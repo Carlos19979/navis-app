@@ -6,6 +6,7 @@ import 'package:navis_mobile/core/network/supabase_client.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
+import 'package:navis_mobile/features/groups/presentation/providers/group_provider.dart';
 import 'package:navis_mobile/features/regattas/domain/entities/regatta.dart';
 import 'package:navis_mobile/features/regattas/presentation/providers/regatta_provider.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
@@ -69,6 +70,13 @@ class RegattaDetailScreen extends ConsumerWidget {
                 _RsvpRow(regattaId: regattaId, currentUserId: _uid),
                 const SizedBox(height: 16),
                 _Participants(regattaId: regattaId),
+                if (regatta.groupId != null) ...[
+                  const SizedBox(height: 16),
+                  _MemberRsvpList(
+                    regattaId: regattaId,
+                    groupId: regatta.groupId!,
+                  ),
+                ],
                 const SizedBox(height: 24),
                 if (regatta.ownerId == _uid)
                   _ownerControls(context, ref, regatta),
@@ -171,7 +179,54 @@ class RegattaDetailScreen extends ConsumerWidget {
         ),
       );
     }
+    // Completed or cancelled: the owner can delete it permanently.
+    if (r.status == 'completed' || r.status == 'cancelled') {
+      return NavisButton(
+        label: 'Eliminar regata',
+        icon: Icons.delete_outline,
+        variant: NavisButtonVariant.danger,
+        onPressed: () => _delete(context, ref, r),
+      );
+    }
     return const SizedBox.shrink();
+  }
+
+  Future<void> _delete(BuildContext context, WidgetRef ref, Regatta r) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: ctx.dialogSurface,
+        title: Text('Eliminar regata', style: TextStyle(color: ctx.txtPrimary)),
+        content: Text(
+          'Se eliminará esta regata de forma permanente.',
+          style: TextStyle(color: ctx.txtSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child:
+                const Text('Eliminar', style: TextStyle(color: AppColors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await ref.read(regattaRepositoryProvider).delete(r.id);
+      if (r.groupId != null) {
+        ref.invalidate(groupRegattasProvider(r.groupId!));
+      }
+      if (!context.mounted) return;
+      NavisSnackbar.success(context, 'Regata eliminada');
+      context.pop();
+    } catch (_) {
+      if (!context.mounted) return;
+      NavisSnackbar.error(context, 'No se pudo eliminar');
+    }
   }
 
   Future<void> _cancel(BuildContext context, WidgetRef ref, Regatta r) async {
@@ -297,6 +352,114 @@ class _Participants extends ConsumerWidget {
         Text(label,
             style: TextStyle(color: context.txtSecondary, fontSize: 12)),
       ],
+    );
+  }
+}
+
+/// Lists every group member with their RSVP status for the regatta.
+class _MemberRsvpList extends ConsumerWidget {
+  const _MemberRsvpList({required this.regattaId, required this.groupId});
+
+  final String regattaId;
+  final String groupId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final membersAsync = ref.watch(groupMembersProvider(groupId));
+    final participants =
+        ref.watch(regattaParticipantsProvider(regattaId)).valueOrNull ??
+            const [];
+    final rsvpByUser = <String, String>{
+      for (final p in participants) p.userId: p.rsvp,
+    };
+
+    return membersAsync.maybeWhen(
+      data: (members) {
+        if (members.isEmpty) return const SizedBox.shrink();
+        return NavisCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Miembros',
+                  style: TextStyle(
+                      color: context.txtPrimary, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 8),
+              for (var i = 0; i < members.length; i++) ...[
+                if (i > 0)
+                  Divider(
+                    height: 1,
+                    color: context.glassBorderColor.withValues(alpha: 0.3),
+                  ),
+                _MemberRow(
+                  name:
+                      members[i].name.isNotEmpty ? members[i].name : 'Miembro',
+                  isOwner: members[i].role == 'owner',
+                  rsvp: rsvpByUser[members[i].userId],
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+      orElse: () => const SizedBox.shrink(),
+    );
+  }
+}
+
+class _MemberRow extends StatelessWidget {
+  const _MemberRow({
+    required this.name,
+    required this.isOwner,
+    required this.rsvp,
+  });
+
+  final String name;
+  final bool isOwner;
+  final String? rsvp;
+
+  @override
+  Widget build(BuildContext context) {
+    final (color, icon) = switch (rsvp) {
+      'going' => (AppColors.green, Icons.check_circle),
+      'maybe' => (AppColors.amber, Icons.help_outline),
+      'not_going' => (AppColors.red, Icons.cancel),
+      _ => (context.txtSecondary, Icons.remove_circle_outline),
+    };
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 16,
+            backgroundColor: AppColors.cyan.withValues(alpha: 0.15),
+            child: Text(
+              name.isNotEmpty ? name[0].toUpperCase() : '?',
+              style: const TextStyle(
+                  color: AppColors.cyan, fontWeight: FontWeight.w700),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    name,
+                    style: TextStyle(color: context.txtPrimary),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (isOwner) ...[
+                  const SizedBox(width: 6),
+                  const Icon(Icons.star, size: 13, color: AppColors.amber),
+                ],
+              ],
+            ),
+          ),
+          Icon(icon, size: 20, color: color),
+        ],
+      ),
     );
   }
 }

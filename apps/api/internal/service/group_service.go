@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"crypto/rand"
+	"errors"
 	"fmt"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
@@ -13,11 +14,13 @@ import (
 type GroupService struct {
 	groupRepo  port.GroupRepository
 	memberRepo port.GroupMemberRepository
+	profiles   port.ProfileRepository
+	notifier   *Notifier
 }
 
 // NewGroupService creates a new GroupService.
-func NewGroupService(groupRepo port.GroupRepository, memberRepo port.GroupMemberRepository) *GroupService {
-	return &GroupService{groupRepo: groupRepo, memberRepo: memberRepo}
+func NewGroupService(groupRepo port.GroupRepository, memberRepo port.GroupMemberRepository, profiles port.ProfileRepository, notifier *Notifier) *GroupService {
+	return &GroupService{groupRepo: groupRepo, memberRepo: memberRepo, profiles: profiles, notifier: notifier}
 }
 
 // inviteCodeAlphabet excludes ambiguous characters (0/O, 1/I/L) for readability.
@@ -45,18 +48,44 @@ func (s *GroupService) Create(ctx context.Context, group *domain.Group) (*domain
 		return nil, fmt.Errorf("creating group: %w", domain.ErrUnauthorized)
 	}
 
-	// Private groups are joined with an invite code; public groups are join-by-request.
-	if group.Visibility == domain.GroupVisibilityPrivate {
-		code, err := generateInviteCode()
+	// Only paid plans (armador/gestor) may create groups.
+	if s.profiles != nil {
+		profile, err := s.profiles.GetOrCreate(ctx, group.OwnerID)
 		if err != nil {
 			return nil, fmt.Errorf("creating group: %w", err)
 		}
-		group.InviteCode = &code
+		if !profile.Plan.CanCreateGroups() {
+			return nil, fmt.Errorf("creating group: %w", domain.ErrPlanForbidden)
+		}
 	}
 
-	created, err := s.groupRepo.Create(ctx, group)
-	if err != nil {
+	// Private groups are joined with an invite code; public groups are
+	// join-by-request. Retry on the (astronomically rare) code collision by
+	// regenerating the code — the DB's UNIQUE constraint is the source of truth.
+	private := group.Visibility == domain.GroupVisibilityPrivate
+	const maxAttempts = 5
+	var created *domain.Group
+	for attempt := 0; attempt < maxAttempts; attempt++ {
+		if private {
+			code, err := generateInviteCode()
+			if err != nil {
+				return nil, fmt.Errorf("creating group: %w", err)
+			}
+			group.InviteCode = &code
+		}
+		var err error
+		created, err = s.groupRepo.Create(ctx, group)
+		if err == nil {
+			break
+		}
+		if private && errors.Is(err, domain.ErrConflict) {
+			created = nil
+			continue // invite code collided — regenerate and retry
+		}
 		return nil, fmt.Errorf("creating group: %w", err)
+	}
+	if created == nil {
+		return nil, fmt.Errorf("creating group: %w", domain.ErrConflict)
 	}
 
 	if err := s.memberRepo.Add(ctx, created.ID, created.OwnerID,
@@ -138,6 +167,15 @@ func (s *GroupService) RequestJoin(ctx context.Context, userID, groupID string) 
 		domain.GroupRoleMember, domain.GroupMemberStatusPending); err != nil {
 		return nil, fmt.Errorf("requesting to join group %s: %w", groupID, err)
 	}
+
+	// Notify the group owner of the new join request.
+	if s.notifier != nil && group.OwnerID != "" {
+		name := s.notifier.UserName(ctx, userID)
+		s.notifier.Send(ctx, group.OwnerID, WorkflowGroupJoinRequest,
+			"Solicitud de grupo",
+			fmt.Sprintf("%s quiere unirse a %s", name, group.Name),
+			"group", group.ID)
+	}
 	return s.groupRepo.GetByID(ctx, userID, groupID)
 }
 
@@ -211,6 +249,18 @@ func (s *GroupService) ApproveRequest(ctx context.Context, ownerID, groupID, tar
 	}
 	if err := s.memberRepo.SetStatus(ctx, groupID, targetUserID, domain.GroupMemberStatusActive); err != nil {
 		return fmt.Errorf("approving request in group %s: %w", groupID, err)
+	}
+
+	// Notify the requester that they were accepted.
+	if s.notifier != nil {
+		groupName := "el grupo"
+		if g, err := s.groupRepo.GetByID(ctx, ownerID, groupID); err == nil {
+			groupName = g.Name
+		}
+		s.notifier.Send(ctx, targetUserID, WorkflowGroupRequestApproved,
+			"Solicitud aceptada",
+			fmt.Sprintf("Te han aceptado en %s", groupName),
+			"group", groupID)
 	}
 	return nil
 }

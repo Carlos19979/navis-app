@@ -88,6 +88,20 @@ func (r *DocumentRepo) GetByID(ctx context.Context, userID, id string) (*domain.
 	return d, nil
 }
 
+// GetByIDUnscoped retrieves a document by ID without a user filter. Callers
+// must enforce their own authorization (e.g., shared boat access).
+func (r *DocumentRepo) GetByIDUnscoped(ctx context.Context, id string) (*domain.Document, error) {
+	query := `SELECT ` + documentColumns + ` FROM documents WHERE id = $1`
+	d, err := scanDocument(r.pool.QueryRow(ctx, query, id))
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrDocumentNotFound
+		}
+		return nil, fmt.Errorf("getting document %s: %w", id, err)
+	}
+	return d, nil
+}
+
 // List returns a paginated list of all documents for a user.
 func (r *DocumentRepo) List(ctx context.Context, userID, cursor string, limit int) ([]domain.Document, string, error) {
 	var (

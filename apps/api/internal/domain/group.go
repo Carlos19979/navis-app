@@ -56,6 +56,7 @@ type Group struct {
 type GroupMember struct {
 	GroupID  string
 	UserID   string
+	Name     string
 	Role     GroupMemberRole
 	Status   GroupMemberStatus
 	JoinedAt time.Time

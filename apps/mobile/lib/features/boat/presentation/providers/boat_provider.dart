@@ -61,6 +61,9 @@ class BoatsNotifier extends AsyncNotifier<List<Boat>> {
     state = AsyncData(
       currentBoats.map((b) => b.id == updated.id ? updated : b).toList(),
     );
+    // Refresh the single-boat cache so the detail/edit screens (which watch
+    // boatProvider(id)) show the new data and photo instead of stale values.
+    ref.invalidate(boatProvider(updated.id));
   }
 
   Future<void> deleteBoat(String id) async {

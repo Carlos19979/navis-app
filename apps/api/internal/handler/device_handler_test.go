@@ -33,9 +33,9 @@ func (m *mockDeviceRepo) Delete(ctx context.Context, token string) error {
 
 type mockNotifier struct{}
 
-func (m *mockNotifier) EnsureSubscriber(_ context.Context, _ string) error        { return nil }
-func (m *mockNotifier) SetPushToken(_ context.Context, _, _ string) error          { return nil }
-func (m *mockNotifier) RemovePushToken(_ context.Context, _, _ string) error       { return nil }
+func (m *mockNotifier) EnsureSubscriber(_ context.Context, _ string) error   { return nil }
+func (m *mockNotifier) SetPushToken(_ context.Context, _, _ string) error    { return nil }
+func (m *mockNotifier) RemovePushToken(_ context.Context, _, _ string) error { return nil }
 
 // --- Helpers ---
 

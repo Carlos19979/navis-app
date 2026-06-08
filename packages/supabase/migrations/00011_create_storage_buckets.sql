@@ -1,9 +1,12 @@
--- Create storage buckets for boat photos and document scans
+-- Create storage buckets for boat photos and document scans.
+-- Buckets are public so the app can render images via getPublicUrl + cached
+-- network images. Writes remain protected by the per-user RLS policies below
+-- (uploads/updates/deletes scoped to the owner's {userId}/... folder).
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES
-  ('boats', 'boats', false, 5242880, ARRAY['image/jpeg', 'image/png', 'image/webp']),
-  ('documents', 'documents', false, 10485760, ARRAY['image/jpeg', 'image/png', 'image/webp', 'application/pdf'])
-ON CONFLICT (id) DO NOTHING;
+  ('boats', 'boats', true, 5242880, ARRAY['image/jpeg', 'image/png', 'image/webp']),
+  ('documents', 'documents', true, 10485760, ARRAY['image/jpeg', 'image/png', 'image/webp', 'application/pdf'])
+ON CONFLICT (id) DO UPDATE SET public = EXCLUDED.public;
 
 -- RLS policies for boats bucket: users can only access their own files
 -- Path pattern: {userId}/{boatId}/photo.jpg

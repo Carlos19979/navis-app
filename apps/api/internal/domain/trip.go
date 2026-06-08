@@ -57,6 +57,11 @@ type Trip struct {
 	Notes                *string
 	Photos               []string
 	Status               TripStatus
+	ShareToken           *string
+	Destination          *string
+	ETA                  *time.Time
+	ShoreContactName     *string
+	ShoreContactPhone    *string
 	CreatedAt            time.Time
 	UpdatedAt            time.Time
 }
@@ -65,6 +70,7 @@ type Trip struct {
 type TripParticipant struct {
 	TripID      string
 	UserID      string
+	Name        string
 	RSVP        RSVP
 	RespondedAt time.Time
 }

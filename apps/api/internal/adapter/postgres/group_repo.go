@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
@@ -72,6 +73,12 @@ func (r *GroupRepo) Create(ctx context.Context, group *domain.Group) (*domain.Gr
 		&g.CreatedAt, &g.UpdatedAt,
 	)
 	if err != nil {
+		// The only UNIQUE constraint on groups is invite_code, so a unique
+		// violation here means the generated code collided.
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return nil, domain.ErrConflict
+		}
 		return nil, fmt.Errorf("inserting group: %w", err)
 	}
 	return g, nil
@@ -227,6 +234,29 @@ func scanMembers(rows pgx.Rows) ([]domain.GroupMember, error) {
 	return members, rows.Err()
 }
 
+// scanMembersWithName scans member rows that additionally select a display name.
+func scanMembersWithName(rows pgx.Rows) ([]domain.GroupMember, error) {
+	members := make([]domain.GroupMember, 0)
+	for rows.Next() {
+		m := domain.GroupMember{}
+		if err := rows.Scan(&m.GroupID, &m.UserID, &m.Role, &m.Status, &m.JoinedAt, &m.Name); err != nil {
+			return nil, err
+		}
+		members = append(members, m)
+	}
+	return members, rows.Err()
+}
+
+// memberName resolves a display name from the user's auth metadata, falling
+// back to email then a generic label.
+const memberNameExpr = `COALESCE(
+	NULLIF(u.raw_user_meta_data->>'name', ''),
+	NULLIF(u.raw_user_meta_data->>'display_name', ''),
+	NULLIF(u.raw_user_meta_data->>'full_name', ''),
+	u.email::text,
+	'Miembro'
+)`
+
 // Add inserts a membership row (idempotent: existing rows are left untouched).
 func (r *GroupMemberRepo) Add(ctx context.Context, groupID, userID string, role domain.GroupMemberRole, status domain.GroupMemberStatus) error {
 	_, err := r.pool.Exec(ctx,
@@ -288,17 +318,18 @@ func (r *GroupMemberRepo) Remove(ctx context.Context, groupID, userID string) er
 // ListMembers returns the active members of a group (owner first, then by join time).
 func (r *GroupMemberRepo) ListMembers(ctx context.Context, groupID string) ([]domain.GroupMember, error) {
 	rows, err := r.pool.Query(ctx,
-		`SELECT group_id, user_id, role, status, joined_at
-		 FROM group_members
-		 WHERE group_id = $1 AND status = 'active'
-		 ORDER BY (role = 'owner') DESC, joined_at ASC`,
+		`SELECT gm.group_id, gm.user_id, gm.role, gm.status, gm.joined_at, `+memberNameExpr+`
+		 FROM group_members gm
+		 LEFT JOIN auth.users u ON u.id = gm.user_id
+		 WHERE gm.group_id = $1 AND gm.status = 'active'
+		 ORDER BY (gm.role = 'owner') DESC, gm.joined_at ASC`,
 		groupID)
 	if err != nil {
 		return nil, fmt.Errorf("listing members of group %s: %w", groupID, err)
 	}
 	defer rows.Close()
 
-	members, err := scanMembers(rows)
+	members, err := scanMembersWithName(rows)
 	if err != nil {
 		return nil, fmt.Errorf("scanning members of group %s: %w", groupID, err)
 	}
@@ -308,17 +339,18 @@ func (r *GroupMemberRepo) ListMembers(ctx context.Context, groupID string) ([]do
 // ListPending returns the pending join requests of a group, oldest first.
 func (r *GroupMemberRepo) ListPending(ctx context.Context, groupID string) ([]domain.GroupMember, error) {
 	rows, err := r.pool.Query(ctx,
-		`SELECT group_id, user_id, role, status, joined_at
-		 FROM group_members
-		 WHERE group_id = $1 AND status = 'pending'
-		 ORDER BY joined_at ASC`,
+		`SELECT gm.group_id, gm.user_id, gm.role, gm.status, gm.joined_at, `+memberNameExpr+`
+		 FROM group_members gm
+		 LEFT JOIN auth.users u ON u.id = gm.user_id
+		 WHERE gm.group_id = $1 AND gm.status = 'pending'
+		 ORDER BY gm.joined_at ASC`,
 		groupID)
 	if err != nil {
 		return nil, fmt.Errorf("listing pending requests of group %s: %w", groupID, err)
 	}
 	defer rows.Close()
 
-	members, err := scanMembers(rows)
+	members, err := scanMembersWithName(rows)
 	if err != nil {
 		return nil, fmt.Errorf("scanning pending requests of group %s: %w", groupID, err)
 	}

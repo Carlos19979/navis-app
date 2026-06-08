@@ -6,9 +6,8 @@ import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
-import 'package:navis_mobile/features/ports/presentation/providers/port_provider.dart';
-import 'package:navis_mobile/features/ports/presentation/widgets/port_selector_field.dart';
 import 'package:navis_mobile/features/regattas/presentation/providers/regatta_provider.dart';
+import 'package:navis_mobile/features/regattas/presentation/widgets/departure_port_picker.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
@@ -165,7 +164,7 @@ class _ScheduleRegattaScreenState extends ConsumerState<ScheduleRegattaScreen> {
                         style: TextStyle(color: context.txtSecondary)),
                   )
                 else
-                  _DeparturePortPicker(
+                  DeparturePortPicker(
                     key: ValueKey(selectedBoat.id),
                     boat: selectedBoat,
                     onChanged: (name) => setState(() => _departurePort = name),
@@ -240,66 +239,6 @@ class _Label extends StatelessWidget {
     return Text(
       text,
       style: TextStyle(color: context.txtPrimary, fontWeight: FontWeight.w600),
-    );
-  }
-}
-
-/// Loads ports near the boat's home port and shows the shared PortSelectorField.
-class _DeparturePortPicker extends ConsumerWidget {
-  const _DeparturePortPicker({
-    required this.boat,
-    required this.onChanged,
-    super.key,
-  });
-
-  final Boat boat;
-  final ValueChanged<String?> onChanged;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final lat = boat.homePortLat;
-    final lon = boat.homePortLon;
-
-    // No home-port coordinates: fall back to a map-only selector.
-    if (lat == null || lon == null) {
-      return PortSelectorField(
-        label: '',
-        icon: Icons.anchor,
-        ports: const [],
-        initialName: boat.homePort,
-        mapTitle: 'Puerto de salida',
-        onChanged: onChanged,
-      );
-    }
-
-    final params = roundedPortParams(lat: lat, lon: lon, radiusKm: 100);
-    final portsAsync = ref.watch(nearbyPortsProvider(params));
-
-    return portsAsync.when(
-      loading: () => const Padding(
-        padding: EdgeInsets.symmetric(vertical: 16),
-        child: Center(child: CircularProgressIndicator(color: AppColors.cyan)),
-      ),
-      error: (_, __) => PortSelectorField(
-        label: '',
-        icon: Icons.anchor,
-        ports: const [],
-        refLat: lat,
-        refLon: lon,
-        initialName: boat.homePort,
-        mapTitle: 'Puerto de salida',
-        onChanged: onChanged,
-      ),
-      data: (ports) => PortSelectorField(
-        label: '',
-        icon: Icons.anchor,
-        ports: ports,
-        refLat: lat,
-        refLon: lon,
-        initialName: boat.homePort,
-        mapTitle: 'Puerto de salida',
-        onChanged: onChanged,
-      ),
     );
   }
 }

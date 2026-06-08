@@ -10,6 +10,7 @@ class Boat {
     this.homePortLon,
     this.photoUrl,
     this.ownerId,
+    this.isOwner = true,
     this.createdAt,
     this.updatedAt,
   });
@@ -24,6 +25,7 @@ class Boat {
   final double? homePortLon;
   final String? photoUrl;
   final String? ownerId;
+  final bool isOwner;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -38,6 +40,7 @@ class Boat {
     double? homePortLon,
     String? photoUrl,
     String? ownerId,
+    bool? isOwner,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -52,6 +55,7 @@ class Boat {
       homePortLon: homePortLon ?? this.homePortLon,
       photoUrl: photoUrl ?? this.photoUrl,
       ownerId: ownerId ?? this.ownerId,
+      isOwner: isOwner ?? this.isOwner,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

@@ -14,7 +14,7 @@
   "trips": "Viajes",
   "weather": "Clima",
   "events": "Eventos",
-  "charts": "Cartas",
+  "charts": "Mapa",
   "profile": "Perfil",
   "settings": "Ajustes",
   "save": "Guardar",
@@ -339,5 +339,16 @@
   "centerOnGps": "Centrar en GPS",
   "toggleSeamarks": "Señales marítimas",
   "togglePorts": "Mostrar puertos",
-  "toggleTripTracks": "Mostrar rutas"
+  "toggleTripTracks": "Mostrar rutas",
+  "now": "Ahora",
+  "hourlyForecast": "Por horas",
+  "wcClear": "Despejado",
+  "wcPartlyCloudy": "Parcialmente nublado",
+  "wcCloudy": "Nublado",
+  "wcFog": "Niebla",
+  "wcDrizzle": "Llovizna",
+  "wcRain": "Lluvia",
+  "wcSnow": "Nieve",
+  "wcThunderstorm": "Tormenta",
+  "wcUnknown": "—"
 }

@@ -37,20 +37,24 @@ func (r *CreateBoatRequest) ToDomain(userID string) *domain.Boat {
 
 // UpdateBoatRequest is the payload for updating an existing boat.
 type UpdateBoatRequest struct {
-	Name        *string          `json:"name"         validate:"omitempty,min=1,max=100"`
-	Type        *domain.BoatType `json:"type"         validate:"omitempty,oneof=sailboat motorboat catamaran rib jetski other"`
-	LengthM     *float64         `json:"length_m"     validate:"omitempty,gt=0"`
-	HomePort    *string          `json:"home_port"    validate:"omitempty,min=1,max=100"`
-	HomePortLat *float64         `json:"home_port_lat" validate:"omitempty,latitude"`
-	HomePortLon *float64         `json:"home_port_lon" validate:"omitempty,longitude"`
-	PhotoURL    *string          `json:"photo_url"    validate:"omitempty,url"`
-	EngineHours *float64         `json:"engine_hours" validate:"omitempty,gte=0"`
+	Name         *string          `json:"name"         validate:"omitempty,min=1,max=100"`
+	Registration *string          `json:"registration" validate:"omitempty,min=1,max=50"`
+	Type         *domain.BoatType `json:"type"         validate:"omitempty,oneof=sailboat motorboat catamaran rib jetski other"`
+	LengthM      *float64         `json:"length_m"     validate:"omitempty,gt=0"`
+	HomePort     *string          `json:"home_port"    validate:"omitempty,min=1,max=100"`
+	HomePortLat  *float64         `json:"home_port_lat" validate:"omitempty,latitude"`
+	HomePortLon  *float64         `json:"home_port_lon" validate:"omitempty,longitude"`
+	PhotoURL     *string          `json:"photo_url"    validate:"omitempty,url"`
+	EngineHours  *float64         `json:"engine_hours" validate:"omitempty,gte=0"`
 }
 
 // ApplyTo merges non-nil fields from the request into the given domain Boat.
 func (r *UpdateBoatRequest) ApplyTo(boat *domain.Boat) {
 	if r.Name != nil {
 		boat.Name = *r.Name
+	}
+	if r.Registration != nil {
+		boat.Registration = *r.Registration
 	}
 	if r.Type != nil {
 		boat.Type = *r.Type
@@ -87,6 +91,7 @@ type BoatResponse struct {
 	HomePortLon  *float64        `json:"home_port_lon,omitempty"`
 	PhotoURL     *string         `json:"photo_url,omitempty"`
 	EngineHours  float64         `json:"engine_hours"`
+	IsOwner      bool            `json:"is_owner"`
 	CreatedAt    time.Time       `json:"created_at"`
 	UpdatedAt    time.Time       `json:"updated_at"`
 }
@@ -114,6 +119,36 @@ func BoatListResponseFromDomain(boats []domain.Boat) []BoatResponse {
 	out := make([]BoatResponse, len(boats))
 	for i := range boats {
 		out[i] = *BoatResponseFromDomain(&boats[i])
+	}
+	return out
+}
+
+// BoatShareCodeResponse carries a boat's invite code.
+type BoatShareCodeResponse struct {
+	Code string `json:"code"`
+}
+
+// JoinBoatRequest is the payload to join a boat by its share code.
+type JoinBoatRequest struct {
+	Code string `json:"code" validate:"required"`
+}
+
+// BoatMemberResponse is a shared member of a boat.
+type BoatMemberResponse struct {
+	UserID string `json:"user_id"`
+	Name   string `json:"name"`
+	Role   string `json:"role"`
+}
+
+// BoatMemberListFromDomain converts domain boat members to responses.
+func BoatMemberListFromDomain(members []domain.BoatMember) []BoatMemberResponse {
+	out := make([]BoatMemberResponse, len(members))
+	for i := range members {
+		out[i] = BoatMemberResponse{
+			UserID: members[i].UserID,
+			Name:   members[i].Name,
+			Role:   members[i].Role,
+		}
 	}
 	return out
 }

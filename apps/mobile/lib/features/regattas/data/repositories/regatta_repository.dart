@@ -71,6 +71,11 @@ class RegattaRepository {
         response.data!['data'] as Map<String, dynamic>);
   }
 
+  /// Permanently deletes a regatta/trip (used for completed or cancelled ones).
+  Future<void> delete(String tripId) async {
+    await _apiClient.delete<void>('/api/v1/trips/$tripId');
+  }
+
   /// Reverts a recording regatta back to "planned" (discards the recording).
   Future<Regatta> revertToPlanned(String tripId) async {
     final response = await _apiClient

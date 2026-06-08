@@ -92,7 +92,7 @@ func TestTripService_Create_Success(t *testing.T) {
 		},
 	}
 	trackRepo := &mockTripTrackRepo{}
-	svc := NewTripService(tripRepo, trackRepo)
+	svc := NewTripService(tripRepo, trackRepo, &mockBoatRepo{})
 
 	result, err := svc.Create(context.Background(), trip)
 	if err != nil {
@@ -113,7 +113,7 @@ func TestTripService_Create_EmptyUserID(t *testing.T) {
 	trip.UserID = ""
 	tripRepo := &mockTripRepo{}
 	trackRepo := &mockTripTrackRepo{}
-	svc := NewTripService(tripRepo, trackRepo)
+	svc := NewTripService(tripRepo, trackRepo, &mockBoatRepo{})
 
 	_, err := svc.Create(context.Background(), trip)
 	if err == nil {
@@ -131,7 +131,7 @@ func TestTripService_Create_EmptyDeparturePort(t *testing.T) {
 	trip.DeparturePort = ""
 	tripRepo := &mockTripRepo{}
 	trackRepo := &mockTripTrackRepo{}
-	svc := NewTripService(tripRepo, trackRepo)
+	svc := NewTripService(tripRepo, trackRepo, &mockBoatRepo{})
 
 	_, err := svc.Create(context.Background(), trip)
 	if err == nil {
@@ -161,7 +161,7 @@ func TestTripService_Create_SetsStatusToRecording(t *testing.T) {
 		},
 	}
 	trackRepo := &mockTripTrackRepo{}
-	svc := NewTripService(tripRepo, trackRepo)
+	svc := NewTripService(tripRepo, trackRepo, &mockBoatRepo{})
 
 	_, err := svc.Create(context.Background(), trip)
 	if err != nil {
@@ -183,7 +183,7 @@ func TestTripService_Create_RepoError(t *testing.T) {
 		},
 	}
 	trackRepo := &mockTripTrackRepo{}
-	svc := NewTripService(tripRepo, trackRepo)
+	svc := NewTripService(tripRepo, trackRepo, &mockBoatRepo{})
 
 	_, err := svc.Create(context.Background(), trip)
 	if err == nil {
@@ -201,12 +201,12 @@ func TestTripService_GetByID_Success(t *testing.T) {
 
 	trip := newTestTrip()
 	tripRepo := &mockTripRepo{
-		getByIDFn: func(_ context.Context, _, _ string) (*domain.Trip, error) {
+		getByIDUnscopedFn: func(_ context.Context, _ string) (*domain.Trip, error) {
 			return trip, nil
 		},
 	}
 	trackRepo := &mockTripTrackRepo{}
-	svc := NewTripService(tripRepo, trackRepo)
+	svc := NewTripService(tripRepo, trackRepo, &mockBoatRepo{})
 
 	result, err := svc.GetByID(context.Background(), "user-1", "trip-1")
 	if err != nil {
@@ -221,12 +221,12 @@ func TestTripService_GetByID_NotFound(t *testing.T) {
 	t.Parallel()
 
 	tripRepo := &mockTripRepo{
-		getByIDFn: func(_ context.Context, _, _ string) (*domain.Trip, error) {
+		getByIDUnscopedFn: func(_ context.Context, _ string) (*domain.Trip, error) {
 			return nil, domain.ErrTripNotFound
 		},
 	}
 	trackRepo := &mockTripTrackRepo{}
-	svc := NewTripService(tripRepo, trackRepo)
+	svc := NewTripService(tripRepo, trackRepo, &mockBoatRepo{})
 
 	_, err := svc.GetByID(context.Background(), "user-1", "nonexistent")
 	if err == nil {
@@ -249,7 +249,7 @@ func TestTripService_List_Success(t *testing.T) {
 		},
 	}
 	trackRepo := &mockTripTrackRepo{}
-	svc := NewTripService(tripRepo, trackRepo)
+	svc := NewTripService(tripRepo, trackRepo, &mockBoatRepo{})
 
 	result, cursor, err := svc.List(context.Background(), "user-1", "", "", 10)
 	if err != nil {
@@ -274,7 +274,7 @@ func TestTripService_List_WithBoatIDFilter(t *testing.T) {
 		},
 	}
 	trackRepo := &mockTripTrackRepo{}
-	svc := NewTripService(tripRepo, trackRepo)
+	svc := NewTripService(tripRepo, trackRepo, &mockBoatRepo{})
 
 	_, _, err := svc.List(context.Background(), "user-1", "boat-42", "", 10)
 	if err != nil {
@@ -296,7 +296,7 @@ func TestTripService_List_DefaultLimit(t *testing.T) {
 		},
 	}
 	trackRepo := &mockTripTrackRepo{}
-	svc := NewTripService(tripRepo, trackRepo)
+	svc := NewTripService(tripRepo, trackRepo, &mockBoatRepo{})
 
 	tests := []struct {
 		name          string
@@ -337,7 +337,7 @@ func TestTripService_Update_Success(t *testing.T) {
 		},
 	}
 	trackRepo := &mockTripTrackRepo{}
-	svc := NewTripService(tripRepo, trackRepo)
+	svc := NewTripService(tripRepo, trackRepo, &mockBoatRepo{})
 
 	result, err := svc.Update(context.Background(), "user-1", updatedTrip)
 	if err != nil {
@@ -355,7 +355,7 @@ func TestTripService_Update_EmptyID(t *testing.T) {
 	trip.ID = ""
 	tripRepo := &mockTripRepo{}
 	trackRepo := &mockTripTrackRepo{}
-	svc := NewTripService(tripRepo, trackRepo)
+	svc := NewTripService(tripRepo, trackRepo, &mockBoatRepo{})
 
 	_, err := svc.Update(context.Background(), "user-1", trip)
 	if err == nil {
@@ -378,7 +378,7 @@ func TestTripService_Update_NotFound(t *testing.T) {
 		},
 	}
 	trackRepo := &mockTripTrackRepo{}
-	svc := NewTripService(tripRepo, trackRepo)
+	svc := NewTripService(tripRepo, trackRepo, &mockBoatRepo{})
 
 	_, err := svc.Update(context.Background(), "user-1", trip)
 	if err == nil {
@@ -402,7 +402,7 @@ func TestTripService_Update_BlocksCompletedTrip(t *testing.T) {
 		},
 	}
 	trackRepo := &mockTripTrackRepo{}
-	svc := NewTripService(tripRepo, trackRepo)
+	svc := NewTripService(tripRepo, trackRepo, &mockBoatRepo{})
 
 	_, err := svc.Update(context.Background(), "user-1", trip)
 	if err == nil {
@@ -432,7 +432,7 @@ func TestTripService_Complete_Success(t *testing.T) {
 			return []domain.TripTrack{}, nil // No tracks
 		},
 	}
-	svc := NewTripService(tripRepo, trackRepo)
+	svc := NewTripService(tripRepo, trackRepo, &mockBoatRepo{})
 
 	arrivalPort := "Ibiza"
 	distNM := 120.5
@@ -482,7 +482,7 @@ func TestTripService_Complete_WithTrackPoints(t *testing.T) {
 			return tracks, nil
 		},
 	}
-	svc := NewTripService(tripRepo, trackRepo)
+	svc := NewTripService(tripRepo, trackRepo, &mockBoatRepo{})
 
 	result, err := svc.Complete(context.Background(), "user-1", "trip-1", nil, nil, nil, nil)
 	if err != nil {
@@ -520,7 +520,7 @@ func TestTripService_Complete_SetsOptionalFields(t *testing.T) {
 			return nil, nil
 		},
 	}
-	svc := NewTripService(tripRepo, trackRepo)
+	svc := NewTripService(tripRepo, trackRepo, &mockBoatRepo{})
 
 	engineHrs := 3.5
 	fuelL := 45.0
@@ -545,7 +545,7 @@ func TestTripService_Complete_NotFound(t *testing.T) {
 		},
 	}
 	trackRepo := &mockTripTrackRepo{}
-	svc := NewTripService(tripRepo, trackRepo)
+	svc := NewTripService(tripRepo, trackRepo, &mockBoatRepo{})
 
 	_, err := svc.Complete(context.Background(), "user-1", "nonexistent", nil, nil, nil, nil)
 	if err == nil {
@@ -568,7 +568,7 @@ func TestTripService_Complete_AlreadyCompleted(t *testing.T) {
 		},
 	}
 	trackRepo := &mockTripTrackRepo{}
-	svc := NewTripService(tripRepo, trackRepo)
+	svc := NewTripService(tripRepo, trackRepo, &mockBoatRepo{})
 
 	_, err := svc.Complete(context.Background(), "user-1", "trip-1", nil, nil, nil, nil)
 	if err == nil {
@@ -598,7 +598,7 @@ func TestTripService_Complete_CalculatesDuration(t *testing.T) {
 			return nil, nil
 		},
 	}
-	svc := NewTripService(tripRepo, trackRepo)
+	svc := NewTripService(tripRepo, trackRepo, &mockBoatRepo{})
 
 	result, err := svc.Complete(context.Background(), "user-1", "trip-1", nil, nil, nil, nil)
 	if err != nil {
@@ -624,7 +624,7 @@ func TestTripService_Delete_Success(t *testing.T) {
 		},
 	}
 	trackRepo := &mockTripTrackRepo{}
-	svc := NewTripService(tripRepo, trackRepo)
+	svc := NewTripService(tripRepo, trackRepo, &mockBoatRepo{})
 
 	err := svc.Delete(context.Background(), "user-1", "trip-1")
 	if err != nil {
@@ -641,7 +641,7 @@ func TestTripService_Delete_NotFound(t *testing.T) {
 		},
 	}
 	trackRepo := &mockTripTrackRepo{}
-	svc := NewTripService(tripRepo, trackRepo)
+	svc := NewTripService(tripRepo, trackRepo, &mockBoatRepo{})
 
 	err := svc.Delete(context.Background(), "user-1", "nonexistent")
 	if err == nil {
@@ -671,7 +671,7 @@ func TestTripService_AddTrackPoints_Success(t *testing.T) {
 			return nil
 		},
 	}
-	svc := NewTripService(tripRepo, trackRepo)
+	svc := NewTripService(tripRepo, trackRepo, &mockBoatRepo{})
 
 	err := svc.AddTrackPoints(context.Background(), "user-1", tracks)
 	if err != nil {
@@ -684,7 +684,7 @@ func TestTripService_AddTrackPoints_EmptySlice(t *testing.T) {
 
 	tripRepo := &mockTripRepo{}
 	trackRepo := &mockTripTrackRepo{}
-	svc := NewTripService(tripRepo, trackRepo)
+	svc := NewTripService(tripRepo, trackRepo, &mockBoatRepo{})
 
 	err := svc.AddTrackPoints(context.Background(), "user-1", []domain.TripTrack{})
 	if err != nil {
@@ -704,7 +704,7 @@ func TestTripService_AddTrackPoints_TripNotFound(t *testing.T) {
 		},
 	}
 	trackRepo := &mockTripTrackRepo{}
-	svc := NewTripService(tripRepo, trackRepo)
+	svc := NewTripService(tripRepo, trackRepo, &mockBoatRepo{})
 
 	err := svc.AddTrackPoints(context.Background(), "user-1", tracks)
 	if err == nil {
@@ -732,7 +732,7 @@ func TestTripService_AddTrackPoints_BatchCreateError(t *testing.T) {
 			return repoErr
 		},
 	}
-	svc := NewTripService(tripRepo, trackRepo)
+	svc := NewTripService(tripRepo, trackRepo, &mockBoatRepo{})
 
 	err := svc.AddTrackPoints(context.Background(), "user-1", tracks)
 	if err == nil {
@@ -752,7 +752,7 @@ func TestTripService_GetTrackPoints_Success(t *testing.T) {
 		{ID: "t1", TripID: "trip-1", Lat: 39.47, Lon: -0.37},
 	}
 	tripRepo := &mockTripRepo{
-		getByIDFn: func(_ context.Context, _, _ string) (*domain.Trip, error) {
+		getByIDUnscopedFn: func(_ context.Context, _ string) (*domain.Trip, error) {
 			return newTestTrip(), nil
 		},
 	}
@@ -761,7 +761,7 @@ func TestTripService_GetTrackPoints_Success(t *testing.T) {
 			return tracks, nil
 		},
 	}
-	svc := NewTripService(tripRepo, trackRepo)
+	svc := NewTripService(tripRepo, trackRepo, &mockBoatRepo{})
 
 	result, err := svc.GetTrackPoints(context.Background(), "user-1", "trip-1")
 	if err != nil {
@@ -776,12 +776,12 @@ func TestTripService_GetTrackPoints_TripNotFound(t *testing.T) {
 	t.Parallel()
 
 	tripRepo := &mockTripRepo{
-		getByIDFn: func(_ context.Context, _, _ string) (*domain.Trip, error) {
+		getByIDUnscopedFn: func(_ context.Context, _ string) (*domain.Trip, error) {
 			return nil, domain.ErrTripNotFound
 		},
 	}
 	trackRepo := &mockTripTrackRepo{}
-	svc := NewTripService(tripRepo, trackRepo)
+	svc := NewTripService(tripRepo, trackRepo, &mockBoatRepo{})
 
 	_, err := svc.GetTrackPoints(context.Background(), "user-1", "nonexistent")
 	if err == nil {
@@ -854,4 +854,28 @@ func TestComputeTrackStats_SinglePoint(t *testing.T) {
 	if maxSpd != 0 || avgSpd != 0 {
 		t.Errorf("expected zero speeds for single point, got max=%f avg=%f", maxSpd, avgSpd)
 	}
+}
+
+func (m *mockTripRepo) ListUpcomingRegattas(_ context.Context, _, _ time.Time) ([]domain.Trip, error) {
+	return nil, nil
+}
+
+func (m *mockTripRepo) SetShareToken(_ context.Context, _, _, _ string) error {
+	return nil
+}
+
+func (m *mockTripRepo) ClearShareToken(_ context.Context, _, _ string) error {
+	return nil
+}
+
+func (m *mockTripRepo) GetByShareToken(_ context.Context, _ string) (*domain.Trip, error) {
+	return nil, domain.ErrTripNotFound
+}
+
+func (m *mockTripRepo) SetFloatPlan(_ context.Context, _, _ string, _ *string, _ *time.Time, _, _ *string) error {
+	return nil
+}
+
+func (m *mockTripRepo) ListOverdueFloatPlans(_ context.Context, _ time.Time) ([]domain.Trip, error) {
+	return nil, nil
 }

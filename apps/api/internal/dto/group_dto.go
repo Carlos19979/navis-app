@@ -106,6 +106,7 @@ func GroupListResponseFromDomain(groups []domain.Group) []GroupResponse {
 // GroupMemberResponse is the API response for a group membership.
 type GroupMemberResponse struct {
 	UserID   string                   `json:"user_id"`
+	Name     string                   `json:"name"`
 	Role     domain.GroupMemberRole   `json:"role"`
 	Status   domain.GroupMemberStatus `json:"status"`
 	JoinedAt time.Time                `json:"joined_at"`
@@ -115,6 +116,7 @@ type GroupMemberResponse struct {
 func GroupMemberResponseFromDomain(m *domain.GroupMember) *GroupMemberResponse {
 	return &GroupMemberResponse{
 		UserID:   m.UserID,
+		Name:     m.Name,
 		Role:     m.Role,
 		Status:   m.Status,
 		JoinedAt: m.JoinedAt,

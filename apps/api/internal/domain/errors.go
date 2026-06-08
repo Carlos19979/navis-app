@@ -21,6 +21,12 @@ var (
 	ErrValidation            = errors.New("validation error")
 	ErrDuplicateRegistration = errors.New("duplicate registration")
 	ErrConflict              = errors.New("conflict")
+	// ErrPlanLimit is returned when an action exceeds the user's plan quota
+	// (e.g. creating more boats than the plan allows).
+	ErrPlanLimit = errors.New("plan limit reached")
+	// ErrPlanForbidden is returned when the user's plan does not allow an
+	// action at all (e.g. a normal user creating a group).
+	ErrPlanForbidden = errors.New("not allowed on current plan")
 )
 
 // ValidationError represents a field-level validation failure.

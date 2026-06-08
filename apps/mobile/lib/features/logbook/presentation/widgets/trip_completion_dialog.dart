@@ -8,6 +8,7 @@ import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/map_picker_screen.dart';
 import 'package:navis_mobile/features/ports/domain/entities/port.dart';
+import 'package:navis_mobile/shared/widgets/crew_chips_field.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 
 class TripCompletionData {
@@ -39,6 +40,8 @@ class TripCompletionDialog extends StatefulWidget {
     this.startLon,
     this.endLat,
     this.endLon,
+    this.initialCrew = const [],
+    this.crewSuggestions = const [],
   });
 
   final double? distanceNm;
@@ -50,6 +53,12 @@ class TripCompletionDialog extends StatefulWidget {
   final double? endLat;
   final double? endLon;
 
+  /// Crew names to pre-fill (e.g. group members who RSVP'd "going").
+  final List<String> initialCrew;
+
+  /// Quick-add crew suggestions shown below the input.
+  final List<String> crewSuggestions;
+
   @override
   State<TripCompletionDialog> createState() => _TripCompletionDialogState();
 }
@@ -58,8 +67,8 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
   final _formKey = GlobalKey<FormState>();
   final _engineHoursCtrl = TextEditingController();
   final _fuelCtrl = TextEditingController();
-  final _crewCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
+  late List<String> _crew = List.of(widget.initialCrew);
 
   Port? _selectedDeparturePort;
   bool _useCustomDeparture = false;
@@ -135,7 +144,6 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
   void dispose() {
     _engineHoursCtrl.dispose();
     _fuelCtrl.dispose();
-    _crewCtrl.dispose();
     _notesCtrl.dispose();
     super.dispose();
   }
@@ -291,15 +299,11 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
                         },
                       ),
                       const SizedBox(height: 12),
-                      TextFormField(
-                        controller: _crewCtrl,
-                        decoration: InputDecoration(
-                          labelText: AppLocalizations.of(context)!.crewMembers,
-                          prefixIcon: const Icon(Icons.group),
-                          hintText:
-                              AppLocalizations.of(context)!.commaSeparatedNames,
-                        ),
-                        textCapitalization: TextCapitalization.words,
+                      CrewChipsField(
+                        label: AppLocalizations.of(context)!.crewMembers,
+                        initial: widget.initialCrew,
+                        suggestions: widget.crewSuggestions,
+                        onChanged: (crew) => _crew = crew,
                       ),
                       const SizedBox(height: 12),
                       TextFormField(
@@ -548,13 +552,7 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
-    final crew = _crewCtrl.text.trim().isEmpty
-        ? null
-        : _crewCtrl.text
-            .split(',')
-            .map((s) => s.trim())
-            .where((s) => s.isNotEmpty)
-            .toList();
+    final crew = _crew.isEmpty ? null : List<String>.of(_crew);
 
     final departure = _useCustomDeparture
         ? _customDepartureName

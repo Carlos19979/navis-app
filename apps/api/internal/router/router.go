@@ -23,6 +23,8 @@ func New(
 	weatherH *handler.WeatherHandler,
 	deviceH *handler.DeviceHandler,
 	userH *handler.UserHandler,
+	profileH *handler.ProfileHandler,
+	maintenanceH *handler.MaintenanceHandler,
 	jwtSecret string,
 	jwksURL string,
 	allowedOrigins []string,
@@ -57,6 +59,12 @@ func New(
 		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	})
 
+	// Public shared trips (no auth) — the share/landing pages.
+	r.Route("/public/trips", func(r chi.Router) {
+		r.Get("/{token}", tripH.PublicJSON)
+		r.Get("/{token}/view", tripH.PublicView)
+	})
+
 	// API v1 routes (all require authentication).
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Use(middleware.Auth(jwtSecret, jwksURL))
@@ -65,11 +73,19 @@ func New(
 		r.Route("/boats", func(r chi.Router) {
 			r.Post("/", boatH.Create)
 			r.Get("/", boatH.List)
+			r.Get("/shared", boatH.ListShared)
+			r.Post("/join", boatH.Join)
 
 			r.Route("/{id}", func(r chi.Router) {
 				r.Get("/", boatH.GetByID)
 				r.Put("/", boatH.Update)
 				r.Delete("/", boatH.Delete)
+				r.Put("/share-code", boatH.ShareCode)
+				r.Post("/leave", boatH.Leave)
+				r.Route("/members", func(r chi.Router) {
+					r.Get("/", boatH.ListMembers)
+					r.Delete("/{userId}", boatH.RemoveMember)
+				})
 
 				r.Route("/documents", func(r chi.Router) {
 					r.Post("/", docH.Create)
@@ -79,6 +95,19 @@ func New(
 				r.Route("/trips", func(r chi.Router) {
 					r.Post("/", tripH.Create)
 					r.Get("/", tripH.List)
+				})
+
+				r.Route("/maintenance", func(r chi.Router) {
+					r.Get("/", maintenanceH.ListLogs)
+					r.Post("/", maintenanceH.CreateLog)
+					r.Delete("/{logId}", maintenanceH.DeleteLog)
+				})
+
+				r.Route("/expenses", func(r chi.Router) {
+					r.Get("/", maintenanceH.ListExpenses)
+					r.Post("/", maintenanceH.CreateExpense)
+					r.Get("/summary", maintenanceH.ExpenseSummary)
+					r.Delete("/{expenseId}", maintenanceH.DeleteExpense)
 				})
 			})
 		})
@@ -101,6 +130,9 @@ func New(
 				r.Put("/complete", tripH.Complete)
 				r.Get("/tracks", tripH.GetTracks)
 				r.Post("/tracks", tripH.AddTracks)
+				r.Put("/share", tripH.Share)
+				r.Delete("/share", tripH.Unshare)
+				r.Put("/float-plan", tripH.SetFloatPlan)
 
 				// Regatta lifecycle + RSVP.
 				r.Put("/start", regattaH.Start)
@@ -173,6 +205,8 @@ func New(
 		r.Route("/weather", func(r chi.Router) {
 			r.Get("/current", weatherH.GetCurrent)
 			r.Get("/forecast", weatherH.GetForecast)
+			r.Get("/overview", weatherH.GetOverview)
+			r.Get("/hourly", weatherH.GetHourly)
 		})
 
 		// Device tokens for push notifications.
@@ -185,6 +219,12 @@ func New(
 		r.Route("/user", func(r chi.Router) {
 			r.Get("/export", userH.ExportData)
 			r.Delete("/", userH.DeleteAccount)
+		})
+
+		// Current user's plan and limits.
+		r.Route("/me", func(r chi.Router) {
+			r.Get("/", profileH.Me)
+			r.Put("/plan", profileH.UpdatePlan)
 		})
 	})
 

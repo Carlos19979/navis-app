@@ -482,3 +482,15 @@ func TestEventService_IsInterested_RepoError(t *testing.T) {
 		t.Errorf("expected underlying error %v, got %v", repoErr, err)
 	}
 }
+
+func (m *mockEventRepo) ListStartingBetween(_ context.Context, _, _ time.Time) ([]domain.Event, error) {
+	return nil, nil
+}
+
+func (m *mockEventInterestRepo) ListInterestedUsers(_ context.Context, _ string) ([]string, error) {
+	return nil, nil
+}
+
+func (m *mockEventInterestRepo) InterestedIn(_ context.Context, _ string, _ []string) (map[string]bool, error) {
+	return map[string]bool{}, nil
+}

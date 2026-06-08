@@ -14,7 +14,7 @@
   "trips": "Trips",
   "weather": "Weather",
   "events": "Events",
-  "charts": "Charts",
+  "charts": "Map",
   "profile": "Profile",
   "settings": "Settings",
   "save": "Save",
@@ -339,5 +339,16 @@
   "centerOnGps": "Center on GPS",
   "toggleSeamarks": "Toggle sea marks",
   "togglePorts": "Show ports",
-  "toggleTripTracks": "Show trip tracks"
+  "toggleTripTracks": "Show trip tracks",
+  "now": "Now",
+  "hourlyForecast": "Hourly Forecast",
+  "wcClear": "Clear",
+  "wcPartlyCloudy": "Partly Cloudy",
+  "wcCloudy": "Cloudy",
+  "wcFog": "Fog",
+  "wcDrizzle": "Drizzle",
+  "wcRain": "Rain",
+  "wcSnow": "Snow",
+  "wcThunderstorm": "Thunderstorm",
+  "wcUnknown": "—"
 }

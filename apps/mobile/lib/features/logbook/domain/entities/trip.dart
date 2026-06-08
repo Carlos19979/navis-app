@@ -15,6 +15,10 @@ class Trip {
     this.engineHours,
     this.fuelConsumedL,
     this.crewMembers,
+    this.destination,
+    this.eta,
+    this.shoreContactName,
+    this.shoreContactPhone,
     this.createdAt,
     this.updatedAt,
   });
@@ -34,6 +38,10 @@ class Trip {
   final double? engineHours;
   final double? fuelConsumedL;
   final List<String>? crewMembers;
+  final String? destination;
+  final DateTime? eta;
+  final String? shoreContactName;
+  final String? shoreContactPhone;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -58,6 +66,10 @@ class Trip {
     double? engineHours,
     double? fuelConsumedL,
     List<String>? crewMembers,
+    String? destination,
+    DateTime? eta,
+    String? shoreContactName,
+    String? shoreContactPhone,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -77,6 +89,10 @@ class Trip {
       engineHours: engineHours ?? this.engineHours,
       fuelConsumedL: fuelConsumedL ?? this.fuelConsumedL,
       crewMembers: crewMembers ?? this.crewMembers,
+      destination: destination ?? this.destination,
+      eta: eta ?? this.eta,
+      shoreContactName: shoreContactName ?? this.shoreContactName,
+      shoreContactPhone: shoreContactPhone ?? this.shoreContactPhone,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

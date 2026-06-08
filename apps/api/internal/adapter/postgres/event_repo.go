@@ -24,7 +24,8 @@ func NewEventRepo(pool *pgxpool.Pool) *EventRepo {
 
 const eventColumns = `id, name, organizer, organizer_logo_url, description, event_type,
 	location_name, ST_Y(location::geometry) AS lat, ST_X(location::geometry) AS lon,
-	start_date, end_date, boat_classes, registration_url, documents_url, is_featured,
+	start_date, end_date, boat_classes, registration_url, documents_url,
+	stream_url, tracking_url, is_featured,
 	created_at, updated_at`
 
 // scanEvent scans a single row into a domain.Event.
@@ -34,6 +35,7 @@ func scanEvent(row pgx.Row) (*domain.Event, error) {
 		&e.ID, &e.Name, &e.Organizer, &e.OrganizerLogoURL, &e.Description,
 		&e.EventType, &e.LocationName, &e.Lat, &e.Lon,
 		&e.StartDate, &e.EndDate, &e.BoatClasses, &e.RegistrationURL, &e.DocumentsURL,
+		&e.StreamURL, &e.TrackingURL,
 		&e.IsFeatured, &e.CreatedAt, &e.UpdatedAt,
 	)
 	return e, err
@@ -48,6 +50,7 @@ func scanEvents(rows pgx.Rows) ([]domain.Event, error) {
 			&e.ID, &e.Name, &e.Organizer, &e.OrganizerLogoURL, &e.Description,
 			&e.EventType, &e.LocationName, &e.Lat, &e.Lon,
 			&e.StartDate, &e.EndDate, &e.BoatClasses, &e.RegistrationURL, &e.DocumentsURL,
+			&e.StreamURL, &e.TrackingURL,
 			&e.IsFeatured, &e.CreatedAt, &e.UpdatedAt,
 		); err != nil {
 			return nil, err
@@ -302,4 +305,60 @@ func (r *NotificationLogRepo) Create(ctx context.Context, userID, documentID str
 		return fmt.Errorf("creating notification log: %w", err)
 	}
 	return nil
+}
+
+// ListStartingBetween returns regatta events whose start_date is in [from, to).
+func (r *EventRepo) ListStartingBetween(ctx context.Context, from, to time.Time) ([]domain.Event, error) {
+	rows, err := r.pool.Query(ctx,
+		`SELECT `+eventColumns+` FROM events
+		 WHERE event_type = 'regatta' AND start_date >= $1 AND start_date < $2
+		 ORDER BY start_date ASC`,
+		from, to)
+	if err != nil {
+		return nil, fmt.Errorf("listing starting events: %w", err)
+	}
+	defer rows.Close()
+	return scanEvents(rows)
+}
+
+// ListInterestedUsers returns the user IDs interested in an event.
+func (r *EventInterestRepo) ListInterestedUsers(ctx context.Context, eventID string) ([]string, error) {
+	rows, err := r.pool.Query(ctx,
+		`SELECT user_id FROM event_interests WHERE event_id = $1`, eventID)
+	if err != nil {
+		return nil, fmt.Errorf("listing interested users for %s: %w", eventID, err)
+	}
+	defer rows.Close()
+	users := make([]string, 0)
+	for rows.Next() {
+		var u string
+		if err := rows.Scan(&u); err != nil {
+			return nil, err
+		}
+		users = append(users, u)
+	}
+	return users, rows.Err()
+}
+
+// InterestedIn returns which of eventIDs the user is interested in.
+func (r *EventInterestRepo) InterestedIn(ctx context.Context, userID string, eventIDs []string) (map[string]bool, error) {
+	result := make(map[string]bool, len(eventIDs))
+	if len(eventIDs) == 0 {
+		return result, nil
+	}
+	rows, err := r.pool.Query(ctx,
+		`SELECT event_id FROM event_interests WHERE user_id = $1 AND event_id = ANY($2)`,
+		userID, eventIDs)
+	if err != nil {
+		return nil, fmt.Errorf("listing interested events for %s: %w", userID, err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		result[id] = true
+	}
+	return result, rows.Err()
 }

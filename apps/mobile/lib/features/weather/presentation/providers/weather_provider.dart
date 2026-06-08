@@ -2,7 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
 import 'package:navis_mobile/features/weather/data/repositories/weather_repository.dart';
+import 'package:navis_mobile/features/weather/domain/entities/hourly_weather.dart';
 import 'package:navis_mobile/features/weather/domain/entities/weather.dart';
+import 'package:navis_mobile/features/weather/domain/entities/weather_overview.dart';
 
 final weatherRepositoryProvider = Provider<WeatherRepository>((ref) {
   return WeatherRepository();
@@ -22,8 +24,8 @@ Future<Position?> _getPosition() async {
 
   try {
     return await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.low,
-      timeLimit: const Duration(seconds: 10),
+      desiredAccuracy: LocationAccuracy.medium,
+      timeLimit: const Duration(seconds: 12),
     );
   } on Exception {
     return await Geolocator.getLastKnownPosition();
@@ -44,4 +46,21 @@ final forecastProvider = FutureProvider<List<Weather>>((ref) async {
   if (position == null) return [];
   final repository = ref.read(weatherRepositoryProvider);
   return repository.getForecast(position.latitude, position.longitude);
+});
+
+final weatherOverviewProvider = FutureProvider<WeatherOverview?>((ref) async {
+  final position = await ref.watch(positionProvider.future);
+  if (position == null) return null;
+  final repository = ref.read(weatherRepositoryProvider);
+  return repository.getOverview(position.latitude, position.longitude);
+});
+
+/// Hourly forecast for a specific day, fetched on demand when the user taps a
+/// day in the forecast list.
+final hourlyForDayProvider =
+    FutureProvider.family<List<HourlyWeather>, DateTime>((ref, day) async {
+  final position = await ref.watch(positionProvider.future);
+  if (position == null) return [];
+  final repository = ref.read(weatherRepositoryProvider);
+  return repository.getHourly(position.latitude, position.longitude, day);
 });

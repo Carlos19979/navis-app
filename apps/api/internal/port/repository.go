@@ -2,6 +2,7 @@ package port
 
 import (
 	"context"
+	"time"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 )
@@ -11,14 +12,49 @@ type BoatRepository interface {
 	Create(ctx context.Context, boat *domain.Boat) (*domain.Boat, error)
 	GetByID(ctx context.Context, userID, id string) (*domain.Boat, error)
 	List(ctx context.Context, userID, cursor string, limit int) ([]domain.Boat, string, error)
+	Count(ctx context.Context, userID string) (int, error)
 	Update(ctx context.Context, userID string, boat *domain.Boat) (*domain.Boat, error)
 	Delete(ctx context.Context, userID, id string) error
+	// Shared access (crew / co-owners).
+	GetByIDAccessible(ctx context.Context, userID, id string) (*domain.Boat, error)
+	HasAccess(ctx context.Context, userID, boatID string) (bool, error)
+	ListShared(ctx context.Context, userID string) ([]domain.Boat, error)
+	EnsureShareCode(ctx context.Context, userID, boatID, candidate string) (string, error)
+	GetIDByShareCode(ctx context.Context, code string) (boatID, ownerID string, err error)
+	AddMember(ctx context.Context, boatID, userID, role string) error
+	ListMembers(ctx context.Context, boatID string) ([]domain.BoatMember, error)
+	RemoveMember(ctx context.Context, ownerID, boatID, memberUserID string) error
+	Leave(ctx context.Context, userID, boatID string) error
+}
+
+// ProfileRepository persists per-user account data (subscription plan).
+type ProfileRepository interface {
+	// GetOrCreate returns the user's profile, creating a default one if absent.
+	GetOrCreate(ctx context.Context, userID string) (*domain.Profile, error)
+	SetPlan(ctx context.Context, userID string, plan domain.Plan) (*domain.Profile, error)
+}
+
+// MaintenanceRepository persists boat maintenance/service logs.
+type MaintenanceRepository interface {
+	Create(ctx context.Context, log *domain.MaintenanceLog) (*domain.MaintenanceLog, error)
+	ListByBoat(ctx context.Context, userID, boatID string) ([]domain.MaintenanceLog, error)
+	Delete(ctx context.Context, userID, id string) error
+}
+
+// ExpenseRepository persists boat expenses.
+type ExpenseRepository interface {
+	Create(ctx context.Context, e *domain.Expense) (*domain.Expense, error)
+	ListByBoat(ctx context.Context, userID, boatID string) ([]domain.Expense, error)
+	Delete(ctx context.Context, userID, id string) error
+	// TotalsByCategory returns summed amounts per category for a boat.
+	TotalsByCategory(ctx context.Context, userID, boatID string) (map[string]float64, error)
 }
 
 // DocumentRepository defines persistence operations for documents.
 type DocumentRepository interface {
 	Create(ctx context.Context, doc *domain.Document) (*domain.Document, error)
 	GetByID(ctx context.Context, userID, id string) (*domain.Document, error)
+	GetByIDUnscoped(ctx context.Context, id string) (*domain.Document, error)
 	List(ctx context.Context, userID, cursor string, limit int) ([]domain.Document, string, error)
 	ListByBoat(ctx context.Context, userID, boatID, cursor string, limit int) ([]domain.Document, string, error)
 	ListExpiring(ctx context.Context, withinDays int) ([]domain.Document, error)
@@ -33,8 +69,19 @@ type TripRepository interface {
 	GetByIDUnscoped(ctx context.Context, id string) (*domain.Trip, error)
 	List(ctx context.Context, userID, boatID, cursor string, limit int) ([]domain.Trip, string, error)
 	ListByGroup(ctx context.Context, groupID, cursor string, limit int) ([]domain.Trip, string, error)
+	// ListUpcomingRegattas returns planned group regattas scheduled in [from, to).
+	ListUpcomingRegattas(ctx context.Context, from, to time.Time) ([]domain.Trip, error)
 	Update(ctx context.Context, userID string, trip *domain.Trip) (*domain.Trip, error)
 	Delete(ctx context.Context, userID, id string) error
+	// SetShareToken / ClearShareToken manage a trip's public share link.
+	SetShareToken(ctx context.Context, userID, tripID, token string) error
+	ClearShareToken(ctx context.Context, userID, tripID string) error
+	// GetByShareToken returns a trip by its public token (no user scoping).
+	GetByShareToken(ctx context.Context, token string) (*domain.Trip, error)
+	// SetFloatPlan stores destination/ETA/shore contact on a trip.
+	SetFloatPlan(ctx context.Context, userID, tripID string, destination *string, eta *time.Time, name, phone *string) error
+	// ListOverdueFloatPlans returns recording trips past their ETA.
+	ListOverdueFloatPlans(ctx context.Context, cutoff time.Time) ([]domain.Trip, error)
 }
 
 // TripParticipantRepository tracks RSVP answers to planned group trips/regattas.
@@ -72,12 +119,30 @@ type EventRepository interface {
 	List(ctx context.Context, cursor string, limit int) ([]domain.Event, string, error)
 	ListUpcoming(ctx context.Context, cursor string, limit int) ([]domain.Event, string, error)
 	NearLocation(ctx context.Context, lat, lon, radiusKM float64, cursor string, limit int) ([]domain.Event, string, error)
+	// ListStartingBetween returns events whose start_date is in [from, to).
+	ListStartingBetween(ctx context.Context, from, to time.Time) ([]domain.Event, error)
 }
 
 // EventInterestRepository tracks user interest (bookmarks) in events.
 type EventInterestRepository interface {
 	Toggle(ctx context.Context, userID, eventID string) (bool, error)
 	IsInterested(ctx context.Context, userID, eventID string) (bool, error)
+	// ListInterestedUsers returns the user IDs interested in an event.
+	ListInterestedUsers(ctx context.Context, eventID string) ([]string, error)
+	// InterestedIn returns, for the given user, which of eventIDs they like.
+	InterestedIn(ctx context.Context, userID string, eventIDs []string) (map[string]bool, error)
+}
+
+// UserRepository resolves user profile data (e.g. display names) for
+// notification messages. Backed by Supabase auth.users metadata.
+type UserRepository interface {
+	DisplayName(ctx context.Context, userID string) (string, error)
+}
+
+// SentNotificationRepository is a generic dedup log for scheduled notifications.
+type SentNotificationRepository interface {
+	Exists(ctx context.Context, userID, kind, refID, dedupKey string) (bool, error)
+	Record(ctx context.Context, userID, kind, refID, dedupKey string) error
 }
 
 // GroupRepository defines persistence operations for groups (clubs/crews).

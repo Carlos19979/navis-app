@@ -13,7 +13,6 @@ import 'package:navis_mobile/features/documents/presentation/providers/document_
 import 'package:navis_mobile/features/documents/presentation/widgets/document_status_badge.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
-import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
@@ -28,46 +27,45 @@ class DocumentDetailScreen extends ConsumerWidget {
     final l = AppLocalizations.of(context)!;
     final docAsync = ref.watch(documentProvider(documentId));
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
-      appBar: NavisAppBar(
-        title: l.documentDetails,
-        showBack: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit_outlined),
-            tooltip: l.editDocument,
-            onPressed: () {
-              final doc = ref.read(documentProvider(documentId)).valueOrNull;
-              if (doc != null) {
-                context.push(
-                  '/documents/$documentId/edit?boatId=${doc.boatId}',
-                );
-              }
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.autorenew, color: AppColors.cyan),
-            tooltip: l.renewDocument,
-            onPressed: () {
-              final doc = ref.read(documentProvider(documentId)).valueOrNull;
-              if (doc != null) {
-                context.push(
-                  '/documents/$documentId/edit?boatId=${doc.boatId}&renew=true',
-                );
-              }
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete_outlined, color: AppColors.red),
-            tooltip: l.delete,
-            onPressed: () => _confirmDelete(context, ref),
-          ),
-        ],
-      ),
-      body: GradientBackground(
-        child: SafeArea(
+    return GradientBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: NavisAppBar(
+          title: l.documentDetails,
+          showBack: true,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: l.editDocument,
+              onPressed: () {
+                final doc = ref.read(documentProvider(documentId)).valueOrNull;
+                if (doc != null) {
+                  context.push(
+                    '/documents/$documentId/edit?boatId=${doc.boatId}',
+                  );
+                }
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.autorenew, color: AppColors.cyan),
+              tooltip: l.renewDocument,
+              onPressed: () {
+                final doc = ref.read(documentProvider(documentId)).valueOrNull;
+                if (doc != null) {
+                  context.push(
+                    '/documents/$documentId/edit?boatId=${doc.boatId}&renew=true',
+                  );
+                }
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete_outlined, color: AppColors.red),
+              tooltip: l.delete,
+              onPressed: () => _confirmDelete(context, ref),
+            ),
+          ],
+        ),
+        body: SafeArea(
           child: docAsync.when(
             loading: () => const NavisLoading(),
             error: (error, stack) => NavisErrorWidget(
@@ -141,8 +139,8 @@ class DocumentDetailScreen extends ConsumerWidget {
                                     const SizedBox(height: 4),
                                     Text(
                                       daysLeft < 0
-                                          ? '${-daysLeft} days overdue'
-                                          : '$daysLeft days remaining',
+                                          ? l.daysOverdue(-daysLeft)
+                                          : l.daysRemaining(daysLeft),
                                       style: TextStyle(
                                         color: statusColor,
                                         fontWeight: FontWeight.w500,
@@ -171,7 +169,7 @@ class DocumentDetailScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Details',
+                            l.details,
                             style: Theme.of(context)
                                 .textTheme
                                 .titleSmall
@@ -192,7 +190,7 @@ class DocumentDetailScreen extends ConsumerWidget {
                               icon: Icons.notifications_outlined,
                               label: l.alert,
                               value:
-                                  '${doc.alertDaysBefore} days before expiry',
+                                  '${doc.alertDaysBefore} ${l.daysBeforeExpiry}',
                             ),
                           ],
                           if (doc.notes != null && doc.notes!.isNotEmpty) ...[
@@ -327,39 +325,7 @@ class DocumentDetailScreen extends ConsumerWidget {
                           ),
                     ],
 
-                    const SizedBox(height: 24),
-
-                    // Action buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          child: NavisButton(
-                            label: l.renewDocument,
-                            icon: Icons.autorenew,
-                            variant: NavisButtonVariant.secondary,
-                            compact: true,
-                            onPressed: () {
-                              context.push(
-                                '/documents/$documentId/edit?boatId=${doc.boatId}&renew=true',
-                              );
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: NavisButton(
-                            label: l.delete,
-                            icon: Icons.delete_outlined,
-                            variant: NavisButtonVariant.danger,
-                            compact: true,
-                            onPressed: () => _confirmDelete(context, ref),
-                          ),
-                        ),
-                      ],
-                    ).animate().fadeIn(
-                          duration: 400.ms,
-                          delay: 400.ms,
-                        ),
+                    const SizedBox(height: 8),
                   ],
                 ),
               );

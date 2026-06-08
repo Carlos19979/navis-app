@@ -185,7 +185,7 @@ abstract class AppLocalizations {
   /// No description provided for @charts.
   ///
   /// In en, this message translates to:
-  /// **'Charts'**
+  /// **'Map'**
   String get charts;
 
   /// No description provided for @profile.
@@ -1903,6 +1903,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show trip tracks'**
   String get toggleTripTracks;
+
+  /// No description provided for @now.
+  ///
+  /// In en, this message translates to:
+  /// **'Now'**
+  String get now;
+
+  /// No description provided for @hourlyForecast.
+  ///
+  /// In en, this message translates to:
+  /// **'Hourly Forecast'**
+  String get hourlyForecast;
+
+  /// No description provided for @wcClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get wcClear;
+
+  /// No description provided for @wcPartlyCloudy.
+  ///
+  /// In en, this message translates to:
+  /// **'Partly Cloudy'**
+  String get wcPartlyCloudy;
+
+  /// No description provided for @wcCloudy.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloudy'**
+  String get wcCloudy;
+
+  /// No description provided for @wcFog.
+  ///
+  /// In en, this message translates to:
+  /// **'Fog'**
+  String get wcFog;
+
+  /// No description provided for @wcDrizzle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drizzle'**
+  String get wcDrizzle;
+
+  /// No description provided for @wcRain.
+  ///
+  /// In en, this message translates to:
+  /// **'Rain'**
+  String get wcRain;
+
+  /// No description provided for @wcSnow.
+  ///
+  /// In en, this message translates to:
+  /// **'Snow'**
+  String get wcSnow;
+
+  /// No description provided for @wcThunderstorm.
+  ///
+  /// In en, this message translates to:
+  /// **'Thunderstorm'**
+  String get wcThunderstorm;
+
+  /// No description provided for @wcUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'—'**
+  String get wcUnknown;
 }
 
 class _AppLocalizationsDelegate

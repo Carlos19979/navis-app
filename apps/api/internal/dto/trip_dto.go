@@ -88,22 +88,27 @@ type TripResponse struct {
 	ScheduledAt          *time.Time        `json:"scheduled_at,omitempty"`
 	ChecklistCompletedAt *time.Time        `json:"checklist_completed_at,omitempty"`
 	DeparturePort        string            `json:"departure_port"`
-	ArrivalPort       *string           `json:"arrival_port,omitempty"`
-	DepartureTime     time.Time         `json:"departure_time"`
-	ArrivalTime       *time.Time        `json:"arrival_time,omitempty"`
-	DistanceNM        *float64          `json:"distance_nm,omitempty"`
-	MaxSpeedKnots     *float64          `json:"max_speed_knots,omitempty"`
-	AvgSpeedKnots     *float64          `json:"avg_speed_knots,omitempty"`
-	EngineHours       *float64          `json:"engine_hours,omitempty"`
-	FuelConsumedL     *float64          `json:"fuel_consumed_l,omitempty"`
-	DurationMinutes   *int              `json:"duration_minutes,omitempty"`
-	CrewMembers       []string          `json:"crew_members"`
-	WeatherConditions map[string]any    `json:"weather_conditions,omitempty"`
-	Notes             *string           `json:"notes,omitempty"`
-	Photos            []string          `json:"photos"`
-	Status            domain.TripStatus `json:"status"`
-	CreatedAt         time.Time         `json:"created_at"`
-	UpdatedAt         time.Time         `json:"updated_at"`
+	ArrivalPort          *string           `json:"arrival_port,omitempty"`
+	DepartureTime        time.Time         `json:"departure_time"`
+	ArrivalTime          *time.Time        `json:"arrival_time,omitempty"`
+	DistanceNM           *float64          `json:"distance_nm,omitempty"`
+	MaxSpeedKnots        *float64          `json:"max_speed_knots,omitempty"`
+	AvgSpeedKnots        *float64          `json:"avg_speed_knots,omitempty"`
+	EngineHours          *float64          `json:"engine_hours,omitempty"`
+	FuelConsumedL        *float64          `json:"fuel_consumed_l,omitempty"`
+	DurationMinutes      *int              `json:"duration_minutes,omitempty"`
+	CrewMembers          []string          `json:"crew_members"`
+	WeatherConditions    map[string]any    `json:"weather_conditions,omitempty"`
+	Notes                *string           `json:"notes,omitempty"`
+	Photos               []string          `json:"photos"`
+	Status               domain.TripStatus `json:"status"`
+	ShareToken           *string           `json:"share_token"`
+	Destination          *string           `json:"destination"`
+	ETA                  *time.Time        `json:"eta"`
+	ShoreContactName     *string           `json:"shore_contact_name"`
+	ShoreContactPhone    *string           `json:"shore_contact_phone"`
+	CreatedAt            time.Time         `json:"created_at"`
+	UpdatedAt            time.Time         `json:"updated_at"`
 }
 
 // TripResponseFromDomain builds a TripResponse from a domain Trip.
@@ -130,22 +135,27 @@ func TripResponseFromDomain(t *domain.Trip) *TripResponse {
 		ScheduledAt:          t.ScheduledAt,
 		ChecklistCompletedAt: t.ChecklistCompletedAt,
 		DeparturePort:        t.DeparturePort,
-		ArrivalPort:       t.ArrivalPort,
-		DepartureTime:     t.DepartureTime,
-		ArrivalTime:       t.ArrivalTime,
-		DistanceNM:        t.DistanceNM,
-		MaxSpeedKnots:     t.MaxSpeedKnots,
-		AvgSpeedKnots:     t.AvgSpeedKnots,
-		EngineHours:       t.EngineHours,
-		FuelConsumedL:     t.FuelConsumedL,
-		DurationMinutes:   t.DurationMinutes,
-		CrewMembers:       crew,
-		WeatherConditions: t.WeatherConditions,
-		Notes:             t.Notes,
-		Photos:            photos,
-		Status:            t.Status,
-		CreatedAt:         t.CreatedAt,
-		UpdatedAt:         t.UpdatedAt,
+		ArrivalPort:          t.ArrivalPort,
+		DepartureTime:        t.DepartureTime,
+		ArrivalTime:          t.ArrivalTime,
+		DistanceNM:           t.DistanceNM,
+		MaxSpeedKnots:        t.MaxSpeedKnots,
+		AvgSpeedKnots:        t.AvgSpeedKnots,
+		EngineHours:          t.EngineHours,
+		FuelConsumedL:        t.FuelConsumedL,
+		DurationMinutes:      t.DurationMinutes,
+		CrewMembers:          crew,
+		WeatherConditions:    t.WeatherConditions,
+		Notes:                t.Notes,
+		Photos:               photos,
+		Status:               t.Status,
+		ShareToken:           t.ShareToken,
+		Destination:          t.Destination,
+		ETA:                  t.ETA,
+		ShoreContactName:     t.ShoreContactName,
+		ShoreContactPhone:    t.ShoreContactPhone,
+		CreatedAt:            t.CreatedAt,
+		UpdatedAt:            t.UpdatedAt,
 	}
 }
 
@@ -262,6 +272,7 @@ func ChecklistItemListResponseFromDomain(items []domain.ChecklistItem) []Checkli
 // TripParticipantResponse is the API response for a regatta RSVP.
 type TripParticipantResponse struct {
 	UserID      string      `json:"user_id"`
+	Name        string      `json:"name"`
 	RSVP        domain.RSVP `json:"rsvp"`
 	RespondedAt time.Time   `json:"responded_at"`
 }
@@ -270,6 +281,7 @@ type TripParticipantResponse struct {
 func TripParticipantResponseFromDomain(p *domain.TripParticipant) *TripParticipantResponse {
 	return &TripParticipantResponse{
 		UserID:      p.UserID,
+		Name:        p.Name,
 		RSVP:        p.RSVP,
 		RespondedAt: p.RespondedAt,
 	}
@@ -282,4 +294,52 @@ func TripParticipantListResponseFromDomain(participants []domain.TripParticipant
 		out[i] = *TripParticipantResponseFromDomain(&participants[i])
 	}
 	return out
+}
+
+// ShareTripResponse is returned when a trip's public link is created.
+type ShareTripResponse struct {
+	Token string `json:"token"`
+	URL   string `json:"url"`
+}
+
+// PublicTrackPoint is a single lat/lon on a public trip's route.
+type PublicTrackPoint struct {
+	Lat float64 `json:"lat"`
+	Lon float64 `json:"lon"`
+}
+
+// PublicTripResponse is the public (unauthenticated) view of a shared trip.
+type PublicTripResponse struct {
+	DeparturePort   string             `json:"departure_port"`
+	ArrivalPort     *string            `json:"arrival_port"`
+	DepartureTime   time.Time          `json:"departure_time"`
+	ArrivalTime     *time.Time         `json:"arrival_time"`
+	DistanceNM      *float64           `json:"distance_nm"`
+	DurationMinutes *int               `json:"duration_minutes"`
+	Track           []PublicTrackPoint `json:"track"`
+}
+
+// PublicTripResponseFromDomain builds the public view from a trip and its track.
+func PublicTripResponseFromDomain(t *domain.Trip, track []domain.TripTrack) PublicTripResponse {
+	pts := make([]PublicTrackPoint, len(track))
+	for i := range track {
+		pts[i] = PublicTrackPoint{Lat: track[i].Lat, Lon: track[i].Lon}
+	}
+	return PublicTripResponse{
+		DeparturePort:   t.DeparturePort,
+		ArrivalPort:     t.ArrivalPort,
+		DepartureTime:   t.DepartureTime,
+		ArrivalTime:     t.ArrivalTime,
+		DistanceNM:      t.DistanceNM,
+		DurationMinutes: t.DurationMinutes,
+		Track:           pts,
+	}
+}
+
+// FloatPlanRequest sets a trip's destination, ETA and shore contact.
+type FloatPlanRequest struct {
+	Destination       *string    `json:"destination"`
+	ETA               *time.Time `json:"eta"`
+	ShoreContactName  *string    `json:"shore_contact_name"`
+	ShoreContactPhone *string    `json:"shore_contact_phone"`
 }

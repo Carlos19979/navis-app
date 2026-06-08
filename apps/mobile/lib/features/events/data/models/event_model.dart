@@ -16,6 +16,8 @@ class EventModel {
     this.boatClasses = const [],
     this.registrationUrl,
     this.documentsUrl,
+    this.streamUrl,
+    this.trackingUrl,
     this.isFeatured = false,
     this.isInterested = false,
     this.createdAt,
@@ -41,6 +43,8 @@ class EventModel {
           (json['boat_classes'] as List<dynamic>?)?.cast<String>() ?? const [],
       registrationUrl: json['registration_url'] as String?,
       documentsUrl: json['documents_url'] as String?,
+      streamUrl: json['stream_url'] as String?,
+      trackingUrl: json['tracking_url'] as String?,
       isFeatured: json['is_featured'] as bool? ?? false,
       isInterested: json['is_interested'] as bool? ?? false,
       createdAt: json['created_at'] != null
@@ -66,6 +70,8 @@ class EventModel {
   final List<String> boatClasses;
   final String? registrationUrl;
   final String? documentsUrl;
+  final String? streamUrl;
+  final String? trackingUrl;
   final bool isFeatured;
   final bool isInterested;
   final DateTime? createdAt;
@@ -87,6 +93,8 @@ class EventModel {
       boatClasses: boatClasses,
       registrationUrl: registrationUrl,
       documentsUrl: documentsUrl,
+      streamUrl: streamUrl,
+      trackingUrl: trackingUrl,
       isFeatured: isFeatured,
       isInterested: isInterested,
       createdAt: createdAt,

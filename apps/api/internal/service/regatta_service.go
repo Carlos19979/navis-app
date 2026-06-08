@@ -18,6 +18,7 @@ type RegattaService struct {
 	participantRepo port.TripParticipantRepository
 	checklistRepo   port.TripChecklistRepository
 	memberRepo      port.GroupMemberRepository
+	notifier        *Notifier
 }
 
 // NewRegattaService creates a new RegattaService.
@@ -26,12 +27,36 @@ func NewRegattaService(
 	participantRepo port.TripParticipantRepository,
 	checklistRepo port.TripChecklistRepository,
 	memberRepo port.GroupMemberRepository,
+	notifier *Notifier,
 ) *RegattaService {
 	return &RegattaService{
 		tripRepo:        tripRepo,
 		participantRepo: participantRepo,
 		checklistRepo:   checklistRepo,
 		memberRepo:      memberRepo,
+		notifier:        notifier,
+	}
+}
+
+// regattaTitle returns a human label for a trip/regatta.
+func regattaTitle(t *domain.Trip) string {
+	if t.Title != nil && *t.Title != "" {
+		return *t.Title
+	}
+	return "la regata"
+}
+
+// rsvpLabel maps an RSVP value to a short Spanish phrase.
+func rsvpLabel(r domain.RSVP) string {
+	switch r {
+	case domain.RSVPGoing:
+		return "va a"
+	case domain.RSVPMaybe:
+		return "quizá vaya a"
+	case domain.RSVPNotGoing:
+		return "no va a"
+	default:
+		return "respondió a"
 	}
 }
 
@@ -78,6 +103,21 @@ func (s *RegattaService) Schedule(ctx context.Context, userID, groupID string, t
 
 	// The organiser is going by default; ignore RSVP failure (non-critical).
 	_ = s.participantRepo.SetRSVP(ctx, created.ID, userID, domain.RSVPGoing)
+
+	// Notify the other active members that a regatta was scheduled.
+	if s.notifier != nil {
+		members, err := s.memberRepo.ListMembers(ctx, groupID)
+		if err == nil {
+			body := fmt.Sprintf("Nueva regata: %s", regattaTitle(created))
+			for i := range members {
+				if members[i].UserID == userID {
+					continue
+				}
+				s.notifier.Send(ctx, members[i].UserID, WorkflowRegattaScheduled,
+					"Nueva regata programada", body, "regatta", created.ID)
+			}
+		}
+	}
 	return created, nil
 }
 
@@ -159,11 +199,19 @@ func (s *RegattaService) Start(ctx context.Context, userID, tripID string) (*dom
 
 // SetRSVP records the user's attendance answer for a group trip they can see.
 func (s *RegattaService) SetRSVP(ctx context.Context, userID, tripID string, rsvp domain.RSVP) error {
-	if _, err := s.visibleGroupTrip(ctx, userID, tripID); err != nil {
+	trip, err := s.visibleGroupTrip(ctx, userID, tripID)
+	if err != nil {
 		return err
 	}
 	if err := s.participantRepo.SetRSVP(ctx, tripID, userID, rsvp); err != nil {
 		return fmt.Errorf("setting RSVP for trip %s: %w", tripID, err)
+	}
+	// Notify the organiser when someone else answers.
+	if s.notifier != nil && trip.UserID != userID {
+		name := s.notifier.UserName(ctx, userID)
+		body := fmt.Sprintf("%s %s %s", name, rsvpLabel(rsvp), regattaTitle(trip))
+		s.notifier.Send(ctx, trip.UserID, WorkflowRegattaRSVP,
+			"Respuesta a la regata", body, "regatta", trip.ID)
 	}
 	return nil
 }

@@ -17,6 +17,10 @@ class TripModel {
     this.engineHours,
     this.fuelConsumedL,
     this.crewMembers,
+    this.destination,
+    this.eta,
+    this.shoreContactName,
+    this.shoreContactPhone,
     this.createdAt,
     this.updatedAt,
   });
@@ -46,6 +50,10 @@ class TripModel {
       crewMembers: (json['crew_members'] as List<dynamic>?)
           ?.map((e) => e as String)
           .toList(),
+      destination: json['destination'] as String?,
+      eta: json['eta'] != null ? DateTime.parse(json['eta'] as String) : null,
+      shoreContactName: json['shore_contact_name'] as String?,
+      shoreContactPhone: json['shore_contact_phone'] as String?,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
@@ -89,6 +97,10 @@ class TripModel {
   final double? engineHours;
   final double? fuelConsumedL;
   final List<String>? crewMembers;
+  final String? destination;
+  final DateTime? eta;
+  final String? shoreContactName;
+  final String? shoreContactPhone;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -140,6 +152,10 @@ class TripModel {
       engineHours: engineHours,
       fuelConsumedL: fuelConsumedL,
       crewMembers: crewMembers,
+      destination: destination,
+      eta: eta,
+      shoreContactName: shoreContactName,
+      shoreContactPhone: shoreContactPhone,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );

@@ -42,6 +42,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
   }
 
+  Future<void> _onOAuth(Future<bool> Function() start) async {
+    try {
+      await start();
+      // Session arrives via the redirect deep link → onAuthStateChange → router.
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No se pudo iniciar sesión con ese proveedor'),
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _onForgotPassword() async {
     final emailCtrl = TextEditingController(
       text: _emailController.text.trim(),
@@ -313,6 +328,42 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           duration: 500.ms,
                           curve: Curves.easeOut,
                         ),
+                    const SizedBox(height: 16),
+
+                    // -- Divider --
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Divider(color: context.glassBorderColor),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(
+                            'o',
+                            style: TextStyle(color: context.txtSecondary),
+                          ),
+                        ),
+                        Expanded(
+                          child: Divider(color: context.glassBorderColor),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // -- Social sign-in --
+                    _SocialButton(
+                      icon: Icons.apple,
+                      label: 'Continuar con Apple',
+                      onPressed: () => _onOAuth(
+                          ref.read(authRepositoryProvider).signInWithApple),
+                    ),
+                    const SizedBox(height: 10),
+                    _SocialButton(
+                      icon: Icons.g_mobiledata,
+                      label: 'Continuar con Google',
+                      onPressed: () => _onOAuth(
+                          ref.read(authRepositoryProvider).signInWithGoogle),
+                    ),
                     const SizedBox(height: 20),
 
                     // -- Forgot Password --
@@ -417,6 +468,43 @@ class _GlassTextField extends StatelessWidget {
           minHeight: 40,
         ),
         suffixIcon: suffixIcon,
+      ),
+    );
+  }
+}
+
+class _SocialButton extends StatelessWidget {
+  const _SocialButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 52,
+      child: OutlinedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, color: context.txtPrimary),
+        label: Text(
+          label,
+          style: TextStyle(
+            color: context.txtPrimary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(color: context.glassBorderColor),
+          backgroundColor: context.glassBg,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
       ),
     );
   }

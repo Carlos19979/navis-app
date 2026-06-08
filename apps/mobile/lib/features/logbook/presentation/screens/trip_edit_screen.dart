@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
+import 'package:navis_mobile/shared/widgets/crew_chips_field.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
@@ -26,8 +27,9 @@ class _TripEditScreenState extends ConsumerState<TripEditScreen> {
   final _arrivalPortController = TextEditingController();
   final _engineHoursController = TextEditingController();
   final _fuelController = TextEditingController();
-  final _crewController = TextEditingController();
   final _notesController = TextEditingController();
+  List<String> _crew = [];
+  final List<String> _crewSuggestions = const [];
   bool _isLoading = false;
   bool _loaded = false;
 
@@ -43,7 +45,7 @@ class _TripEditScreenState extends ConsumerState<TripEditScreen> {
     _arrivalPortController.text = trip.arrivalPort ?? '';
     _engineHoursController.text = trip.engineHours?.toStringAsFixed(1) ?? '';
     _fuelController.text = trip.fuelConsumedL?.toStringAsFixed(1) ?? '';
-    _crewController.text = trip.crewMembers?.join(', ') ?? '';
+    _crew = List.of(trip.crewMembers ?? const []);
     _notesController.text = trip.notes ?? '';
     setState(() => _loaded = true);
   }
@@ -54,7 +56,6 @@ class _TripEditScreenState extends ConsumerState<TripEditScreen> {
     _arrivalPortController.dispose();
     _engineHoursController.dispose();
     _fuelController.dispose();
-    _crewController.dispose();
     _notesController.dispose();
     super.dispose();
   }
@@ -66,10 +67,7 @@ class _TripEditScreenState extends ConsumerState<TripEditScreen> {
 
     try {
       final trip = await ref.read(tripProvider(widget.tripId).future);
-      final crewText = _crewController.text.trim();
-      final crewList = crewText.isEmpty
-          ? <String>[]
-          : crewText.split(',').map((s) => s.trim()).toList();
+      final crewList = List<String>.of(_crew);
 
       final updated = trip.copyWith(
         departurePort: _departurePortController.text.trim(),
@@ -211,13 +209,11 @@ class _TripEditScreenState extends ConsumerState<TripEditScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      TextFormField(
-                        controller: _crewController,
-                        textInputAction: TextInputAction.next,
-                        decoration: InputDecoration(
-                          labelText: l.crewMembersCommaSeparated,
-                          prefixIcon: const Icon(Icons.group),
-                        ),
+                      CrewChipsField(
+                        label: l.crewMembers,
+                        initial: _crew,
+                        suggestions: _crewSuggestions,
+                        onChanged: (crew) => _crew = crew,
                       ),
                       const SizedBox(height: 16),
                       TextFormField(

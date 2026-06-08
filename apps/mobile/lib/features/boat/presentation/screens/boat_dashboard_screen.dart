@@ -6,7 +6,10 @@ import 'package:go_router/go_router.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
+import 'package:navis_mobile/features/boat/data/boat_share_repository.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
+import 'package:navis_mobile/features/profile/data/account_provider.dart';
+import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 import 'package:navis_mobile/features/boat/presentation/widgets/boat_header.dart';
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -47,14 +50,95 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
     }
   }
 
+  void _onAddBoat() {
+    final account = ref.read(accountProvider).valueOrNull;
+    final boats = ref.read(boatsProvider).valueOrNull ?? const [];
+    if (account != null && boats.length >= account.maxBoats) {
+      showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: ctx.dialogSurface,
+          title:
+              Text('Límite de barcos', style: TextStyle(color: ctx.txtPrimary)),
+          content: Text(
+            'Tu plan ${account.planLabel} permite hasta ${account.maxBoats} '
+            '${account.maxBoats == 1 ? 'barco' : 'barcos'}. '
+            'Mejora tu plan para añadir más.',
+            style: TextStyle(color: ctx.txtSecondary),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Entendido'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+    context.go('/boats/new');
+  }
+
+  Future<void> _joinBoat() async {
+    final controller = TextEditingController();
+    final code = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: ctx.dialogSurface,
+        title:
+            Text('Unirse a un barco', style: TextStyle(color: ctx.txtPrimary)),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          textCapitalization: TextCapitalization.characters,
+          style: TextStyle(color: ctx.txtPrimary),
+          decoration: const InputDecoration(hintText: 'Código de invitación'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.cyan),
+            onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
+            child: const Text('Unirse'),
+          ),
+        ],
+      ),
+    );
+    if (code == null || code.isEmpty) return;
+    try {
+      await ref.read(boatShareRepositoryProvider).joinBoat(code);
+      ref.invalidate(sharedBoatsProvider);
+      if (mounted) {
+        NavisSnackbar.success(context, 'Te has unido al barco');
+      }
+    } catch (_) {
+      if (mounted) {
+        NavisSnackbar.error(context, 'Código inválido o error al unirse');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final boatsAsync = ref.watch(boatsProvider);
+    ref.watch(accountProvider); // warm the plan for FAB gating
     final l = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: NavisAppBar(title: l.myBoats),
+      appBar: NavisAppBar(
+        title: l.myBoats,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.group_add_outlined),
+            tooltip: 'Unirse a un barco',
+            onPressed: _joinBoat,
+          ),
+        ],
+      ),
       body: boatsAsync.when(
         loading: () => const NavisShimmer(itemHeight: 180),
         error: (error, stack) => NavisErrorWidget(
@@ -62,7 +146,9 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
           onRetry: () => ref.invalidate(boatsProvider),
         ),
         data: (boats) {
-          if (boats.isEmpty) {
+          final shared =
+              ref.watch(sharedBoatsProvider).valueOrNull ?? const <Boat>[];
+          if (boats.isEmpty && shared.isEmpty) {
             return NavisEmptyState(
               icon: Icons.sailing_outlined,
               message: l.noBoats,
@@ -71,28 +157,52 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
             );
           }
 
+          final hasShared = shared.isNotEmpty;
+          final headerCount = hasShared ? 1 : 0;
+          final total = boats.length + headerCount + shared.length + 1;
+
           return RefreshIndicator(
             color: AppColors.cyan,
             onRefresh: () async {
               ref.invalidate(boatsProvider);
+              ref.invalidate(sharedBoatsProvider);
             },
             child: ListView.builder(
               controller: _scrollController,
               padding: const EdgeInsets.all(16),
-              itemCount: boats.length + 1,
+              itemCount: total,
               itemBuilder: (context, index) {
-                if (index == boats.length) {
-                  return const SizedBox(height: 100);
+                if (index < boats.length) {
+                  return _BoatCard(boat: boats[index], index: index);
                 }
-                final boat = boats[index];
-                return _BoatCard(boat: boat, index: index);
+                var i = index - boats.length;
+                if (hasShared) {
+                  if (i == 0) {
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(4, 8, 4, 12),
+                      child: Text(
+                        'Compartidos conmigo',
+                        style: TextStyle(
+                          color: context.txtSecondary,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                      ),
+                    );
+                  }
+                  i -= 1;
+                  if (i < shared.length) {
+                    return _BoatCard(boat: shared[i], index: boats.length + i);
+                  }
+                }
+                return const SizedBox(height: 100);
               },
             ),
           );
         },
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 124),
+        padding: const EdgeInsets.only(bottom: 112),
         child: Container(
           decoration: BoxDecoration(
             gradient: AppColors.cyanGradient,
@@ -106,7 +216,7 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
             ],
           ),
           child: FloatingActionButton(
-            onPressed: () => context.go('/boats/new'),
+            onPressed: _onAddBoat,
             tooltip: l.addNewBoat,
             backgroundColor: Colors.transparent,
             elevation: 0,

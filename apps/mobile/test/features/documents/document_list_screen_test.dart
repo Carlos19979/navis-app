@@ -9,6 +9,8 @@ import 'package:mocktail/mocktail.dart';
 import 'package:navis_mobile/features/documents/domain/entities/document.dart';
 import 'package:navis_mobile/features/documents/domain/repositories/document_repository.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
+import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
+import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
 import 'package:navis_mobile/features/documents/presentation/screens/document_list_screen.dart';
 
@@ -99,6 +101,15 @@ void main() {
 
     return ProviderScope(
       overrides: [
+        boatProvider.overrideWith(
+          (ref, id) async => Boat(
+            id: id,
+            name: 'Test Boat',
+            registration: 'TEST-1',
+            type: 'sailboat',
+            lengthMeters: 10,
+          ),
+        ),
         boatDocumentsProvider.overrideWith(
           (ref, id) async {
             if (useError) {
@@ -258,6 +269,15 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            boatProvider.overrideWith(
+              (ref, id) async => Boat(
+                id: id,
+                name: 'Test Boat',
+                registration: 'TEST-1',
+                type: 'sailboat',
+                lengthMeters: 10,
+              ),
+            ),
             boatDocumentsProvider.overrideWith(
               (ref, id) =>
                   Future<List<Document>>.delayed(const Duration(days: 1)),

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
 import 'package:navis_mobile/features/logbook/presentation/widgets/stats_summary.dart';
 import 'package:navis_mobile/features/logbook/presentation/widgets/trip_card.dart';
@@ -97,39 +98,42 @@ class LogbookScreen extends ConsumerWidget {
             );
           },
         ),
-        floatingActionButton: Container(
-          decoration: BoxDecoration(
-            gradient: AppColors.cyanGradient,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.cyan.withValues(alpha: 0.4),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: FloatingActionButton.extended(
-            heroTag: 'record_trip',
-            onPressed: () => context.push('/boats/$boatId/precheck'),
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            icon: const Icon(
-              Icons.play_arrow,
-              color: Colors.white,
-            ),
-            label: Text(
-              l.startTrip,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ),
+        floatingActionButton:
+            (ref.watch(boatProvider(boatId)).valueOrNull?.isOwner ?? true)
+                ? Container(
+                    decoration: BoxDecoration(
+                      gradient: AppColors.cyanGradient,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.cyan.withValues(alpha: 0.4),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: FloatingActionButton.extended(
+                      heroTag: 'record_trip',
+                      onPressed: () => context.push('/boats/$boatId/precheck'),
+                      backgroundColor: Colors.transparent,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      icon: const Icon(
+                        Icons.play_arrow,
+                        color: Colors.white,
+                      ),
+                      label: Text(
+                        l.startTrip,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  )
+                : null,
       ),
     );
   }

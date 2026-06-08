@@ -19,8 +19,8 @@ type APIResponse struct {
 
 // APIError represents a structured error in the API response.
 type APIError struct {
-	Message string              `json:"message"`
-	Code    string              `json:"code"`
+	Message string                 `json:"message"`
+	Code    string                 `json:"code"`
 	Details []validator.FieldError `json:"details,omitempty"`
 }
 
@@ -89,6 +89,12 @@ func MapDomainError(w http.ResponseWriter, err error) {
 
 	case errors.Is(err, domain.ErrConflict):
 		Error(w, http.StatusConflict, err.Error(), "CONFLICT")
+
+	case errors.Is(err, domain.ErrPlanLimit):
+		Error(w, http.StatusPaymentRequired, err.Error(), "PLAN_LIMIT")
+
+	case errors.Is(err, domain.ErrPlanForbidden):
+		Error(w, http.StatusPaymentRequired, err.Error(), "PLAN_FORBIDDEN")
 
 	default:
 		slog.Error("unhandled error", slog.String("error", err.Error()))

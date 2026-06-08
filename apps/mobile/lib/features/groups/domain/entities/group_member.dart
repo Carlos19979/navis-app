@@ -4,10 +4,12 @@ class GroupMember {
     required this.userId,
     required this.role,
     required this.status,
+    this.name = '',
     this.joinedAt,
   });
 
   final String userId;
+  final String name;
   final String role; // 'owner' | 'member'
   final String status; // 'pending' | 'active'
   final DateTime? joinedAt;

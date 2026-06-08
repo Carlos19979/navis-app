@@ -32,9 +32,14 @@ class TripRecordingScreen extends ConsumerStatefulWidget {
     this.tripId,
     this.isRegatta = false,
     this.autoStart = false,
+    this.departurePort,
   });
 
   final String boatId;
+
+  /// Optional pre-selected departure port (e.g. starting a regatta from an
+  /// event). Used as the trip's departure instead of the home-port fallback.
+  final String? departurePort;
 
   /// When set, records into this existing (already-started) trip instead of
   /// creating a new one — used for group regattas after the safety checklist.
@@ -286,8 +291,12 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
 
     try {
       final repo = ref.read(tripRepositoryProvider);
-      String departureName = 'Unknown';
-      if (_currentPosition != null) {
+      // Prefer the port chosen up front (e.g. starting from an event).
+      String departureName =
+          (widget.departurePort != null && widget.departurePort!.isNotEmpty)
+              ? widget.departurePort!
+              : 'Unknown';
+      if (departureName == 'Unknown' && _currentPosition != null) {
         try {
           final portRepo = ref.read(portRepositoryProvider);
           final ports = await portRepo.getNearby(
@@ -342,16 +351,46 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
   }
 
   Future<void> _cancelRecording() async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await _confirmDiscard(
+      title: 'Cancelar viaje',
+      message: widget.isRegatta
+          ? 'La regata volverá a "programada" y se descartará la grabación.'
+          : 'Se descartará este viaje sin guardarlo.',
+      confirmLabel: 'Cancelar viaje',
+    );
+    if (confirmed) await _discardTripAndPop();
+  }
+
+  /// Leave the map without saving the trip. Available while recording so the
+  /// user is never "trapped" in the map — discards the in-progress recording.
+  Future<void> _exitWithoutSaving() async {
+    if (_status == TripStatus.completed) {
+      context.pop();
+      return;
+    }
+    final confirmed = await _confirmDiscard(
+      title: 'Salir sin guardar',
+      message: widget.isRegatta
+          ? 'Se descartará la grabación y la regata volverá a "programada".'
+          : 'Saldrás del mapa y se descartará la grabación sin guardar el viaje.',
+      confirmLabel: 'Salir sin guardar',
+    );
+    if (confirmed) await _discardTripAndPop();
+  }
+
+  Future<bool> _confirmDiscard({
+    required String title,
+    required String message,
+    required String confirmLabel,
+  }) async {
+    final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.darkSurface,
-        title: const Text('Cancelar viaje',
-            style: TextStyle(color: AppColors.textPrimary)),
+        title:
+            Text(title, style: const TextStyle(color: AppColors.textPrimary)),
         content: Text(
-          widget.isRegatta
-              ? 'La regata volverá a "programada" y se descartará la grabación.'
-              : 'Se descartará este viaje sin guardarlo.',
+          message,
           style: const TextStyle(color: AppColors.textSecondary),
         ),
         actions: [
@@ -361,14 +400,18 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Cancelar viaje',
-                style: TextStyle(color: AppColors.red)),
+            child: Text(confirmLabel,
+                style: const TextStyle(color: AppColors.red)),
           ),
         ],
       ),
     );
-    if (confirmed != true) return;
+    return result == true;
+  }
 
+  /// Stops timers/streams, discards the trip on the server (delete for solo,
+  /// revert to planned for a regatta) and leaves the screen.
+  Future<void> _discardTripAndPop() async {
     await _positionSubscription?.cancel();
     _positionSubscription = null;
     _elapsedTimer?.cancel();
@@ -380,6 +423,7 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
           await ref
               .read(regattaRepositoryProvider)
               .revertToPlanned(_createdTrip!.id);
+          ref.invalidate(regattaProvider(_createdTrip!.id));
         } else {
           await ref.read(tripRepositoryProvider).deleteTrip(_createdTrip!.id);
         }
@@ -403,6 +447,22 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
 
     final ports = ref.read(allPortsProvider).valueOrNull;
 
+    // For group regattas, pre-fill the crew with members who RSVP'd "going".
+    var crewSuggestions = const <String>[];
+    if (widget.isRegatta && widget.tripId != null) {
+      try {
+        final participants =
+            await ref.read(regattaParticipantsProvider(widget.tripId!).future);
+        crewSuggestions = participants
+            .where((p) => p.rsvp == 'going' && p.name.trim().isNotEmpty)
+            .map((p) => p.name)
+            .toList(growable: false);
+      } catch (_) {
+        // Best effort: no suggestions if participants can't be loaded.
+      }
+    }
+    if (!mounted) return;
+
     final completionData = await showDialog<TripCompletionData>(
       context: context,
       barrierDismissible: false,
@@ -413,6 +473,8 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
             ? _totalDistance / (_elapsed.inSeconds / 3600)
             : null,
         nearbyPorts: ports ?? [],
+        initialCrew: crewSuggestions,
+        crewSuggestions: crewSuggestions,
         startLat: _trackPoints.isNotEmpty
             ? _trackPoints.first.latitude
             : _currentPosition?.latitude,
@@ -490,6 +552,10 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
       }
 
       ref.invalidate(boatTripsProvider(widget.boatId));
+      // Refresh the regatta so its detail no longer shows "en curso".
+      if (widget.isRegatta && _createdTrip != null) {
+        ref.invalidate(regattaProvider(_createdTrip!.id));
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -661,16 +727,18 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
                     elapsed: _elapsed,
                     gpsAccuracy: _gpsAccuracy,
                   ),
-                if (!isRecording)
-                  Positioned(
-                    top: MediaQuery.of(context).padding.top + 8,
-                    left: 12,
-                    child: _GlassIconButton(
-                      icon: Icons.arrow_back,
-                      onPressed: () => context.pop(),
-                      semanticLabel: AppLocalizations.of(context)!.goBack,
-                    ),
+                Positioned(
+                  top: MediaQuery.of(context).padding.top + 8,
+                  left: 12,
+                  child: _GlassIconButton(
+                    icon: isRecording ? Icons.close : Icons.arrow_back,
+                    onPressed:
+                        isRecording ? _exitWithoutSaving : () => context.pop(),
+                    semanticLabel: isRecording
+                        ? 'Salir sin guardar'
+                        : AppLocalizations.of(context)!.goBack,
                   ),
+                ),
                 MapControls(
                   onZoomIn: () => _mapController.move(
                     _mapController.camera.center,
@@ -743,4 +811,3 @@ class _GlassIconButton extends StatelessWidget {
     );
   }
 }
-

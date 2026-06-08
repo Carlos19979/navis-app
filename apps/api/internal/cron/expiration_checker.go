@@ -97,12 +97,12 @@ func (ec *ExpirationChecker) check(ctx context.Context) {
 			title, body := buildMessage(string(doc.Type), doc.CustomName, daysUntilExpiry, doc.ExpiryDate)
 
 			payload := map[string]any{
-				"title":              title,
-				"body":               body,
-				"document_id":        doc.ID,
-				"document_type":      string(doc.Type),
-				"days_until_expiry":  daysUntilExpiry,
-				"expiry_date":        doc.ExpiryDate.Format("2006-01-02"),
+				"title":             title,
+				"body":              body,
+				"document_id":       doc.ID,
+				"document_type":     string(doc.Type),
+				"days_until_expiry": daysUntilExpiry,
+				"expiry_date":       doc.ExpiryDate.Format("2006-01-02"),
 			}
 
 			if err := ec.notifier.TriggerWorkflow(ctx, "document-expiry", doc.UserID, payload); err != nil {

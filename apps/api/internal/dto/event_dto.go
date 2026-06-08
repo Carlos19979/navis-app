@@ -8,8 +8,8 @@ import (
 
 // EventListParams captures query parameters for listing events.
 type EventListParams struct {
-	Cursor   string  `query:"cursor"`
-	Limit    int     `query:"limit"    validate:"omitempty,gte=1,lte=50"`
+	Cursor   string   `query:"cursor"`
+	Limit    int      `query:"limit"    validate:"omitempty,gte=1,lte=50"`
 	Lat      *float64 `query:"lat"      validate:"omitempty,latitude"`
 	Lon      *float64 `query:"lon"      validate:"omitempty,longitude"`
 	RadiusKM *float64 `query:"radius_km" validate:"omitempty,gt=0"`
@@ -31,6 +31,8 @@ type EventResponse struct {
 	BoatClasses      []string         `json:"boat_classes"`
 	RegistrationURL  *string          `json:"registration_url,omitempty"`
 	DocumentsURL     *string          `json:"documents_url,omitempty"`
+	StreamURL        *string          `json:"stream_url,omitempty"`
+	TrackingURL      *string          `json:"tracking_url,omitempty"`
 	IsFeatured       bool             `json:"is_featured"`
 	IsInterested     bool             `json:"is_interested"`
 	CreatedAt        time.Time        `json:"created_at"`
@@ -59,6 +61,8 @@ func EventResponseFromDomain(e *domain.Event, isInterested bool) *EventResponse 
 		BoatClasses:      classes,
 		RegistrationURL:  e.RegistrationURL,
 		DocumentsURL:     e.DocumentsURL,
+		StreamURL:        e.StreamURL,
+		TrackingURL:      e.TrackingURL,
 		IsFeatured:       e.IsFeatured,
 		IsInterested:     isInterested,
 		CreatedAt:        e.CreatedAt,

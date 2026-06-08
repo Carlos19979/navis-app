@@ -12,6 +12,7 @@ import 'package:navis_mobile/features/boat/presentation/screens/document_detail_
 import 'package:navis_mobile/features/charts/presentation/screens/chart_screen.dart';
 import 'package:navis_mobile/features/documents/presentation/screens/document_form_screen.dart';
 import 'package:navis_mobile/features/documents/presentation/screens/document_list_screen.dart';
+import 'package:navis_mobile/features/maintenance/presentation/screens/maintenance_screen.dart';
 import 'package:navis_mobile/features/events/presentation/screens/event_detail_screen.dart';
 import 'package:navis_mobile/features/events/presentation/screens/events_screen.dart';
 import 'package:navis_mobile/features/groups/presentation/screens/group_detail_screen.dart';
@@ -20,6 +21,7 @@ import 'package:navis_mobile/features/groups/presentation/screens/groups_screen.
 import 'package:navis_mobile/features/regattas/presentation/screens/pre_trip_checklist_screen.dart';
 import 'package:navis_mobile/features/regattas/presentation/screens/regatta_detail_screen.dart';
 import 'package:navis_mobile/features/regattas/presentation/screens/schedule_regatta_screen.dart';
+import 'package:navis_mobile/features/regattas/presentation/screens/start_event_regatta_screen.dart';
 import 'package:navis_mobile/features/logbook/presentation/screens/logbook_screen.dart';
 import 'package:navis_mobile/features/logbook/presentation/screens/trip_detail_screen.dart';
 import 'package:navis_mobile/features/logbook/presentation/screens/trip_edit_screen.dart';
@@ -142,6 +144,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
+        path: '/events/:id/start-regatta',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return StartEventRegattaScreen(eventId: id);
+        },
+      ),
+      GoRoute(
         path: '/groups/:id',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
@@ -192,6 +201,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
+        path: '/boats/:id/maintenance',
+        builder: (context, state) {
+          final boatId = state.pathParameters['id']!;
+          return MaintenanceScreen(boatId: boatId);
+        },
+      ),
+      GoRoute(
         path: '/boats/:id/documents/new',
         builder: (context, state) {
           final boatId = state.pathParameters['id']!;
@@ -209,7 +225,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/boats/:id/precheck',
         builder: (context, state) {
           final boatId = state.pathParameters['id']!;
-          return PreTripChecklistScreen(boatId: boatId);
+          final port = state.uri.queryParameters['port'];
+          return PreTripChecklistScreen(
+            boatId: boatId,
+            departurePort: (port != null && port.isNotEmpty) ? port : null,
+          );
         },
       ),
       GoRoute(
@@ -219,11 +239,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           final tripId = state.uri.queryParameters['tripId'];
           final isRegatta = state.uri.queryParameters['regatta'] == 'true';
           final autoStart = state.uri.queryParameters['autostart'] == 'true';
+          final port = state.uri.queryParameters['port'];
           return TripRecordingScreen(
             boatId: boatId,
             tripId: tripId,
             isRegatta: isRegatta,
             autoStart: autoStart,
+            departurePort: (port != null && port.isNotEmpty) ? port : null,
           );
         },
       ),

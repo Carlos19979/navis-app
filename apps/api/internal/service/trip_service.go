@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
 	"math"
 	"time"
@@ -14,13 +15,15 @@ import (
 type TripService struct {
 	tripRepo  port.TripRepository
 	trackRepo port.TripTrackRepository
+	boatRepo  port.BoatRepository
 }
 
 // NewTripService creates a new TripService.
-func NewTripService(tripRepo port.TripRepository, trackRepo port.TripTrackRepository) *TripService {
+func NewTripService(tripRepo port.TripRepository, trackRepo port.TripTrackRepository, boatRepo port.BoatRepository) *TripService {
 	return &TripService{
 		tripRepo:  tripRepo,
 		trackRepo: trackRepo,
+		boatRepo:  boatRepo,
 	}
 }
 
@@ -42,22 +45,39 @@ func (s *TripService) Create(ctx context.Context, trip *domain.Trip) (*domain.Tr
 	return created, nil
 }
 
-// GetByID retrieves a single trip owned by the given user.
+// GetByID retrieves a single trip the user owns or has shared access to.
 func (s *TripService) GetByID(ctx context.Context, userID, id string) (*domain.Trip, error) {
-	trip, err := s.tripRepo.GetByID(ctx, userID, id)
+	trip, err := s.tripRepo.GetByIDUnscoped(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("getting trip %s: %w", id, err)
+	}
+	access, err := s.boatRepo.HasAccess(ctx, userID, trip.BoatID)
+	if err != nil {
+		return nil, fmt.Errorf("getting trip %s: %w", id, err)
+	}
+	if !access {
+		return nil, fmt.Errorf("getting trip %s: %w", id, domain.ErrTripNotFound)
 	}
 	return trip, nil
 }
 
-// List returns a paginated list of trips for a user.
+// List returns a paginated list of trips. For a specific boat, members with
+// shared access read the boat owner's trips (read-only).
 func (s *TripService) List(ctx context.Context, userID, boatID, cursor string, limit int) ([]domain.Trip, string, error) {
 	if limit <= 0 || limit > 50 {
 		limit = 20
 	}
 
-	trips, nextCursor, err := s.tripRepo.List(ctx, userID, boatID, cursor, limit)
+	scopeID := userID
+	if boatID != "" {
+		boat, err := s.boatRepo.GetByIDAccessible(ctx, userID, boatID)
+		if err != nil {
+			return nil, "", fmt.Errorf("listing trips: %w", err)
+		}
+		scopeID = boat.UserID // read the boat owner's trips
+	}
+
+	trips, nextCursor, err := s.tripRepo.List(ctx, scopeID, boatID, cursor, limit)
 	if err != nil {
 		return nil, "", fmt.Errorf("listing trips: %w", err)
 	}
@@ -196,11 +216,19 @@ func (s *TripService) AddTrackPoints(ctx context.Context, userID string, tracks 
 	return nil
 }
 
-// GetTrackPoints returns all GPS track points for a trip.
+// GetTrackPoints returns all GPS track points for a trip the user owns or has
+// shared access to.
 func (s *TripService) GetTrackPoints(ctx context.Context, userID, tripID string) ([]domain.TripTrack, error) {
-	// Verify trip ownership.
-	if _, err := s.tripRepo.GetByID(ctx, userID, tripID); err != nil {
+	trip, err := s.tripRepo.GetByIDUnscoped(ctx, tripID)
+	if err != nil {
 		return nil, fmt.Errorf("getting track points for trip %s: %w", tripID, err)
+	}
+	access, err := s.boatRepo.HasAccess(ctx, userID, trip.BoatID)
+	if err != nil {
+		return nil, fmt.Errorf("getting track points for trip %s: %w", tripID, err)
+	}
+	if !access {
+		return nil, fmt.Errorf("getting track points for trip %s: %w", tripID, domain.ErrTripNotFound)
 	}
 
 	points, err := s.trackRepo.ListByTrip(ctx, tripID)
@@ -208,4 +236,74 @@ func (s *TripService) GetTrackPoints(ctx context.Context, userID, tripID string)
 		return nil, fmt.Errorf("getting track points for trip %s: %w", tripID, err)
 	}
 	return points, nil
+}
+
+// shareTokenAlphabet is URL-safe and avoids ambiguous characters.
+const shareTokenAlphabet = "abcdefghijkmnpqrstuvwxyz23456789"
+
+func generateShareToken() (string, error) {
+	const n = 12
+	buf := make([]byte, n)
+	if _, err := rand.Read(buf); err != nil {
+		return "", fmt.Errorf("generating share token: %w", err)
+	}
+	for i := range buf {
+		buf[i] = shareTokenAlphabet[int(buf[i])%len(shareTokenAlphabet)]
+	}
+	return string(buf), nil
+}
+
+// Share makes a trip publicly accessible, returning its share token. If the
+// trip is already shared, the existing token is reused (idempotent).
+func (s *TripService) Share(ctx context.Context, userID, tripID string) (string, error) {
+	trip, err := s.tripRepo.GetByID(ctx, userID, tripID)
+	if err != nil {
+		return "", fmt.Errorf("share trip: %w", err)
+	}
+	if trip.ShareToken != nil && *trip.ShareToken != "" {
+		return *trip.ShareToken, nil
+	}
+	token, err := generateShareToken()
+	if err != nil {
+		return "", err
+	}
+	if err := s.tripRepo.SetShareToken(ctx, userID, tripID, token); err != nil {
+		return "", fmt.Errorf("share trip: %w", err)
+	}
+	return token, nil
+}
+
+// Unshare revokes a trip's public share link.
+func (s *TripService) Unshare(ctx context.Context, userID, tripID string) error {
+	if err := s.tripRepo.ClearShareToken(ctx, userID, tripID); err != nil {
+		return fmt.Errorf("unshare trip: %w", err)
+	}
+	return nil
+}
+
+// PublicByToken returns a shared trip and its track, by public token.
+func (s *TripService) PublicByToken(ctx context.Context, token string) (*domain.Trip, []domain.TripTrack, error) {
+	trip, err := s.tripRepo.GetByShareToken(ctx, token)
+	if err != nil {
+		return nil, nil, fmt.Errorf("public trip: %w", err)
+	}
+	track, err := s.trackRepo.ListByTrip(ctx, trip.ID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("public trip track: %w", err)
+	}
+	return trip, track, nil
+}
+
+// SetFloatPlan stores the float plan for a trip.
+func (s *TripService) SetFloatPlan(ctx context.Context, userID, tripID string,
+	destination *string, eta *time.Time, name, phone *string) error {
+	if err := s.tripRepo.SetFloatPlan(ctx, userID, tripID, destination, eta, name, phone); err != nil {
+		return fmt.Errorf("set float plan: %w", err)
+	}
+	return nil
+}
+
+// ListOverdueFloatPlans returns recording trips past their ETA.
+func (s *TripService) ListOverdueFloatPlans(ctx context.Context, cutoff time.Time) ([]domain.Trip, error) {
+	return s.tripRepo.ListOverdueFloatPlans(ctx, cutoff)
 }

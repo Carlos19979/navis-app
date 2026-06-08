@@ -14,15 +14,18 @@ class NavisAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.showBack = false,
     this.actions,
     this.transparent = false,
+    this.bottom,
   });
 
   final String title;
   final bool showBack;
   final List<Widget>? actions;
   final bool transparent;
+  final PreferredSizeWidget? bottom;
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize =>
+      Size.fromHeight(kToolbarHeight + (bottom?.preferredSize.height ?? 0));
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +43,7 @@ class NavisAppBar extends StatelessWidget implements PreferredSizeWidget {
         automaticallyImplyLeading: false,
         leading: showBack ? _buildBackButton(context) : null,
         actions: _buildActions(context),
+        bottom: bottom,
       );
     }
 
@@ -76,6 +80,7 @@ class NavisAppBar extends StatelessWidget implements PreferredSizeWidget {
             automaticallyImplyLeading: false,
             leading: showBack ? _buildBackButton(context) : null,
             actions: _buildActions(context),
+            bottom: bottom,
           ),
         ),
       ),

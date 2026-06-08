@@ -7,17 +7,17 @@ type DocumentType string
 
 // DocumentType values.
 const (
-	DocumentTypeITB              DocumentType = "itb"
-	DocumentTypeInsuranceRC      DocumentType = "insurance_rc"
-	DocumentTypeInsuranceFull    DocumentType = "insurance_full"
-	DocumentTypeLifeRaft         DocumentType = "life_raft"
-	DocumentTypeExtinguisher     DocumentType = "extinguisher"
-	DocumentTypeFlares           DocumentType = "flares"
-	DocumentTypeFirstAid         DocumentType = "first_aid"
-	DocumentTypeMedicalCert      DocumentType = "medical_cert"
-	DocumentTypeRadioCert        DocumentType = "radio_cert"
+	DocumentTypeITB               DocumentType = "itb"
+	DocumentTypeInsuranceRC       DocumentType = "insurance_rc"
+	DocumentTypeInsuranceFull     DocumentType = "insurance_full"
+	DocumentTypeLifeRaft          DocumentType = "life_raft"
+	DocumentTypeExtinguisher      DocumentType = "extinguisher"
+	DocumentTypeFlares            DocumentType = "flares"
+	DocumentTypeFirstAid          DocumentType = "first_aid"
+	DocumentTypeMedicalCert       DocumentType = "medical_cert"
+	DocumentTypeRadioCert         DocumentType = "radio_cert"
 	DocumentTypeNavigationLicense DocumentType = "navigation_license"
-	DocumentTypeCustom           DocumentType = "custom"
+	DocumentTypeCustom            DocumentType = "custom"
 )
 
 // DocumentStatus represents the current validity status of a document.

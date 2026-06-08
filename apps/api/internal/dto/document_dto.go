@@ -43,6 +43,7 @@ func (r *CreateDocumentRequest) ToDomain(userID string) *domain.Document {
 
 // UpdateDocumentRequest is the payload for updating an existing document.
 type UpdateDocumentRequest struct {
+	Type                *string    `json:"type"                  validate:"omitempty,min=1,max=100"`
 	ExpiryDate          *time.Time `json:"expiry_date"           validate:"omitempty"`
 	PhotoURL            *string    `json:"photo_url"             validate:"omitempty,url"`
 	Notes               *string    `json:"notes"                 validate:"omitempty,max=500"`
@@ -54,6 +55,9 @@ type UpdateDocumentRequest struct {
 
 // ApplyTo merges non-nil fields from the request into the given domain Document.
 func (r *UpdateDocumentRequest) ApplyTo(doc *domain.Document) {
+	if r.Type != nil {
+		doc.Type = domain.DocumentType(*r.Type)
+	}
 	if r.ExpiryDate != nil {
 		doc.ExpiryDate = *r.ExpiryDate
 	}
