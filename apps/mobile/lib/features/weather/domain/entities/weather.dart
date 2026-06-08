@@ -5,6 +5,7 @@ class Weather {
     required this.windDirection,
     required this.waveHeight,
     required this.description,
+    this.weatherCode = 0,
     this.humidity,
     this.pressure,
     this.icon,
@@ -16,6 +17,7 @@ class Weather {
   final double windDirection;
   final double waveHeight;
   final String description;
+  final int weatherCode;
   final int? humidity;
   final double? pressure;
   final String? icon;
@@ -27,6 +29,7 @@ class Weather {
     double? windDirection,
     double? waveHeight,
     String? description,
+    int? weatherCode,
     int? humidity,
     double? pressure,
     String? icon,
@@ -38,6 +41,7 @@ class Weather {
       windDirection: windDirection ?? this.windDirection,
       waveHeight: waveHeight ?? this.waveHeight,
       description: description ?? this.description,
+      weatherCode: weatherCode ?? this.weatherCode,
       humidity: humidity ?? this.humidity,
       pressure: pressure ?? this.pressure,
       icon: icon ?? this.icon,

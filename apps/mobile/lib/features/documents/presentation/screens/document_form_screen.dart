@@ -104,11 +104,8 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
     final doc = await ref.read(documentProvider(widget.documentId!).future);
     _notesController.text = doc.notes ?? '';
     _alertDaysController.text = (doc.alertDaysBefore ?? 30).toString();
-    if (widget.isRenew) {
-      _renewalCostController.text =
-          doc.lastRenewalCost?.toStringAsFixed(2) ?? '';
-      _renewalProviderController.text = doc.lastRenewalProvider ?? '';
-    }
+    _renewalCostController.text = doc.lastRenewalCost?.toStringAsFixed(2) ?? '';
+    _renewalProviderController.text = doc.lastRenewalProvider ?? '';
     setState(() {
       _selectedType = doc.type;
       if (!_documentTypes.contains(doc.type)) {
@@ -202,14 +199,13 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
             : _notesController.text.trim(),
         alertDaysBefore: int.tryParse(_alertDaysController.text.trim()),
         photoUrl: _existingPhotoUrl,
+        // Renewing stamps a new renewal date; editing keeps the existing one.
         lastRenewalDate: widget.isRenew ? DateTime.now() : null,
-        lastRenewalCost: widget.isRenew
-            ? double.tryParse(_renewalCostController.text.trim())
-            : null,
-        lastRenewalProvider:
-            widget.isRenew && _renewalProviderController.text.trim().isNotEmpty
-                ? _renewalProviderController.text.trim()
-                : null,
+        lastRenewalCost: double.tryParse(
+            _renewalCostController.text.trim().replaceAll(',', '.')),
+        lastRenewalProvider: _renewalProviderController.text.trim().isEmpty
+            ? null
+            : _renewalProviderController.text.trim(),
       );
 
       if (_isEdit) {
@@ -239,6 +235,9 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
       }
 
       ref.invalidate(boatDocumentsProvider(widget.boatId));
+      if (_isEdit && widget.documentId != null) {
+        ref.invalidate(documentProvider(widget.documentId!));
+      }
 
       if (mounted) {
         final l = AppLocalizations.of(context)!;
@@ -316,13 +315,11 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                               ),
                             );
                           }).toList(),
-                          onChanged: widget.isRenew
-                              ? null
-                              : (value) {
-                                  if (value != null) {
-                                    setState(() => _selectedType = value);
-                                  }
-                                },
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() => _selectedType = value);
+                            }
+                          },
                         ),
                         const SizedBox(height: 16),
                         GestureDetector(
@@ -392,8 +389,9 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                     ),
                   ),
 
-                  // Renewal section
-                  if (widget.isRenew) ...[
+                  // Renewal section — shown for existing documents so edit and
+                  // renew expose the same fields; hidden when creating a new one.
+                  if (_isEdit) ...[
                     const SizedBox(height: 16),
                     NavisCard(
                       child: Column(
@@ -519,11 +517,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                   const SizedBox(height: 32),
 
                   NavisButton(
-                    label: widget.isRenew
-                        ? l.renewDocument
-                        : _isEdit
-                            ? l.editDocument
-                            : l.save,
+                    label: widget.isRenew ? l.renewDocument : l.save,
                     onPressed: _onSave,
                     isLoading: _isLoading,
                   ),

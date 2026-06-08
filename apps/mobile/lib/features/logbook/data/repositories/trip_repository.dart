@@ -218,6 +218,35 @@ class TripRepository {
     );
   }
 
+  /// Makes a trip public and returns its shareable URL.
+  Future<String> shareTrip(String id) async {
+    final response = await _apiClient.put<Map<String, dynamic>>(
+      '/api/v1/trips/$id/share',
+    );
+    return (response.data!['data'] as Map<String, dynamic>)['url'] as String;
+  }
+
+  /// Revokes a trip's public share link.
+  Future<void> unshareTrip(String id) async {
+    await _apiClient.delete<void>('/api/v1/trips/$id/share');
+  }
+
+  /// Sets a trip's float plan (destination, ETA, shore contact).
+  Future<void> setFloatPlan(
+    String id, {
+    String? destination,
+    DateTime? eta,
+    String? shoreContactName,
+    String? shoreContactPhone,
+  }) async {
+    await _apiClient.put<void>('/api/v1/trips/$id/float-plan', data: {
+      'destination': destination,
+      'eta': eta?.toUtc().toIso8601String(),
+      'shore_contact_name': shoreContactName,
+      'shore_contact_phone': shoreContactPhone,
+    });
+  }
+
   Future<void> deleteTrip(String id) async {
     try {
       await _apiClient.delete<void>('/api/v1/trips/$id');

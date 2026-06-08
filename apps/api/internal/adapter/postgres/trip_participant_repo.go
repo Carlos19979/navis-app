@@ -47,9 +47,11 @@ func (r *TripParticipantRepo) Remove(ctx context.Context, tripID, userID string)
 // ListByTrip returns all RSVPs for a trip, oldest answer first.
 func (r *TripParticipantRepo) ListByTrip(ctx context.Context, tripID string) ([]domain.TripParticipant, error) {
 	rows, err := r.pool.Query(ctx,
-		`SELECT trip_id, user_id, rsvp, responded_at
-		 FROM trip_participants WHERE trip_id = $1
-		 ORDER BY responded_at ASC`,
+		`SELECT tp.trip_id, tp.user_id, tp.rsvp, tp.responded_at, `+memberNameExpr+`
+		 FROM trip_participants tp
+		 LEFT JOIN auth.users u ON u.id = tp.user_id
+		 WHERE tp.trip_id = $1
+		 ORDER BY tp.responded_at ASC`,
 		tripID)
 	if err != nil {
 		return nil, fmt.Errorf("listing participants for trip %s: %w", tripID, err)
@@ -59,7 +61,7 @@ func (r *TripParticipantRepo) ListByTrip(ctx context.Context, tripID string) ([]
 	participants := make([]domain.TripParticipant, 0)
 	for rows.Next() {
 		var p domain.TripParticipant
-		if err := rows.Scan(&p.TripID, &p.UserID, &p.RSVP, &p.RespondedAt); err != nil {
+		if err := rows.Scan(&p.TripID, &p.UserID, &p.RSVP, &p.RespondedAt, &p.Name); err != nil {
 			return nil, fmt.Errorf("scanning participant for trip %s: %w", tripID, err)
 		}
 		participants = append(participants, p)

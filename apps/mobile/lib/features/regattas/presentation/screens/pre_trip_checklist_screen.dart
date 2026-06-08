@@ -17,16 +17,21 @@ import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 
 /// Pre-departure safety checklist.
 ///
+/// In both modes the checklist is optional — the crew can set sail without
+/// ticking every item (a safety hint is shown when items remain). It is a
+/// recommendation, not a hard gate.
+///
 /// Two modes:
-/// - Regatta ([tripId] set): items are persisted; all must be checked to
-///   complete the checklist and start recording the regatta's trip.
-/// - Boat ([boatId] set, [tripId] null): a local, skippable checklist shown
-///   before starting a solo trip recording. Items are not persisted.
+/// - Regatta ([tripId] set): items are persisted to the trip. Starting marks
+///   the checklist as acknowledged and begins recording the regatta's trip.
+/// - Boat ([boatId] set, [tripId] null): a local checklist shown before
+///   starting a solo trip recording. Items are not persisted.
 class PreTripChecklistScreen extends ConsumerStatefulWidget {
   const PreTripChecklistScreen({
     this.tripId,
     this.groupId,
     this.boatId,
+    this.departurePort,
     super.key,
   }) : assert(tripId != null || boatId != null,
             'Either tripId (regatta) or boatId (solo trip) is required');
@@ -34,6 +39,10 @@ class PreTripChecklistScreen extends ConsumerStatefulWidget {
   final String? tripId;
   final String? groupId;
   final String? boatId;
+
+  /// Optional pre-selected departure port, carried into the recording screen
+  /// (e.g. when starting a regatta from an event).
+  final String? departurePort;
 
   @override
   ConsumerState<PreTripChecklistScreen> createState() =>
@@ -179,7 +188,13 @@ class _PreTripChecklistScreenState
 
   /// Boat: no persistence — just go straight to recording (auto-start).
   void _startSoloTrip() {
-    context.pushReplacement('/boats/${widget.boatId}/record?autostart=true');
+    final port = widget.departurePort;
+    final portQuery = (port != null && port.isNotEmpty)
+        ? '&port=${Uri.encodeComponent(port)}'
+        : '';
+    context.pushReplacement(
+      '/boats/${widget.boatId}/record?autostart=true$portQuery',
+    );
   }
 
   @override
@@ -209,7 +224,7 @@ class _PreTripChecklistScreenState
     return _content(
       items: _items!,
       primaryLabel: 'Empezar viaje',
-      gated: false,
+      showSkipHint: false,
       onPrimary: _startSoloTrip,
     );
   }
@@ -227,8 +242,8 @@ class _PreTripChecklistScreenState
       ),
       data: (_) => _content(
         items: _items ?? const <ChecklistItem>[],
-        primaryLabel: 'Completar y zarpar',
-        gated: true,
+        primaryLabel: _allChecked ? 'Completar y zarpar' : 'Zarpar igualmente',
+        showSkipHint: !_allChecked,
         onPrimary: _completeAndStart,
       ),
     );
@@ -237,7 +252,7 @@ class _PreTripChecklistScreenState
   Widget _content({
     required List<ChecklistItem> items,
     required String primaryLabel,
-    required bool gated,
+    required bool showSkipHint,
     required VoidCallback onPrimary,
   }) {
     return Column(
@@ -285,11 +300,13 @@ class _PreTripChecklistScreenState
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
           child: Column(
             children: [
-              if (gated && !_allChecked)
+              if (showSkipHint)
                 const Padding(
                   padding: EdgeInsets.only(bottom: 8),
                   child: Text(
-                    'Marca todos los ítems de seguridad para zarpar.',
+                    'Recomendamos marcar todos los ítems de seguridad, '
+                    'pero puedes zarpar igualmente bajo tu responsabilidad.',
+                    textAlign: TextAlign.center,
                     style: TextStyle(color: AppColors.amber, fontSize: 13),
                   ),
                 ),
@@ -297,7 +314,7 @@ class _PreTripChecklistScreenState
                 label: primaryLabel,
                 icon: Icons.sailing,
                 isLoading: _busy,
-                isDisabled: _busy || (gated && !_allChecked),
+                isDisabled: _busy,
                 onPressed: onPrimary,
               ),
             ],

@@ -608,3 +608,72 @@ For reference, typical document `type` values used in Spain:
 | `Radiooperador`               | Radio operator certificate           |
 
 The `type` field is free text; the above are suggestions for the UI.
+
+---
+
+## Account / Plans
+
+### GET /api/v1/me
+Returns the current user's plan and derived limits.
+`{ plan, max_boats, boat_count, can_create_groups }`
+
+### PUT /api/v1/me/plan
+Dev/testing only (replace with a payment webhook). Body `{ "plan": "normal|armador|gestor" }`.
+
+Plan enforcement returns **402** with code `PLAN_LIMIT` (boat quota) or `PLAN_FORBIDDEN`
+(e.g. a `normal` user creating a group).
+
+## Trip sharing & float plan
+
+### PUT /api/v1/trips/:id/share
+Make a trip public. Returns `{ token, url }` (idempotent). URL → public web page.
+
+### DELETE /api/v1/trips/:id/share
+Revoke the public link.
+
+### GET /public/trips/:token  (no auth)
+Public JSON of a shared trip + track.
+
+### GET /public/trips/:token/view  (no auth)
+HTML landing page with a Leaflet/OpenSeaMap map of the route (the share/growth page).
+
+### PUT /api/v1/trips/:id/float-plan
+Body `{ destination, eta, shore_contact_name, shore_contact_phone }` (all optional).
+An overdue cron alerts the owner if a recording trip passes its ETA + 30m.
+
+## Maintenance & Expenses (per boat)
+
+### GET / POST /api/v1/boats/:id/maintenance · DELETE …/maintenance/:logId
+Service logs `{ type, performed_at, engine_hours?, cost?, provider?, notes? }`.
+
+### GET / POST /api/v1/boats/:id/expenses · DELETE …/expenses/:expenseId
+Expenses `{ category, amount, incurred_on, notes? }`.
+
+### GET /api/v1/boats/:id/expenses/summary
+`{ totals: {category: amount}, total }`.
+
+## Boat sharing (crew / co-owners)
+
+### PUT /api/v1/boats/:id/share-code
+Owner: get/create the boat's invite code → `{ code }`.
+
+### POST /api/v1/boats/join
+Body `{ code }` → join a boat as a read-only `viewer` member.
+
+### GET /api/v1/boats/shared
+Boats shared with the current user.
+
+### GET /api/v1/boats/:id/members · DELETE …/members/:userId
+Owner: list / revoke shared members.
+
+### POST /api/v1/boats/:id/leave
+Member: leave a shared boat.
+
+**Access model:** boat + its documents/trips/maintenance/expenses are **readable** by the
+owner or any member; **all writes are owner-only**. `GET /api/v1/boats/:id` includes `is_owner`.
+
+## Weather (extended)
+
+### GET /api/v1/weather/overview?lat&lon
+Adds `tides` (hourly sea level) and `tide_extremes` (`{time, height, kind: high|low}`),
+omitted where the tidal range is negligible (<0.3 m).

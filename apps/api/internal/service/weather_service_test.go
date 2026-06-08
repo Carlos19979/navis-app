@@ -14,6 +14,8 @@ import (
 type mockWeatherProvider struct {
 	getCurrentFn  func(ctx context.Context, lat, lon float64) (*port.WeatherData, error)
 	getForecastFn func(ctx context.Context, lat, lon float64, days int) ([]port.WeatherData, error)
+	getOverviewFn func(ctx context.Context, lat, lon float64) (*port.WeatherOverview, error)
+	getHourlyFn   func(ctx context.Context, lat, lon float64, date string) ([]port.HourlyPoint, error)
 }
 
 func (m *mockWeatherProvider) GetCurrent(ctx context.Context, lat, lon float64) (*port.WeatherData, error) {
@@ -22,6 +24,14 @@ func (m *mockWeatherProvider) GetCurrent(ctx context.Context, lat, lon float64) 
 
 func (m *mockWeatherProvider) GetForecast(ctx context.Context, lat, lon float64, days int) ([]port.WeatherData, error) {
 	return m.getForecastFn(ctx, lat, lon, days)
+}
+
+func (m *mockWeatherProvider) GetOverview(ctx context.Context, lat, lon float64) (*port.WeatherOverview, error) {
+	return m.getOverviewFn(ctx, lat, lon)
+}
+
+func (m *mockWeatherProvider) GetHourly(ctx context.Context, lat, lon float64, date string) ([]port.HourlyPoint, error) {
+	return m.getHourlyFn(ctx, lat, lon, date)
 }
 
 // --- helpers ---
@@ -280,6 +290,125 @@ func TestWeatherService_GetForecast_NotCached(t *testing.T) {
 
 	if callCount != 2 {
 		t.Errorf("expected 2 provider calls (no caching), got %d", callCount)
+	}
+}
+
+// --- GetOverview tests ---
+
+func newTestOverview() *port.WeatherOverview {
+	return &port.WeatherOverview{
+		Current: *newTestWeatherData(),
+		Hourly:  []port.HourlyPoint{{Temp: 21, Time: time.Now()}},
+		Daily:   []port.DailyPoint{{TempMax: 24, TempMin: 18, Date: time.Now()}},
+	}
+}
+
+func TestWeatherService_GetOverview_Success(t *testing.T) {
+	t.Parallel()
+
+	overview := newTestOverview()
+	provider := &mockWeatherProvider{
+		getOverviewFn: func(_ context.Context, _, _ float64) (*port.WeatherOverview, error) {
+			return overview, nil
+		},
+	}
+	svc := NewWeatherService(provider)
+
+	result, err := svc.GetOverview(context.Background(), 39.47, -0.38)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if len(result.Hourly) != 1 || len(result.Daily) != 1 {
+		t.Errorf("expected 1 hourly and 1 daily point, got %d and %d",
+			len(result.Hourly), len(result.Daily))
+	}
+}
+
+func TestWeatherService_GetOverview_ProviderError(t *testing.T) {
+	t.Parallel()
+
+	providerErr := errors.New("overview unavailable")
+	provider := &mockWeatherProvider{
+		getOverviewFn: func(_ context.Context, _, _ float64) (*port.WeatherOverview, error) {
+			return nil, providerErr
+		},
+	}
+	svc := NewWeatherService(provider)
+
+	_, err := svc.GetOverview(context.Background(), 39.47, -0.38)
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if !errors.Is(err, providerErr) {
+		t.Errorf("expected underlying error %v, got %v", providerErr, err)
+	}
+}
+
+func TestWeatherService_GetOverview_CacheHit(t *testing.T) {
+	t.Parallel()
+
+	callCount := 0
+	overview := newTestOverview()
+	provider := &mockWeatherProvider{
+		getOverviewFn: func(_ context.Context, _, _ float64) (*port.WeatherOverview, error) {
+			callCount++
+			return overview, nil
+		},
+	}
+	svc := NewWeatherService(provider)
+
+	_, _ = svc.GetOverview(context.Background(), 39.47, -0.38)
+	_, _ = svc.GetOverview(context.Background(), 39.47, -0.38)
+
+	if callCount != 1 {
+		t.Errorf("expected provider called once (cache hit), got %d", callCount)
+	}
+}
+
+// --- GetHourly tests ---
+
+func TestWeatherService_GetHourly_Success(t *testing.T) {
+	t.Parallel()
+
+	points := []port.HourlyPoint{{Temp: 20, Time: time.Now()}}
+	provider := &mockWeatherProvider{
+		getHourlyFn: func(_ context.Context, _, _ float64, date string) ([]port.HourlyPoint, error) {
+			if date != "2026-06-10" {
+				t.Errorf("expected date 2026-06-10, got %q", date)
+			}
+			return points, nil
+		},
+	}
+	svc := NewWeatherService(provider)
+
+	result, err := svc.GetHourly(context.Background(), 39.47, -0.38, "2026-06-10")
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if len(result) != 1 {
+		t.Errorf("expected 1 hourly point, got %d", len(result))
+	}
+}
+
+func TestWeatherService_GetHourly_CacheHitPerDate(t *testing.T) {
+	t.Parallel()
+
+	callCount := 0
+	provider := &mockWeatherProvider{
+		getHourlyFn: func(_ context.Context, _, _ float64, _ string) ([]port.HourlyPoint, error) {
+			callCount++
+			return []port.HourlyPoint{{Temp: 20}}, nil
+		},
+	}
+	svc := NewWeatherService(provider)
+
+	// Same date twice -> 1 call (cache hit); different date -> another call.
+	_, _ = svc.GetHourly(context.Background(), 39.47, -0.38, "2026-06-10")
+	_, _ = svc.GetHourly(context.Background(), 39.47, -0.38, "2026-06-10")
+	_, _ = svc.GetHourly(context.Background(), 39.47, -0.38, "2026-06-11")
+
+	if callCount != 2 {
+		t.Errorf("expected 2 provider calls (one per distinct date), got %d", callCount)
 	}
 }
 

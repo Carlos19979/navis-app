@@ -85,18 +85,26 @@ func main() {
 	notifLogRepo := postgres.NewNotificationLogRepo(pool)
 	portRepo := postgres.NewPortRepo(pool)
 	deviceTokenRepo := postgres.NewDeviceTokenRepo(pool)
+	userRepo := postgres.NewUserRepo(pool)
+	sentNotifRepo := postgres.NewSentNotificationRepo(pool)
+	profileRepo := postgres.NewProfileRepo(pool)
+	maintenanceRepo := postgres.NewMaintenanceRepo(pool)
+	expenseRepo := postgres.NewExpenseRepo(pool)
 
 	// Create adapters.
 	weatherProvider := openmeteo.New()
 	notifier := novu.New(cfg.NovuAPIKey, logger)
+	notifySvc := service.NewNotifier(notifier, userRepo, logger)
 
 	// Create services.
-	boatSvc := service.NewBoatService(boatRepo)
+	boatSvc := service.NewBoatService(boatRepo, profileRepo)
 	docSvc := service.NewDocumentService(docRepo, boatRepo)
-	tripSvc := service.NewTripService(tripRepo, trackRepo)
+	tripSvc := service.NewTripService(tripRepo, trackRepo, boatRepo)
 	eventSvc := service.NewEventService(eventRepo, interestRepo)
-	groupSvc := service.NewGroupService(groupRepo, groupMemberRepo)
-	regattaSvc := service.NewRegattaService(tripRepo, participantRepo, checklistRepo, groupMemberRepo)
+	groupSvc := service.NewGroupService(groupRepo, groupMemberRepo, profileRepo, notifySvc)
+	profileSvc := service.NewProfileService(profileRepo, boatRepo)
+	maintenanceSvc := service.NewMaintenanceService(maintenanceRepo, expenseRepo, boatRepo)
+	regattaSvc := service.NewRegattaService(tripRepo, participantRepo, checklistRepo, groupMemberRepo, notifySvc)
 	portSvc := service.NewPortService(portRepo)
 	weatherSvc := service.NewWeatherService(weatherProvider)
 
@@ -104,6 +112,12 @@ func main() {
 	expirationChecker := cron.New(docRepo, notifLogRepo, notifier, logger)
 	expirationChecker.Start()
 	defer expirationChecker.Stop()
+
+	// Create and start regatta reminder / live-event notifier cron.
+	regattaNotifier := cron.NewRegattaNotifier(
+		tripRepo, groupMemberRepo, eventRepo, interestRepo, sentNotifRepo, notifySvc, logger)
+	regattaNotifier.Start()
+	defer regattaNotifier.Stop()
 
 	// Create handlers.
 	boatH := handler.NewBoatHandler(boatSvc)
@@ -116,12 +130,14 @@ func main() {
 	weatherH := handler.NewWeatherHandler(weatherSvc)
 	deviceH := handler.NewDeviceHandler(deviceTokenRepo, notifier)
 	userH := handler.NewUserHandler(boatRepo, docRepo, tripRepo, trackRepo, deviceTokenRepo)
+	profileH := handler.NewProfileHandler(profileSvc)
+	maintenanceH := handler.NewMaintenanceHandler(maintenanceSvc)
 
 	// Create router.
 	jwksURL := cfg.SupabaseURL + "/auth/v1/.well-known/jwks.json"
 
 	r := router.New(
-		boatH, docH, tripH, eventH, groupH, regattaH, portH, weatherH, deviceH, userH,
+		boatH, docH, tripH, eventH, groupH, regattaH, portH, weatherH, deviceH, userH, profileH, maintenanceH,
 		cfg.SupabaseJWTSecret,
 		jwksURL,
 		cfg.CORSAllowedOrigins,

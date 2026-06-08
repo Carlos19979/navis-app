@@ -35,6 +35,7 @@ class RegattaParticipantModel {
   static RegattaParticipant fromJson(Map<String, dynamic> json) {
     return RegattaParticipant(
       userId: json['user_id'] as String,
+      name: json['name'] as String? ?? '',
       rsvp: json['rsvp'] as String,
     );
   }

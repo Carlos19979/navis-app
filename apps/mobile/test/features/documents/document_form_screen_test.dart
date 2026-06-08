@@ -359,7 +359,7 @@ void main() {
       expect(find.text('Provider / Company'), findsOneWidget);
     });
 
-    testWidgets('document type dropdown is disabled in renew mode',
+    testWidgets('document type dropdown is editable in renew mode',
         (tester) async {
       await tester.pumpWidget(buildSubject(
         documentId: 'doc-1',
@@ -368,11 +368,11 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      // The dropdown should be present but disabled (onChanged is null)
+      // Renew shares the same editable fields as edit (onChanged is set).
       final dropdown = tester.widget<DropdownButtonFormField<String>>(
         find.byType(DropdownButtonFormField<String>),
       );
-      expect(dropdown.onChanged, isNull);
+      expect(dropdown.onChanged, isNotNull);
     });
 
     testWidgets('can enter renewal cost', (tester) async {

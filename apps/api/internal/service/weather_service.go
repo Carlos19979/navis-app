@@ -11,10 +11,12 @@ import (
 
 // WeatherService wraps a WeatherProvider with in-memory caching.
 type WeatherService struct {
-	provider port.WeatherProvider
-	mu       sync.RWMutex
-	cache    map[string]weatherCacheEntry
-	ttl      time.Duration
+	provider      port.WeatherProvider
+	mu            sync.RWMutex
+	cache         map[string]weatherCacheEntry
+	overviewCache map[string]overviewCacheEntry
+	hourlyCache   map[string]hourlyCacheEntry
+	ttl           time.Duration
 }
 
 type weatherCacheEntry struct {
@@ -22,12 +24,24 @@ type weatherCacheEntry struct {
 	fetchedAt time.Time
 }
 
+type overviewCacheEntry struct {
+	data      *port.WeatherOverview
+	fetchedAt time.Time
+}
+
+type hourlyCacheEntry struct {
+	data      []port.HourlyPoint
+	fetchedAt time.Time
+}
+
 // NewWeatherService creates a new WeatherService with a default cache TTL of 10 minutes.
 func NewWeatherService(provider port.WeatherProvider) *WeatherService {
 	return &WeatherService{
-		provider: provider,
-		cache:    make(map[string]weatherCacheEntry),
-		ttl:      10 * time.Minute,
+		provider:      provider,
+		cache:         make(map[string]weatherCacheEntry),
+		overviewCache: make(map[string]overviewCacheEntry),
+		hourlyCache:   make(map[string]hourlyCacheEntry),
+		ttl:           10 * time.Minute,
 	}
 }
 
@@ -74,5 +88,55 @@ func (s *WeatherService) GetForecast(ctx context.Context, lat, lon float64, days
 	if err != nil {
 		return nil, fmt.Errorf("fetching forecast for %.4f,%.4f: %w", lat, lon, err)
 	}
+	return data, nil
+}
+
+// GetOverview returns current conditions plus hourly and daily forecasts,
+// using a cached value if one was fetched within the TTL.
+func (s *WeatherService) GetOverview(ctx context.Context, lat, lon float64) (*port.WeatherOverview, error) {
+	key := cacheKey(lat, lon)
+
+	s.mu.RLock()
+	entry, ok := s.overviewCache[key]
+	s.mu.RUnlock()
+
+	if ok && time.Since(entry.fetchedAt) < s.ttl {
+		return entry.data, nil
+	}
+
+	data, err := s.provider.GetOverview(ctx, lat, lon)
+	if err != nil {
+		return nil, fmt.Errorf("fetching overview for %.4f,%.4f: %w", lat, lon, err)
+	}
+
+	s.mu.Lock()
+	s.overviewCache[key] = overviewCacheEntry{data: data, fetchedAt: time.Now()}
+	s.mu.Unlock()
+
+	return data, nil
+}
+
+// GetHourly returns the hourly forecast for a single day (YYYY-MM-DD), using a
+// cached value if one was fetched within the TTL.
+func (s *WeatherService) GetHourly(ctx context.Context, lat, lon float64, date string) ([]port.HourlyPoint, error) {
+	key := cacheKey(lat, lon) + ":" + date
+
+	s.mu.RLock()
+	entry, ok := s.hourlyCache[key]
+	s.mu.RUnlock()
+
+	if ok && time.Since(entry.fetchedAt) < s.ttl {
+		return entry.data, nil
+	}
+
+	data, err := s.provider.GetHourly(ctx, lat, lon, date)
+	if err != nil {
+		return nil, fmt.Errorf("fetching hourly for %.4f,%.4f on %s: %w", lat, lon, date, err)
+	}
+
+	s.mu.Lock()
+	s.hourlyCache[key] = hourlyCacheEntry{data: data, fetchedAt: time.Now()}
+	s.mu.Unlock()
+
 	return data, nil
 }

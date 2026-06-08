@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 	"github.com/Carlos19979/navis-app/apps/api/internal/dto"
 	"github.com/Carlos19979/navis-app/apps/api/internal/middleware"
 	"github.com/Carlos19979/navis-app/apps/api/internal/service"
@@ -61,7 +62,7 @@ func (h *EventHandler) List(w http.ResponseWriter, r *http.Request) {
 			meta = &Meta{NextCursor: &encoded}
 		}
 
-		JSONWithMeta(w, http.StatusOK, dto.EventListResponseFromDomain(events, nil), meta)
+		JSONWithMeta(w, http.StatusOK, dto.EventListResponseFromDomain(events, h.interestedMap(r, events)), meta)
 		return
 	}
 
@@ -79,7 +80,7 @@ func (h *EventHandler) List(w http.ResponseWriter, r *http.Request) {
 			meta = &Meta{NextCursor: &encoded}
 		}
 
-		JSONWithMeta(w, http.StatusOK, dto.EventListResponseFromDomain(events, nil), meta)
+		JSONWithMeta(w, http.StatusOK, dto.EventListResponseFromDomain(events, h.interestedMap(r, events)), meta)
 		return
 	}
 
@@ -96,7 +97,7 @@ func (h *EventHandler) List(w http.ResponseWriter, r *http.Request) {
 		meta = &Meta{NextCursor: &encoded}
 	}
 
-	JSONWithMeta(w, http.StatusOK, dto.EventListResponseFromDomain(events, nil), meta)
+	JSONWithMeta(w, http.StatusOK, dto.EventListResponseFromDomain(events, h.interestedMap(r, events)), meta)
 }
 
 // GetByID handles GET /events/{id}.
@@ -109,7 +110,29 @@ func (h *EventHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	JSON(w, http.StatusOK, dto.EventResponseFromDomain(event, false))
+	interested := false
+	if userID, ok := middleware.UserIDFromContext(r.Context()); ok {
+		interested, _ = h.svc.IsInterested(r.Context(), userID, id)
+	}
+
+	JSON(w, http.StatusOK, dto.EventResponseFromDomain(event, interested))
+}
+
+// interestedMap resolves which of the given events the current user likes.
+func (h *EventHandler) interestedMap(r *http.Request, events []domain.Event) map[string]bool {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || len(events) == 0 {
+		return nil
+	}
+	ids := make([]string, len(events))
+	for i := range events {
+		ids[i] = events[i].ID
+	}
+	m, err := h.svc.InterestedIn(r.Context(), userID, ids)
+	if err != nil {
+		return nil
+	}
+	return m
 }
 
 // ToggleInterest handles POST /events/{id}/interest.

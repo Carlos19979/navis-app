@@ -9,7 +9,9 @@ import 'package:navis_mobile/core/database/local_database.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
+import 'package:navis_mobile/features/profile/data/account_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
+import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
@@ -41,6 +43,62 @@ class SettingsScreen extends ConsumerWidget {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              // Dev-only plan switcher (real apps drive plan from payment).
+              NavisCard(
+                padding: EdgeInsets.zero,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const _SectionHeader(label: 'PLAN (PRUEBAS)'),
+                    Consumer(
+                      builder: (context, ref, _) {
+                        final current =
+                            ref.watch(accountProvider).valueOrNull?.plan ??
+                                'normal';
+                        Widget tile(String value, String label, String sub) {
+                          return ListTile(
+                            title: Text(label),
+                            subtitle: Text(sub),
+                            trailing: current == value
+                                ? const Icon(Icons.check_circle,
+                                    color: AppColors.cyan)
+                                : null,
+                            onTap: () async {
+                              if (current == value) return;
+                              try {
+                                await ref
+                                    .read(accountRepositoryProvider)
+                                    .setPlan(value);
+                                ref.invalidate(accountProvider);
+                                if (context.mounted) {
+                                  NavisSnackbar.success(
+                                      context, 'Plan cambiado a $label');
+                                }
+                              } catch (_) {
+                                if (context.mounted) {
+                                  NavisSnackbar.error(
+                                      context, 'No se pudo cambiar el plan');
+                                }
+                              }
+                            },
+                          );
+                        }
+
+                        return Column(
+                          children: [
+                            tile('normal', 'Normal', '1 barco · sin grupos'),
+                            tile('armador', 'Armador',
+                                '2 barcos · crear grupos'),
+                            tile(
+                                'gestor', 'Gestor', '15 barcos · crear grupos'),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
               NavisCard(
                 padding: EdgeInsets.zero,
                 child: Column(

@@ -65,6 +65,56 @@ func (h *WeatherHandler) GetForecast(w http.ResponseWriter, r *http.Request) {
 	JSON(w, http.StatusOK, dto.ForecastFromPort(data))
 }
 
+// GetOverview handles GET /weather/overview?lat=X&lon=Y.
+// It returns current conditions plus hourly (next 24h) and daily forecasts.
+func (h *WeatherHandler) GetOverview(w http.ResponseWriter, r *http.Request) {
+	lat, lon, ok := parseLatLon(w, r)
+	if !ok {
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
+	defer cancel()
+
+	data, err := h.svc.GetOverview(ctx, lat, lon)
+	if err != nil {
+		Error(w, http.StatusBadGateway, "failed to fetch weather data", "WEATHER_ERROR")
+		return
+	}
+
+	JSON(w, http.StatusOK, dto.OverviewFromPort(data))
+}
+
+// GetHourly handles GET /weather/hourly?lat=X&lon=Y&date=YYYY-MM-DD.
+// It returns the full hourly forecast for the requested day.
+func (h *WeatherHandler) GetHourly(w http.ResponseWriter, r *http.Request) {
+	lat, lon, ok := parseLatLon(w, r)
+	if !ok {
+		return
+	}
+
+	date := r.URL.Query().Get("date")
+	if date == "" {
+		Error(w, http.StatusBadRequest, "date query parameter is required", "BAD_REQUEST")
+		return
+	}
+	if _, err := time.Parse("2006-01-02", date); err != nil {
+		Error(w, http.StatusBadRequest, "date must be in YYYY-MM-DD format", "BAD_REQUEST")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
+	defer cancel()
+
+	data, err := h.svc.GetHourly(ctx, lat, lon, date)
+	if err != nil {
+		Error(w, http.StatusBadGateway, "failed to fetch hourly data", "WEATHER_ERROR")
+		return
+	}
+
+	JSON(w, http.StatusOK, dto.HourlyFromPort(data))
+}
+
 // parseLatLon extracts lat and lon query parameters.
 // Returns false if parameters are missing or invalid (response already written).
 func parseLatLon(w http.ResponseWriter, r *http.Request) (float64, float64, bool) {

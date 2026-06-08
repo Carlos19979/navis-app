@@ -6,6 +6,7 @@ import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/groups/domain/entities/group.dart';
 import 'package:navis_mobile/features/groups/presentation/providers/group_provider.dart';
+import 'package:navis_mobile/features/profile/data/account_provider.dart';
 import 'package:navis_mobile/features/groups/presentation/widgets/group_card.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
@@ -30,6 +31,32 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen>
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _onCreateGroup() {
+    final account = ref.read(accountProvider).valueOrNull;
+    if (account != null && !account.canCreateGroups) {
+      showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: ctx.dialogSurface,
+          title: Text('Crear grupos', style: TextStyle(color: ctx.txtPrimary)),
+          content: Text(
+            'Crear grupos está disponible en los planes Armador y Gestor. '
+            'Tu plan actual es ${account.planLabel}.',
+            style: TextStyle(color: ctx.txtSecondary),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Entendido'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+    context.push('/groups/new');
   }
 
   Future<void> _joinByCode() async {
@@ -77,6 +104,7 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen>
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(accountProvider); // warm the plan for create-group gating
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
@@ -91,7 +119,7 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen>
         ],
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 124),
+        padding: const EdgeInsets.only(bottom: 112),
         child: Container(
           decoration: BoxDecoration(
             gradient: AppColors.cyanGradient,
@@ -105,7 +133,7 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen>
             ],
           ),
           child: FloatingActionButton(
-            onPressed: () => context.push('/groups/new'),
+            onPressed: _onCreateGroup,
             tooltip: 'Crear grupo',
             backgroundColor: Colors.transparent,
             elevation: 0,

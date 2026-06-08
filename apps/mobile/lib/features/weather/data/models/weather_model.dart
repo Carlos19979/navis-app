@@ -7,6 +7,7 @@ class WeatherModel {
     required this.windDirection,
     required this.waveHeight,
     required this.description,
+    this.weatherCode = 0,
     this.humidity,
     this.pressure,
     this.icon,
@@ -20,7 +21,8 @@ class WeatherModel {
       windDirection: (json['wind_direction'] as num).toDouble(),
       waveHeight: (json['wave_height'] as num?)?.toDouble() ?? 0.0,
       description: json['description'] as String? ?? '',
-      humidity: json['humidity'] as int?,
+      weatherCode: (json['weather_code'] as num?)?.toInt() ?? 0,
+      humidity: (json['humidity'] as num?)?.toInt(),
       pressure: (json['pressure'] as num?)?.toDouble(),
       icon: json['icon'] as String?,
       date:
@@ -33,6 +35,7 @@ class WeatherModel {
   final double windDirection;
   final double waveHeight;
   final String description;
+  final int weatherCode;
   final int? humidity;
   final double? pressure;
   final String? icon;
@@ -45,6 +48,7 @@ class WeatherModel {
       'wind_direction': windDirection,
       'wave_height': waveHeight,
       'description': description,
+      'weather_code': weatherCode,
       if (humidity != null) 'humidity': humidity,
       if (pressure != null) 'pressure': pressure,
       if (icon != null) 'icon': icon,
@@ -59,6 +63,7 @@ class WeatherModel {
       windDirection: windDirection,
       waveHeight: waveHeight,
       description: description,
+      weatherCode: weatherCode,
       humidity: humidity,
       pressure: pressure,
       icon: icon,

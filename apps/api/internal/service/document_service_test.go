@@ -12,13 +12,13 @@ import (
 // --- mock DocumentRepository ---
 
 type mockDocumentRepo struct {
-	createFn      func(ctx context.Context, doc *domain.Document) (*domain.Document, error)
-	getByIDFn     func(ctx context.Context, userID, id string) (*domain.Document, error)
-	listFn        func(ctx context.Context, userID, cursor string, limit int) ([]domain.Document, string, error)
-	listByBoatFn  func(ctx context.Context, userID, boatID, cursor string, limit int) ([]domain.Document, string, error)
+	createFn       func(ctx context.Context, doc *domain.Document) (*domain.Document, error)
+	getByIDFn      func(ctx context.Context, userID, id string) (*domain.Document, error)
+	listFn         func(ctx context.Context, userID, cursor string, limit int) ([]domain.Document, string, error)
+	listByBoatFn   func(ctx context.Context, userID, boatID, cursor string, limit int) ([]domain.Document, string, error)
 	listExpiringFn func(ctx context.Context, withinDays int) ([]domain.Document, error)
-	updateFn      func(ctx context.Context, userID string, doc *domain.Document) (*domain.Document, error)
-	deleteFn      func(ctx context.Context, userID, id string) error
+	updateFn       func(ctx context.Context, userID string, doc *domain.Document) (*domain.Document, error)
+	deleteFn       func(ctx context.Context, userID, id string) error
 }
 
 func (m *mockDocumentRepo) Create(ctx context.Context, doc *domain.Document) (*domain.Document, error) {
@@ -632,4 +632,8 @@ func TestComputeStatus_BoundaryExactlyOnWarningDay(t *testing.T) {
 	if status != domain.DocumentStatusWarning {
 		t.Errorf("expected %q at boundary, got %q", domain.DocumentStatusWarning, status)
 	}
+}
+
+func (m *mockDocumentRepo) GetByIDUnscoped(_ context.Context, id string) (*domain.Document, error) {
+	return m.GetByID(context.Background(), "", id)
 }

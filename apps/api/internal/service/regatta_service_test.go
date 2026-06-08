@@ -93,7 +93,7 @@ func TestRegattaService_Schedule_Success(t *testing.T) {
 			return trip, nil
 		},
 	}
-	svc := NewRegattaService(tripRepo, &mockTripParticipantRepo{}, &mockTripChecklistRepo{}, activeMemberRepo())
+	svc := NewRegattaService(tripRepo, &mockTripParticipantRepo{}, &mockTripChecklistRepo{}, activeMemberRepo(), nil)
 
 	when := time.Now().Add(48 * time.Hour)
 	in := &domain.Trip{BoatID: "boat-1", DeparturePort: "Palma", ScheduledAt: &when}
@@ -123,7 +123,7 @@ func TestRegattaService_Schedule_NotMemberForbidden(t *testing.T) {
 			return nil, domain.ErrMembershipNotFound
 		},
 	}
-	svc := NewRegattaService(&mockTripRepo{}, &mockTripParticipantRepo{}, &mockTripChecklistRepo{}, memberRepo)
+	svc := NewRegattaService(&mockTripRepo{}, &mockTripParticipantRepo{}, &mockTripChecklistRepo{}, memberRepo, nil)
 
 	_, err := svc.Schedule(context.Background(), "user-2", "group-1",
 		&domain.Trip{BoatID: "boat-1", DeparturePort: "Palma"})
@@ -142,7 +142,7 @@ func TestRegattaService_Start_RequiresChecklist(t *testing.T) {
 			return &domain.Trip{ID: "trip-1", Status: domain.TripStatusPlanned, ChecklistCompletedAt: nil}, nil
 		},
 	}
-	svc := NewRegattaService(tripRepo, &mockTripParticipantRepo{}, &mockTripChecklistRepo{}, activeMemberRepo())
+	svc := NewRegattaService(tripRepo, &mockTripParticipantRepo{}, &mockTripChecklistRepo{}, activeMemberRepo(), nil)
 
 	_, err := svc.Start(context.Background(), "user-1", "trip-1")
 	if !errors.Is(err, domain.ErrConflict) {
@@ -162,7 +162,7 @@ func TestRegattaService_Start_Success(t *testing.T) {
 			return trip, nil
 		},
 	}
-	svc := NewRegattaService(tripRepo, &mockTripParticipantRepo{}, &mockTripChecklistRepo{}, activeMemberRepo())
+	svc := NewRegattaService(tripRepo, &mockTripParticipantRepo{}, &mockTripChecklistRepo{}, activeMemberRepo(), nil)
 
 	out, err := svc.Start(context.Background(), "user-1", "trip-1")
 	if err != nil {
@@ -181,7 +181,7 @@ func TestRegattaService_Start_NotPlannedConflict(t *testing.T) {
 			return &domain.Trip{ID: "trip-1", Status: domain.TripStatusRecording}, nil
 		},
 	}
-	svc := NewRegattaService(tripRepo, &mockTripParticipantRepo{}, &mockTripChecklistRepo{}, activeMemberRepo())
+	svc := NewRegattaService(tripRepo, &mockTripParticipantRepo{}, &mockTripChecklistRepo{}, activeMemberRepo(), nil)
 
 	_, err := svc.Start(context.Background(), "user-1", "trip-1")
 	if !errors.Is(err, domain.ErrConflict) {
@@ -204,7 +204,7 @@ func TestRegattaService_CompleteChecklist_SetsTimestamp(t *testing.T) {
 			return trip, nil
 		},
 	}
-	svc := NewRegattaService(tripRepo, &mockTripParticipantRepo{}, &mockTripChecklistRepo{}, activeMemberRepo())
+	svc := NewRegattaService(tripRepo, &mockTripParticipantRepo{}, &mockTripChecklistRepo{}, activeMemberRepo(), nil)
 
 	if _, err := svc.CompleteChecklist(context.Background(), "user-1", "trip-1"); err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -230,7 +230,7 @@ func TestRegattaService_SetRSVP_NonMemberForbidden(t *testing.T) {
 			return nil, domain.ErrMembershipNotFound
 		},
 	}
-	svc := NewRegattaService(tripRepo, &mockTripParticipantRepo{}, &mockTripChecklistRepo{}, memberRepo)
+	svc := NewRegattaService(tripRepo, &mockTripParticipantRepo{}, &mockTripChecklistRepo{}, memberRepo, nil)
 
 	err := svc.SetRSVP(context.Background(), "outsider", "trip-1", domain.RSVPGoing)
 	if !errors.Is(err, domain.ErrForbidden) {
@@ -258,7 +258,7 @@ func TestRegattaService_GetChecklist_SeedsDefaults(t *testing.T) {
 			return []domain.ChecklistItem{{ID: "i1", Label: "Chalecos"}}, nil
 		},
 	}
-	svc := NewRegattaService(tripRepo, &mockTripParticipantRepo{}, checklistRepo, activeMemberRepo())
+	svc := NewRegattaService(tripRepo, &mockTripParticipantRepo{}, checklistRepo, activeMemberRepo(), nil)
 
 	items, err := svc.GetChecklist(context.Background(), "user-1", "trip-1")
 	if err != nil {

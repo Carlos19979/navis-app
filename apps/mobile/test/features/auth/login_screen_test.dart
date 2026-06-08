@@ -435,6 +435,7 @@ void main() {
         await tester.pumpWidget(buildLoginScreen());
         await tester.pumpAndSettle();
 
+        await tester.ensureVisible(find.text('Forgot Password?'));
         await tester.tap(find.text('Forgot Password?'));
         await tester.pumpAndSettle();
 
@@ -450,6 +451,7 @@ void main() {
         await tester.pumpWidget(buildLoginScreen());
         await tester.pumpAndSettle();
 
+        await tester.ensureVisible(find.text('Forgot Password?'));
         await tester.tap(find.text('Forgot Password?'));
         await tester.pumpAndSettle();
 
@@ -477,6 +479,7 @@ void main() {
         await tester.pump();
 
         // Open dialog
+        await tester.ensureVisible(find.text('Forgot Password?'));
         await tester.tap(find.text('Forgot Password?'));
         await tester.pumpAndSettle();
 
@@ -508,6 +511,7 @@ void main() {
         await tester.pump();
 
         // Open dialog
+        await tester.ensureVisible(find.text('Forgot Password?'));
         await tester.tap(find.text('Forgot Password?'));
         await tester.pumpAndSettle();
 
@@ -537,6 +541,7 @@ void main() {
         await tester.enterText(emailField, 'user@test.com');
         await tester.pump();
 
+        await tester.ensureVisible(find.text('Forgot Password?'));
         await tester.tap(find.text('Forgot Password?'));
         await tester.pumpAndSettle();
 
@@ -567,6 +572,7 @@ void main() {
         await tester.enterText(emailField, 'user@test.com');
         await tester.pump();
 
+        await tester.ensureVisible(find.text('Forgot Password?'));
         await tester.tap(find.text('Forgot Password?'));
         await tester.pumpAndSettle();
 

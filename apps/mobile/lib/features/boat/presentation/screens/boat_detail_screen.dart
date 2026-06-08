@@ -1,11 +1,14 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
+import 'package:navis_mobile/features/boat/data/boat_share_repository.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -78,57 +81,106 @@ class _BoatDetailView extends ConsumerWidget {
                       .fadeIn(duration: 400.ms)
                       .slideY(begin: 0.05, end: 0, duration: 400.ms),
                   const SizedBox(height: 16),
-                  _ActionTile(
-                    icon: Icons.description_outlined,
-                    title: l.documents,
-                    subtitle: l.certificates,
-                    color: AppColors.cyan,
-                    onTap: () => context.push('/boats/${boat.id}/documents'),
-                  ).animate().fadeIn(duration: 400.ms, delay: 50.ms).slideY(
-                        begin: 0.05,
-                        end: 0,
-                        duration: 400.ms,
-                        delay: 50.ms,
+                  if (boat.isOwner) ...[
+                    _ActionTile(
+                      icon: Icons.description_outlined,
+                      title: l.documents,
+                      subtitle: l.certificates,
+                      color: AppColors.cyan,
+                      onTap: () => context.push('/boats/${boat.id}/documents'),
+                    ),
+                    const SizedBox(height: 10),
+                    _ActionTile(
+                      icon: Icons.route_outlined,
+                      title: l.logbook,
+                      subtitle: l.tripHistory,
+                      color: AppColors.green,
+                      onTap: () => context.push('/boats/${boat.id}/trips'),
+                    ),
+                    const SizedBox(height: 10),
+                    _ActionTile(
+                      icon: Icons.build_outlined,
+                      title: 'Mantenimiento y gastos',
+                      subtitle: 'Servicios y costes del barco',
+                      color: AppColors.amber,
+                      onTap: () =>
+                          context.push('/boats/${boat.id}/maintenance'),
+                    ),
+                    const SizedBox(height: 10),
+                    _ActionTile(
+                      icon: Icons.people_outline,
+                      title: 'Compartir barco',
+                      subtitle: 'Tripulación y copropietarios',
+                      color: AppColors.cyan,
+                      onTap: () => _shareBoat(context, ref, boat),
+                    ),
+                    const SizedBox(height: 10),
+                    _ActionTile(
+                      icon: Icons.edit_outlined,
+                      title: l.editBoat,
+                      subtitle: l.modifyBoatDetails,
+                      color: AppColors.amber,
+                      onTap: () => context.push('/boats/${boat.id}/edit'),
+                    ),
+                    const SizedBox(height: 10),
+                    _ActionTile(
+                      icon: Icons.delete_outlined,
+                      title: l.deleteBoat,
+                      subtitle: l.removePermanently,
+                      color: AppColors.red,
+                      onTap: () => _confirmDelete(context, ref),
+                    ),
+                  ] else ...[
+                    NavisCard(
+                      child: Row(
+                        children: [
+                          const Icon(Icons.visibility_outlined,
+                              color: AppColors.cyan),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Barco compartido contigo (solo lectura). '
+                              'Lo gestiona el propietario.',
+                              style: TextStyle(color: context.txtSecondary),
+                            ),
+                          ),
+                        ],
                       ),
-                  const SizedBox(height: 10),
-                  _ActionTile(
-                    icon: Icons.route_outlined,
-                    title: l.logbook,
-                    subtitle: l.tripHistory,
-                    color: AppColors.green,
-                    onTap: () => context.push('/boats/${boat.id}/trips'),
-                  ).animate().fadeIn(duration: 400.ms, delay: 100.ms).slideY(
-                        begin: 0.05,
-                        end: 0,
-                        duration: 400.ms,
-                        delay: 100.ms,
-                      ),
-                  const SizedBox(height: 10),
-                  _ActionTile(
-                    icon: Icons.edit_outlined,
-                    title: l.editBoat,
-                    subtitle: l.modifyBoatDetails,
-                    color: AppColors.amber,
-                    onTap: () => context.push('/boats/${boat.id}/edit'),
-                  ).animate().fadeIn(duration: 400.ms, delay: 150.ms).slideY(
-                        begin: 0.05,
-                        end: 0,
-                        duration: 400.ms,
-                        delay: 150.ms,
-                      ),
-                  const SizedBox(height: 10),
-                  _ActionTile(
-                    icon: Icons.delete_outlined,
-                    title: l.deleteBoat,
-                    subtitle: l.removePermanently,
-                    color: AppColors.red,
-                    onTap: () => _confirmDelete(context, ref),
-                  ).animate().fadeIn(duration: 400.ms, delay: 200.ms).slideY(
-                        begin: 0.05,
-                        end: 0,
-                        duration: 400.ms,
-                        delay: 200.ms,
-                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    _ActionTile(
+                      icon: Icons.description_outlined,
+                      title: l.documents,
+                      subtitle: l.certificates,
+                      color: AppColors.cyan,
+                      onTap: () => context.push('/boats/${boat.id}/documents'),
+                    ),
+                    const SizedBox(height: 10),
+                    _ActionTile(
+                      icon: Icons.route_outlined,
+                      title: l.logbook,
+                      subtitle: l.tripHistory,
+                      color: AppColors.green,
+                      onTap: () => context.push('/boats/${boat.id}/trips'),
+                    ),
+                    const SizedBox(height: 10),
+                    _ActionTile(
+                      icon: Icons.build_outlined,
+                      title: 'Mantenimiento y gastos',
+                      subtitle: 'Servicios y costes del barco',
+                      color: AppColors.amber,
+                      onTap: () =>
+                          context.push('/boats/${boat.id}/maintenance'),
+                    ),
+                    const SizedBox(height: 10),
+                    _ActionTile(
+                      icon: Icons.logout,
+                      title: 'Salir del barco compartido',
+                      subtitle: 'Dejar de tener acceso',
+                      color: AppColors.red,
+                      onTap: () => _leaveBoat(context, ref, boat),
+                    ),
+                  ],
                   const SizedBox(height: 100),
                 ]),
               ),
@@ -186,6 +238,170 @@ class _BoatDetailView extends ConsumerWidget {
       ),
     );
   }
+
+  Future<void> _shareBoat(
+      BuildContext context, WidgetRef ref, Boat boat) async {
+    final messenger = ScaffoldMessenger.of(context);
+    String code;
+    try {
+      code = await ref.read(boatShareRepositoryProvider).shareCode(boat.id);
+    } catch (_) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('No se pudo obtener el código')),
+      );
+      return;
+    }
+    if (!context.mounted) return;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: context.dialogSurface,
+      isScrollControlled: true,
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Compartir barco',
+                style: TextStyle(
+                    color: context.txtPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700)),
+            const SizedBox(height: 4),
+            Text(
+              'Comparte este código. Quien lo introduzca verá el barco '
+              '(solo lectura).',
+              style: TextStyle(color: context.txtSecondary, fontSize: 13),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              decoration: BoxDecoration(
+                color: AppColors.cyan.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                    color: AppColors.cyan.withValues(alpha: 0.4), width: 0.5),
+              ),
+              child: Center(
+                child: Text(
+                  code,
+                  style: const TextStyle(
+                    color: AppColors.cyan,
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 4,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: code));
+                      messenger.showSnackBar(
+                        const SnackBar(content: Text('Código copiado')),
+                      );
+                    },
+                    icon: const Icon(Icons.copy, size: 18),
+                    label: const Text('Copiar'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: FilledButton.icon(
+                    style:
+                        FilledButton.styleFrom(backgroundColor: AppColors.cyan),
+                    onPressed: () => Share.share(
+                        'Únete a mi barco "${boat.name}" en Navis con el '
+                        'código: $code'),
+                    icon: const Icon(Icons.share, size: 18),
+                    label: const Text('Compartir'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            Text('Con acceso',
+                style: TextStyle(
+                    color: context.txtPrimary, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            Consumer(
+              builder: (context, ref, _) {
+                final membersAsync = ref.watch(boatMembersProvider(boat.id));
+                return membersAsync.when(
+                  loading: () => const Padding(
+                    padding: EdgeInsets.all(8),
+                    child: LinearProgressIndicator(),
+                  ),
+                  error: (e, _) => Text('Error: $e',
+                      style: TextStyle(color: context.txtSecondary)),
+                  data: (members) {
+                    if (members.isEmpty) {
+                      return Text('Aún no has compartido con nadie.',
+                          style: TextStyle(color: context.txtSecondary));
+                    }
+                    return Column(
+                      children: [
+                        for (final m in members)
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: const Icon(Icons.person_outline),
+                            title: Text(m.name,
+                                style: TextStyle(color: context.txtPrimary)),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.remove_circle_outline,
+                                  color: AppColors.red),
+                              onPressed: () async {
+                                await ref
+                                    .read(boatShareRepositoryProvider)
+                                    .removeMember(boat.id, m.userId);
+                                ref.invalidate(boatMembersProvider(boat.id));
+                              },
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _leaveBoat(
+      BuildContext context, WidgetRef ref, Boat boat) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.dialogSurfaceElevated,
+        title: const Text('Salir del barco'),
+        content: Text('Dejarás de tener acceso a "${boat.name}".'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.red),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Salir'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await ref.read(boatShareRepositoryProvider).leaveBoat(boat.id);
+    ref.invalidate(sharedBoatsProvider);
+    if (context.mounted) context.go('/boats');
+  }
 }
 
 class _BoatSliverAppBar extends StatelessWidget {
@@ -199,16 +415,18 @@ class _BoatSliverAppBar extends StatelessWidget {
       expandedHeight: 220,
       pinned: true,
       backgroundColor: AppColors.deepNavy,
+      foregroundColor: Colors.white,
       leading: Container(
         margin: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: context.glassBg,
+          color: Colors.black.withValues(alpha: 0.35),
           shape: BoxShape.circle,
         ),
         child: IconButton(
           icon: const Icon(
             Icons.arrow_back_ios_new_rounded,
             size: 18,
+            color: Colors.white,
           ),
           tooltip: AppLocalizations.of(context)!.goBack,
           onPressed: () {
@@ -223,11 +441,12 @@ class _BoatSliverAppBar extends StatelessWidget {
       flexibleSpace: FlexibleSpaceBar(
         title: Text(
           boat.name,
-          style: TextStyle(
+          style: const TextStyle(
+            color: Colors.white,
             fontWeight: FontWeight.w700,
             shadows: [
               Shadow(
-                color: Colors.black.withValues(alpha: 0.6),
+                color: Colors.black54,
                 blurRadius: 12,
               ),
             ],

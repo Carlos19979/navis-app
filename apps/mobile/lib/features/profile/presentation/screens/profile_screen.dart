@@ -8,6 +8,7 @@ import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
+import 'package:navis_mobile/features/profile/data/account_provider.dart';
 import 'package:navis_mobile/features/profile/presentation/providers/profile_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
@@ -99,6 +100,36 @@ class ProfileScreen extends ConsumerWidget {
                       duration: 400.ms,
                       delay: 150.ms,
                     ),
+
+                const SizedBox(height: 10),
+
+                // Plan badge
+                Consumer(
+                  builder: (context, ref, _) {
+                    final account = ref.watch(accountProvider).valueOrNull;
+                    if (account == null) return const SizedBox.shrink();
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: AppColors.cyan.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: AppColors.cyan.withValues(alpha: 0.4),
+                          width: 0.5,
+                        ),
+                      ),
+                      child: Text(
+                        'Plan ${account.planLabel}',
+                        style: const TextStyle(
+                          color: AppColors.cyan,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    );
+                  },
+                ).animate().fadeIn(duration: 400.ms, delay: 180.ms),
 
                 if (profile.createdAt != null) ...[
                   const SizedBox(height: 4),

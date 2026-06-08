@@ -12,6 +12,7 @@ class BoatModel {
     this.homePortLon,
     this.photoUrl,
     this.ownerId,
+    this.isOwner = true,
     this.createdAt,
     this.updatedAt,
   });
@@ -28,6 +29,7 @@ class BoatModel {
       homePortLon: (json['home_port_lon'] as num?)?.toDouble(),
       photoUrl: json['photo_url'] as String?,
       ownerId: json['owner_id'] as String?,
+      isOwner: json['is_owner'] as bool? ?? true,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
@@ -64,6 +66,7 @@ class BoatModel {
   final double? homePortLon;
   final String? photoUrl;
   final String? ownerId;
+  final bool isOwner;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -96,6 +99,7 @@ class BoatModel {
       homePortLon: homePortLon,
       photoUrl: photoUrl,
       ownerId: ownerId,
+      isOwner: isOwner,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );

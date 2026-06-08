@@ -97,3 +97,12 @@ func (s *EventService) IsInterested(ctx context.Context, userID, eventID string)
 	}
 	return interested, nil
 }
+
+// InterestedIn returns which of the given events the user is interested in.
+func (s *EventService) InterestedIn(ctx context.Context, userID string, eventIDs []string) (map[string]bool, error) {
+	m, err := s.interestRepo.InterestedIn(ctx, userID, eventIDs)
+	if err != nil {
+		return nil, fmt.Errorf("checking interest set: %w", err)
+	}
+	return m, nil
+}

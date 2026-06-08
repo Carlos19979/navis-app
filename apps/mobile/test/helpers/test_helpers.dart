@@ -8,9 +8,25 @@ import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/documents/domain/entities/document.dart';
 import 'package:navis_mobile/features/events/domain/entities/event.dart';
 import 'package:navis_mobile/features/logbook/domain/entities/trip.dart';
+import 'package:navis_mobile/features/weather/domain/entities/daily_weather.dart';
+import 'package:navis_mobile/features/weather/domain/entities/hourly_weather.dart';
 import 'package:navis_mobile/features/weather/domain/entities/weather.dart';
+import 'package:navis_mobile/features/weather/domain/entities/weather_overview.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
+import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/profile/presentation/providers/profile_provider.dart';
+
+/// Default boatProvider override so screens that gate write-actions on
+/// boat ownership get an owned boat unless a test overrides it.
+final _defaultBoatOverride = boatProvider.overrideWith(
+  (ref, id) async => Boat(
+    id: id,
+    name: 'Test Boat',
+    registration: 'TEST-1',
+    type: 'sailboat',
+    lengthMeters: 10,
+  ),
+);
 
 Widget buildTestApp(
   Widget child, {
@@ -18,7 +34,7 @@ Widget buildTestApp(
   NavigatorObserver? observer,
 }) {
   return ProviderScope(
-    overrides: overrides,
+    overrides: [_defaultBoatOverride, ...overrides],
     child: MaterialApp(
       home: child,
       navigatorObservers: observer != null ? [observer] : [],
@@ -41,7 +57,7 @@ Widget buildTestAppWithScaffold(
   List<Override> overrides = const [],
 }) {
   return ProviderScope(
-    overrides: overrides,
+    overrides: [_defaultBoatOverride, ...overrides],
     child: MaterialApp(
       home: Scaffold(body: child),
       localizationsDelegates: const [
@@ -180,6 +196,56 @@ Weather makeForecast(DateTime date) {
     waveHeight: 0.5,
     description: 'Sunny',
     date: date,
+  );
+}
+
+HourlyWeather makeHourly(
+  DateTime time, {
+  double temperature = 20.0,
+  double windSpeed = 12.0,
+  int weatherCode = 0,
+  double? waveHeight = 0.5,
+  int? precipitationProbability = 0,
+}) {
+  return HourlyWeather(
+    time: time,
+    temperature: temperature,
+    windSpeed: windSpeed,
+    windDirection: 225.0,
+    weatherCode: weatherCode,
+    waveHeight: waveHeight,
+    precipitationProbability: precipitationProbability,
+  );
+}
+
+DailyWeather makeDaily(
+  DateTime date, {
+  double temperatureMax = 26.0,
+  double temperatureMin = 18.0,
+  double windSpeed = 10.0,
+  int weatherCode = 0,
+  double? waveHeight = 0.5,
+}) {
+  return DailyWeather(
+    date: date,
+    temperatureMax: temperatureMax,
+    temperatureMin: temperatureMin,
+    windSpeed: windSpeed,
+    windDirection: 180.0,
+    weatherCode: weatherCode,
+    waveHeight: waveHeight,
+  );
+}
+
+WeatherOverview makeOverview({
+  Weather? current,
+  List<HourlyWeather>? hourly,
+  List<DailyWeather>? daily,
+}) {
+  return WeatherOverview(
+    current: current ?? makeWeather(),
+    hourly: hourly ?? [makeHourly(DateTime(2026, 5, 1, 12))],
+    daily: daily ?? [makeDaily(DateTime(2026, 5))],
   );
 }
 

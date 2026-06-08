@@ -86,7 +86,8 @@ class RecordingControls extends StatelessWidget {
         const SizedBox(height: 6),
         TextButton.icon(
           onPressed: onCancel,
-          icon: const Icon(Icons.close, size: 16, color: AppColors.textSecondary),
+          icon:
+              const Icon(Icons.close, size: 16, color: AppColors.textSecondary),
           label: const Text(
             'Cancelar viaje',
             style: TextStyle(color: AppColors.textSecondary, fontSize: 13),

@@ -25,7 +25,8 @@ func NewTripRepo(pool *pgxpool.Pool) *TripRepo {
 const tripColumns = `id, boat_id, user_id, group_id, title, kind, scheduled_at,
 	checklist_completed_at, departure_port, arrival_port, departure_time,
 	arrival_time, distance_nm, max_speed_knots, avg_speed_knots, engine_hours, fuel_consumed_l,
-	duration_minutes, crew_members, weather_conditions, notes, photos, status, created_at, updated_at`
+	duration_minutes, crew_members, weather_conditions, notes, photos, status, share_token,
+	destination, eta, shore_contact_name, shore_contact_phone, created_at, updated_at`
 
 // tripScanDest returns the scan destinations for tripColumns, in order.
 func tripScanDest(t *domain.Trip) []any {
@@ -34,7 +35,9 @@ func tripScanDest(t *domain.Trip) []any {
 		&t.ChecklistCompletedAt, &t.DeparturePort, &t.ArrivalPort, &t.DepartureTime,
 		&t.ArrivalTime, &t.DistanceNM, &t.MaxSpeedKnots, &t.AvgSpeedKnots, &t.EngineHours,
 		&t.FuelConsumedL, &t.DurationMinutes, &t.CrewMembers, &t.WeatherConditions,
-		&t.Notes, &t.Photos, &t.Status, &t.CreatedAt, &t.UpdatedAt,
+		&t.Notes, &t.Photos, &t.Status, &t.ShareToken,
+		&t.Destination, &t.ETA, &t.ShoreContactName, &t.ShoreContactPhone,
+		&t.CreatedAt, &t.UpdatedAt,
 	}
 }
 
@@ -332,4 +335,91 @@ func (r *TripTrackRepo) ListByTrip(ctx context.Context, tripID string) ([]domain
 	}
 
 	return tracks, nil
+}
+
+// ListUpcomingRegattas returns planned group regattas scheduled in [from, to).
+func (r *TripRepo) ListUpcomingRegattas(ctx context.Context, from, to time.Time) ([]domain.Trip, error) {
+	rows, err := r.pool.Query(ctx,
+		`SELECT `+tripColumns+` FROM trips
+		 WHERE kind = 'regatta' AND status = 'planned'
+		   AND group_id IS NOT NULL AND scheduled_at IS NOT NULL
+		   AND scheduled_at >= $1 AND scheduled_at < $2
+		 ORDER BY scheduled_at ASC`,
+		from, to)
+	if err != nil {
+		return nil, fmt.Errorf("listing upcoming regattas: %w", err)
+	}
+	defer rows.Close()
+	return scanTrips(rows)
+}
+
+// SetShareToken stores a public share token on a trip owned by the user.
+func (r *TripRepo) SetShareToken(ctx context.Context, userID, tripID, token string) error {
+	ct, err := r.pool.Exec(ctx,
+		`UPDATE trips SET share_token = $1, updated_at = now() WHERE user_id = $2 AND id = $3`,
+		token, userID, tripID)
+	if err != nil {
+		return fmt.Errorf("setting share token for trip %s: %w", tripID, err)
+	}
+	if ct.RowsAffected() == 0 {
+		return domain.ErrTripNotFound
+	}
+	return nil
+}
+
+// ClearShareToken removes a trip's public share token.
+func (r *TripRepo) ClearShareToken(ctx context.Context, userID, tripID string) error {
+	ct, err := r.pool.Exec(ctx,
+		`UPDATE trips SET share_token = NULL, updated_at = now() WHERE user_id = $1 AND id = $2`,
+		userID, tripID)
+	if err != nil {
+		return fmt.Errorf("clearing share token for trip %s: %w", tripID, err)
+	}
+	if ct.RowsAffected() == 0 {
+		return domain.ErrTripNotFound
+	}
+	return nil
+}
+
+// GetByShareToken returns a trip by its public share token (no user scoping).
+func (r *TripRepo) GetByShareToken(ctx context.Context, token string) (*domain.Trip, error) {
+	query := `SELECT ` + tripColumns + ` FROM trips WHERE share_token = $1`
+	t, err := scanTrip(r.pool.QueryRow(ctx, query, token))
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrTripNotFound
+		}
+		return nil, fmt.Errorf("getting trip by share token: %w", err)
+	}
+	return t, nil
+}
+
+// SetFloatPlan stores the float plan (destination, ETA, shore contact) on a trip.
+func (r *TripRepo) SetFloatPlan(ctx context.Context, userID, tripID string,
+	destination *string, eta *time.Time, name, phone *string) error {
+	ct, err := r.pool.Exec(ctx,
+		`UPDATE trips SET destination = $1, eta = $2, shore_contact_name = $3,
+			shore_contact_phone = $4, updated_at = now()
+		 WHERE user_id = $5 AND id = $6`,
+		destination, eta, name, phone, userID, tripID)
+	if err != nil {
+		return fmt.Errorf("setting float plan for trip %s: %w", tripID, err)
+	}
+	if ct.RowsAffected() == 0 {
+		return domain.ErrTripNotFound
+	}
+	return nil
+}
+
+// ListOverdueFloatPlans returns recording trips whose ETA passed before the
+// given cutoff (for the safety overdue-arrival alert).
+func (r *TripRepo) ListOverdueFloatPlans(ctx context.Context, cutoff time.Time) ([]domain.Trip, error) {
+	query := `SELECT ` + tripColumns + ` FROM trips
+		WHERE status = 'recording' AND eta IS NOT NULL AND eta < $1`
+	rows, err := r.pool.Query(ctx, query, cutoff)
+	if err != nil {
+		return nil, fmt.Errorf("listing overdue float plans: %w", err)
+	}
+	defer rows.Close()
+	return scanTrips(rows)
 }

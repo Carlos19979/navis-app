@@ -39,6 +39,11 @@ class TripDetailScreen extends ConsumerWidget {
           showBack: true,
           actions: [
             IconButton(
+              icon: const Icon(Icons.assignment_outlined),
+              tooltip: 'Plan de navegación',
+              onPressed: () => _floatPlan(context, ref),
+            ),
+            IconButton(
               icon: const Icon(Icons.share_outlined),
               tooltip: AppLocalizations.of(context)!.shareTrip,
               onPressed: () => _shareTrip(context, ref),
@@ -110,93 +115,129 @@ class TripDetailScreen extends ConsumerWidget {
     BuildContext context,
     List<TrackPoint> trackPoints,
   ) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: context.glassBorderColor,
-            width: 0.5,
-          ),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: RepaintBoundary(
-            child: SizedBox(
-              height: 220,
-              child: FlutterMap(
-                options: MapOptions(
-                  initialCenter: LatLng(
-                    trackPoints.first.latitude,
-                    trackPoints.first.longitude,
-                  ),
-                  initialZoom: 12,
-                  interactionOptions: const InteractionOptions(
-                    flags: InteractiveFlag.none,
-                  ),
+    return GestureDetector(
+      onTap: () => _openFullScreenMap(context, trackPoints),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Stack(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: context.glassBorderColor,
+                  width: 0.5,
                 ),
-                children: [
-                  OpenSeaMapTileProvider.baseLayer,
-                  PolylineLayer(
-                    polylines: _buildSpeedPolylines(trackPoints),
-                  ),
-                  MarkerLayer(
-                    markers: [
-                      Marker(
-                        point: LatLng(
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: RepaintBoundary(
+                  child: SizedBox(
+                    height: 220,
+                    child: FlutterMap(
+                      options: MapOptions(
+                        initialCenter: LatLng(
                           trackPoints.first.latitude,
                           trackPoints.first.longitude,
                         ),
-                        width: 14,
-                        height: 14,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: AppColors.green,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white,
-                              width: 2,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.green.withValues(alpha: 0.4),
-                                blurRadius: 6,
-                              ),
-                            ],
-                          ),
+                        initialZoom: 12,
+                        interactionOptions: const InteractionOptions(
+                          flags: InteractiveFlag.none,
                         ),
                       ),
-                      Marker(
-                        point: LatLng(
-                          trackPoints.last.latitude,
-                          trackPoints.last.longitude,
+                      children: [
+                        OpenSeaMapTileProvider.baseLayer,
+                        PolylineLayer(
+                          polylines: _buildSpeedPolylines(trackPoints),
                         ),
-                        width: 14,
-                        height: 14,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: AppColors.red,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white,
-                              width: 2,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.red.withValues(alpha: 0.4),
-                                blurRadius: 6,
+                        MarkerLayer(
+                          markers: [
+                            Marker(
+                              point: LatLng(
+                                trackPoints.first.latitude,
+                                trackPoints.first.longitude,
                               ),
-                            ],
-                          ),
+                              width: 14,
+                              height: 14,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: AppColors.green,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 2,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.green
+                                          .withValues(alpha: 0.4),
+                                      blurRadius: 6,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Marker(
+                              point: LatLng(
+                                trackPoints.last.latitude,
+                                trackPoints.last.longitude,
+                              ),
+                              width: 14,
+                              height: 14,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: AppColors.red,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 2,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color:
+                                          AppColors.red.withValues(alpha: 0.4),
+                                      blurRadius: 6,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ],
+                ),
               ),
             ),
-          ),
+            Positioned(
+              right: 10,
+              bottom: 10,
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppColors.navy.withValues(alpha: 0.7),
+                  shape: BoxShape.circle,
+                ),
+                child:
+                    const Icon(Icons.fullscreen, color: Colors.white, size: 18),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openFullScreenMap(
+    BuildContext context,
+    List<TrackPoint> trackPoints,
+  ) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => _TripMapFullScreen(
+          trackPoints: trackPoints,
+          polylines: _buildSpeedPolylines(trackPoints),
         ),
       ),
     );
@@ -365,29 +406,226 @@ class TripDetailScreen extends ConsumerWidget {
     return polylines;
   }
 
+  String _summaryText(Trip trip) {
+    final distance = trip.distanceNm != null
+        ? '${trip.distanceNm!.toStringAsFixed(1)} NM'
+        : '';
+    final duration = trip.duration != null
+        ? '${trip.duration!.inHours}h ${trip.duration!.inMinutes % 60}m'
+        : '';
+    return (StringBuffer()
+          ..writeln('${trip.departurePort} \u2192 ${trip.arrivalPort ?? '?'}')
+          ..writeln(trip.departureTime.toLocal().toString().substring(0, 16))
+          ..writeln(
+            [distance, duration].where((s) => s.isNotEmpty).join(' \u2022 '),
+          ))
+        .toString();
+  }
+
+  void _floatPlan(BuildContext context, WidgetRef ref) {
+    final tripAsync = ref.read(tripProvider(tripId));
+    if (tripAsync case AsyncData(:final value)) {
+      final trip = value;
+      final messenger = ScaffoldMessenger.of(context);
+      final destCtrl = TextEditingController(text: trip.destination ?? '');
+      final nameCtrl = TextEditingController(text: trip.shoreContactName ?? '');
+      final phoneCtrl =
+          TextEditingController(text: trip.shoreContactPhone ?? '');
+      DateTime? eta = trip.eta;
+
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: context.dialogSurface,
+        builder: (ctx) => Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 16,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
+          ),
+          child: StatefulBuilder(
+            builder: (ctx, setState) => Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('Plan de navegación',
+                    style: TextStyle(
+                        color: context.txtPrimary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700)),
+                const SizedBox(height: 4),
+                Text(
+                  'Avisa a un contacto en tierra de tu plan y ETA.',
+                  style: TextStyle(color: context.txtSecondary, fontSize: 12),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: destCtrl,
+                  decoration: const InputDecoration(labelText: 'Destino'),
+                ),
+                const SizedBox(height: 10),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    eta == null
+                        ? 'ETA (hora estimada de llegada)'
+                        : 'ETA: ${eta!.toLocal().toString().substring(0, 16)}',
+                    style: TextStyle(color: context.txtPrimary),
+                  ),
+                  trailing: const Icon(Icons.schedule, size: 18),
+                  onTap: () async {
+                    final d = await showDatePicker(
+                      context: ctx,
+                      initialDate: eta ?? DateTime.now(),
+                      firstDate:
+                          DateTime.now().subtract(const Duration(days: 1)),
+                      lastDate: DateTime.now().add(const Duration(days: 30)),
+                    );
+                    if (d == null) return;
+                    if (!ctx.mounted) return;
+                    final t = await showTimePicker(
+                      context: ctx,
+                      initialTime:
+                          TimeOfDay.fromDateTime(eta ?? DateTime.now()),
+                    );
+                    if (t == null) return;
+                    setState(() => eta =
+                        DateTime(d.year, d.month, d.day, t.hour, t.minute));
+                  },
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: nameCtrl,
+                  decoration:
+                      const InputDecoration(labelText: 'Contacto en tierra'),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: phoneCtrl,
+                  keyboardType: TextInputType.phone,
+                  decoration:
+                      const InputDecoration(labelText: 'Teléfono del contacto'),
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () async {
+                          await _saveFloatPlan(ref, trip.id, destCtrl.text, eta,
+                              nameCtrl.text, phoneCtrl.text);
+                          if (ctx.mounted) Navigator.of(ctx).pop();
+                        },
+                        child: const Text('Guardar'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: FilledButton(
+                        style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.cyan),
+                        onPressed: () async {
+                          await _saveFloatPlan(ref, trip.id, destCtrl.text, eta,
+                              nameCtrl.text, phoneCtrl.text);
+                          if (ctx.mounted) Navigator.of(ctx).pop();
+                          await _shareFloatPlan(messenger, ref, trip,
+                              destCtrl.text, eta, nameCtrl.text);
+                        },
+                        child: const Text('Compartir'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _saveFloatPlan(WidgetRef ref, String id, String dest,
+      DateTime? eta, String name, String phone) async {
+    await ref.read(tripRepositoryProvider).setFloatPlan(
+          id,
+          destination: dest.trim().isEmpty ? null : dest.trim(),
+          eta: eta,
+          shoreContactName: name.trim().isEmpty ? null : name.trim(),
+          shoreContactPhone: phone.trim().isEmpty ? null : phone.trim(),
+        );
+    ref.invalidate(tripProvider(id));
+  }
+
+  Future<void> _shareFloatPlan(ScaffoldMessengerState messenger, WidgetRef ref,
+      Trip trip, String dest, DateTime? eta, String name) async {
+    try {
+      final url = await ref.read(tripRepositoryProvider).shareTrip(trip.id);
+      final msg = StringBuffer()
+        ..writeln('🧭 Plan de navegación')
+        ..writeln('Salida: ${trip.departurePort}')
+        ..writeln('Destino: ${dest.isEmpty ? '—' : dest}');
+      if (eta != null) {
+        msg.writeln('ETA: ${eta.toLocal().toString().substring(0, 16)}');
+      }
+      msg
+        ..writeln('Si no confirmo llegada, contacta a quien corresponda.')
+        ..writeln('Seguimiento en directo: $url');
+      await Share.share(msg.toString());
+    } catch (_) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('No se pudo compartir el plan')),
+      );
+    }
+  }
+
   void _shareTrip(BuildContext context, WidgetRef ref) {
     final tripAsync = ref.read(tripProvider(tripId));
     if (tripAsync case AsyncData(:final value)) {
       final trip = value;
-      final distance = trip.distanceNm != null
-          ? '${trip.distanceNm!.toStringAsFixed(1)} NM'
-          : '';
-      final duration = trip.duration != null
-          ? '${trip.duration!.inHours}h ${trip.duration!.inMinutes % 60}m'
-          : '';
-      final text = StringBuffer()
-        ..writeln(
-          '${trip.departurePort} \u2192 ${trip.arrivalPort ?? '?'}',
-        )
-        ..writeln(
-          trip.departureTime.toLocal().toString().substring(0, 16),
-        )
-        ..writeln(
-          [distance, duration].where((s) => s.isNotEmpty).join(' \u2022 '),
-        )
-        ..writeln()
-        ..write('Shared from Navis');
-      Share.share(text.toString());
+      showModalBottomSheet<void>(
+        context: context,
+        backgroundColor: context.dialogSurface,
+        showDragHandle: true,
+        builder: (sheetCtx) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.link, color: AppColors.cyan),
+                title: const Text('Compartir enlace'),
+                subtitle: const Text('P\u00e1gina web con el mapa del viaje'),
+                onTap: () {
+                  Navigator.of(sheetCtx).pop();
+                  _shareLink(context, ref, trip);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.short_text, color: AppColors.cyan),
+                title: const Text('Compartir resumen'),
+                subtitle: const Text('Texto con los datos del viaje'),
+                onTap: () {
+                  Navigator.of(sheetCtx).pop();
+                  Share.share('${_summaryText(trip)}\nHecho con Navis');
+                },
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _shareLink(
+      BuildContext context, WidgetRef ref, Trip trip) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final url = await ref.read(tripRepositoryProvider).shareTrip(trip.id);
+      await Share.share('${_summaryText(trip)}\n$url');
+    } catch (_) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('No se pudo crear el enlace')),
+      );
     }
   }
 
@@ -652,6 +890,93 @@ class _StatBox extends StatelessWidget {
               ),
         ),
       ],
+    );
+  }
+}
+
+/// Full-screen, interactive view of a finished trip's track.
+class _TripMapFullScreen extends StatelessWidget {
+  const _TripMapFullScreen({
+    required this.trackPoints,
+    required this.polylines,
+  });
+
+  final List<TrackPoint> trackPoints;
+  final List<Polyline> polylines;
+
+  @override
+  Widget build(BuildContext context) {
+    final points = trackPoints
+        .map((p) => LatLng(p.latitude, p.longitude))
+        .toList(growable: false);
+
+    return Scaffold(
+      backgroundColor: AppColors.navy,
+      body: Stack(
+        children: [
+          FlutterMap(
+            options: MapOptions(
+              initialCameraFit: CameraFit.bounds(
+                bounds: LatLngBounds.fromPoints(points),
+                padding: const EdgeInsets.all(48),
+              ),
+              interactionOptions: const InteractionOptions(
+                flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+              ),
+            ),
+            children: [
+              OpenSeaMapTileProvider.baseLayer,
+              OpenSeaMapTileProvider.seamarkLayer,
+              PolylineLayer(polylines: polylines),
+              MarkerLayer(
+                markers: [
+                  _endpointMarker(points.first, AppColors.green),
+                  _endpointMarker(points.last, AppColors.red),
+                ],
+              ),
+            ],
+          ),
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 8,
+            left: 12,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.navy.withValues(alpha: 0.6),
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    tooltip: AppLocalizations.of(context)!.goBack,
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Marker _endpointMarker(LatLng point, Color color) {
+    return Marker(
+      point: point,
+      width: 16,
+      height: 16,
+      child: Container(
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white, width: 2),
+          boxShadow: [
+            BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 6),
+          ],
+        ),
+      ),
     );
   }
 }

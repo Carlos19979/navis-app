@@ -45,9 +45,16 @@ func (s *DocumentService) Create(ctx context.Context, doc *domain.Document) (*do
 
 // GetByID retrieves a single document owned by the given user.
 func (s *DocumentService) GetByID(ctx context.Context, userID, id string) (*domain.Document, error) {
-	doc, err := s.docRepo.GetByID(ctx, userID, id)
+	doc, err := s.docRepo.GetByIDUnscoped(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("getting document %s: %w", id, err)
+	}
+	access, err := s.boatRepo.HasAccess(ctx, userID, doc.BoatID)
+	if err != nil {
+		return nil, fmt.Errorf("getting document %s: %w", id, err)
+	}
+	if !access {
+		return nil, fmt.Errorf("getting document %s: %w", id, domain.ErrDocumentNotFound)
 	}
 	return doc, nil
 }
@@ -71,7 +78,11 @@ func (s *DocumentService) ListByBoat(ctx context.Context, userID, boatID, cursor
 		limit = 20
 	}
 
-	docs, nextCursor, err := s.docRepo.ListByBoat(ctx, userID, boatID, cursor, limit)
+	boat, err := s.boatRepo.GetByIDAccessible(ctx, userID, boatID)
+	if err != nil {
+		return nil, "", fmt.Errorf("listing documents for boat %s: %w", boatID, err)
+	}
+	docs, nextCursor, err := s.docRepo.ListByBoat(ctx, boat.UserID, boatID, cursor, limit)
 	if err != nil {
 		return nil, "", fmt.Errorf("listing documents for boat %s: %w", boatID, err)
 	}

@@ -3,13 +3,18 @@ import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/charts/data/tile_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import 'package:navis_mobile/features/events/domain/entities/event.dart';
 import 'package:navis_mobile/features/events/presentation/providers/event_provider.dart';
+import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
@@ -28,6 +33,19 @@ class EventDetailScreen extends ConsumerStatefulWidget {
 
 class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
   bool _isRegistering = false;
+
+  Future<void> _openLive(Event event) async {
+    final url = (event.streamUrl != null && event.streamUrl!.isNotEmpty)
+        ? event.streamUrl!
+        : event.trackingUrl;
+    if (url == null || url.isEmpty) return;
+    final uri = Uri.tryParse(url);
+    if (uri == null) return;
+    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!ok && mounted) {
+      NavisSnackbar.error(context, 'No se pudo abrir el directo');
+    }
+  }
 
   Future<void> _toggleRegistration() async {
     setState(() => _isRegistering = true);
@@ -213,17 +231,44 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                       ),
                   const SizedBox(height: 16),
 
-                  // Action button
-                  NavisButton(
-                    label: event.isInterested ? l.notInterested : l.interested,
-                    icon: event.isInterested
-                        ? Icons.close
-                        : Icons.favorite_outline,
-                    variant: event.isInterested
-                        ? NavisButtonVariant.secondary
-                        : NavisButtonVariant.primary,
-                    onPressed: _toggleRegistration,
-                    isLoading: _isRegistering,
+                  // Action buttons
+                  Column(
+                    children: [
+                      // Follow the regatta live (external YouTube / tracker).
+                      if (event.hasLiveCoverage) ...[
+                        NavisButton(
+                          label: 'Seguir en directo',
+                          icon: Icons.live_tv,
+                          onPressed: () => _openLive(event),
+                        ),
+                        const SizedBox(height: 10),
+                      ],
+                      // Join this event with one of the owner's groups, which
+                      // creates a group regatta (visible in Groups → Regattas).
+                      if (event.eventType == 'regatta') ...[
+                        NavisButton(
+                          label: 'Unirse como grupo',
+                          icon: Icons.groups,
+                          onPressed: () => context.push(
+                            '/events/${widget.eventId}/start-regatta',
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                      ],
+                      NavisButton(
+                        label:
+                            event.isInterested ? l.notInterested : l.interested,
+                        icon: event.isInterested
+                            ? Icons.close
+                            : Icons.favorite_outline,
+                        variant:
+                            event.eventType == 'regatta' || event.isInterested
+                                ? NavisButtonVariant.secondary
+                                : NavisButtonVariant.primary,
+                        onPressed: _toggleRegistration,
+                        isLoading: _isRegistering,
+                      ),
+                    ],
                   ).animate().fadeIn(
                         delay: 400.ms,
                         duration: 500.ms,

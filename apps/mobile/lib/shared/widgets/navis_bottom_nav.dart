@@ -16,7 +16,10 @@ class NavisBottomNav extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    // Sit lower by eating into the bottom safe-area inset (clamped so it never
+    // goes off-screen on devices without a home indicator).
+    final bottomPadding =
+        (MediaQuery.of(context).padding.bottom - 10).clamp(0.0, double.infinity);
 
     final items = [
       _NavItem(
@@ -55,7 +58,7 @@ class NavisBottomNav extends ConsumerWidget {
           padding: EdgeInsets.only(
             left: 20,
             right: 20,
-            bottom: bottomPadding + 12,
+            bottom: bottomPadding + 2,
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(24),

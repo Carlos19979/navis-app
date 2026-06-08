@@ -31,6 +31,8 @@ type Event struct {
 	BoatClasses      []string
 	RegistrationURL  *string
 	DocumentsURL     *string
+	StreamURL        *string
+	TrackingURL      *string
 	IsFeatured       bool
 	CreatedAt        time.Time
 	UpdatedAt        time.Time

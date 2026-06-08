@@ -51,7 +51,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get events => 'Eventos';
 
   @override
-  String get charts => 'Cartas';
+  String get charts => 'Mapa';
 
   @override
   String get profile => 'Perfil';
@@ -942,4 +942,37 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get toggleTripTracks => 'Mostrar rutas';
+
+  @override
+  String get now => 'Ahora';
+
+  @override
+  String get hourlyForecast => 'Por horas';
+
+  @override
+  String get wcClear => 'Despejado';
+
+  @override
+  String get wcPartlyCloudy => 'Parcialmente nublado';
+
+  @override
+  String get wcCloudy => 'Nublado';
+
+  @override
+  String get wcFog => 'Niebla';
+
+  @override
+  String get wcDrizzle => 'Llovizna';
+
+  @override
+  String get wcRain => 'Lluvia';
+
+  @override
+  String get wcSnow => 'Nieve';
+
+  @override
+  String get wcThunderstorm => 'Tormenta';
+
+  @override
+  String get wcUnknown => '—';
 }

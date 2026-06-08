@@ -3,6 +3,7 @@ import 'package:navis_mobile/features/groups/domain/entities/group_member.dart';
 class GroupMemberModel {
   const GroupMemberModel({
     required this.userId,
+    required this.name,
     required this.role,
     required this.status,
     this.joinedAt,
@@ -11,6 +12,7 @@ class GroupMemberModel {
   factory GroupMemberModel.fromJson(Map<String, dynamic> json) {
     return GroupMemberModel(
       userId: json['user_id'] as String,
+      name: json['name'] as String? ?? '',
       role: json['role'] as String,
       status: json['status'] as String,
       joinedAt: json['joined_at'] != null
@@ -20,12 +22,14 @@ class GroupMemberModel {
   }
 
   final String userId;
+  final String name;
   final String role;
   final String status;
   final DateTime? joinedAt;
 
   GroupMember toEntity() => GroupMember(
         userId: userId,
+        name: name,
         role: role,
         status: status,
         joinedAt: joinedAt,

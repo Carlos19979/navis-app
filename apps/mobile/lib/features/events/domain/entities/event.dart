@@ -14,6 +14,8 @@ class Event {
     this.boatClasses = const [],
     this.registrationUrl,
     this.documentsUrl,
+    this.streamUrl,
+    this.trackingUrl,
     this.isFeatured = false,
     this.isInterested = false,
     this.createdAt,
@@ -34,7 +36,14 @@ class Event {
   final List<String> boatClasses;
   final String? registrationUrl;
   final String? documentsUrl;
+  final String? streamUrl;
+  final String? trackingUrl;
   final bool isFeatured;
+
+  /// True when there's a live-coverage link (stream or tracker) to follow.
+  bool get hasLiveCoverage =>
+      (streamUrl != null && streamUrl!.isNotEmpty) ||
+      (trackingUrl != null && trackingUrl!.isNotEmpty);
   final bool isInterested;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -54,6 +63,8 @@ class Event {
     List<String>? boatClasses,
     String? registrationUrl,
     String? documentsUrl,
+    String? streamUrl,
+    String? trackingUrl,
     bool? isFeatured,
     bool? isInterested,
     DateTime? createdAt,
@@ -74,6 +85,8 @@ class Event {
       boatClasses: boatClasses ?? this.boatClasses,
       registrationUrl: registrationUrl ?? this.registrationUrl,
       documentsUrl: documentsUrl ?? this.documentsUrl,
+      streamUrl: streamUrl ?? this.streamUrl,
+      trackingUrl: trackingUrl ?? this.trackingUrl,
       isFeatured: isFeatured ?? this.isFeatured,
       isInterested: isInterested ?? this.isInterested,
       createdAt: createdAt ?? this.createdAt,

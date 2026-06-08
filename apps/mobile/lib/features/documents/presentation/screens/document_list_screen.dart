@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/documents/domain/entities/document.dart';
+import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
 import 'package:navis_mobile/features/documents/presentation/widgets/document_status_badge.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -81,30 +82,34 @@ class DocumentListScreen extends ConsumerWidget {
           ),
         ),
       ),
-      floatingActionButton: Container(
-        decoration: BoxDecoration(
-          gradient: AppColors.cyanGradient,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.cyan.withValues(alpha: 0.4),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: FloatingActionButton(
-          onPressed: () => context.push('/boats/$boatId/documents/new'),
-          tooltip: l.newDocument,
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          child: Icon(
-            Icons.add,
-            color: Colors.white,
-            semanticLabel: l.newDocument,
-          ),
-        ),
-      ),
+      floatingActionButton:
+          (ref.watch(boatProvider(boatId)).valueOrNull?.isOwner ?? true)
+              ? Container(
+                  decoration: BoxDecoration(
+                    gradient: AppColors.cyanGradient,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.cyan.withValues(alpha: 0.4),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: FloatingActionButton(
+                    onPressed: () =>
+                        context.push('/boats/$boatId/documents/new'),
+                    tooltip: l.newDocument,
+                    elevation: 0,
+                    backgroundColor: Colors.transparent,
+                    child: Icon(
+                      Icons.add,
+                      color: Colors.white,
+                      semanticLabel: l.newDocument,
+                    ),
+                  ),
+                )
+              : null,
     );
   }
 }

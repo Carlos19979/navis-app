@@ -67,9 +67,9 @@ func (m *mockNotifier) TriggerWorkflow(ctx context.Context, workflowID, subscrib
 	return nil
 }
 
-func (m *mockNotifier) EnsureSubscriber(_ context.Context, _ string) error        { return nil }
-func (m *mockNotifier) SetPushToken(_ context.Context, _, _ string) error          { return nil }
-func (m *mockNotifier) RemovePushToken(_ context.Context, _, _ string) error       { return nil }
+func (m *mockNotifier) EnsureSubscriber(_ context.Context, _ string) error   { return nil }
+func (m *mockNotifier) SetPushToken(_ context.Context, _, _ string) error    { return nil }
+func (m *mockNotifier) RemovePushToken(_ context.Context, _, _ string) error { return nil }
 
 // --- Helpers ---
 
@@ -315,4 +315,8 @@ func TestBuildMessage_CustomName(t *testing.T) {
 	if body != `Your document "Fire Extinguisher Cert" expires in 30 days (on 2026-06-01).` {
 		t.Errorf("unexpected body: %s", body)
 	}
+}
+
+func (m *mockDocRepo) GetByIDUnscoped(_ context.Context, _ string) (*domain.Document, error) {
+	return nil, domain.ErrDocumentNotFound
 }

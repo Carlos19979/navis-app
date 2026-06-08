@@ -76,8 +76,13 @@ class ChecklistItem {
 
 /// A participant's RSVP to a planned regatta.
 class RegattaParticipant {
-  const RegattaParticipant({required this.userId, required this.rsvp});
+  const RegattaParticipant({
+    required this.userId,
+    required this.rsvp,
+    this.name = '',
+  });
 
   final String userId;
+  final String name;
   final String rsvp; // going | maybe | not_going
 }

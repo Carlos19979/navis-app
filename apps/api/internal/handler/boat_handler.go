@@ -63,13 +63,16 @@ func (h *BoatHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := chi.URLParam(r, "id")
-	boat, err := h.svc.GetByID(r.Context(), userID, id)
+	// Accessible to the owner or shared members (read-only for members).
+	boat, err := h.svc.GetAccessible(r.Context(), userID, id)
 	if err != nil {
 		MapDomainError(w, err)
 		return
 	}
 
-	JSON(w, http.StatusOK, dto.BoatResponseFromDomain(boat))
+	resp := dto.BoatResponseFromDomain(boat)
+	resp.IsOwner = boat.UserID == userID
+	JSON(w, http.StatusOK, resp)
 }
 
 // List handles GET /boats.
