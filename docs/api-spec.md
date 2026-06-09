@@ -669,9 +669,10 @@ Owner: set a member's role. Body `{ "role": "viewer" | "editor" }`.
 Member: leave a shared boat.
 
 **Access model:** boat + its documents/trips/maintenance/expenses are **readable** by the
-owner or any member (the boat logbook shows every member's trips). An **editor** member may
-also **record trips**; all other writes (documents, maintenance, expenses, boat edit) are
-owner-only. `GET /api/v1/boats/:id` includes `is_owner` and `can_record`.
+owner or any member (logbook/maintenance/expense lists show every member's entries). An
+**editor** member may also **record trips and log expenses/maintenance**; documents, boat
+edit/delete, member management and deletes stay owner-only. `GET /api/v1/boats/:id` includes
+`is_owner` and `can_record`.
 
 ## Weather (extended)
 
