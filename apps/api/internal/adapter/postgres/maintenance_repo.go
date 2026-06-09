@@ -46,11 +46,11 @@ func (r *MaintenanceRepo) Create(ctx context.Context, m *domain.MaintenanceLog) 
 }
 
 // ListByBoat returns a boat's maintenance logs, newest first.
-func (r *MaintenanceRepo) ListByBoat(ctx context.Context, userID, boatID string) ([]domain.MaintenanceLog, error) {
+func (r *MaintenanceRepo) ListByBoat(ctx context.Context, boatID string) ([]domain.MaintenanceLog, error) {
 	rows, err := r.pool.Query(ctx,
 		`SELECT `+maintenanceColumns+` FROM maintenance_logs
-		 WHERE user_id = $1 AND boat_id = $2
-		 ORDER BY performed_at DESC, created_at DESC`, userID, boatID)
+		 WHERE boat_id = $1
+		 ORDER BY performed_at DESC, created_at DESC`, boatID)
 	if err != nil {
 		return nil, fmt.Errorf("listing maintenance logs: %w", err)
 	}
@@ -113,11 +113,11 @@ func (r *ExpenseRepo) Create(ctx context.Context, e *domain.Expense) (*domain.Ex
 }
 
 // ListByBoat returns a boat's expenses, newest first.
-func (r *ExpenseRepo) ListByBoat(ctx context.Context, userID, boatID string) ([]domain.Expense, error) {
+func (r *ExpenseRepo) ListByBoat(ctx context.Context, boatID string) ([]domain.Expense, error) {
 	rows, err := r.pool.Query(ctx,
 		`SELECT `+expenseColumns+` FROM expenses
-		 WHERE user_id = $1 AND boat_id = $2
-		 ORDER BY incurred_on DESC, created_at DESC`, userID, boatID)
+		 WHERE boat_id = $1
+		 ORDER BY incurred_on DESC, created_at DESC`, boatID)
 	if err != nil {
 		return nil, fmt.Errorf("listing expenses: %w", err)
 	}
@@ -147,10 +147,10 @@ func (r *ExpenseRepo) Delete(ctx context.Context, userID, id string) error {
 }
 
 // TotalsByCategory sums expense amounts per category for a boat.
-func (r *ExpenseRepo) TotalsByCategory(ctx context.Context, userID, boatID string) (map[string]float64, error) {
+func (r *ExpenseRepo) TotalsByCategory(ctx context.Context, boatID string) (map[string]float64, error) {
 	rows, err := r.pool.Query(ctx,
 		`SELECT category, SUM(amount) FROM expenses
-		 WHERE user_id = $1 AND boat_id = $2 GROUP BY category`, userID, boatID)
+		 WHERE boat_id = $1 GROUP BY category`, boatID)
 	if err != nil {
 		return nil, fmt.Errorf("summing expenses: %w", err)
 	}

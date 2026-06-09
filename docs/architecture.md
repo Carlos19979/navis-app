@@ -159,9 +159,9 @@ Key tables: `profiles`, `boats` (+`share_code`), `boat_members`, `documents`,
    `editor` (`PUT /boats/:id/members/:userId/role`)
 2. Reads of a boat and its documents/trips/maintenance/expenses check
    `boatRepo.HasAccess(userID, boatID)`; the logbook lists every member's trips
-3. An `editor` may also **record trips** (`boatRepo.CanEdit`); all other writes
-   stay strictly owner-scoped (members get 404), so sharing cannot escalate
-   beyond recording trips
+3. An `editor` may also **record trips and log expenses/maintenance**
+   (`boatRepo.CanEdit`); documents, boat edit/delete and member management stay
+   strictly owner-scoped, so sharing cannot escalate to ownership/admin actions
 
 ## Deployment
 

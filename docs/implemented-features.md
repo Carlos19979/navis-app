@@ -27,9 +27,9 @@ and what remains (mostly external config). Use this to continue.
 ## Boat sharing — security model (important)
 - Table `boat_members(boat_id, user_id, role)` with role `viewer|editor` + `boats.share_code`.
 - **Reads** (boat, documents, trips+tracks, maintenance, expenses) allowed for **owner OR any member** via `boatRepo.HasAccess` / `GetByIDAccessible`, reading **as the owner's scope**. The boat **logbook** lists *all* members' trips (`tripRepo.ListByBoatAll`).
-- **editor role** may additionally **record trips** (`TripService.Create` checks `boatRepo.CanEdit` = owner OR editor). `GET /boats/:id` returns `can_record`.
-- **All other writes** (documents, maintenance, expenses, boat edit/delete) stay strict owner-only.
-- Verified with two accounts: viewer record-trip 403; owner promotes to editor (204); editor record-trip 201 and it shows in the owner's logbook; editor expense write still 404; non-member 404 everywhere.
+- **editor role** may additionally **record trips, log expenses and log maintenance** (each `Create` checks `boatRepo.CanEdit` = owner OR editor). `GET /boats/:id` returns `can_record`. Expense/maintenance lists are boat-scoped so every member's entries show.
+- **Documents, boat edit/delete, member management, and deletes** stay strict owner-only.
+- Verified with two accounts: viewer record-trip/expense 403; owner promotes to editor (204); editor records trips + logs expenses/maintenance (201, visible to the owner); editor document write still owner-only; non-member 404 everywhere.
 - Mobile: "Compartir barco" (owner: code + members list with a **viewer/editor toggle** + remove), "Unirse a un barco" (code), "Compartidos conmigo" section. Shared boat shows documents/logbook/maintenance read-only; the logbook record FAB appears only when `can_record`.
 
 ## Cron jobs (in `RegattaNotifier`, all UTC)

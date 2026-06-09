@@ -128,7 +128,7 @@ class _MaintenanceTab extends ConsumerWidget {
             );
           },
         ),
-        if (ref.watch(boatProvider(boatId)).valueOrNull?.isOwner ?? true)
+        if (ref.watch(boatProvider(boatId)).valueOrNull?.canRecord ?? true)
           Positioned(
             right: 16,
             bottom: 16,
@@ -363,7 +363,7 @@ class _ExpensesTab extends ConsumerWidget {
             );
           },
         ),
-        if (ref.watch(boatProvider(boatId)).valueOrNull?.isOwner ?? true)
+        if (ref.watch(boatProvider(boatId)).valueOrNull?.canRecord ?? true)
           Positioned(
             right: 16,
             bottom: 16,

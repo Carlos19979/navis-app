@@ -39,17 +39,19 @@ type ProfileRepository interface {
 // MaintenanceRepository persists boat maintenance/service logs.
 type MaintenanceRepository interface {
 	Create(ctx context.Context, log *domain.MaintenanceLog) (*domain.MaintenanceLog, error)
-	ListByBoat(ctx context.Context, userID, boatID string) ([]domain.MaintenanceLog, error)
+	// ListByBoat returns all logs on a boat (caller enforces access).
+	ListByBoat(ctx context.Context, boatID string) ([]domain.MaintenanceLog, error)
 	Delete(ctx context.Context, userID, id string) error
 }
 
 // ExpenseRepository persists boat expenses.
 type ExpenseRepository interface {
 	Create(ctx context.Context, e *domain.Expense) (*domain.Expense, error)
-	ListByBoat(ctx context.Context, userID, boatID string) ([]domain.Expense, error)
+	// ListByBoat returns all expenses on a boat (caller enforces access).
+	ListByBoat(ctx context.Context, boatID string) ([]domain.Expense, error)
 	Delete(ctx context.Context, userID, id string) error
 	// TotalsByCategory returns summed amounts per category for a boat.
-	TotalsByCategory(ctx context.Context, userID, boatID string) (map[string]float64, error)
+	TotalsByCategory(ctx context.Context, boatID string) (map[string]float64, error)
 }
 
 // DocumentRepository defines persistence operations for documents.
