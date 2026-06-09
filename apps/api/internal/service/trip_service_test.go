@@ -16,6 +16,7 @@ type mockTripRepo struct {
 	getByIDFn         func(ctx context.Context, userID, id string) (*domain.Trip, error)
 	getByIDUnscopedFn func(ctx context.Context, id string) (*domain.Trip, error)
 	listFn            func(ctx context.Context, userID, boatID, cursor string, limit int) ([]domain.Trip, string, error)
+	listByBoatAllFn   func(ctx context.Context, boatID, cursor string, limit int) ([]domain.Trip, string, error)
 	listByGroupFn     func(ctx context.Context, groupID, cursor string, limit int) ([]domain.Trip, string, error)
 	updateFn          func(ctx context.Context, userID string, trip *domain.Trip) (*domain.Trip, error)
 	deleteFn          func(ctx context.Context, userID, id string) error
@@ -268,7 +269,7 @@ func TestTripService_List_WithBoatIDFilter(t *testing.T) {
 
 	var capturedBoatID string
 	tripRepo := &mockTripRepo{
-		listFn: func(_ context.Context, _, boatID, _ string, _ int) ([]domain.Trip, string, error) {
+		listByBoatAllFn: func(_ context.Context, boatID, _ string, _ int) ([]domain.Trip, string, error) {
 			capturedBoatID = boatID
 			return []domain.Trip{}, "", nil
 		},
@@ -878,4 +879,11 @@ func (m *mockTripRepo) SetFloatPlan(_ context.Context, _, _ string, _ *string, _
 
 func (m *mockTripRepo) ListOverdueFloatPlans(_ context.Context, _ time.Time) ([]domain.Trip, error) {
 	return nil, nil
+}
+
+func (m *mockTripRepo) ListByBoatAll(ctx context.Context, boatID, cursor string, limit int) ([]domain.Trip, string, error) {
+	if m.listByBoatAllFn != nil {
+		return m.listByBoatAllFn(ctx, boatID, cursor, limit)
+	}
+	return nil, "", nil
 }

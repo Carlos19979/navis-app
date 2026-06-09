@@ -454,3 +454,10 @@ func (m *mockBoatRepo) ListMembers(_ context.Context, _ string) ([]domain.BoatMe
 }
 func (m *mockBoatRepo) RemoveMember(_ context.Context, _, _, _ string) error { return nil }
 func (m *mockBoatRepo) Leave(_ context.Context, _, _ string) error           { return nil }
+
+func (m *mockBoatRepo) CanEdit(_ context.Context, _, _ string) (bool, error) {
+	return true, nil
+}
+func (m *mockBoatRepo) SetMemberRole(_ context.Context, _, _, _, _ string) error {
+	return nil
+}

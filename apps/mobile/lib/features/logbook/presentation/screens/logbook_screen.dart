@@ -99,7 +99,7 @@ class LogbookScreen extends ConsumerWidget {
           },
         ),
         floatingActionButton:
-            (ref.watch(boatProvider(boatId)).valueOrNull?.isOwner ?? true)
+            (ref.watch(boatProvider(boatId)).valueOrNull?.canRecord ?? true)
                 ? Container(
                     decoration: BoxDecoration(
                       gradient: AppColors.cyanGradient,

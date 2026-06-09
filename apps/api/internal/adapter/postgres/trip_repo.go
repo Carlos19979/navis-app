@@ -393,3 +393,45 @@ func (r *TripRepo) GetByShareToken(ctx context.Context, token string) (*domain.T
 	}
 	return t, nil
 }
+
+// ListByBoatAll returns ALL trips on a boat (any owner/recorder), for the shared
+// logbook. Authorization (boat access) is enforced by the caller.
+func (r *TripRepo) ListByBoatAll(ctx context.Context, boatID, cursor string, limit int) ([]domain.Trip, string, error) {
+	var (
+		rows pgx.Rows
+		err  error
+	)
+	if cursor == "" {
+		query := `SELECT ` + tripColumns + ` FROM trips
+			WHERE boat_id = $1
+			ORDER BY created_at DESC, id DESC
+			LIMIT $2`
+		rows, err = r.pool.Query(ctx, query, boatID, limit+1)
+	} else {
+		var cursorCreatedAt time.Time
+		cErr := r.pool.QueryRow(ctx,
+			`SELECT created_at FROM trips WHERE id = $1`, cursor).Scan(&cursorCreatedAt)
+		if cErr != nil {
+			return r.ListByBoatAll(ctx, boatID, "", limit)
+		}
+		query := `SELECT ` + tripColumns + ` FROM trips
+			WHERE boat_id = $1 AND (created_at, id) < ($2, $3)
+			ORDER BY created_at DESC, id DESC
+			LIMIT $4`
+		rows, err = r.pool.Query(ctx, query, boatID, cursorCreatedAt, cursor, limit+1)
+	}
+	if err != nil {
+		return nil, "", fmt.Errorf("listing boat trips: %w", err)
+	}
+	defer rows.Close()
+	trips, err := scanTrips(rows)
+	if err != nil {
+		return nil, "", fmt.Errorf("scanning boat trips: %w", err)
+	}
+	var nextCursor string
+	if len(trips) > limit {
+		nextCursor = trips[limit].ID
+		trips = trips[:limit]
+	}
+	return trips, nextCursor, nil
+}

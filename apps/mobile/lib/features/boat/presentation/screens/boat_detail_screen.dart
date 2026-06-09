@@ -139,8 +139,12 @@ class _BoatDetailView extends ConsumerWidget {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              'Barco compartido contigo (solo lectura). '
-                              'Lo gestiona el propietario.',
+                              boat.canRecord
+                                  ? 'Barco compartido contigo. Puedes ver su '
+                                      'información y grabar viajes; lo demás lo '
+                                      'gestiona el propietario.'
+                                  : 'Barco compartido contigo (solo lectura). '
+                                      'Lo gestiona el propietario.',
                               style: TextStyle(color: context.txtSecondary),
                             ),
                           ),
@@ -270,8 +274,8 @@ class _BoatDetailView extends ConsumerWidget {
                     fontWeight: FontWeight.w700)),
             const SizedBox(height: 4),
             Text(
-              'Comparte este código. Quien lo introduzca verá el barco '
-              '(solo lectura).',
+              'Comparte este código. Quien lo introduzca verá el barco. '
+              'Activa "puede grabar viajes" abajo para darle permiso de editor.',
               style: TextStyle(color: context.txtSecondary, fontSize: 13),
             ),
             const SizedBox(height: 16),
@@ -353,6 +357,33 @@ class _BoatDetailView extends ConsumerWidget {
                             leading: const Icon(Icons.person_outline),
                             title: Text(m.name,
                                 style: TextStyle(color: context.txtPrimary)),
+                            subtitle: Row(
+                              children: [
+                                Text(
+                                  'Puede grabar viajes',
+                                  style: TextStyle(
+                                      color: context.txtSecondary,
+                                      fontSize: 12),
+                                ),
+                                const SizedBox(width: 4),
+                                Switch(
+                                  value: m.role == 'editor',
+                                  activeTrackColor:
+                                      AppColors.cyan.withValues(alpha: 0.5),
+                                  activeThumbColor: AppColors.cyan,
+                                  materialTapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                  onChanged: (v) async {
+                                    await ref
+                                        .read(boatShareRepositoryProvider)
+                                        .setMemberRole(boat.id, m.userId,
+                                            v ? 'editor' : 'viewer');
+                                    ref.invalidate(
+                                        boatMembersProvider(boat.id));
+                                  },
+                                ),
+                              ],
+                            ),
                             trailing: IconButton(
                               icon: const Icon(Icons.remove_circle_outline,
                                   color: AppColors.red),

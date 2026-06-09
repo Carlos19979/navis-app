@@ -92,6 +92,7 @@ type BoatResponse struct {
 	PhotoURL     *string         `json:"photo_url,omitempty"`
 	EngineHours  float64         `json:"engine_hours"`
 	IsOwner      bool            `json:"is_owner"`
+	CanRecord    bool            `json:"can_record"`
 	CreatedAt    time.Time       `json:"created_at"`
 	UpdatedAt    time.Time       `json:"updated_at"`
 }
@@ -151,4 +152,9 @@ func BoatMemberListFromDomain(members []domain.BoatMember) []BoatMemberResponse 
 		}
 	}
 	return out
+}
+
+// UpdateBoatMemberRoleRequest changes a shared member's role.
+type UpdateBoatMemberRoleRequest struct {
+	Role string `json:"role" validate:"required,oneof=viewer editor"`
 }

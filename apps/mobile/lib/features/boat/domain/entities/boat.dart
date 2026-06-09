@@ -11,6 +11,7 @@ class Boat {
     this.photoUrl,
     this.ownerId,
     this.isOwner = true,
+    this.canRecord = true,
     this.createdAt,
     this.updatedAt,
   });
@@ -26,6 +27,7 @@ class Boat {
   final String? photoUrl;
   final String? ownerId;
   final bool isOwner;
+  final bool canRecord;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -41,6 +43,7 @@ class Boat {
     String? photoUrl,
     String? ownerId,
     bool? isOwner,
+    bool? canRecord,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -56,6 +59,7 @@ class Boat {
       photoUrl: photoUrl ?? this.photoUrl,
       ownerId: ownerId ?? this.ownerId,
       isOwner: isOwner ?? this.isOwner,
+      canRecord: canRecord ?? this.canRecord,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

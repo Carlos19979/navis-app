@@ -65,6 +65,14 @@ class BoatShareRepository {
     await _apiClient.delete<void>('/api/v1/boats/$boatId/members/$userId');
   }
 
+  /// Owner: set a member's role (viewer = read-only, editor = can record trips).
+  Future<void> setMemberRole(String boatId, String userId, String role) async {
+    await _apiClient.put<void>(
+      '/api/v1/boats/$boatId/members/$userId/role',
+      data: {'role': role},
+    );
+  }
+
   /// Member: leave a shared boat.
   Future<void> leaveBoat(String boatId) async {
     await _apiClient.post<void>('/api/v1/boats/$boatId/leave');

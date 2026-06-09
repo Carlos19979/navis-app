@@ -72,6 +72,7 @@ func (h *BoatHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 
 	resp := dto.BoatResponseFromDomain(boat)
 	resp.IsOwner = boat.UserID == userID
+	resp.CanRecord, _ = h.svc.CanRecord(r.Context(), userID, id)
 	JSON(w, http.StatusOK, resp)
 }
 
