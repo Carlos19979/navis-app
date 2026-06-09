@@ -14,7 +14,7 @@ and what remains (mostly external config). Use this to continue.
 | **Tides + navigation window** | ✅ | ✅ | E2E | Open-Meteo `sea_level_height_msl`; hidden when range <0.3m (Mediterranean). |
 | ~~Float plan (destination/ETA/shore contact)~~ | **removed** | **removed** | — | Removed 2026-06-09: phone-based auto-alert can't be a reliable rescue net (alerted the owner, not the shore contact; needs SMS/satellite). DB columns (`trips.destination/eta/shore_contact_*`) + dormant Go/Dart fields left in place. Trip *sharing* (F2) stays. |
 | **Sign in with Apple/Google** | n/a (provider-agnostic JWT) | ✅ code + URL scheme | build only | **Needs external config**: Supabase providers + Apple/Google credentials + iOS capability. iOS Info.plist URL scheme NOT committed (lives in local ios/ hacks) — re-add `CFBundleURLTypes` scheme `navis` when wiring. |
-| **Boat sharing (crew/co-owners)** | ✅ | ✅ | 🔒 security-tested | Roles: `viewer` (read) / `editor` (read + **record trips**). Docs/expenses/boat-edit stay owner-only. |
+| **Boat sharing (crew/co-owners)** | ✅ | ✅ | 🔒 security-tested | **Granular per-member permissions** (record trips · manage expenses · manage maintenance · view documents · manage documents). Boat edit/delete + member management stay owner-only. |
 
 ## Plans / tiers
 - Table `profiles(plan)` ∈ `normal|armador|gestor`, default `normal` (auto-created).
@@ -25,12 +25,14 @@ and what remains (mostly external config). Use this to continue.
 - Mobile: `accountProvider`; FAB gating in Boats & Groups; plan badge in Profile; **DEV plan switcher** in Settings.
 
 ## Boat sharing — security model (important)
-- Table `boat_members(boat_id, user_id, role)` with role `viewer|editor` + `boats.share_code`.
-- **Reads** (boat, documents, trips+tracks, maintenance, expenses) allowed for **owner OR any member** via `boatRepo.HasAccess` / `GetByIDAccessible`, reading **as the owner's scope**. The boat **logbook** lists *all* members' trips (`tripRepo.ListByBoatAll`).
-- **editor role** may additionally **record trips, log expenses and log maintenance** (each `Create` checks `boatRepo.CanEdit` = owner OR editor). `GET /boats/:id` returns `can_record`. Expense/maintenance lists are boat-scoped so every member's entries show.
-- **Documents, boat edit/delete, member management, and deletes** stay strict owner-only.
-- Verified with two accounts: viewer record-trip/expense 403; owner promotes to editor (204); editor records trips + logs expenses/maintenance (201, visible to the owner); editor document write still owner-only; non-member 404 everywhere.
-- Mobile: "Compartir barco" (owner: code + members list with a **viewer/editor toggle** + remove), "Unirse a un barco" (code), "Compartidos conmigo" section. Shared boat shows documents/logbook/maintenance read-only; the logbook record FAB appears only when `can_record`.
+- Table `boat_members(boat_id, user_id, role, can_record_trips, can_manage_expenses, can_manage_maintenance, can_view_documents, can_manage_documents)` + `boats.share_code`. A new member joins **view-only** (only `can_view_documents` true). The `role` column is legacy/unused; enforcement is on the flags.
+- **`boatRepo.GetPermissions(userID, boatID)`** resolves the set: owner → all true; member → their flags; non-member → access=false. The owner has every permission implicitly.
+- **Base read** (boat info + logbook of all members' trips via `tripRepo.ListByBoatAll`) is allowed for owner or any member (`HasAccess` / `GetByIDAccessible`). Maintenance/expense lists are boat-scoped so every member's entries show.
+- **Per-permission enforcement:** record trips → `CanRecordTrips` (`TripService.Create`); expenses create/edit/delete → `CanManageExpenses`; maintenance create/edit/delete → `CanManageMaintenance`; document list/detail → `CanViewDocuments`; document create/edit/delete → `CanManageDocuments`. Document list/update/delete became boat-scoped (top-level `/documents/:id` resolves the boat from the doc).
+- **Owner-only always:** boat edit/delete, member management (`PUT /boats/:id/members/:userId/permissions`, remove).
+- `GET /boats/:id` returns `permissions{...}`; `GET /boats/:id/members` returns each member's `permissions{...}`.
+- Verified with two accounts: viewer record-trip/expense 403; owner grants record-trips+manage-expenses (PUT 204); member then records trips 201, logs expenses 201, but maintenance 403 and document-view 403; base expense *read* still 200; non-member 404.
+- Mobile: `Boat.permissions` + `BoatPermissions`; "Compartir barco" members list is a **per-member 5-toggle editor**; the documents tile, logbook record FAB, maintenance/expense FABs+edit, and document FAB are each gated on the matching permission.
 
 ## Cron jobs (in `RegattaNotifier`, all UTC)
 - `0 9 * * *` regatta reminders (next 36h) → group members.

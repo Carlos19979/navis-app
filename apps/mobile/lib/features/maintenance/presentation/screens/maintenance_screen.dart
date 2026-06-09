@@ -90,9 +90,12 @@ class _MaintenanceTab extends ConsumerWidget {
               itemCount: logs.length,
               itemBuilder: (context, i) {
                 final m = logs[i];
-                final canEdit =
-                    ref.watch(boatProvider(boatId)).valueOrNull?.canRecord ??
-                        true;
+                final canEdit = ref
+                        .watch(boatProvider(boatId))
+                        .valueOrNull
+                        ?.permissions
+                        .canManageMaintenance ??
+                    true;
                 return NavisCard(
                   onTap: canEdit
                       ? () => _editMaintenance(context, ref, existing: m)
@@ -151,7 +154,12 @@ class _MaintenanceTab extends ConsumerWidget {
             );
           },
         ),
-        if (ref.watch(boatProvider(boatId)).valueOrNull?.canRecord ?? true)
+        if (ref
+                .watch(boatProvider(boatId))
+                .valueOrNull
+                ?.permissions
+                .canManageMaintenance ??
+            true)
           Positioned(
             right: 16,
             bottom: 16,
@@ -384,7 +392,8 @@ class _ExpensesTab extends ConsumerWidget {
                     onTap: (ref
                                 .watch(boatProvider(boatId))
                                 .valueOrNull
-                                ?.canRecord ??
+                                ?.permissions
+                                .canManageExpenses ??
                             true)
                         ? () => _editExpense(context, ref, existing: e)
                         : null,
@@ -436,7 +445,12 @@ class _ExpensesTab extends ConsumerWidget {
             );
           },
         ),
-        if (ref.watch(boatProvider(boatId)).valueOrNull?.canRecord ?? true)
+        if (ref
+                .watch(boatProvider(boatId))
+                .valueOrNull
+                ?.permissions
+                .canManageExpenses ??
+            true)
           Positioned(
             right: 16,
             bottom: 16,

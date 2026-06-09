@@ -318,7 +318,9 @@ func (r *BoatRepo) AddMember(ctx context.Context, boatID, userID, role string) e
 // ListMembers returns the shared members of a boat, with display names.
 func (r *BoatRepo) ListMembers(ctx context.Context, boatID string) ([]domain.BoatMember, error) {
 	rows, err := r.pool.Query(ctx,
-		`SELECT bm.user_id, bm.role, `+memberNameExpr+`
+		`SELECT bm.user_id, `+memberNameExpr+`,
+			bm.can_record_trips, bm.can_manage_expenses, bm.can_manage_maintenance,
+			bm.can_view_documents, bm.can_manage_documents
 		 FROM boat_members bm
 		 LEFT JOIN auth.users u ON u.id = bm.user_id
 		 WHERE bm.boat_id = $1 ORDER BY bm.created_at ASC`, boatID)
@@ -329,7 +331,10 @@ func (r *BoatRepo) ListMembers(ctx context.Context, boatID string) ([]domain.Boa
 	out := make([]domain.BoatMember, 0)
 	for rows.Next() {
 		var m domain.BoatMember
-		if err := rows.Scan(&m.UserID, &m.Role, &m.Name); err != nil {
+		p := &m.Permissions
+		if err := rows.Scan(&m.UserID, &m.Name,
+			&p.CanRecordTrips, &p.CanManageExpenses, &p.CanManageMaintenance,
+			&p.CanViewDocuments, &p.CanManageDocuments); err != nil {
 			return nil, err
 		}
 		m.BoatID = boatID
@@ -363,27 +368,46 @@ func (r *BoatRepo) Leave(ctx context.Context, userID, boatID string) error {
 	return nil
 }
 
-// CanEdit reports whether the user may write to the boat (owner or 'editor' member).
-func (r *BoatRepo) CanEdit(ctx context.Context, userID, boatID string) (bool, error) {
-	var ok bool
-	err := r.pool.QueryRow(ctx,
-		`SELECT EXISTS (SELECT 1 FROM boats WHERE id = $2 AND user_id = $1)
-			OR EXISTS (SELECT 1 FROM boat_members WHERE boat_id = $2 AND user_id = $1 AND role = 'editor')`,
-		userID, boatID).Scan(&ok)
-	if err != nil {
-		return false, fmt.Errorf("checking boat edit access: %w", err)
+// GetPermissions resolves a user's permission set for a boat. The owner has all
+// permissions; a member has their stored flags; a non-member has access=false.
+func (r *BoatRepo) GetPermissions(ctx context.Context, userID, boatID string) (domain.BoatPermissions, bool, error) {
+	var isOwner bool
+	if err := r.pool.QueryRow(ctx,
+		`SELECT EXISTS (SELECT 1 FROM boats WHERE id = $2 AND user_id = $1)`,
+		userID, boatID).Scan(&isOwner); err != nil {
+		return domain.BoatPermissions{}, false, fmt.Errorf("checking boat owner: %w", err)
 	}
-	return ok, nil
+	if isOwner {
+		return domain.OwnerPermissions(), true, nil
+	}
+	var p domain.BoatPermissions
+	err := r.pool.QueryRow(ctx,
+		`SELECT can_record_trips, can_manage_expenses, can_manage_maintenance,
+			can_view_documents, can_manage_documents
+		 FROM boat_members WHERE boat_id = $1 AND user_id = $2`, boatID, userID).
+		Scan(&p.CanRecordTrips, &p.CanManageExpenses, &p.CanManageMaintenance,
+			&p.CanViewDocuments, &p.CanManageDocuments)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.BoatPermissions{}, false, nil
+		}
+		return domain.BoatPermissions{}, false, fmt.Errorf("getting boat permissions: %w", err)
+	}
+	return p, true, nil
 }
 
-// SetMemberRole changes a member's role (owner only — enforced via ownerID).
-func (r *BoatRepo) SetMemberRole(ctx context.Context, ownerID, boatID, memberUserID, role string) error {
+// SetPermissions updates a member's permission flags (owner only).
+func (r *BoatRepo) SetPermissions(ctx context.Context, ownerID, boatID, memberUserID string, p domain.BoatPermissions) error {
 	ct, err := r.pool.Exec(ctx,
-		`UPDATE boat_members SET role = $1 WHERE boat_id = $2 AND user_id = $3
-		 AND boat_id IN (SELECT id FROM boats WHERE user_id = $4)`,
-		role, boatID, memberUserID, ownerID)
+		`UPDATE boat_members SET can_record_trips=$1, can_manage_expenses=$2,
+			can_manage_maintenance=$3, can_view_documents=$4, can_manage_documents=$5
+		 WHERE boat_id = $6 AND user_id = $7
+			AND boat_id IN (SELECT id FROM boats WHERE user_id = $8)`,
+		p.CanRecordTrips, p.CanManageExpenses, p.CanManageMaintenance,
+		p.CanViewDocuments, p.CanManageDocuments,
+		boatID, memberUserID, ownerID)
 	if err != nil {
-		return fmt.Errorf("setting boat member role: %w", err)
+		return fmt.Errorf("setting boat member permissions: %w", err)
 	}
 	if ct.RowsAffected() == 0 {
 		return domain.ErrNotFound

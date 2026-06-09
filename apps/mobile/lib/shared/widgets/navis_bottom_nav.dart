@@ -18,8 +18,8 @@ class NavisBottomNav extends ConsumerWidget {
     final l = AppLocalizations.of(context)!;
     // Sit lower by eating into the bottom safe-area inset (clamped so it never
     // goes off-screen on devices without a home indicator).
-    final bottomPadding =
-        (MediaQuery.of(context).padding.bottom - 10).clamp(0.0, double.infinity);
+    final bottomPadding = (MediaQuery.of(context).padding.bottom - 10)
+        .clamp(0.0, double.infinity);
 
     final items = [
       _NavItem(

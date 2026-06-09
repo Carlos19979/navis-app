@@ -1,4 +1,5 @@
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
+import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
 
 class BoatModel {
   const BoatModel({
@@ -13,7 +14,7 @@ class BoatModel {
     this.photoUrl,
     this.ownerId,
     this.isOwner = true,
-    this.canRecord = true,
+    this.permissions = const BoatPermissions(),
     this.createdAt,
     this.updatedAt,
   });
@@ -31,7 +32,10 @@ class BoatModel {
       photoUrl: json['photo_url'] as String?,
       ownerId: json['owner_id'] as String?,
       isOwner: json['is_owner'] as bool? ?? true,
-      canRecord: json['can_record'] as bool? ?? true,
+      permissions: json['permissions'] is Map<String, dynamic>
+          ? BoatPermissions.fromJson(
+              json['permissions'] as Map<String, dynamic>)
+          : const BoatPermissions(),
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
@@ -69,7 +73,7 @@ class BoatModel {
   final String? photoUrl;
   final String? ownerId;
   final bool isOwner;
-  final bool canRecord;
+  final BoatPermissions permissions;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -103,7 +107,7 @@ class BoatModel {
       photoUrl: photoUrl,
       ownerId: ownerId,
       isOwner: isOwner,
-      canRecord: canRecord,
+      permissions: permissions,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );

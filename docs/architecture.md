@@ -155,13 +155,14 @@ Key tables: `profiles`, `boats` (+`share_code`), `boat_members`, `documents`,
 
 ### Boat sharing (crew / co-owners)
 1. Owner generates `boats.share_code`; an invitee `POST /boats/join` is added to
-   `boat_members` as a read-only `viewer`. The owner can promote a member to
-   `editor` (`PUT /boats/:id/members/:userId/role`)
-2. Reads of a boat and its documents/trips/maintenance/expenses check
-   `boatRepo.HasAccess(userID, boatID)`; the logbook lists every member's trips
-3. An `editor` may also **record trips and log expenses/maintenance**
-   (`boatRepo.CanEdit`); documents, boat edit/delete and member management stay
-   strictly owner-scoped, so sharing cannot escalate to ownership/admin actions
+   `boat_members` view-only. The owner sets **granular per-member permissions**
+   (`PUT /boats/:id/members/:userId/permissions`)
+2. Base read (boat info + logbook of all members' trips) checks
+   `boatRepo.HasAccess`; the boat logbook lists every member's trips
+3. Every other action is gated by `boatRepo.GetPermissions(userID, boatID)` —
+   record trips, manage expenses, manage maintenance, view documents, manage
+   documents (owner has all). Boat edit/delete and member management stay
+   owner-only, so sharing cannot escalate to ownership/admin actions
 
 ## Deployment
 

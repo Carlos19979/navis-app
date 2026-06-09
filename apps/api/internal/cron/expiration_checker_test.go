@@ -25,16 +25,16 @@ func (m *mockDocRepo) GetByID(ctx context.Context, userID, id string) (*domain.D
 func (m *mockDocRepo) List(ctx context.Context, userID, cursor string, limit int) ([]domain.Document, string, error) {
 	return nil, "", nil
 }
-func (m *mockDocRepo) ListByBoat(ctx context.Context, userID, boatID, cursor string, limit int) ([]domain.Document, string, error) {
+func (m *mockDocRepo) ListByBoat(ctx context.Context, boatID, cursor string, limit int) ([]domain.Document, string, error) {
 	return nil, "", nil
 }
 func (m *mockDocRepo) ListExpiring(ctx context.Context, withinDays int) ([]domain.Document, error) {
 	return m.listExpiringFn(ctx, withinDays)
 }
-func (m *mockDocRepo) Update(ctx context.Context, userID string, doc *domain.Document) (*domain.Document, error) {
+func (m *mockDocRepo) Update(ctx context.Context, doc *domain.Document) (*domain.Document, error) {
 	return nil, nil
 }
-func (m *mockDocRepo) Delete(ctx context.Context, userID, id string) error { return nil }
+func (m *mockDocRepo) Delete(ctx context.Context, boatID, id string) error { return nil }
 
 type mockNotifLogRepo struct {
 	existsFn func(ctx context.Context, userID, docID string, daysBefore int) (bool, error)

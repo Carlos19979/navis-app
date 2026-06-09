@@ -3,24 +3,33 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:navis_mobile/core/network/api_client.dart';
 import 'package:navis_mobile/features/boat/data/models/boat_model.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
+import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
 
 /// A user with shared access to a boat.
 class BoatMember {
   const BoatMember({
     required this.userId,
     required this.name,
-    required this.role,
+    required this.permissions,
   });
 
   factory BoatMember.fromJson(Map<String, dynamic> json) => BoatMember(
         userId: json['user_id'] as String,
         name: json['name'] as String? ?? '',
-        role: json['role'] as String? ?? 'viewer',
+        permissions: json['permissions'] is Map<String, dynamic>
+            ? BoatPermissions.fromJson(
+                json['permissions'] as Map<String, dynamic>)
+            : const BoatPermissions(
+                canRecordTrips: false,
+                canManageExpenses: false,
+                canManageMaintenance: false,
+                canManageDocuments: false,
+              ),
       );
 
   final String userId;
   final String name;
-  final String role;
+  final BoatPermissions permissions;
 }
 
 class BoatShareRepository {
@@ -65,11 +74,12 @@ class BoatShareRepository {
     await _apiClient.delete<void>('/api/v1/boats/$boatId/members/$userId');
   }
 
-  /// Owner: set a member's role (viewer = read-only, editor = can record trips).
-  Future<void> setMemberRole(String boatId, String userId, String role) async {
+  /// Owner: set a member's granular permissions.
+  Future<void> setMemberPermissions(
+      String boatId, String userId, BoatPermissions permissions) async {
     await _apiClient.put<void>(
-      '/api/v1/boats/$boatId/members/$userId/role',
-      data: {'role': role},
+      '/api/v1/boats/$boatId/members/$userId/permissions',
+      data: permissions.toJson(),
     );
   }
 

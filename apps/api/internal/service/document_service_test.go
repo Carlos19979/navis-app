@@ -33,20 +33,20 @@ func (m *mockDocumentRepo) List(ctx context.Context, userID, cursor string, limi
 	return m.listFn(ctx, userID, cursor, limit)
 }
 
-func (m *mockDocumentRepo) ListByBoat(ctx context.Context, userID, boatID, cursor string, limit int) ([]domain.Document, string, error) {
-	return m.listByBoatFn(ctx, userID, boatID, cursor, limit)
+func (m *mockDocumentRepo) ListByBoat(ctx context.Context, boatID, cursor string, limit int) ([]domain.Document, string, error) {
+	return m.listByBoatFn(ctx, "", boatID, cursor, limit)
 }
 
 func (m *mockDocumentRepo) ListExpiring(ctx context.Context, withinDays int) ([]domain.Document, error) {
 	return m.listExpiringFn(ctx, withinDays)
 }
 
-func (m *mockDocumentRepo) Update(ctx context.Context, userID string, doc *domain.Document) (*domain.Document, error) {
-	return m.updateFn(ctx, userID, doc)
+func (m *mockDocumentRepo) Update(ctx context.Context, doc *domain.Document) (*domain.Document, error) {
+	return m.updateFn(ctx, "", doc)
 }
 
-func (m *mockDocumentRepo) Delete(ctx context.Context, userID, id string) error {
-	return m.deleteFn(ctx, userID, id)
+func (m *mockDocumentRepo) Delete(ctx context.Context, boatID, id string) error {
+	return m.deleteFn(ctx, boatID, id)
 }
 
 // --- helpers ---
@@ -119,13 +119,13 @@ func TestDocumentService_Create_EmptyUserID(t *testing.T) {
 	}
 }
 
-func TestDocumentService_Create_BoatNotFound(t *testing.T) {
+func TestDocumentService_Create_NoBoatAccess(t *testing.T) {
 	t.Parallel()
 
 	doc := newTestDocument()
 	boatRepo := &mockBoatRepo{
-		getByIDFn: func(_ context.Context, _, _ string) (*domain.Boat, error) {
-			return nil, domain.ErrBoatNotFound
+		getPermissionsFn: func(_ context.Context, _, _ string) (domain.BoatPermissions, bool, error) {
+			return domain.BoatPermissions{}, false, nil // not a member
 		},
 	}
 	docRepo := &mockDocumentRepo{}
@@ -135,22 +135,19 @@ func TestDocumentService_Create_BoatNotFound(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
-	if !errors.Is(err, domain.ErrBoatNotFound) {
-		t.Errorf("expected ErrBoatNotFound, got %v", err)
+	if !errors.Is(err, domain.ErrForbidden) {
+		t.Errorf("expected ErrForbidden, got %v", err)
 	}
 }
 
-func TestDocumentService_Create_BoatNotOwnedByUser(t *testing.T) {
+func TestDocumentService_Create_NoManagePermission(t *testing.T) {
 	t.Parallel()
 
 	doc := newTestDocument()
-	doc.UserID = "other-user" // Different from boat owner
 	boatRepo := &mockBoatRepo{
-		getByIDFn: func(_ context.Context, userID, _ string) (*domain.Boat, error) {
-			if userID == "other-user" {
-				return nil, domain.ErrBoatNotFound
-			}
-			return newTestBoat(), nil
+		getPermissionsFn: func(_ context.Context, _, _ string) (domain.BoatPermissions, bool, error) {
+			// Member who can view but not manage documents.
+			return domain.BoatPermissions{CanViewDocuments: true}, true, nil
 		},
 	}
 	docRepo := &mockDocumentRepo{}
@@ -160,8 +157,8 @@ func TestDocumentService_Create_BoatNotOwnedByUser(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
-	if !errors.Is(err, domain.ErrBoatNotFound) {
-		t.Errorf("expected ErrBoatNotFound, got %v", err)
+	if !errors.Is(err, domain.ErrForbidden) {
+		t.Errorf("expected ErrForbidden, got %v", err)
 	}
 }
 
@@ -400,7 +397,7 @@ func TestDocumentService_Update_NotFound(t *testing.T) {
 	}
 }
 
-func TestDocumentService_Update_BoatOwnershipFails(t *testing.T) {
+func TestDocumentService_Update_NoManagePermission(t *testing.T) {
 	t.Parallel()
 
 	doc := newTestDocument()
@@ -412,8 +409,8 @@ func TestDocumentService_Update_BoatOwnershipFails(t *testing.T) {
 		},
 	}
 	boatRepo := &mockBoatRepo{
-		getByIDFn: func(_ context.Context, _, _ string) (*domain.Boat, error) {
-			return nil, domain.ErrBoatNotFound
+		getPermissionsFn: func(_ context.Context, _, _ string) (domain.BoatPermissions, bool, error) {
+			return domain.BoatPermissions{CanViewDocuments: true}, true, nil // view only
 		},
 	}
 	svc := NewDocumentService(docRepo, boatRepo)
@@ -422,8 +419,8 @@ func TestDocumentService_Update_BoatOwnershipFails(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
-	if !errors.Is(err, domain.ErrBoatNotFound) {
-		t.Errorf("expected ErrBoatNotFound, got %v", err)
+	if !errors.Is(err, domain.ErrForbidden) {
+		t.Errorf("expected ErrForbidden, got %v", err)
 	}
 }
 
@@ -433,6 +430,9 @@ func TestDocumentService_Delete_Success(t *testing.T) {
 	t.Parallel()
 
 	docRepo := &mockDocumentRepo{
+		getByIDFn: func(_ context.Context, _, _ string) (*domain.Document, error) {
+			return &domain.Document{ID: "doc-1", BoatID: "boat-1"}, nil
+		},
 		deleteFn: func(_ context.Context, _, _ string) error {
 			return nil
 		},
@@ -449,6 +449,9 @@ func TestDocumentService_Delete_NotFound(t *testing.T) {
 	t.Parallel()
 
 	docRepo := &mockDocumentRepo{
+		getByIDFn: func(_ context.Context, _, _ string) (*domain.Document, error) {
+			return &domain.Document{ID: "x", BoatID: "boat-1"}, nil
+		},
 		deleteFn: func(_ context.Context, _, _ string) error {
 			return domain.ErrDocumentNotFound
 		},

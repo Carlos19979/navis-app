@@ -36,13 +36,13 @@ func (s *TripService) Create(ctx context.Context, trip *domain.Trip) (*domain.Tr
 		return nil, &domain.ValidationError{Field: "departure_port", Message: "departure port is required"}
 	}
 
-	// Only the boat owner or an 'editor' member may record trips on the boat.
+	// Only users with the "record trips" permission may record on the boat.
 	if trip.BoatID != "" {
-		canEdit, err := s.boatRepo.CanEdit(ctx, trip.UserID, trip.BoatID)
+		perms, ok, err := s.boatRepo.GetPermissions(ctx, trip.UserID, trip.BoatID)
 		if err != nil {
 			return nil, fmt.Errorf("creating trip: %w", err)
 		}
-		if !canEdit {
+		if !ok || !perms.CanRecordTrips {
 			return nil, fmt.Errorf("creating trip: %w", domain.ErrForbidden)
 		}
 	}

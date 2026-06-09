@@ -662,17 +662,19 @@ Boats shared with the current user.
 ### GET /api/v1/boats/:id/members · DELETE …/members/:userId
 Owner: list / revoke shared members.
 
-### PUT /api/v1/boats/:id/members/:userId/role
-Owner: set a member's role. Body `{ "role": "viewer" | "editor" }`.
+### PUT /api/v1/boats/:id/members/:userId/permissions
+Owner: set a member's granular permissions. Body (all booleans):
+`{ "can_record_trips", "can_manage_expenses", "can_manage_maintenance", "can_view_documents", "can_manage_documents" }`.
 
 ### POST /api/v1/boats/:id/leave
 Member: leave a shared boat.
 
-**Access model:** boat + its documents/trips/maintenance/expenses are **readable** by the
-owner or any member (logbook/maintenance/expense lists show every member's entries). An
-**editor** member may also **record trips and log expenses/maintenance**; documents, boat
-edit/delete, member management and deletes stay owner-only. `GET /api/v1/boats/:id` includes
-`is_owner` and `can_record`.
+**Access model:** base read (boat info + logbook of all members' trips) is allowed for the
+owner or any member. Everything else is governed by **per-member permissions** (resolved via
+`boatRepo.GetPermissions`; the owner has all): record trips, manage expenses, manage
+maintenance, view documents, manage documents. Boat edit/delete and member management stay
+owner-only. `GET /api/v1/boats/:id` returns `is_owner` and a `permissions{...}` object;
+`GET /api/v1/boats/:id/members` returns each member's `permissions{...}`.
 
 ## Weather (extended)
 

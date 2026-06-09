@@ -165,17 +165,14 @@ func (s *BoatService) RemoveMember(ctx context.Context, ownerID, boatID, memberU
 	return s.repo.RemoveMember(ctx, ownerID, boatID, memberUserID)
 }
 
-// SetMemberRole changes a member's role (viewer/editor). Owner only.
-func (s *BoatService) SetMemberRole(ctx context.Context, ownerID, boatID, memberUserID, role string) error {
-	if role != "viewer" && role != "editor" {
-		return &domain.ValidationError{Field: "role", Message: "role must be viewer or editor"}
-	}
-	return s.repo.SetMemberRole(ctx, ownerID, boatID, memberUserID, role)
+// SetMemberPermissions updates a member's granular permission flags. Owner only.
+func (s *BoatService) SetMemberPermissions(ctx context.Context, ownerID, boatID, memberUserID string, p domain.BoatPermissions) error {
+	return s.repo.SetPermissions(ctx, ownerID, boatID, memberUserID, p)
 }
 
-// CanRecord reports whether the user may record trips on the boat (owner or editor).
-func (s *BoatService) CanRecord(ctx context.Context, userID, boatID string) (bool, error) {
-	return s.repo.CanEdit(ctx, userID, boatID)
+// Permissions resolves a user's permission set for a boat (access=false if none).
+func (s *BoatService) Permissions(ctx context.Context, userID, boatID string) (domain.BoatPermissions, bool, error) {
+	return s.repo.GetPermissions(ctx, userID, boatID)
 }
 
 // Leave removes the user's own membership of a shared boat.
