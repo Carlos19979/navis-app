@@ -2,8 +2,10 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
@@ -20,27 +22,47 @@ func NewMaintenanceRepo(pool *pgxpool.Pool) *MaintenanceRepo {
 }
 
 const maintenanceColumns = `id, boat_id, user_id, type, performed_at, engine_hours,
-	cost, provider, notes, created_at, updated_at`
+	cost, provider, notes, invoice_url, created_at, updated_at`
 
 func scanMaintenance(row interface {
 	Scan(...any) error
 }) (*domain.MaintenanceLog, error) {
 	m := &domain.MaintenanceLog{}
 	err := row.Scan(&m.ID, &m.BoatID, &m.UserID, &m.Type, &m.PerformedAt,
-		&m.EngineHours, &m.Cost, &m.Provider, &m.Notes, &m.CreatedAt, &m.UpdatedAt)
+		&m.EngineHours, &m.Cost, &m.Provider, &m.Notes, &m.InvoiceURL,
+		&m.CreatedAt, &m.UpdatedAt)
 	return m, err
 }
 
 // Create inserts a maintenance log.
 func (r *MaintenanceRepo) Create(ctx context.Context, m *domain.MaintenanceLog) (*domain.MaintenanceLog, error) {
 	query := `INSERT INTO maintenance_logs
-		(boat_id, user_id, type, performed_at, engine_hours, cost, provider, notes)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+		(boat_id, user_id, type, performed_at, engine_hours, cost, provider, notes, invoice_url)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
 		RETURNING ` + maintenanceColumns
 	out, err := scanMaintenance(r.pool.QueryRow(ctx, query,
-		m.BoatID, m.UserID, m.Type, m.PerformedAt, m.EngineHours, m.Cost, m.Provider, m.Notes))
+		m.BoatID, m.UserID, m.Type, m.PerformedAt, m.EngineHours, m.Cost, m.Provider, m.Notes, m.InvoiceURL))
 	if err != nil {
 		return nil, fmt.Errorf("inserting maintenance log: %w", err)
+	}
+	return out, nil
+}
+
+// Update modifies a maintenance log scoped to its boat.
+func (r *MaintenanceRepo) Update(ctx context.Context, m *domain.MaintenanceLog) (*domain.MaintenanceLog, error) {
+	query := `UPDATE maintenance_logs
+		SET type=$1, performed_at=$2, engine_hours=$3, cost=$4, provider=$5,
+			notes=$6, invoice_url=$7, updated_at=now()
+		WHERE id=$8 AND boat_id=$9
+		RETURNING ` + maintenanceColumns
+	out, err := scanMaintenance(r.pool.QueryRow(ctx, query,
+		m.Type, m.PerformedAt, m.EngineHours, m.Cost, m.Provider, m.Notes, m.InvoiceURL,
+		m.ID, m.BoatID))
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrNotFound
+		}
+		return nil, fmt.Errorf("updating maintenance log %s: %w", m.ID, err)
 	}
 	return out, nil
 }
@@ -67,9 +89,9 @@ func (r *MaintenanceRepo) ListByBoat(ctx context.Context, boatID string) ([]doma
 }
 
 // Delete removes a maintenance log owned by the user.
-func (r *MaintenanceRepo) Delete(ctx context.Context, userID, id string) error {
+func (r *MaintenanceRepo) Delete(ctx context.Context, boatID, id string) error {
 	ct, err := r.pool.Exec(ctx,
-		`DELETE FROM maintenance_logs WHERE user_id = $1 AND id = $2`, userID, id)
+		`DELETE FROM maintenance_logs WHERE boat_id = $1 AND id = $2`, boatID, id)
 	if err != nil {
 		return fmt.Errorf("deleting maintenance log %s: %w", id, err)
 	}
@@ -89,25 +111,42 @@ func NewExpenseRepo(pool *pgxpool.Pool) *ExpenseRepo {
 	return &ExpenseRepo{pool: pool}
 }
 
-const expenseColumns = `id, boat_id, user_id, category, amount, incurred_on, notes, created_at, updated_at`
+const expenseColumns = `id, boat_id, user_id, category, amount, incurred_on, notes, invoice_url, created_at, updated_at`
 
 func scanExpense(row interface {
 	Scan(...any) error
 }) (*domain.Expense, error) {
 	e := &domain.Expense{}
 	err := row.Scan(&e.ID, &e.BoatID, &e.UserID, &e.Category, &e.Amount,
-		&e.IncurredOn, &e.Notes, &e.CreatedAt, &e.UpdatedAt)
+		&e.IncurredOn, &e.Notes, &e.InvoiceURL, &e.CreatedAt, &e.UpdatedAt)
 	return e, err
 }
 
 // Create inserts an expense.
 func (r *ExpenseRepo) Create(ctx context.Context, e *domain.Expense) (*domain.Expense, error) {
-	query := `INSERT INTO expenses (boat_id, user_id, category, amount, incurred_on, notes)
-		VALUES ($1,$2,$3,$4,$5,$6) RETURNING ` + expenseColumns
+	query := `INSERT INTO expenses (boat_id, user_id, category, amount, incurred_on, notes, invoice_url)
+		VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING ` + expenseColumns
 	out, err := scanExpense(r.pool.QueryRow(ctx, query,
-		e.BoatID, e.UserID, e.Category, e.Amount, e.IncurredOn, e.Notes))
+		e.BoatID, e.UserID, e.Category, e.Amount, e.IncurredOn, e.Notes, e.InvoiceURL))
 	if err != nil {
 		return nil, fmt.Errorf("inserting expense: %w", err)
+	}
+	return out, nil
+}
+
+// Update modifies an expense scoped to its boat.
+func (r *ExpenseRepo) Update(ctx context.Context, e *domain.Expense) (*domain.Expense, error) {
+	query := `UPDATE expenses
+		SET category=$1, amount=$2, incurred_on=$3, notes=$4, invoice_url=$5, updated_at=now()
+		WHERE id=$6 AND boat_id=$7
+		RETURNING ` + expenseColumns
+	out, err := scanExpense(r.pool.QueryRow(ctx, query,
+		e.Category, e.Amount, e.IncurredOn, e.Notes, e.InvoiceURL, e.ID, e.BoatID))
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrNotFound
+		}
+		return nil, fmt.Errorf("updating expense %s: %w", e.ID, err)
 	}
 	return out, nil
 }
@@ -134,9 +173,9 @@ func (r *ExpenseRepo) ListByBoat(ctx context.Context, boatID string) ([]domain.E
 }
 
 // Delete removes an expense owned by the user.
-func (r *ExpenseRepo) Delete(ctx context.Context, userID, id string) error {
+func (r *ExpenseRepo) Delete(ctx context.Context, boatID, id string) error {
 	ct, err := r.pool.Exec(ctx,
-		`DELETE FROM expenses WHERE user_id = $1 AND id = $2`, userID, id)
+		`DELETE FROM expenses WHERE boat_id = $1 AND id = $2`, boatID, id)
 	if err != nil {
 		return fmt.Errorf("deleting expense %s: %w", id, err)
 	}

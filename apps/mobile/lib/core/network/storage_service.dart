@@ -85,6 +85,48 @@ class StorageService {
     return '$url?v=${DateTime.now().millisecondsSinceEpoch}';
   }
 
+  /// Uploads an invoice/receipt (image or PDF) for a maintenance/expense entry.
+  Future<String> uploadInvoice({
+    required String userId,
+    required File file,
+  }) async {
+    uploadProgress.value = 0.0;
+    final ext = file.path.contains('.')
+        ? '.${file.path.split('.').last}'.toLowerCase()
+        : '';
+    final isPdf = ext == '.pdf';
+    final stamp = DateTime.now().millisecondsSinceEpoch;
+    final String path;
+    if (isPdf) {
+      path = '$userId/invoices/$stamp.pdf';
+      uploadProgress.value = 0.5;
+      await supabaseClient.storage.from('documents').upload(
+            path,
+            file,
+            fileOptions: const FileOptions(
+              contentType: 'application/pdf',
+              upsert: true,
+            ),
+          );
+    } else {
+      path = '$userId/invoices/$stamp.jpg';
+      final compressed = await _compressImage(file);
+      uploadProgress.value = 0.5;
+      await supabaseClient.storage.from('documents').uploadBinary(
+            path,
+            compressed,
+            fileOptions: const FileOptions(
+              contentType: 'image/jpeg',
+              upsert: true,
+            ),
+          );
+    }
+    uploadProgress.value = 1.0;
+    final url = supabaseClient.storage.from('documents').getPublicUrl(path);
+    uploadProgress.value = null;
+    return url;
+  }
+
   Future<void> deleteBoatPhoto({
     required String userId,
     required String boatId,

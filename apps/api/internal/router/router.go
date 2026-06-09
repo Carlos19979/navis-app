@@ -101,6 +101,7 @@ func New(
 				r.Route("/maintenance", func(r chi.Router) {
 					r.Get("/", maintenanceH.ListLogs)
 					r.Post("/", maintenanceH.CreateLog)
+					r.Put("/{logId}", maintenanceH.UpdateLog)
 					r.Delete("/{logId}", maintenanceH.DeleteLog)
 				})
 
@@ -108,6 +109,7 @@ func New(
 					r.Get("/", maintenanceH.ListExpenses)
 					r.Post("/", maintenanceH.CreateExpense)
 					r.Get("/summary", maintenanceH.ExpenseSummary)
+					r.Put("/{expenseId}", maintenanceH.UpdateExpense)
 					r.Delete("/{expenseId}", maintenanceH.DeleteExpense)
 				})
 			})

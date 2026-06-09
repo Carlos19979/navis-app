@@ -9,6 +9,7 @@ class MaintenanceLog {
     this.cost,
     this.provider,
     this.notes,
+    this.invoiceUrl,
   });
 
   factory MaintenanceLog.fromJson(Map<String, dynamic> json) {
@@ -21,6 +22,7 @@ class MaintenanceLog {
       cost: (json['cost'] as num?)?.toDouble(),
       provider: json['provider'] as String?,
       notes: json['notes'] as String?,
+      invoiceUrl: json['invoice_url'] as String?,
     );
   }
 
@@ -32,6 +34,7 @@ class MaintenanceLog {
   final double? cost;
   final String? provider;
   final String? notes;
+  final String? invoiceUrl;
 }
 
 /// A cost associated with a boat.
@@ -43,6 +46,7 @@ class Expense {
     required this.amount,
     required this.incurredOn,
     this.notes,
+    this.invoiceUrl,
   });
 
   factory Expense.fromJson(Map<String, dynamic> json) {
@@ -53,6 +57,7 @@ class Expense {
       amount: (json['amount'] as num).toDouble(),
       incurredOn: DateTime.parse(json['incurred_on'] as String),
       notes: json['notes'] as String?,
+      invoiceUrl: json['invoice_url'] as String?,
     );
   }
 
@@ -62,6 +67,7 @@ class Expense {
   final double amount;
   final DateTime incurredOn;
   final String? notes;
+  final String? invoiceUrl;
 }
 
 /// Aggregated expense totals per category.

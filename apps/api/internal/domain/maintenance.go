@@ -13,6 +13,7 @@ type MaintenanceLog struct {
 	Cost        *float64
 	Provider    *string
 	Notes       *string
+	InvoiceURL  *string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
@@ -26,6 +27,7 @@ type Expense struct {
 	Amount     float64
 	IncurredOn time.Time
 	Notes      *string
+	InvoiceURL *string
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 }

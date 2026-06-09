@@ -72,6 +72,7 @@ func (h *MaintenanceHandler) CreateLog(w http.ResponseWriter, r *http.Request) {
 		Cost:        req.Cost,
 		Provider:    req.Provider,
 		Notes:       req.Notes,
+		InvoiceURL:  req.InvoiceURL,
 	}
 	created, err := h.svc.AddLog(r.Context(), log)
 	if err != nil {
@@ -81,6 +82,47 @@ func (h *MaintenanceHandler) CreateLog(w http.ResponseWriter, r *http.Request) {
 	JSON(w, http.StatusCreated, dto.MaintenanceResponseFromDomain(created))
 }
 
+// UpdateLog handles PUT /boats/{boatId}/maintenance/{logId}.
+func (h *MaintenanceHandler) UpdateLog(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok {
+		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
+		return
+	}
+	var req dto.CreateMaintenanceRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		Error(w, http.StatusBadRequest, "invalid request body", "BAD_REQUEST")
+		return
+	}
+	if errs := validator.Validate(req); errs != nil {
+		ValidationError(w, errs)
+		return
+	}
+	performedAt, err := dto.ParseDate(req.PerformedAt)
+	if err != nil {
+		Error(w, http.StatusBadRequest, "invalid performed_at date", "BAD_REQUEST")
+		return
+	}
+	log := &domain.MaintenanceLog{
+		ID:          chi.URLParam(r, "logId"),
+		BoatID:      chi.URLParam(r, "id"),
+		UserID:      userID,
+		Type:        req.Type,
+		PerformedAt: performedAt,
+		EngineHours: req.EngineHours,
+		Cost:        req.Cost,
+		Provider:    req.Provider,
+		Notes:       req.Notes,
+		InvoiceURL:  req.InvoiceURL,
+	}
+	updated, err := h.svc.UpdateLog(r.Context(), userID, log)
+	if err != nil {
+		MapDomainError(w, err)
+		return
+	}
+	JSON(w, http.StatusOK, dto.MaintenanceResponseFromDomain(updated))
+}
+
 // DeleteLog handles DELETE /boats/{boatId}/maintenance/{logId}.
 func (h *MaintenanceHandler) DeleteLog(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.UserIDFromContext(r.Context())
@@ -88,7 +130,8 @@ func (h *MaintenanceHandler) DeleteLog(w http.ResponseWriter, r *http.Request) {
 		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
-	if err := h.svc.DeleteLog(r.Context(), userID, chi.URLParam(r, "logId")); err != nil {
+	if err := h.svc.DeleteLog(r.Context(), userID,
+		chi.URLParam(r, "id"), chi.URLParam(r, "logId")); err != nil {
 		MapDomainError(w, err)
 		return
 	}
@@ -142,6 +185,7 @@ func (h *MaintenanceHandler) CreateExpense(w http.ResponseWriter, r *http.Reques
 		Amount:     req.Amount,
 		IncurredOn: incurredOn,
 		Notes:      req.Notes,
+		InvoiceURL: req.InvoiceURL,
 	}
 	created, err := h.svc.AddExpense(r.Context(), e)
 	if err != nil {
@@ -151,6 +195,45 @@ func (h *MaintenanceHandler) CreateExpense(w http.ResponseWriter, r *http.Reques
 	JSON(w, http.StatusCreated, dto.ExpenseResponseFromDomain(created))
 }
 
+// UpdateExpense handles PUT /boats/{boatId}/expenses/{expenseId}.
+func (h *MaintenanceHandler) UpdateExpense(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok {
+		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
+		return
+	}
+	var req dto.CreateExpenseRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		Error(w, http.StatusBadRequest, "invalid request body", "BAD_REQUEST")
+		return
+	}
+	if errs := validator.Validate(req); errs != nil {
+		ValidationError(w, errs)
+		return
+	}
+	incurredOn, err := dto.ParseDate(req.IncurredOn)
+	if err != nil {
+		Error(w, http.StatusBadRequest, "invalid incurred_on date", "BAD_REQUEST")
+		return
+	}
+	e := &domain.Expense{
+		ID:         chi.URLParam(r, "expenseId"),
+		BoatID:     chi.URLParam(r, "id"),
+		UserID:     userID,
+		Category:   req.Category,
+		Amount:     req.Amount,
+		IncurredOn: incurredOn,
+		Notes:      req.Notes,
+		InvoiceURL: req.InvoiceURL,
+	}
+	updated, err := h.svc.UpdateExpense(r.Context(), userID, e)
+	if err != nil {
+		MapDomainError(w, err)
+		return
+	}
+	JSON(w, http.StatusOK, dto.ExpenseResponseFromDomain(updated))
+}
+
 // DeleteExpense handles DELETE /boats/{boatId}/expenses/{expenseId}.
 func (h *MaintenanceHandler) DeleteExpense(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.UserIDFromContext(r.Context())
@@ -158,7 +241,8 @@ func (h *MaintenanceHandler) DeleteExpense(w http.ResponseWriter, r *http.Reques
 		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
-	if err := h.svc.DeleteExpense(r.Context(), userID, chi.URLParam(r, "expenseId")); err != nil {
+	if err := h.svc.DeleteExpense(r.Context(), userID,
+		chi.URLParam(r, "id"), chi.URLParam(r, "expenseId")); err != nil {
 		MapDomainError(w, err)
 		return
 	}

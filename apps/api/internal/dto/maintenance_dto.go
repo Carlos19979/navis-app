@@ -14,6 +14,7 @@ type CreateMaintenanceRequest struct {
 	Cost        *float64 `json:"cost"`
 	Provider    *string  `json:"provider"`
 	Notes       *string  `json:"notes"`
+	InvoiceURL  *string  `json:"invoice_url"`
 }
 
 // MaintenanceResponse is the API representation of a maintenance log.
@@ -26,6 +27,7 @@ type MaintenanceResponse struct {
 	Cost        *float64 `json:"cost"`
 	Provider    *string  `json:"provider"`
 	Notes       *string  `json:"notes"`
+	InvoiceURL  *string  `json:"invoice_url"`
 }
 
 // MaintenanceResponseFromDomain converts a domain log to a response.
@@ -39,6 +41,7 @@ func MaintenanceResponseFromDomain(m *domain.MaintenanceLog) MaintenanceResponse
 		Cost:        m.Cost,
 		Provider:    m.Provider,
 		Notes:       m.Notes,
+		InvoiceURL:  m.InvoiceURL,
 	}
 }
 
@@ -57,6 +60,7 @@ type CreateExpenseRequest struct {
 	Amount     float64 `json:"amount" validate:"required"`
 	IncurredOn string  `json:"incurred_on" validate:"required"`
 	Notes      *string `json:"notes"`
+	InvoiceURL *string `json:"invoice_url"`
 }
 
 // ExpenseResponse is the API representation of an expense.
@@ -67,6 +71,7 @@ type ExpenseResponse struct {
 	Amount     float64 `json:"amount"`
 	IncurredOn string  `json:"incurred_on"`
 	Notes      *string `json:"notes"`
+	InvoiceURL *string `json:"invoice_url"`
 }
 
 // ExpenseResponseFromDomain converts a domain expense to a response.
@@ -78,6 +83,7 @@ func ExpenseResponseFromDomain(e *domain.Expense) ExpenseResponse {
 		Amount:     e.Amount,
 		IncurredOn: e.IncurredOn.Format("2006-01-02"),
 		Notes:      e.Notes,
+		InvoiceURL: e.InvoiceURL,
 	}
 }
 

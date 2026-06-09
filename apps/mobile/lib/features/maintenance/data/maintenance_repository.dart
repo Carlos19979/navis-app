@@ -23,6 +23,14 @@ class MaintenanceRepository {
     );
   }
 
+  Future<void> updateLog(
+      String boatId, String id, Map<String, dynamic> body) async {
+    await _apiClient.put<Map<String, dynamic>>(
+      '/api/v1/boats/$boatId/maintenance/$id',
+      data: body,
+    );
+  }
+
   Future<void> deleteLog(String boatId, String id) async {
     await _apiClient.delete<void>('/api/v1/boats/$boatId/maintenance/$id');
   }
@@ -37,6 +45,14 @@ class MaintenanceRepository {
   Future<void> addExpense(String boatId, Map<String, dynamic> body) async {
     await _apiClient.post<Map<String, dynamic>>(
       '/api/v1/boats/$boatId/expenses',
+      data: body,
+    );
+  }
+
+  Future<void> updateExpense(
+      String boatId, String id, Map<String, dynamic> body) async {
+    await _apiClient.put<Map<String, dynamic>>(
+      '/api/v1/boats/$boatId/expenses/$id',
       data: body,
     );
   }
