@@ -20,13 +20,25 @@ func NewMaintenanceService(maint port.MaintenanceRepository, exp port.ExpenseRep
 	return &MaintenanceService{maint: maint, exp: exp, boats: boats}
 }
 
-// assertCanEdit verifies the user may write to the boat (owner or editor member).
-func (s *MaintenanceService) assertCanEdit(ctx context.Context, userID, boatID string) error {
-	can, err := s.boats.CanEdit(ctx, userID, boatID)
+// assertMaintenance verifies the user may manage maintenance on the boat.
+func (s *MaintenanceService) assertMaintenance(ctx context.Context, userID, boatID string) error {
+	perms, ok, err := s.boats.GetPermissions(ctx, userID, boatID)
 	if err != nil {
 		return err
 	}
-	if !can {
+	if !ok || !perms.CanManageMaintenance {
+		return domain.ErrForbidden
+	}
+	return nil
+}
+
+// assertExpenses verifies the user may manage expenses on the boat.
+func (s *MaintenanceService) assertExpenses(ctx context.Context, userID, boatID string) error {
+	perms, ok, err := s.boats.GetPermissions(ctx, userID, boatID)
+	if err != nil {
+		return err
+	}
+	if !ok || !perms.CanManageExpenses {
 		return domain.ErrForbidden
 	}
 	return nil
@@ -45,7 +57,7 @@ func (s *MaintenanceService) AddLog(ctx context.Context, log *domain.Maintenance
 	if log.Type == "" {
 		return nil, &domain.ValidationError{Field: "type", Message: "type is required"}
 	}
-	if err := s.assertCanEdit(ctx, log.UserID, log.BoatID); err != nil {
+	if err := s.assertMaintenance(ctx, log.UserID, log.BoatID); err != nil {
 		return nil, fmt.Errorf("add maintenance: %w", err)
 	}
 	return s.maint.Create(ctx, log)
@@ -64,7 +76,7 @@ func (s *MaintenanceService) UpdateLog(ctx context.Context, userID string, log *
 	if log.Type == "" {
 		return nil, &domain.ValidationError{Field: "type", Message: "type is required"}
 	}
-	if err := s.assertCanEdit(ctx, userID, log.BoatID); err != nil {
+	if err := s.assertMaintenance(ctx, userID, log.BoatID); err != nil {
 		return nil, fmt.Errorf("update maintenance: %w", err)
 	}
 	return s.maint.Update(ctx, log)
@@ -72,7 +84,7 @@ func (s *MaintenanceService) UpdateLog(ctx context.Context, userID string, log *
 
 // DeleteLog removes a maintenance log (owner or editor member).
 func (s *MaintenanceService) DeleteLog(ctx context.Context, userID, boatID, id string) error {
-	if err := s.assertCanEdit(ctx, userID, boatID); err != nil {
+	if err := s.assertMaintenance(ctx, userID, boatID); err != nil {
 		return fmt.Errorf("delete maintenance: %w", err)
 	}
 	return s.maint.Delete(ctx, boatID, id)
@@ -83,7 +95,7 @@ func (s *MaintenanceService) AddExpense(ctx context.Context, e *domain.Expense) 
 	if e.Category == "" {
 		return nil, &domain.ValidationError{Field: "category", Message: "category is required"}
 	}
-	if err := s.assertCanEdit(ctx, e.UserID, e.BoatID); err != nil {
+	if err := s.assertExpenses(ctx, e.UserID, e.BoatID); err != nil {
 		return nil, fmt.Errorf("add expense: %w", err)
 	}
 	return s.exp.Create(ctx, e)
@@ -102,7 +114,7 @@ func (s *MaintenanceService) UpdateExpense(ctx context.Context, userID string, e
 	if e.Category == "" {
 		return nil, &domain.ValidationError{Field: "category", Message: "category is required"}
 	}
-	if err := s.assertCanEdit(ctx, userID, e.BoatID); err != nil {
+	if err := s.assertExpenses(ctx, userID, e.BoatID); err != nil {
 		return nil, fmt.Errorf("update expense: %w", err)
 	}
 	return s.exp.Update(ctx, e)
@@ -110,7 +122,7 @@ func (s *MaintenanceService) UpdateExpense(ctx context.Context, userID string, e
 
 // DeleteExpense removes an expense (owner or editor member).
 func (s *MaintenanceService) DeleteExpense(ctx context.Context, userID, boatID, id string) error {
-	if err := s.assertCanEdit(ctx, userID, boatID); err != nil {
+	if err := s.assertExpenses(ctx, userID, boatID); err != nil {
 		return fmt.Errorf("delete expense: %w", err)
 	}
 	return s.exp.Delete(ctx, boatID, id)

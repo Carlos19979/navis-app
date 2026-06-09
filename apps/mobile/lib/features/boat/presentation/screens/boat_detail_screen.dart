@@ -10,6 +10,7 @@ import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/data/boat_share_repository.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
+import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
@@ -139,12 +140,8 @@ class _BoatDetailView extends ConsumerWidget {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              boat.canRecord
-                                  ? 'Barco compartido contigo. Puedes ver su '
-                                      'información y grabar viajes; lo demás lo '
-                                      'gestiona el propietario.'
-                                  : 'Barco compartido contigo (solo lectura). '
-                                      'Lo gestiona el propietario.',
+                              'Barco compartido contigo. Tienes los permisos '
+                              'que te haya dado el propietario.',
                               style: TextStyle(color: context.txtSecondary),
                             ),
                           ),
@@ -152,14 +149,17 @@ class _BoatDetailView extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    _ActionTile(
-                      icon: Icons.description_outlined,
-                      title: l.documents,
-                      subtitle: l.certificates,
-                      color: AppColors.cyan,
-                      onTap: () => context.push('/boats/${boat.id}/documents'),
-                    ),
-                    const SizedBox(height: 10),
+                    if (boat.permissions.canViewDocuments) ...[
+                      _ActionTile(
+                        icon: Icons.description_outlined,
+                        title: l.documents,
+                        subtitle: l.certificates,
+                        color: AppColors.cyan,
+                        onTap: () =>
+                            context.push('/boats/${boat.id}/documents'),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
                     _ActionTile(
                       icon: Icons.route_outlined,
                       title: l.logbook,
@@ -352,49 +352,7 @@ class _BoatDetailView extends ConsumerWidget {
                     return Column(
                       children: [
                         for (final m in members)
-                          ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            leading: const Icon(Icons.person_outline),
-                            title: Text(m.name,
-                                style: TextStyle(color: context.txtPrimary)),
-                            subtitle: Row(
-                              children: [
-                                Text(
-                                  'Puede grabar viajes',
-                                  style: TextStyle(
-                                      color: context.txtSecondary,
-                                      fontSize: 12),
-                                ),
-                                const SizedBox(width: 4),
-                                Switch(
-                                  value: m.role == 'editor',
-                                  activeTrackColor:
-                                      AppColors.cyan.withValues(alpha: 0.5),
-                                  activeThumbColor: AppColors.cyan,
-                                  materialTapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
-                                  onChanged: (v) async {
-                                    await ref
-                                        .read(boatShareRepositoryProvider)
-                                        .setMemberRole(boat.id, m.userId,
-                                            v ? 'editor' : 'viewer');
-                                    ref.invalidate(
-                                        boatMembersProvider(boat.id));
-                                  },
-                                ),
-                              ],
-                            ),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.remove_circle_outline,
-                                  color: AppColors.red),
-                              onPressed: () async {
-                                await ref
-                                    .read(boatShareRepositoryProvider)
-                                    .removeMember(boat.id, m.userId);
-                                ref.invalidate(boatMembersProvider(boat.id));
-                              },
-                            ),
-                          ),
+                          _MemberPermissionsTile(boatId: boat.id, member: m),
                       ],
                     );
                   },
@@ -706,6 +664,96 @@ class _ActionTile extends StatelessWidget {
           Icon(
             Icons.chevron_right_rounded,
             color: context.txtSecondary.withValues(alpha: 0.5),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A shared member with a per-permission toggle editor (owner-facing).
+class _MemberPermissionsTile extends ConsumerStatefulWidget {
+  const _MemberPermissionsTile({required this.boatId, required this.member});
+
+  final String boatId;
+  final BoatMember member;
+
+  @override
+  ConsumerState<_MemberPermissionsTile> createState() =>
+      _MemberPermissionsTileState();
+}
+
+class _MemberPermissionsTileState
+    extends ConsumerState<_MemberPermissionsTile> {
+  late BoatPermissions _perms = widget.member.permissions;
+
+  Future<void> _update(BoatPermissions next) async {
+    setState(() => _perms = next);
+    await ref
+        .read(boatShareRepositoryProvider)
+        .setMemberPermissions(widget.boatId, widget.member.userId, next);
+    ref.invalidate(boatMembersProvider(widget.boatId));
+  }
+
+  Widget _toggle(
+      String label, bool value, BoatPermissions Function(bool) apply) {
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      dense: true,
+      visualDensity: VisualDensity.compact,
+      activeThumbColor: AppColors.cyan,
+      title: Text(label,
+          style: TextStyle(color: context.txtPrimary, fontSize: 13)),
+      value: value,
+      onChanged: (v) => _update(apply(v)),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final granted = [
+      _perms.canRecordTrips,
+      _perms.canManageExpenses,
+      _perms.canManageMaintenance,
+      _perms.canViewDocuments,
+      _perms.canManageDocuments,
+    ].where((e) => e).length;
+
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        tilePadding: EdgeInsets.zero,
+        childrenPadding: const EdgeInsets.only(left: 8, bottom: 8),
+        leading: const Icon(Icons.person_outline),
+        title: Text(widget.member.name,
+            style: TextStyle(color: context.txtPrimary)),
+        subtitle: Text('$granted ${granted == 1 ? 'permiso' : 'permisos'}',
+            style: TextStyle(color: context.txtSecondary, fontSize: 12)),
+        children: [
+          _toggle('Grabar viajes', _perms.canRecordTrips,
+              (v) => _perms.copyWith(canRecordTrips: v)),
+          _toggle('Gestionar gastos', _perms.canManageExpenses,
+              (v) => _perms.copyWith(canManageExpenses: v)),
+          _toggle('Gestionar mantenimiento', _perms.canManageMaintenance,
+              (v) => _perms.copyWith(canManageMaintenance: v)),
+          _toggle('Ver documentos', _perms.canViewDocuments,
+              (v) => _perms.copyWith(canViewDocuments: v)),
+          _toggle('Gestionar documentos', _perms.canManageDocuments,
+              (v) => _perms.copyWith(canManageDocuments: v)),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: () async {
+                await ref
+                    .read(boatShareRepositoryProvider)
+                    .removeMember(widget.boatId, widget.member.userId);
+                ref.invalidate(boatMembersProvider(widget.boatId));
+              },
+              icon: const Icon(Icons.remove_circle_outline,
+                  color: AppColors.red, size: 18),
+              label: const Text('Quitar acceso',
+                  style: TextStyle(color: AppColors.red)),
+            ),
           ),
         ],
       ),

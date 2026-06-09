@@ -82,34 +82,37 @@ class DocumentListScreen extends ConsumerWidget {
           ),
         ),
       ),
-      floatingActionButton:
-          (ref.watch(boatProvider(boatId)).valueOrNull?.isOwner ?? true)
-              ? Container(
-                  decoration: BoxDecoration(
-                    gradient: AppColors.cyanGradient,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.cyan.withValues(alpha: 0.4),
-                        blurRadius: 16,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+      floatingActionButton: (ref
+                  .watch(boatProvider(boatId))
+                  .valueOrNull
+                  ?.permissions
+                  .canManageDocuments ??
+              true)
+          ? Container(
+              decoration: BoxDecoration(
+                gradient: AppColors.cyanGradient,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.cyan.withValues(alpha: 0.4),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
                   ),
-                  child: FloatingActionButton(
-                    onPressed: () =>
-                        context.push('/boats/$boatId/documents/new'),
-                    tooltip: l.newDocument,
-                    elevation: 0,
-                    backgroundColor: Colors.transparent,
-                    child: Icon(
-                      Icons.add,
-                      color: Colors.white,
-                      semanticLabel: l.newDocument,
-                    ),
-                  ),
-                )
-              : null,
+                ],
+              ),
+              child: FloatingActionButton(
+                onPressed: () => context.push('/boats/$boatId/documents/new'),
+                tooltip: l.newDocument,
+                elevation: 0,
+                backgroundColor: Colors.transparent,
+                child: Icon(
+                  Icons.add,
+                  color: Colors.white,
+                  semanticLabel: l.newDocument,
+                ),
+              ),
+            )
+          : null,
     );
   }
 }

@@ -12,11 +12,12 @@ import (
 // --- mock BoatRepository ---
 
 type mockBoatRepo struct {
-	createFn  func(ctx context.Context, boat *domain.Boat) (*domain.Boat, error)
-	getByIDFn func(ctx context.Context, userID, id string) (*domain.Boat, error)
-	listFn    func(ctx context.Context, userID, cursor string, limit int) ([]domain.Boat, string, error)
-	updateFn  func(ctx context.Context, userID string, boat *domain.Boat) (*domain.Boat, error)
-	deleteFn  func(ctx context.Context, userID, id string) error
+	createFn         func(ctx context.Context, boat *domain.Boat) (*domain.Boat, error)
+	getByIDFn        func(ctx context.Context, userID, id string) (*domain.Boat, error)
+	listFn           func(ctx context.Context, userID, cursor string, limit int) ([]domain.Boat, string, error)
+	updateFn         func(ctx context.Context, userID string, boat *domain.Boat) (*domain.Boat, error)
+	deleteFn         func(ctx context.Context, userID, id string) error
+	getPermissionsFn func(ctx context.Context, userID, boatID string) (domain.BoatPermissions, bool, error)
 }
 
 func (m *mockBoatRepo) Create(ctx context.Context, boat *domain.Boat) (*domain.Boat, error) {
@@ -455,9 +456,12 @@ func (m *mockBoatRepo) ListMembers(_ context.Context, _ string) ([]domain.BoatMe
 func (m *mockBoatRepo) RemoveMember(_ context.Context, _, _, _ string) error { return nil }
 func (m *mockBoatRepo) Leave(_ context.Context, _, _ string) error           { return nil }
 
-func (m *mockBoatRepo) CanEdit(_ context.Context, _, _ string) (bool, error) {
-	return true, nil
+func (m *mockBoatRepo) GetPermissions(ctx context.Context, userID, boatID string) (domain.BoatPermissions, bool, error) {
+	if m.getPermissionsFn != nil {
+		return m.getPermissionsFn(ctx, userID, boatID)
+	}
+	return domain.OwnerPermissions(), true, nil
 }
-func (m *mockBoatRepo) SetMemberRole(_ context.Context, _, _, _, _ string) error {
+func (m *mockBoatRepo) SetPermissions(_ context.Context, _, _, _ string, _ domain.BoatPermissions) error {
 	return nil
 }

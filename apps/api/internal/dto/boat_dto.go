@@ -81,20 +81,41 @@ func (r *UpdateBoatRequest) ApplyTo(boat *domain.Boat) {
 
 // BoatResponse is the API response for a boat.
 type BoatResponse struct {
-	ID           string          `json:"id"`
-	Name         string          `json:"name"`
-	Registration string          `json:"registration"`
-	Type         domain.BoatType `json:"type"`
-	LengthM      float64         `json:"length_m"`
-	HomePort     string          `json:"home_port"`
-	HomePortLat  *float64        `json:"home_port_lat,omitempty"`
-	HomePortLon  *float64        `json:"home_port_lon,omitempty"`
-	PhotoURL     *string         `json:"photo_url,omitempty"`
-	EngineHours  float64         `json:"engine_hours"`
-	IsOwner      bool            `json:"is_owner"`
-	CanRecord    bool            `json:"can_record"`
-	CreatedAt    time.Time       `json:"created_at"`
-	UpdatedAt    time.Time       `json:"updated_at"`
+	ID           string                  `json:"id"`
+	Name         string                  `json:"name"`
+	Registration string                  `json:"registration"`
+	Type         domain.BoatType         `json:"type"`
+	LengthM      float64                 `json:"length_m"`
+	HomePort     string                  `json:"home_port"`
+	HomePortLat  *float64                `json:"home_port_lat,omitempty"`
+	HomePortLon  *float64                `json:"home_port_lon,omitempty"`
+	PhotoURL     *string                 `json:"photo_url,omitempty"`
+	EngineHours  float64                 `json:"engine_hours"`
+	IsOwner      bool                    `json:"is_owner"`
+	Permissions  BoatPermissionsResponse `json:"permissions"`
+	CreatedAt    time.Time               `json:"created_at"`
+	UpdatedAt    time.Time               `json:"updated_at"`
+}
+
+// BoatPermissionsResponse is the granular permission set for the current user
+// on a boat (all true for the owner).
+type BoatPermissionsResponse struct {
+	CanRecordTrips       bool `json:"can_record_trips"`
+	CanManageExpenses    bool `json:"can_manage_expenses"`
+	CanManageMaintenance bool `json:"can_manage_maintenance"`
+	CanViewDocuments     bool `json:"can_view_documents"`
+	CanManageDocuments   bool `json:"can_manage_documents"`
+}
+
+// BoatPermissionsResponseFromDomain converts domain permissions to a response.
+func BoatPermissionsResponseFromDomain(p domain.BoatPermissions) BoatPermissionsResponse {
+	return BoatPermissionsResponse{
+		CanRecordTrips:       p.CanRecordTrips,
+		CanManageExpenses:    p.CanManageExpenses,
+		CanManageMaintenance: p.CanManageMaintenance,
+		CanViewDocuments:     p.CanViewDocuments,
+		CanManageDocuments:   p.CanManageDocuments,
+	}
 }
 
 // BoatResponseFromDomain builds a BoatResponse from a domain Boat.
@@ -134,11 +155,11 @@ type JoinBoatRequest struct {
 	Code string `json:"code" validate:"required"`
 }
 
-// BoatMemberResponse is a shared member of a boat.
+// BoatMemberResponse is a shared member of a boat, with their permissions.
 type BoatMemberResponse struct {
-	UserID string `json:"user_id"`
-	Name   string `json:"name"`
-	Role   string `json:"role"`
+	UserID      string                  `json:"user_id"`
+	Name        string                  `json:"name"`
+	Permissions BoatPermissionsResponse `json:"permissions"`
 }
 
 // BoatMemberListFromDomain converts domain boat members to responses.
@@ -146,15 +167,30 @@ func BoatMemberListFromDomain(members []domain.BoatMember) []BoatMemberResponse 
 	out := make([]BoatMemberResponse, len(members))
 	for i := range members {
 		out[i] = BoatMemberResponse{
-			UserID: members[i].UserID,
-			Name:   members[i].Name,
-			Role:   members[i].Role,
+			UserID:      members[i].UserID,
+			Name:        members[i].Name,
+			Permissions: BoatPermissionsResponseFromDomain(members[i].Permissions),
 		}
 	}
 	return out
 }
 
-// UpdateBoatMemberRoleRequest changes a shared member's role.
-type UpdateBoatMemberRoleRequest struct {
-	Role string `json:"role" validate:"required,oneof=viewer editor"`
+// UpdateBoatMemberPermissionsRequest sets a member's granular permissions.
+type UpdateBoatMemberPermissionsRequest struct {
+	CanRecordTrips       bool `json:"can_record_trips"`
+	CanManageExpenses    bool `json:"can_manage_expenses"`
+	CanManageMaintenance bool `json:"can_manage_maintenance"`
+	CanViewDocuments     bool `json:"can_view_documents"`
+	CanManageDocuments   bool `json:"can_manage_documents"`
+}
+
+// ToDomain converts the request to a domain permission set.
+func (r *UpdateBoatMemberPermissionsRequest) ToDomain() domain.BoatPermissions {
+	return domain.BoatPermissions{
+		CanRecordTrips:       r.CanRecordTrips,
+		CanManageExpenses:    r.CanManageExpenses,
+		CanManageMaintenance: r.CanManageMaintenance,
+		CanViewDocuments:     r.CanViewDocuments,
+		CanManageDocuments:   r.CanManageDocuments,
+	}
 }

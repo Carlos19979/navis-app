@@ -32,10 +32,31 @@ type Boat struct {
 	UpdatedAt    time.Time
 }
 
+// BoatPermissions is the granular permission set for a shared boat member.
+// The boat owner implicitly has all permissions.
+type BoatPermissions struct {
+	CanRecordTrips       bool
+	CanManageExpenses    bool
+	CanManageMaintenance bool
+	CanViewDocuments     bool
+	CanManageDocuments   bool
+}
+
+// OwnerPermissions returns a permission set with everything enabled.
+func OwnerPermissions() BoatPermissions {
+	return BoatPermissions{
+		CanRecordTrips:       true,
+		CanManageExpenses:    true,
+		CanManageMaintenance: true,
+		CanViewDocuments:     true,
+		CanManageDocuments:   true,
+	}
+}
+
 // BoatMember is a user with shared access to a boat (crew / co-owner).
 type BoatMember struct {
-	BoatID string
-	UserID string
-	Name   string
-	Role   string // viewer | editor
+	BoatID      string
+	UserID      string
+	Name        string
+	Permissions BoatPermissions
 }

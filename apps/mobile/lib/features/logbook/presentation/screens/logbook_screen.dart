@@ -98,42 +98,46 @@ class LogbookScreen extends ConsumerWidget {
             );
           },
         ),
-        floatingActionButton:
-            (ref.watch(boatProvider(boatId)).valueOrNull?.canRecord ?? true)
-                ? Container(
-                    decoration: BoxDecoration(
-                      gradient: AppColors.cyanGradient,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.cyan.withValues(alpha: 0.4),
-                          blurRadius: 16,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+        floatingActionButton: (ref
+                    .watch(boatProvider(boatId))
+                    .valueOrNull
+                    ?.permissions
+                    .canRecordTrips ??
+                true)
+            ? Container(
+                decoration: BoxDecoration(
+                  gradient: AppColors.cyanGradient,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.cyan.withValues(alpha: 0.4),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
                     ),
-                    child: FloatingActionButton.extended(
-                      heroTag: 'record_trip',
-                      onPressed: () => context.push('/boats/$boatId/precheck'),
-                      backgroundColor: Colors.transparent,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      icon: const Icon(
-                        Icons.play_arrow,
-                        color: Colors.white,
-                      ),
-                      label: Text(
-                        l.startTrip,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                  ],
+                ),
+                child: FloatingActionButton.extended(
+                  heroTag: 'record_trip',
+                  onPressed: () => context.push('/boats/$boatId/precheck'),
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  icon: const Icon(
+                    Icons.play_arrow,
+                    color: Colors.white,
+                  ),
+                  label: Text(
+                    l.startTrip,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
                     ),
-                  )
-                : null,
+                  ),
+                ),
+              )
+            : null,
       ),
     );
   }

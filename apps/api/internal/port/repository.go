@@ -18,8 +18,9 @@ type BoatRepository interface {
 	// Shared access (crew / co-owners).
 	GetByIDAccessible(ctx context.Context, userID, id string) (*domain.Boat, error)
 	HasAccess(ctx context.Context, userID, boatID string) (bool, error)
-	CanEdit(ctx context.Context, userID, boatID string) (bool, error)
-	SetMemberRole(ctx context.Context, ownerID, boatID, memberUserID, role string) error
+	// GetPermissions resolves a user's permissions for a boat; access=false if none.
+	GetPermissions(ctx context.Context, userID, boatID string) (domain.BoatPermissions, bool, error)
+	SetPermissions(ctx context.Context, ownerID, boatID, memberUserID string, p domain.BoatPermissions) error
 	ListShared(ctx context.Context, userID string) ([]domain.Boat, error)
 	EnsureShareCode(ctx context.Context, userID, boatID, candidate string) (string, error)
 	GetIDByShareCode(ctx context.Context, code string) (boatID, ownerID string, err error)
@@ -62,10 +63,10 @@ type DocumentRepository interface {
 	GetByID(ctx context.Context, userID, id string) (*domain.Document, error)
 	GetByIDUnscoped(ctx context.Context, id string) (*domain.Document, error)
 	List(ctx context.Context, userID, cursor string, limit int) ([]domain.Document, string, error)
-	ListByBoat(ctx context.Context, userID, boatID, cursor string, limit int) ([]domain.Document, string, error)
+	ListByBoat(ctx context.Context, boatID, cursor string, limit int) ([]domain.Document, string, error)
 	ListExpiring(ctx context.Context, withinDays int) ([]domain.Document, error)
-	Update(ctx context.Context, userID string, doc *domain.Document) (*domain.Document, error)
-	Delete(ctx context.Context, userID, id string) error
+	Update(ctx context.Context, doc *domain.Document) (*domain.Document, error)
+	Delete(ctx context.Context, boatID, id string) error
 }
 
 // TripRepository defines persistence operations for trips.

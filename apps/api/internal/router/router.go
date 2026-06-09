@@ -84,7 +84,7 @@ func New(
 				r.Post("/leave", boatH.Leave)
 				r.Route("/members", func(r chi.Router) {
 					r.Get("/", boatH.ListMembers)
-					r.Put("/{userId}/role", boatH.SetMemberRole)
+					r.Put("/{userId}/permissions", boatH.SetMemberPermissions)
 					r.Delete("/{userId}", boatH.RemoveMember)
 				})
 

@@ -29,9 +29,13 @@ func (s *DocumentService) Create(ctx context.Context, doc *domain.Document) (*do
 		return nil, fmt.Errorf("creating document: %w", domain.ErrUnauthorized)
 	}
 
-	// Validate boat ownership.
-	if _, err := s.boatRepo.GetByID(ctx, doc.UserID, doc.BoatID); err != nil {
-		return nil, fmt.Errorf("creating document: boat ownership check: %w", err)
+	// Requires the "manage documents" permission (owner or member).
+	perms, ok, err := s.boatRepo.GetPermissions(ctx, doc.UserID, doc.BoatID)
+	if err != nil {
+		return nil, fmt.Errorf("creating document: %w", err)
+	}
+	if !ok || !perms.CanManageDocuments {
+		return nil, fmt.Errorf("creating document: %w", domain.ErrForbidden)
 	}
 
 	doc.Status = computeStatus(doc.ExpiryDate, doc.AlertDays)
@@ -49,11 +53,11 @@ func (s *DocumentService) GetByID(ctx context.Context, userID, id string) (*doma
 	if err != nil {
 		return nil, fmt.Errorf("getting document %s: %w", id, err)
 	}
-	access, err := s.boatRepo.HasAccess(ctx, userID, doc.BoatID)
+	perms, ok, err := s.boatRepo.GetPermissions(ctx, userID, doc.BoatID)
 	if err != nil {
 		return nil, fmt.Errorf("getting document %s: %w", id, err)
 	}
-	if !access {
+	if !ok || !perms.CanViewDocuments {
 		return nil, fmt.Errorf("getting document %s: %w", id, domain.ErrDocumentNotFound)
 	}
 	return doc, nil
@@ -78,11 +82,14 @@ func (s *DocumentService) ListByBoat(ctx context.Context, userID, boatID, cursor
 		limit = 20
 	}
 
-	boat, err := s.boatRepo.GetByIDAccessible(ctx, userID, boatID)
+	perms, ok, err := s.boatRepo.GetPermissions(ctx, userID, boatID)
 	if err != nil {
 		return nil, "", fmt.Errorf("listing documents for boat %s: %w", boatID, err)
 	}
-	docs, nextCursor, err := s.docRepo.ListByBoat(ctx, boat.UserID, boatID, cursor, limit)
+	if !ok || !perms.CanViewDocuments {
+		return nil, "", fmt.Errorf("listing documents for boat %s: %w", boatID, domain.ErrForbidden)
+	}
+	docs, nextCursor, err := s.docRepo.ListByBoat(ctx, boatID, cursor, limit)
 	if err != nil {
 		return nil, "", fmt.Errorf("listing documents for boat %s: %w", boatID, err)
 	}
@@ -95,28 +102,43 @@ func (s *DocumentService) Update(ctx context.Context, userID string, doc *domain
 		return nil, &domain.ValidationError{Field: "id", Message: "id is required"}
 	}
 
-	// Verify the user owns the boat associated with this document.
-	existing, err := s.docRepo.GetByID(ctx, userID, doc.ID)
+	// Resolve the document's boat and require "manage documents".
+	existing, err := s.docRepo.GetByIDUnscoped(ctx, doc.ID)
 	if err != nil {
 		return nil, fmt.Errorf("updating document %s: %w", doc.ID, err)
 	}
-
-	if _, err := s.boatRepo.GetByID(ctx, userID, existing.BoatID); err != nil {
-		return nil, fmt.Errorf("updating document: boat ownership check: %w", err)
+	perms, ok, err := s.boatRepo.GetPermissions(ctx, userID, existing.BoatID)
+	if err != nil {
+		return nil, fmt.Errorf("updating document %s: %w", doc.ID, err)
+	}
+	if !ok || !perms.CanManageDocuments {
+		return nil, fmt.Errorf("updating document %s: %w", doc.ID, domain.ErrForbidden)
 	}
 
+	doc.BoatID = existing.BoatID
 	doc.Status = computeStatus(doc.ExpiryDate, doc.AlertDays)
 
-	updated, err := s.docRepo.Update(ctx, userID, doc)
+	updated, err := s.docRepo.Update(ctx, doc)
 	if err != nil {
 		return nil, fmt.Errorf("updating document %s: %w", doc.ID, err)
 	}
 	return updated, nil
 }
 
-// Delete removes a document if owned by the user.
+// Delete removes a document (requires "manage documents" permission).
 func (s *DocumentService) Delete(ctx context.Context, userID, id string) error {
-	if err := s.docRepo.Delete(ctx, userID, id); err != nil {
+	existing, err := s.docRepo.GetByIDUnscoped(ctx, id)
+	if err != nil {
+		return fmt.Errorf("deleting document %s: %w", id, err)
+	}
+	perms, ok, err := s.boatRepo.GetPermissions(ctx, userID, existing.BoatID)
+	if err != nil {
+		return fmt.Errorf("deleting document %s: %w", id, err)
+	}
+	if !ok || !perms.CanManageDocuments {
+		return fmt.Errorf("deleting document %s: %w", id, domain.ErrForbidden)
+	}
+	if err := s.docRepo.Delete(ctx, existing.BoatID, id); err != nil {
 		return fmt.Errorf("deleting document %s: %w", id, err)
 	}
 	return nil

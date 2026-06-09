@@ -150,7 +150,7 @@ func (r *DocumentRepo) List(ctx context.Context, userID, cursor string, limit in
 }
 
 // ListByBoat returns a paginated list of documents for a specific boat.
-func (r *DocumentRepo) ListByBoat(ctx context.Context, userID, boatID, cursor string, limit int) ([]domain.Document, string, error) {
+func (r *DocumentRepo) ListByBoat(ctx context.Context, boatID, cursor string, limit int) ([]domain.Document, string, error) {
 	var (
 		rows pgx.Rows
 		err  error
@@ -158,24 +158,24 @@ func (r *DocumentRepo) ListByBoat(ctx context.Context, userID, boatID, cursor st
 
 	if cursor == "" {
 		query := `SELECT ` + documentColumns + ` FROM documents
-			WHERE user_id = $1 AND boat_id = $2
+			WHERE boat_id = $1
 			ORDER BY created_at DESC, id DESC
-			LIMIT $3`
-		rows, err = r.pool.Query(ctx, query, userID, boatID, limit+1)
+			LIMIT $2`
+		rows, err = r.pool.Query(ctx, query, boatID, limit+1)
 	} else {
 		var cursorCreatedAt time.Time
 		cErr := r.pool.QueryRow(ctx,
 			`SELECT created_at FROM documents WHERE id = $1`, cursor,
 		).Scan(&cursorCreatedAt)
 		if cErr != nil {
-			return r.ListByBoat(ctx, userID, boatID, "", limit)
+			return r.ListByBoat(ctx, boatID, "", limit)
 		}
 
 		query := `SELECT ` + documentColumns + ` FROM documents
-			WHERE user_id = $1 AND boat_id = $2 AND (created_at, id) < ($3, $4)
+			WHERE boat_id = $1 AND (created_at, id) < ($2, $3)
 			ORDER BY created_at DESC, id DESC
-			LIMIT $5`
-		rows, err = r.pool.Query(ctx, query, userID, boatID, cursorCreatedAt, cursor, limit+1)
+			LIMIT $4`
+		rows, err = r.pool.Query(ctx, query, boatID, cursorCreatedAt, cursor, limit+1)
 	}
 	if err != nil {
 		return nil, "", fmt.Errorf("listing documents for boat %s: %w", boatID, err)
@@ -223,17 +223,17 @@ func (r *DocumentRepo) ListExpiring(ctx context.Context, withinDays int) ([]doma
 }
 
 // Update modifies an existing document and returns the updated record.
-func (r *DocumentRepo) Update(ctx context.Context, userID string, doc *domain.Document) (*domain.Document, error) {
+func (r *DocumentRepo) Update(ctx context.Context, doc *domain.Document) (*domain.Document, error) {
 	query := `
 		UPDATE documents
 		SET type = $3, custom_name = $4, expiry_date = $5, status = $6,
 			photo_url = $7, notes = $8, last_renewal_date = $9, last_renewal_cost = $10,
 			last_renewal_provider = $11, alert_days = $12, updated_at = now()
-		WHERE user_id = $1 AND id = $2
+		WHERE id = $1 AND boat_id = $2
 		RETURNING ` + documentColumns
 
 	d, err := scanDocument(r.pool.QueryRow(ctx, query,
-		userID, doc.ID, doc.Type, doc.CustomName, doc.ExpiryDate, doc.Status,
+		doc.ID, doc.BoatID, doc.Type, doc.CustomName, doc.ExpiryDate, doc.Status,
 		doc.PhotoURL, doc.Notes, doc.LastRenewalDate, doc.LastRenewalCost,
 		doc.LastRenewalProvider, doc.AlertDays,
 	))
@@ -246,10 +246,10 @@ func (r *DocumentRepo) Update(ctx context.Context, userID string, doc *domain.Do
 	return d, nil
 }
 
-// Delete removes a document by ID, scoped to the given user.
-func (r *DocumentRepo) Delete(ctx context.Context, userID, id string) error {
+// Delete removes a document by ID, scoped to its boat.
+func (r *DocumentRepo) Delete(ctx context.Context, boatID, id string) error {
 	result, err := r.pool.Exec(ctx,
-		`DELETE FROM documents WHERE user_id = $1 AND id = $2`, userID, id)
+		`DELETE FROM documents WHERE boat_id = $1 AND id = $2`, boatID, id)
 	if err != nil {
 		return fmt.Errorf("deleting document %s: %w", id, err)
 	}
