@@ -36,6 +36,17 @@ func (s *TripService) Create(ctx context.Context, trip *domain.Trip) (*domain.Tr
 		return nil, &domain.ValidationError{Field: "departure_port", Message: "departure port is required"}
 	}
 
+	// Only the boat owner or an 'editor' member may record trips on the boat.
+	if trip.BoatID != "" {
+		canEdit, err := s.boatRepo.CanEdit(ctx, trip.UserID, trip.BoatID)
+		if err != nil {
+			return nil, fmt.Errorf("creating trip: %w", err)
+		}
+		if !canEdit {
+			return nil, fmt.Errorf("creating trip: %w", domain.ErrForbidden)
+		}
+	}
+
 	trip.Status = domain.TripStatusRecording
 
 	created, err := s.tripRepo.Create(ctx, trip)
@@ -68,16 +79,20 @@ func (s *TripService) List(ctx context.Context, userID, boatID, cursor string, l
 		limit = 20
 	}
 
-	scopeID := userID
+	// For a specific boat, return the whole shared logbook (every member's
+	// trips) after verifying access. Without a boat, return the user's own trips.
 	if boatID != "" {
-		boat, err := s.boatRepo.GetByIDAccessible(ctx, userID, boatID)
+		if _, err := s.boatRepo.GetByIDAccessible(ctx, userID, boatID); err != nil {
+			return nil, "", fmt.Errorf("listing trips: %w", err)
+		}
+		trips, nextCursor, err := s.tripRepo.ListByBoatAll(ctx, boatID, cursor, limit)
 		if err != nil {
 			return nil, "", fmt.Errorf("listing trips: %w", err)
 		}
-		scopeID = boat.UserID // read the boat owner's trips
+		return trips, nextCursor, nil
 	}
 
-	trips, nextCursor, err := s.tripRepo.List(ctx, scopeID, boatID, cursor, limit)
+	trips, nextCursor, err := s.tripRepo.List(ctx, userID, boatID, cursor, limit)
 	if err != nil {
 		return nil, "", fmt.Errorf("listing trips: %w", err)
 	}

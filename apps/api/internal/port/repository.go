@@ -18,6 +18,8 @@ type BoatRepository interface {
 	// Shared access (crew / co-owners).
 	GetByIDAccessible(ctx context.Context, userID, id string) (*domain.Boat, error)
 	HasAccess(ctx context.Context, userID, boatID string) (bool, error)
+	CanEdit(ctx context.Context, userID, boatID string) (bool, error)
+	SetMemberRole(ctx context.Context, ownerID, boatID, memberUserID, role string) error
 	ListShared(ctx context.Context, userID string) ([]domain.Boat, error)
 	EnsureShareCode(ctx context.Context, userID, boatID, candidate string) (string, error)
 	GetIDByShareCode(ctx context.Context, code string) (boatID, ownerID string, err error)
@@ -68,6 +70,7 @@ type TripRepository interface {
 	GetByID(ctx context.Context, userID, id string) (*domain.Trip, error)
 	GetByIDUnscoped(ctx context.Context, id string) (*domain.Trip, error)
 	List(ctx context.Context, userID, boatID, cursor string, limit int) ([]domain.Trip, string, error)
+	ListByBoatAll(ctx context.Context, boatID, cursor string, limit int) ([]domain.Trip, string, error)
 	ListByGroup(ctx context.Context, groupID, cursor string, limit int) ([]domain.Trip, string, error)
 	// ListUpcomingRegattas returns planned group regattas scheduled in [from, to).
 	ListUpcomingRegattas(ctx context.Context, from, to time.Time) ([]domain.Trip, error)

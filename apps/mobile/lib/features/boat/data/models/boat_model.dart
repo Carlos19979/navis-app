@@ -13,6 +13,7 @@ class BoatModel {
     this.photoUrl,
     this.ownerId,
     this.isOwner = true,
+    this.canRecord = true,
     this.createdAt,
     this.updatedAt,
   });
@@ -30,6 +31,7 @@ class BoatModel {
       photoUrl: json['photo_url'] as String?,
       ownerId: json['owner_id'] as String?,
       isOwner: json['is_owner'] as bool? ?? true,
+      canRecord: json['can_record'] as bool? ?? true,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
@@ -67,6 +69,7 @@ class BoatModel {
   final String? photoUrl;
   final String? ownerId;
   final bool isOwner;
+  final bool canRecord;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -100,6 +103,7 @@ class BoatModel {
       photoUrl: photoUrl,
       ownerId: ownerId,
       isOwner: isOwner,
+      canRecord: canRecord,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );

@@ -14,7 +14,7 @@ and what remains (mostly external config). Use this to continue.
 | **Tides + navigation window** | ✅ | ✅ | E2E | Open-Meteo `sea_level_height_msl`; hidden when range <0.3m (Mediterranean). |
 | ~~Float plan (destination/ETA/shore contact)~~ | **removed** | **removed** | — | Removed 2026-06-09: phone-based auto-alert can't be a reliable rescue net (alerted the owner, not the shore contact; needs SMS/satellite). DB columns (`trips.destination/eta/shore_contact_*`) + dormant Go/Dart fields left in place. Trip *sharing* (F2) stays. |
 | **Sign in with Apple/Google** | n/a (provider-agnostic JWT) | ✅ code + URL scheme | build only | **Needs external config**: Supabase providers + Apple/Google credentials + iOS capability. iOS Info.plist URL scheme NOT committed (lives in local ios/ hacks) — re-add `CFBundleURLTypes` scheme `navis` when wiring. |
-| **Boat sharing (crew/co-owners)** | ✅ | ✅ | 🔒 security-tested | Read-only members; writes owner-only. |
+| **Boat sharing (crew/co-owners)** | ✅ | ✅ | 🔒 security-tested | Roles: `viewer` (read) / `editor` (read + **record trips**). Docs/expenses/boat-edit stay owner-only. |
 
 ## Plans / tiers
 - Table `profiles(plan)` ∈ `normal|armador|gestor`, default `normal` (auto-created).
@@ -25,11 +25,12 @@ and what remains (mostly external config). Use this to continue.
 - Mobile: `accountProvider`; FAB gating in Boats & Groups; plan badge in Profile; **DEV plan switcher** in Settings.
 
 ## Boat sharing — security model (important)
-- Table `boat_members(boat_id, user_id, role)` + `boats.share_code`.
-- **Reads** (boat, documents, trips+tracks, maintenance, expenses) allowed for **owner OR member** via `boatRepo.HasAccess` / `GetByIDAccessible`, reading **as the owner's scope**.
-- **Writes** stay strict owner-only (`boatRepo.GetByID(userID, …)` / user-scoped repos).
-- Verified with two accounts: member reads 200, all member writes 404, non-member 404 everywhere.
-- Mobile: "Compartir barco" (owner: code + members + remove), "Unirse a un barco" (code), "Compartidos conmigo" section, read-only shared boat (write FABs/delete hidden).
+- Table `boat_members(boat_id, user_id, role)` with role `viewer|editor` + `boats.share_code`.
+- **Reads** (boat, documents, trips+tracks, maintenance, expenses) allowed for **owner OR any member** via `boatRepo.HasAccess` / `GetByIDAccessible`, reading **as the owner's scope**. The boat **logbook** lists *all* members' trips (`tripRepo.ListByBoatAll`).
+- **editor role** may additionally **record trips** (`TripService.Create` checks `boatRepo.CanEdit` = owner OR editor). `GET /boats/:id` returns `can_record`.
+- **All other writes** (documents, maintenance, expenses, boat edit/delete) stay strict owner-only.
+- Verified with two accounts: viewer record-trip 403; owner promotes to editor (204); editor record-trip 201 and it shows in the owner's logbook; editor expense write still 404; non-member 404 everywhere.
+- Mobile: "Compartir barco" (owner: code + members list with a **viewer/editor toggle** + remove), "Unirse a un barco" (code), "Compartidos conmigo" section. Shared boat shows documents/logbook/maintenance read-only; the logbook record FAB appears only when `can_record`.
 
 ## Cron jobs (in `RegattaNotifier`, all UTC)
 - `0 9 * * *` regatta reminders (next 36h) → group members.

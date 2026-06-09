@@ -362,3 +362,31 @@ func (r *BoatRepo) Leave(ctx context.Context, userID, boatID string) error {
 	}
 	return nil
 }
+
+// CanEdit reports whether the user may write to the boat (owner or 'editor' member).
+func (r *BoatRepo) CanEdit(ctx context.Context, userID, boatID string) (bool, error) {
+	var ok bool
+	err := r.pool.QueryRow(ctx,
+		`SELECT EXISTS (SELECT 1 FROM boats WHERE id = $2 AND user_id = $1)
+			OR EXISTS (SELECT 1 FROM boat_members WHERE boat_id = $2 AND user_id = $1 AND role = 'editor')`,
+		userID, boatID).Scan(&ok)
+	if err != nil {
+		return false, fmt.Errorf("checking boat edit access: %w", err)
+	}
+	return ok, nil
+}
+
+// SetMemberRole changes a member's role (owner only — enforced via ownerID).
+func (r *BoatRepo) SetMemberRole(ctx context.Context, ownerID, boatID, memberUserID, role string) error {
+	ct, err := r.pool.Exec(ctx,
+		`UPDATE boat_members SET role = $1 WHERE boat_id = $2 AND user_id = $3
+		 AND boat_id IN (SELECT id FROM boats WHERE user_id = $4)`,
+		role, boatID, memberUserID, ownerID)
+	if err != nil {
+		return fmt.Errorf("setting boat member role: %w", err)
+	}
+	if ct.RowsAffected() == 0 {
+		return domain.ErrNotFound
+	}
+	return nil
+}

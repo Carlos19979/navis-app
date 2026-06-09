@@ -662,11 +662,16 @@ Boats shared with the current user.
 ### GET /api/v1/boats/:id/members · DELETE …/members/:userId
 Owner: list / revoke shared members.
 
+### PUT /api/v1/boats/:id/members/:userId/role
+Owner: set a member's role. Body `{ "role": "viewer" | "editor" }`.
+
 ### POST /api/v1/boats/:id/leave
 Member: leave a shared boat.
 
 **Access model:** boat + its documents/trips/maintenance/expenses are **readable** by the
-owner or any member; **all writes are owner-only**. `GET /api/v1/boats/:id` includes `is_owner`.
+owner or any member (the boat logbook shows every member's trips). An **editor** member may
+also **record trips**; all other writes (documents, maintenance, expenses, boat edit) are
+owner-only. `GET /api/v1/boats/:id` includes `is_owner` and `can_record`.
 
 ## Weather (extended)
 

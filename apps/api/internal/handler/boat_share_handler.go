@@ -95,6 +95,31 @@ func (h *BoatHandler) RemoveMember(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// SetMemberRole handles PUT /boats/{id}/members/{userId}/role — owner sets
+// a member's role (viewer/editor).
+func (h *BoatHandler) SetMemberRole(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok {
+		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
+		return
+	}
+	var req dto.UpdateBoatMemberRoleRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		Error(w, http.StatusBadRequest, "invalid request body", "BAD_REQUEST")
+		return
+	}
+	if errs := validator.Validate(req); errs != nil {
+		ValidationError(w, errs)
+		return
+	}
+	if err := h.svc.SetMemberRole(r.Context(), userID,
+		chi.URLParam(r, "id"), chi.URLParam(r, "userId"), req.Role); err != nil {
+		MapDomainError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 // Leave handles POST /boats/{id}/leave — a member leaves a shared boat.
 func (h *BoatHandler) Leave(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.UserIDFromContext(r.Context())
