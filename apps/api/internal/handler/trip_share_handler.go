@@ -58,29 +58,6 @@ func (h *TripHandler) Unshare(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// SetFloatPlan handles PUT /trips/{id}/float-plan.
-func (h *TripHandler) SetFloatPlan(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
-	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
-		return
-	}
-	tripID := chi.URLParam(r, "id")
-
-	var req dto.FloatPlanRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		Error(w, http.StatusBadRequest, "invalid request body", "BAD_REQUEST")
-		return
-	}
-
-	if err := h.svc.SetFloatPlan(r.Context(), userID, tripID,
-		req.Destination, req.ETA, req.ShoreContactName, req.ShoreContactPhone); err != nil {
-		MapDomainError(w, err)
-		return
-	}
-	w.WriteHeader(http.StatusNoContent)
-}
-
 // PublicJSON handles GET /public/trips/{token} (no auth) — JSON view.
 func (h *TripHandler) PublicJSON(w http.ResponseWriter, r *http.Request) {
 	token := chi.URLParam(r, "token")

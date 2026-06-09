@@ -132,7 +132,6 @@ func New(
 				r.Post("/tracks", tripH.AddTracks)
 				r.Put("/share", tripH.Share)
 				r.Delete("/share", tripH.Unshare)
-				r.Put("/float-plan", tripH.SetFloatPlan)
 
 				// Regatta lifecycle + RSVP.
 				r.Put("/start", regattaH.Start)

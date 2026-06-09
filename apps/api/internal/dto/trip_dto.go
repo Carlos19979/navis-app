@@ -103,10 +103,6 @@ type TripResponse struct {
 	Photos               []string          `json:"photos"`
 	Status               domain.TripStatus `json:"status"`
 	ShareToken           *string           `json:"share_token"`
-	Destination          *string           `json:"destination"`
-	ETA                  *time.Time        `json:"eta"`
-	ShoreContactName     *string           `json:"shore_contact_name"`
-	ShoreContactPhone    *string           `json:"shore_contact_phone"`
 	CreatedAt            time.Time         `json:"created_at"`
 	UpdatedAt            time.Time         `json:"updated_at"`
 }
@@ -150,10 +146,6 @@ func TripResponseFromDomain(t *domain.Trip) *TripResponse {
 		Photos:               photos,
 		Status:               t.Status,
 		ShareToken:           t.ShareToken,
-		Destination:          t.Destination,
-		ETA:                  t.ETA,
-		ShoreContactName:     t.ShoreContactName,
-		ShoreContactPhone:    t.ShoreContactPhone,
 		CreatedAt:            t.CreatedAt,
 		UpdatedAt:            t.UpdatedAt,
 	}
@@ -334,12 +326,4 @@ func PublicTripResponseFromDomain(t *domain.Trip, track []domain.TripTrack) Publ
 		DurationMinutes: t.DurationMinutes,
 		Track:           pts,
 	}
-}
-
-// FloatPlanRequest sets a trip's destination, ETA and shore contact.
-type FloatPlanRequest struct {
-	Destination       *string    `json:"destination"`
-	ETA               *time.Time `json:"eta"`
-	ShoreContactName  *string    `json:"shore_contact_name"`
-	ShoreContactPhone *string    `json:"shore_contact_phone"`
 }

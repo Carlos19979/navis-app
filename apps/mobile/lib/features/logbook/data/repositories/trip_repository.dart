@@ -231,22 +231,6 @@ class TripRepository {
     await _apiClient.delete<void>('/api/v1/trips/$id/share');
   }
 
-  /// Sets a trip's float plan (destination, ETA, shore contact).
-  Future<void> setFloatPlan(
-    String id, {
-    String? destination,
-    DateTime? eta,
-    String? shoreContactName,
-    String? shoreContactPhone,
-  }) async {
-    await _apiClient.put<void>('/api/v1/trips/$id/float-plan', data: {
-      'destination': destination,
-      'eta': eta?.toUtc().toIso8601String(),
-      'shore_contact_name': shoreContactName,
-      'shore_contact_phone': shoreContactPhone,
-    });
-  }
-
   Future<void> deleteTrip(String id) async {
     try {
       await _apiClient.delete<void>('/api/v1/trips/$id');

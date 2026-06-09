@@ -393,33 +393,3 @@ func (r *TripRepo) GetByShareToken(ctx context.Context, token string) (*domain.T
 	}
 	return t, nil
 }
-
-// SetFloatPlan stores the float plan (destination, ETA, shore contact) on a trip.
-func (r *TripRepo) SetFloatPlan(ctx context.Context, userID, tripID string,
-	destination *string, eta *time.Time, name, phone *string) error {
-	ct, err := r.pool.Exec(ctx,
-		`UPDATE trips SET destination = $1, eta = $2, shore_contact_name = $3,
-			shore_contact_phone = $4, updated_at = now()
-		 WHERE user_id = $5 AND id = $6`,
-		destination, eta, name, phone, userID, tripID)
-	if err != nil {
-		return fmt.Errorf("setting float plan for trip %s: %w", tripID, err)
-	}
-	if ct.RowsAffected() == 0 {
-		return domain.ErrTripNotFound
-	}
-	return nil
-}
-
-// ListOverdueFloatPlans returns recording trips whose ETA passed before the
-// given cutoff (for the safety overdue-arrival alert).
-func (r *TripRepo) ListOverdueFloatPlans(ctx context.Context, cutoff time.Time) ([]domain.Trip, error) {
-	query := `SELECT ` + tripColumns + ` FROM trips
-		WHERE status = 'recording' AND eta IS NOT NULL AND eta < $1`
-	rows, err := r.pool.Query(ctx, query, cutoff)
-	if err != nil {
-		return nil, fmt.Errorf("listing overdue float plans: %w", err)
-	}
-	defer rows.Close()
-	return scanTrips(rows)
-}

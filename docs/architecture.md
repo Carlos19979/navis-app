@@ -81,14 +81,14 @@
   - `internal/dto/` — Data transfer objects
   - `internal/middleware/` — Auth verification, logging, CORS
   - `internal/cron/` — Scheduled jobs (document expiry; regatta reminders;
-    live-event alerts; overdue float-plan alerts)
+    live-event alerts)
   - `internal/config/` — Environment configuration
   - `internal/router/` — Route registration
 - **Auth**: Validates Supabase JWT in middleware (provider-agnostic — email,
   Apple, Google all produce a valid Supabase JWT)
 - **Cron** (robfig/cron, UTC): daily document-expiry check; daily regatta
-  reminders; every 15m live-event + overdue-float-plan alerts. Dedup via
-  `notification_logs` / `sent_notifications`. Push delivered via Novu → FCM.
+  reminders; every 15m live-event alerts. Dedup via `notification_logs` /
+  `sent_notifications`. Push delivered via Novu → FCM.
 
 ### Supabase (`packages/supabase/`)
 
@@ -112,8 +112,7 @@
       v
   +--------+--1:N--> trip_tracks (GPS, PostGIS)
   | trips  |--1:N--> trip_participants (RSVP) / trip_checklist_items
-  +--------+  (regatta: group_id/kind/scheduled_at ; float plan: destination/eta/
-              shore_contact ; public: share_token)
+  +--------+  (regatta: group_id/kind/scheduled_at ; public share: share_token)
 
   groups --1:N--> group_members (pending|active)     (clubs/crews, invite code)
   events --N:M--> event_interests   (events carry stream_url / tracking_url)
@@ -161,11 +160,6 @@ Key tables: `profiles`, `boats` (+`share_code`), `boat_members`, `documents`,
    `boatRepo.HasAccess(userID, boatID)` and resolve to the **owner's** scope
 3. All writes remain strictly owner-scoped (members get 404), so sharing can
    never escalate to write access
-
-### Float plan safety alert
-1. Before departure the skipper sets destination/ETA/shore contact on the trip
-2. A 15-minute cron finds recording trips past `eta + 30m` and pushes the owner
-   a "have you arrived?" alert (dedup via `sent_notifications`)
 
 ## Deployment
 

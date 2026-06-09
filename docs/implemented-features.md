@@ -12,7 +12,7 @@ and what remains (mostly external config). Use this to continue.
 | **Trip share (public link + web page)** | ✅ | ✅ link | E2E | Image card (F2a) still pending. |
 | **Maintenance & expenses** | ✅ | ✅ | E2E + device | Maintenance schedules/reminders cron not built (logs+expenses only). |
 | **Tides + navigation window** | ✅ | ✅ | E2E | Open-Meteo `sea_level_height_msl`; hidden when range <0.3m (Mediterranean). |
-| **Float plan (destination/ETA/shore contact)** | ✅ + overdue cron | ✅ | E2E | Auto-alert notifies the **owner** (push). External shore-contact email needs Resend. |
+| ~~Float plan (destination/ETA/shore contact)~~ | **removed** | **removed** | — | Removed 2026-06-09: phone-based auto-alert can't be a reliable rescue net (alerted the owner, not the shore contact; needs SMS/satellite). DB columns (`trips.destination/eta/shore_contact_*`) + dormant Go/Dart fields left in place. Trip *sharing* (F2) stays. |
 | **Sign in with Apple/Google** | n/a (provider-agnostic JWT) | ✅ code + URL scheme | build only | **Needs external config**: Supabase providers + Apple/Google credentials + iOS capability. iOS Info.plist URL scheme NOT committed (lives in local ios/ hacks) — re-add `CFBundleURLTypes` scheme `navis` when wiring. |
 | **Boat sharing (crew/co-owners)** | ✅ | ✅ | 🔒 security-tested | Read-only members; writes owner-only. |
 
@@ -34,8 +34,8 @@ and what remains (mostly external config). Use this to continue.
 ## Cron jobs (in `RegattaNotifier`, all UTC)
 - `0 9 * * *` regatta reminders (next 36h) → group members.
 - `*/15 * * * *` live-event alert → interested users.
-- `*/15 * * * *` overdue float-plan → trip owner ("¿Has llegado bien?", ETA+30m grace).
 - Dedup via `sent_notifications`. Document-expiry cron unchanged.
+- (Removed: overdue float-plan alert — see Float plan row.)
 
 ## Migrations added (00018–00024)
 `sent_notifications`, `event stream urls`, `profiles`, `trip share_token`,
@@ -51,8 +51,8 @@ and what remains (mostly external config). Use this to continue.
 3. **Payments** for real plan changes (webhook → `profiles.plan`).
 4. **F2a** trip image card (capture a stats card → share image).
 5. **Maintenance schedules + reminders** (due by engine-hours or date).
-6. **Shore-contact email** for float plan overdue (Resend for arbitrary recipients).
-7. Optional: editor role for boat co-owners (write access), maintenance polish across more screens.
+6. Optional: editor role for boat co-owners (write access), maintenance polish across more screens.
+7. (If float plan is ever revived: notify the **shore contact** via SMS/email — not the owner — with a clear "not a rescue system" disclaimer.)
 
 ## Local run reminder
 colima + `supabase start -x studio`; native Go API on :8080; iPhone uses the Mac's
