@@ -59,9 +59,23 @@ func (s *MaintenanceService) ListLogs(ctx context.Context, userID, boatID string
 	return s.maint.ListByBoat(ctx, boatID)
 }
 
-// DeleteLog removes a maintenance log.
-func (s *MaintenanceService) DeleteLog(ctx context.Context, userID, id string) error {
-	return s.maint.Delete(ctx, userID, id)
+// UpdateLog edits a maintenance log (owner or editor member).
+func (s *MaintenanceService) UpdateLog(ctx context.Context, userID string, log *domain.MaintenanceLog) (*domain.MaintenanceLog, error) {
+	if log.Type == "" {
+		return nil, &domain.ValidationError{Field: "type", Message: "type is required"}
+	}
+	if err := s.assertCanEdit(ctx, userID, log.BoatID); err != nil {
+		return nil, fmt.Errorf("update maintenance: %w", err)
+	}
+	return s.maint.Update(ctx, log)
+}
+
+// DeleteLog removes a maintenance log (owner or editor member).
+func (s *MaintenanceService) DeleteLog(ctx context.Context, userID, boatID, id string) error {
+	if err := s.assertCanEdit(ctx, userID, boatID); err != nil {
+		return fmt.Errorf("delete maintenance: %w", err)
+	}
+	return s.maint.Delete(ctx, boatID, id)
 }
 
 // AddExpense records an expense (owner or editor member).
@@ -83,9 +97,23 @@ func (s *MaintenanceService) ListExpenses(ctx context.Context, userID, boatID st
 	return s.exp.ListByBoat(ctx, boatID)
 }
 
-// DeleteExpense removes an expense.
-func (s *MaintenanceService) DeleteExpense(ctx context.Context, userID, id string) error {
-	return s.exp.Delete(ctx, userID, id)
+// UpdateExpense edits an expense (owner or editor member).
+func (s *MaintenanceService) UpdateExpense(ctx context.Context, userID string, e *domain.Expense) (*domain.Expense, error) {
+	if e.Category == "" {
+		return nil, &domain.ValidationError{Field: "category", Message: "category is required"}
+	}
+	if err := s.assertCanEdit(ctx, userID, e.BoatID); err != nil {
+		return nil, fmt.Errorf("update expense: %w", err)
+	}
+	return s.exp.Update(ctx, e)
+}
+
+// DeleteExpense removes an expense (owner or editor member).
+func (s *MaintenanceService) DeleteExpense(ctx context.Context, userID, boatID, id string) error {
+	if err := s.assertCanEdit(ctx, userID, boatID); err != nil {
+		return fmt.Errorf("delete expense: %w", err)
+	}
+	return s.exp.Delete(ctx, boatID, id)
 }
 
 // ExpenseTotals returns summed expenses per category (owner or any member).
