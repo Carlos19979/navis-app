@@ -293,17 +293,3 @@ func (s *TripService) PublicByToken(ctx context.Context, token string) (*domain.
 	}
 	return trip, track, nil
 }
-
-// SetFloatPlan stores the float plan for a trip.
-func (s *TripService) SetFloatPlan(ctx context.Context, userID, tripID string,
-	destination *string, eta *time.Time, name, phone *string) error {
-	if err := s.tripRepo.SetFloatPlan(ctx, userID, tripID, destination, eta, name, phone); err != nil {
-		return fmt.Errorf("set float plan: %w", err)
-	}
-	return nil
-}
-
-// ListOverdueFloatPlans returns recording trips past their ETA.
-func (s *TripService) ListOverdueFloatPlans(ctx context.Context, cutoff time.Time) ([]domain.Trip, error) {
-	return s.tripRepo.ListOverdueFloatPlans(ctx, cutoff)
-}

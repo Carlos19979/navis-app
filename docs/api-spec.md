@@ -623,7 +623,7 @@ Dev/testing only (replace with a payment webhook). Body `{ "plan": "normal|armad
 Plan enforcement returns **402** with code `PLAN_LIMIT` (boat quota) or `PLAN_FORBIDDEN`
 (e.g. a `normal` user creating a group).
 
-## Trip sharing & float plan
+## Trip sharing
 
 ### PUT /api/v1/trips/:id/share
 Make a trip public. Returns `{ token, url }` (idempotent). URL → public web page.
@@ -636,10 +636,6 @@ Public JSON of a shared trip + track.
 
 ### GET /public/trips/:token/view  (no auth)
 HTML landing page with a Leaflet/OpenSeaMap map of the route (the share/growth page).
-
-### PUT /api/v1/trips/:id/float-plan
-Body `{ destination, eta, shore_contact_name, shore_contact_phone }` (all optional).
-An overdue cron alerts the owner if a recording trip passes its ETA + 30m.
 
 ## Maintenance & Expenses (per boat)
 

@@ -78,10 +78,6 @@ type TripRepository interface {
 	ClearShareToken(ctx context.Context, userID, tripID string) error
 	// GetByShareToken returns a trip by its public token (no user scoping).
 	GetByShareToken(ctx context.Context, token string) (*domain.Trip, error)
-	// SetFloatPlan stores destination/ETA/shore contact on a trip.
-	SetFloatPlan(ctx context.Context, userID, tripID string, destination *string, eta *time.Time, name, phone *string) error
-	// ListOverdueFloatPlans returns recording trips past their ETA.
-	ListOverdueFloatPlans(ctx context.Context, cutoff time.Time) ([]domain.Trip, error)
 }
 
 // TripParticipantRepository tracks RSVP answers to planned group trips/regattas.

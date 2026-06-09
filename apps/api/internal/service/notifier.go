@@ -16,7 +16,6 @@ const (
 	WorkflowGroupJoinRequest     = "group-join-request"
 	WorkflowGroupRequestApproved = "group-request-approved"
 	WorkflowEventLive            = "event-live"
-	WorkflowFloatPlanOverdue     = "float-plan-overdue"
 )
 
 // Notifier centralises push-notification sending. It is best-effort: failures

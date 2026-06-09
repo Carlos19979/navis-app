@@ -68,19 +68,10 @@ func (n *RegattaNotifier) Start() {
 		n.logger.Error("failed to schedule live-event alert", slog.String("error", err.Error()))
 	}
 
-	if _, err := n.cron.AddFunc("*/15 * * * *", func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
-		defer cancel()
-		n.alertOverdue(ctx)
-	}); err != nil {
-		n.logger.Error("failed to schedule overdue float-plan alert", slog.String("error", err.Error()))
-	}
-
 	n.cron.Start()
 	n.logger.Info("regatta notifier cron started",
 		slog.String("reminder", "daily 09:00 UTC"),
-		slog.String("live", "every 15m"),
-		slog.String("overdue", "every 15m"))
+		slog.String("live", "every 15m"))
 }
 
 // Stop gracefully stops the cron scheduler.
@@ -149,32 +140,5 @@ func (n *RegattaNotifier) alertLive(ctx context.Context) {
 				e.Name, "La regata empieza — síguela en directo", "event", e.ID)
 			_ = n.sent.Record(ctx, uid, service.WorkflowEventLive, e.ID, "")
 		}
-	}
-}
-
-// alertOverdue notifies skippers whose recording trip has passed its ETA by a
-// grace margin (a "have you arrived safely?" safety nudge).
-func (n *RegattaNotifier) alertOverdue(ctx context.Context) {
-	const grace = 30 * time.Minute
-	cutoff := time.Now().UTC().Add(-grace)
-	trips, err := n.trips.ListOverdueFloatPlans(ctx, cutoff)
-	if err != nil {
-		n.logger.Error("overdue float-plan query failed", slog.String("error", err.Error()))
-		return
-	}
-	for i := range trips {
-		t := &trips[i]
-		if exists, _ := n.sent.Exists(ctx, t.UserID, service.WorkflowFloatPlanOverdue, t.ID, ""); exists {
-			continue
-		}
-		dest := "tu destino"
-		if t.Destination != nil && *t.Destination != "" {
-			dest = *t.Destination
-		}
-		n.notifier.Send(ctx, t.UserID, service.WorkflowFloatPlanOverdue,
-			"¿Has llegado bien?",
-			fmt.Sprintf("Tu viaje a %s debía haber llegado. Cierra el viaje si ya estás a salvo.", dest),
-			"trip", t.ID)
-		_ = n.sent.Record(ctx, t.UserID, service.WorkflowFloatPlanOverdue, t.ID, "")
 	}
 }
