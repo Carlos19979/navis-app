@@ -578,5 +578,6 @@
   "resumeRecordingTitle": "Grabación en curso",
   "resumeRecordingBody": "Se interrumpió la grabación de un viaje. ¿Quieres reanudarla?",
   "resumeAction": "Reanudar",
-  "discardRecording": "Descartar"
+  "discardRecording": "Descartar",
+  "noBoatsValueProp": "Añade tu barco para controlar la caducidad de documentos, recibir avisos antes de las multas y llevar el mantenimiento en un solo sitio."
 }

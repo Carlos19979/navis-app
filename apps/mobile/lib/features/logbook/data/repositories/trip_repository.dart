@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:navis_mobile/core/database/mutation_queue.dart';
 import 'package:navis_mobile/core/database/offline_repository.dart';
 import 'package:navis_mobile/core/network/api_client.dart';
@@ -116,15 +117,7 @@ class TripRepository {
     final envelope = response.data!;
     final data = envelope['data'] as List<dynamic>?;
     if (data == null) return [];
-    return data
-        .map((json) => TrackPointModel.fromJson(json as Map<String, dynamic>))
-        .map((m) => TrackPoint(
-              latitude: m.latitude,
-              longitude: m.longitude,
-              timestamp: m.timestamp,
-              speedKnots: m.speedKnots,
-            ))
-        .toList();
+    return compute(_parseTrackPoints, data);
   }
 
   Future<Trip> createTrip(Trip trip) async {
@@ -256,4 +249,20 @@ class TripRepository {
       mutationQueue != null &&
       offlineRepo != null &&
       offlineRepo!.isNetworkError(e);
+}
+
+/// Parses a decoded JSON list of track points into [TrackPoint] entities.
+///
+/// Runs off the main isolate via [compute] to keep large track transforms
+/// from blocking the UI thread.
+List<TrackPoint> _parseTrackPoints(List<dynamic> data) {
+  return data
+      .map((json) => TrackPointModel.fromJson(json as Map<String, dynamic>))
+      .map((m) => TrackPoint(
+            latitude: m.latitude,
+            longitude: m.longitude,
+            timestamp: m.timestamp,
+            speedKnots: m.speedKnots,
+          ))
+      .toList();
 }

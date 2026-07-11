@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -232,15 +233,22 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                                       semanticLabel: l.boatPhoto,
                                     )
                                   else
-                                    Image.network(
-                                      _existingPhotoUrl!,
-                                      fit: BoxFit.cover,
-                                      semanticLabel: l.boatPhoto,
-                                      errorBuilder: (_, __, ___) => Center(
-                                        child: Icon(
-                                          Icons.broken_image_outlined,
-                                          size: 48,
-                                          color: context.txtSecondary,
+                                    Semantics(
+                                      label: l.boatPhoto,
+                                      child: CachedNetworkImage(
+                                        imageUrl: _existingPhotoUrl!,
+                                        memCacheWidth: 1200,
+                                        fit: BoxFit.cover,
+                                        placeholder: (context, url) =>
+                                            Container(
+                                          color: AppColors.darkCard,
+                                        ),
+                                        errorWidget: (_, __, ___) => Center(
+                                          child: Icon(
+                                            Icons.broken_image_outlined,
+                                            size: 48,
+                                            color: context.txtSecondary,
+                                          ),
                                         ),
                                       ),
                                     ),

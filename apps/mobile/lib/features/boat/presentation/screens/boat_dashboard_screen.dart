@@ -190,6 +190,7 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
             return NavisEmptyState(
               icon: Icons.sailing_outlined,
               message: l.noBoats,
+              description: l.noBoatsValueProp,
               actionLabel: l.addBoat,
               onAction: _onAddBoat,
             );

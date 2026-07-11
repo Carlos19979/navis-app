@@ -672,5 +672,6 @@
   "resumeRecordingTitle": "Recording in progress",
   "resumeRecordingBody": "A trip recording was interrupted. Do you want to resume it?",
   "resumeAction": "Resume",
-  "discardRecording": "Discard"
+  "discardRecording": "Discard",
+  "noBoatsValueProp": "Add your boat to track document expiry, get reminders before fines, and keep your maintenance log in one place."
 }
