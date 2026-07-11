@@ -15,7 +15,7 @@ import (
 
 type deviceRepo interface {
 	Upsert(ctx context.Context, userID, token string, platform domain.Platform) error
-	Delete(ctx context.Context, token string) error
+	Delete(ctx context.Context, userID, token string) error
 }
 
 type notificationProvider interface {
@@ -67,22 +67,27 @@ func (h *DeviceHandler) Create(w http.ResponseWriter, r *http.Request) {
 	JSON(w, http.StatusCreated, map[string]string{"status": "registered"})
 }
 
-// Delete removes a device token.
+// Delete removes one of the caller's own device tokens. Scoping by user ID
+// prevents unregistering another user's device (IDOR).
 func (h *DeviceHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok {
+		Error(w, http.StatusUnauthorized, "missing user", "UNAUTHORIZED")
+		return
+	}
+
 	token := chi.URLParam(r, "token")
 	if token == "" {
 		Error(w, http.StatusBadRequest, "token is required", "BAD_REQUEST")
 		return
 	}
 
-	if err := h.repo.Delete(r.Context(), token); err != nil {
+	if err := h.repo.Delete(r.Context(), userID, token); err != nil {
 		Error(w, http.StatusInternalServerError, "failed to delete device token", "INTERNAL_ERROR")
 		return
 	}
 
-	if userID, ok := middleware.UserIDFromContext(r.Context()); ok {
-		_ = h.notifier.RemovePushToken(r.Context(), userID, token)
-	}
+	_ = h.notifier.RemovePushToken(r.Context(), userID, token)
 
 	w.WriteHeader(http.StatusNoContent)
 }

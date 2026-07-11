@@ -20,15 +20,15 @@ import (
 
 type mockDeviceRepo struct {
 	upsertFn func(ctx context.Context, userID, token string, platform domain.Platform) error
-	deleteFn func(ctx context.Context, token string) error
+	deleteFn func(ctx context.Context, userID, token string) error
 }
 
 func (m *mockDeviceRepo) Upsert(ctx context.Context, userID, token string, platform domain.Platform) error {
 	return m.upsertFn(ctx, userID, token, platform)
 }
 
-func (m *mockDeviceRepo) Delete(ctx context.Context, token string) error {
-	return m.deleteFn(ctx, token)
+func (m *mockDeviceRepo) Delete(ctx context.Context, userID, token string) error {
+	return m.deleteFn(ctx, userID, token)
 }
 
 type mockNotifier struct{}
@@ -179,18 +179,19 @@ func TestDeviceHandler_Create_RepoError(t *testing.T) {
 func TestDeviceHandler_Delete_Success(t *testing.T) {
 	t.Parallel()
 
-	var deletedToken string
+	var deletedUserID, deletedToken string
 
 	h := handler.NewDeviceHandler(&mockDeviceRepo{
 		upsertFn: func(_ context.Context, _, _ string, _ domain.Platform) error { return nil },
-		deleteFn: func(_ context.Context, token string) error {
+		deleteFn: func(_ context.Context, userID, token string) error {
+			deletedUserID = userID
 			deletedToken = token
 			return nil
 		},
 	}, &mockNotifier{})
 
 	w := httptest.NewRecorder()
-	r := httptest.NewRequest(http.MethodDelete, "/api/v1/devices/abc123", nil)
+	r := authedRequest(http.MethodDelete, "/api/v1/devices/abc123", "", "user-1")
 	r = withChiParam(r, "token", "abc123")
 	h.Delete(w, r)
 
@@ -200,6 +201,27 @@ func TestDeviceHandler_Delete_Success(t *testing.T) {
 	if deletedToken != "abc123" {
 		t.Errorf("expected abc123, got %s", deletedToken)
 	}
+	if deletedUserID != "user-1" {
+		t.Errorf("delete must be scoped to the caller, got user %q", deletedUserID)
+	}
+}
+
+func TestDeviceHandler_Delete_Unauthenticated(t *testing.T) {
+	t.Parallel()
+
+	h := handler.NewDeviceHandler(&mockDeviceRepo{
+		upsertFn: func(_ context.Context, _, _ string, _ domain.Platform) error { return nil },
+		deleteFn: func(_ context.Context, _, _ string) error { return nil },
+	}, &mockNotifier{})
+
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest(http.MethodDelete, "/api/v1/devices/abc123", nil)
+	r = withChiParam(r, "token", "abc123")
+	h.Delete(w, r)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d", w.Code)
+	}
 }
 
 func TestDeviceHandler_Delete_MissingToken(t *testing.T) {
@@ -207,11 +229,11 @@ func TestDeviceHandler_Delete_MissingToken(t *testing.T) {
 
 	h := handler.NewDeviceHandler(&mockDeviceRepo{
 		upsertFn: func(_ context.Context, _, _ string, _ domain.Platform) error { return nil },
-		deleteFn: func(_ context.Context, _ string) error { return nil },
+		deleteFn: func(_ context.Context, _, _ string) error { return nil },
 	}, &mockNotifier{})
 
 	w := httptest.NewRecorder()
-	r := httptest.NewRequest(http.MethodDelete, "/api/v1/devices/", nil)
+	r := authedRequest(http.MethodDelete, "/api/v1/devices/", "", "user-1")
 	r = withChiParam(r, "token", "")
 	h.Delete(w, r)
 
@@ -225,13 +247,13 @@ func TestDeviceHandler_Delete_RepoError(t *testing.T) {
 
 	h := handler.NewDeviceHandler(&mockDeviceRepo{
 		upsertFn: func(_ context.Context, _, _ string, _ domain.Platform) error { return nil },
-		deleteFn: func(_ context.Context, _ string) error {
+		deleteFn: func(_ context.Context, _, _ string) error {
 			return errors.New("db error")
 		},
 	}, &mockNotifier{})
 
 	w := httptest.NewRecorder()
-	r := httptest.NewRequest(http.MethodDelete, "/api/v1/devices/abc123", nil)
+	r := authedRequest(http.MethodDelete, "/api/v1/devices/abc123", "", "user-1")
 	r = withChiParam(r, "token", "abc123")
 	h.Delete(w, r)
 

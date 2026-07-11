@@ -1,7 +1,9 @@
 package middleware
 
 import (
+	"net"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 )
@@ -11,7 +13,26 @@ type visitor struct {
 	windowEnd time.Time
 }
 
-// RateLimit returns middleware that limits requests per IP within a window.
+// ClientIP resolves the caller's IP address. Behind the production reverse
+// proxy (Railway) the client IP is the first hop of X-Forwarded-For; locally
+// it falls back to RemoteAddr with the port stripped, so one machine is one
+// bucket instead of one bucket per TCP connection.
+func ClientIP(r *http.Request) string {
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		first, _, _ := strings.Cut(xff, ",")
+		if ip := strings.TrimSpace(first); ip != "" {
+			return ip
+		}
+	}
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
+	}
+	return host
+}
+
+// RateLimit returns middleware that limits requests per client IP within a
+// window.
 func RateLimit(maxRequests int, window time.Duration) func(http.Handler) http.Handler {
 	var mu sync.Mutex
 	visitors := make(map[string]*visitor)
@@ -33,7 +54,7 @@ func RateLimit(maxRequests int, window time.Duration) func(http.Handler) http.Ha
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ip := r.RemoteAddr
+			ip := ClientIP(r)
 
 			mu.Lock()
 			v, exists := visitors[ip]

@@ -179,6 +179,7 @@ type NotificationLogRepository interface {
 // DeviceTokenRepository defines persistence operations for push notification device tokens.
 type DeviceTokenRepository interface {
 	Upsert(ctx context.Context, userID, token string, platform domain.Platform) error
-	Delete(ctx context.Context, token string) error
+	// Delete removes a token owned by userID (scoped to prevent IDOR).
+	Delete(ctx context.Context, userID, token string) error
 	GetByUserID(ctx context.Context, userID string) ([]domain.DeviceToken, error)
 }

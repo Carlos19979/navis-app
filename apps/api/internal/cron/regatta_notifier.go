@@ -110,9 +110,12 @@ func (n *RegattaNotifier) remindUpcoming(ctx context.Context) {
 			if exists, _ := n.sent.Exists(ctx, uid, service.WorkflowRegattaReminder, t.ID, ""); exists {
 				continue
 			}
-			n.notifier.Send(ctx, uid, service.WorkflowRegattaReminder,
-				"Regata próxima", body, "regatta", t.ID)
-			_ = n.sent.Record(ctx, uid, service.WorkflowRegattaReminder, t.ID, "")
+			// Record dedup only after the provider accepted the trigger, so a
+			// transient failure is retried on the next run.
+			if n.notifier.TrySend(ctx, uid, service.WorkflowRegattaReminder,
+				"Regata próxima", body, "regatta", t.ID) {
+				_ = n.sent.Record(ctx, uid, service.WorkflowRegattaReminder, t.ID, "")
+			}
 		}
 	}
 }
@@ -136,9 +139,10 @@ func (n *RegattaNotifier) alertLive(ctx context.Context) {
 			if exists, _ := n.sent.Exists(ctx, uid, service.WorkflowEventLive, e.ID, ""); exists {
 				continue
 			}
-			n.notifier.Send(ctx, uid, service.WorkflowEventLive,
-				e.Name, "La regata empieza — síguela en directo", "event", e.ID)
-			_ = n.sent.Record(ctx, uid, service.WorkflowEventLive, e.ID, "")
+			if n.notifier.TrySend(ctx, uid, service.WorkflowEventLive,
+				e.Name, "La regata empieza — síguela en directo", "event", e.ID) {
+				_ = n.sent.Record(ctx, uid, service.WorkflowEventLive, e.ID, "")
+			}
 		}
 	}
 }

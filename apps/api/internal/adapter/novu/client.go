@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
 )
 
 // Client implements port.NotificationProvider using the Novu REST API.
@@ -22,8 +23,9 @@ func New(apiKey string, logger *slog.Logger) *Client {
 	return &Client{
 		apiKey:  apiKey,
 		baseURL: "https://api.novu.co",
-		http:    &http.Client{},
-		logger:  logger,
+		// Without a timeout a hung Novu request pins its caller forever.
+		http:   &http.Client{Timeout: 10 * time.Second},
+		logger: logger,
 	}
 }
 

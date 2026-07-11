@@ -47,8 +47,15 @@ func (n *Notifier) UserName(ctx context.Context, userID string) string {
 // Send triggers a Novu workflow for one recipient. The payload carries the
 // display text plus a {type, id} deep-link target for the notification tap.
 func (n *Notifier) Send(ctx context.Context, userID, workflow, title, body, linkType, linkID string) {
+	_ = n.TrySend(ctx, userID, workflow, title, body, linkType, linkID)
+}
+
+// TrySend is Send reporting whether the provider accepted the trigger. Callers
+// that record dedup state (crons) must only record on success, otherwise a
+// transient provider failure permanently swallows the notification.
+func (n *Notifier) TrySend(ctx context.Context, userID, workflow, title, body, linkType, linkID string) bool {
 	if n == nil || n.provider == nil || userID == "" {
-		return
+		return false
 	}
 	payload := map[string]any{
 		"title": title,
@@ -61,5 +68,7 @@ func (n *Notifier) Send(ctx context.Context, userID, workflow, title, body, link
 			n.logger.Warn("notification failed",
 				"workflow", workflow, "user_id", userID, "error", err)
 		}
+		return false
 	}
+	return true
 }
