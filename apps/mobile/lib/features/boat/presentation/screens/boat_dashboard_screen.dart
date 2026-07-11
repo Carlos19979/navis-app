@@ -18,6 +18,7 @@ import 'package:navis_mobile/features/boat/presentation/widgets/boat_header.dart
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/trip_recording_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
+import 'package:navis_mobile/features/boat/presentation/boat_type_label.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
@@ -291,14 +292,6 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
   }
 }
 
-String _localizedBoatType(AppLocalizations l, String type) => switch (type) {
-      'sailboat' => l.sailboat,
-      'motorboat' => l.motorboat,
-      'catamaran' => l.catamaran,
-      'other' => l.other,
-      _ => type[0].toUpperCase() + type.substring(1),
-    };
-
 class _BoatCard extends ConsumerWidget {
   const _BoatCard({
     required this.boat,
@@ -341,7 +334,7 @@ class _BoatCard extends ConsumerWidget {
                   ),
                   _InfoChip(
                     icon: Icons.category_outlined,
-                    label: _localizedBoatType(l, boat.type),
+                    label: localizedBoatType(l, boat.type),
                   ),
                   if (boat.homePort != null)
                     _InfoChip(
