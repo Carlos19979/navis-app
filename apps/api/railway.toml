@@ -1,0 +1,27 @@
+# Railway deployment for the Navis Go API (EU region).
+# The service root is apps/api; set the Railway service's root directory to
+# apps/api so this file and the Dockerfile are picked up.
+
+[build]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+# /readyz pings the DB pool (added in the backend-security phase), so Railway
+# only routes traffic once the DB is reachable.
+healthcheckPath = "/readyz"
+healthcheckTimeout = 30
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+# Required env vars (set in the Railway dashboard, NOT here — these are secrets):
+#   APP_ENV=production
+#   DATABASE_URL          Supabase pooler URL, sslmode=require
+#   SUPABASE_URL          https://<project>.supabase.co
+#   SUPABASE_JWT_SECRET
+#   SUPABASE_SERVICE_ROLE_KEY
+#   REVENUECAT_WEBHOOK_SECRET
+#   CORS_ALLOWED_ORIGINS
+#   NOVU_API_KEY          (optional; warns if empty in production)
+#   SENTRY_DSN            (optional)
+# config.Validate() aborts boot if any required one is missing or a dev default.
