@@ -4,10 +4,13 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/robfig/cron/v3"
 
+	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 	"github.com/Carlos19979/navis-app/apps/api/internal/port"
 )
 
@@ -16,6 +19,7 @@ import (
 type ExpirationChecker struct {
 	docs      port.DocumentRepository
 	notifLogs port.NotificationLogRepository
+	profiles  port.ProfileRepository
 	notifier  port.NotificationProvider
 	logger    *slog.Logger
 	cron      *cron.Cron
@@ -25,12 +29,14 @@ type ExpirationChecker struct {
 func New(
 	docs port.DocumentRepository,
 	notifLogs port.NotificationLogRepository,
+	profiles port.ProfileRepository,
 	notifier port.NotificationProvider,
 	logger *slog.Logger,
 ) *ExpirationChecker {
 	return &ExpirationChecker{
 		docs:      docs,
 		notifLogs: notifLogs,
+		profiles:  profiles,
 		notifier:  notifier,
 		logger:    logger,
 	}
@@ -72,8 +78,17 @@ func (ec *ExpirationChecker) check(ctx context.Context) {
 
 	ec.logger.Info("checking document expirations", slog.Int("count", len(docs)))
 
+	// Free users only get reminders for their single nearest-expiry document;
+	// Pro users get all. allowed holds the doc IDs eligible to notify this run.
+	allowed := ec.allowedDocs(ctx, docs)
+
 	var sent, skipped int
 	for _, doc := range docs {
+		if !allowed[doc.ID] {
+			skipped++
+			continue
+		}
+
 		daysUntilExpiry := int(time.Until(doc.ExpiryDate).Hours() / 24)
 
 		for _, alertDay := range doc.AlertDays {
@@ -135,6 +150,70 @@ func (ec *ExpirationChecker) check(ctx context.Context) {
 		slog.Int("notifications_sent", sent),
 		slog.Int("notifications_skipped", skipped),
 	)
+}
+
+// allowedDocs returns the set of document IDs eligible for a reminder this run,
+// applying each owner's plan reminder quota. Free users are capped at their
+// nearest-expiry document(s); Pro (unlimited) users get every document. If the
+// profiles repo is unavailable it fails open (all allowed).
+func (ec *ExpirationChecker) allowedDocs(ctx context.Context, docs []domain.Document) map[string]bool {
+	allowed := make(map[string]bool, len(docs))
+	if ec.profiles == nil {
+		for _, doc := range docs {
+			allowed[doc.ID] = true
+		}
+		return allowed
+	}
+
+	// Group document indices by owner.
+	byUser := make(map[string][]int)
+	for i, doc := range docs {
+		byUser[doc.UserID] = append(byUser[doc.UserID], i)
+	}
+
+	planCache := make(map[string]domain.Plan)
+	for userID, idxs := range byUser {
+		plan, ok := planCache[userID]
+		if !ok {
+			profile, err := ec.profiles.GetOrCreate(ctx, userID)
+			if err != nil {
+				// Fail open for this user rather than silently dropping alerts.
+				ec.logger.Warn("expiration checker: could not load profile; allowing all",
+					slog.String("user_id", userID), slog.String("error", err.Error()))
+				plan = domain.PlanPro
+			} else {
+				plan = profile.Plan
+			}
+			planCache[userID] = plan
+		}
+
+		limit := plan.ReminderDocLimit()
+		if limit == domain.Unlimited || len(idxs) <= limit {
+			for _, i := range idxs {
+				allowed[docs[i].ID] = true
+			}
+			continue
+		}
+
+		// Keep the `limit` documents closest to expiry (deterministic tie-break
+		// on document ID).
+		sortByExpiry(docs, idxs)
+		for _, i := range idxs[:limit] {
+			allowed[docs[i].ID] = true
+		}
+	}
+	return allowed
+}
+
+// sortByExpiry orders the given document indices by ascending expiry date, then
+// by ID for a stable tie-break.
+func sortByExpiry(docs []domain.Document, idxs []int) {
+	slices.SortFunc(idxs, func(a, b int) int {
+		if c := docs[a].ExpiryDate.Compare(docs[b].ExpiryDate); c != 0 {
+			return c
+		}
+		return strings.Compare(docs[a].ID, docs[b].ID)
+	})
 }
 
 func buildMessage(docType string, customName *string, daysUntil int, expiryDate time.Time) (string, string) {

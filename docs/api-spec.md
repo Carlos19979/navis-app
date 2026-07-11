@@ -614,14 +614,21 @@ The `type` field is free text; the above are suggestions for the UI.
 ## Account / Plans
 
 ### GET /api/v1/me
-Returns the current user's plan and derived limits.
-`{ plan, max_boats, boat_count, can_create_groups }`
+Returns the current user's plan and derived entitlements.
+`{ plan: "free|pro", is_pro, entitlements: { max_boats, boat_count, can_create_groups, reminder_doc_limit, maintenance_schedules, attachment_limit } }`
+(legacy `max_boats|boat_count|can_create_groups` also mirrored at the top level).
 
 ### PUT /api/v1/me/plan
-Dev/testing only (replace with a payment webhook). Body `{ "plan": "normal|armador|gestor" }`.
+Dev-only switcher, registered only when `APP_ENV != production`. Body `{ "plan": "free|pro" }`.
+
+### POST /api/v1/webhooks/revenuecat
+RevenueCat webhook (no JWT; authenticated by the exact `Authorization` header value in
+`REVENUECAT_WEBHOOK_SECRET`). Source of truth for the paid tier: grant events
+(`INITIAL_PURCHASE`, `RENEWAL`, …) → `pro`; `EXPIRATION` → `free`; informational events
+acknowledged as no-ops. `401` on bad secret.
 
 Plan enforcement returns **402** with code `PLAN_LIMIT` (boat quota) or `PLAN_FORBIDDEN`
-(e.g. a `normal` user creating a group).
+(e.g. a `free` user creating a group).
 
 ## Trip sharing
 

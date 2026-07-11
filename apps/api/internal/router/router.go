@@ -25,9 +25,11 @@ func New(
 	userH *handler.UserHandler,
 	profileH *handler.ProfileHandler,
 	maintenanceH *handler.MaintenanceHandler,
+	webhookH *handler.WebhookHandler,
 	jwtSecret string,
 	jwksURL string,
 	allowedOrigins []string,
+	enableDevPlanSwitcher bool,
 	logger *slog.Logger,
 ) chi.Router {
 	r := chi.NewRouter()
@@ -64,6 +66,9 @@ func New(
 		r.Get("/{token}", tripH.PublicJSON)
 		r.Get("/{token}/view", tripH.PublicView)
 	})
+
+	// Provider webhooks (no JWT — authenticated by a shared secret in the handler).
+	r.Post("/api/v1/webhooks/revenuecat", webhookH.RevenueCat)
 
 	// API v1 routes (all require authentication).
 	r.Route("/api/v1", func(r chi.Router) {
@@ -226,7 +231,11 @@ func New(
 		// Current user's plan and limits.
 		r.Route("/me", func(r chi.Router) {
 			r.Get("/", profileH.Me)
-			r.Put("/plan", profileH.UpdatePlan)
+			// Dev-only plan switcher. In production the plan is driven solely by
+			// the RevenueCat webhook, so this route is not registered.
+			if enableDevPlanSwitcher {
+				r.Put("/plan", profileH.UpdatePlan)
+			}
 		})
 	})
 

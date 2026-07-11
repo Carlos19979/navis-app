@@ -19,8 +19,8 @@ func NewProfileRepo(pool *pgxpool.Pool) *ProfileRepo {
 	return &ProfileRepo{pool: pool}
 }
 
-// GetOrCreate returns the user's profile, inserting a default 'normal' one if
-// it doesn't exist yet.
+// GetOrCreate returns the user's profile, inserting a default 'free' one if
+// it doesn't exist yet (the DB default drives the plan value).
 func (r *ProfileRepo) GetOrCreate(ctx context.Context, userID string) (*domain.Profile, error) {
 	p := &domain.Profile{}
 	err := r.pool.QueryRow(ctx,

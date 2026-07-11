@@ -8,6 +8,8 @@ import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/data/boat_share_repository.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
+import 'package:navis_mobile/features/billing/billing.dart';
+import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
 import 'package:navis_mobile/features/profile/data/account_provider.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 import 'package:navis_mobile/features/boat/presentation/widgets/boat_header.dart';
@@ -50,32 +52,29 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
     }
   }
 
-  void _onAddBoat() {
+  Future<void> _onAddBoat() async {
+    final isPro = ref.read(isProProvider);
     final account = ref.read(accountProvider).valueOrNull;
     final boats = ref.read(boatsProvider).valueOrNull ?? const [];
-    if (account != null && boats.length >= account.maxBoats) {
-      showDialog<void>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: ctx.dialogSurface,
-          title:
-              Text('Límite de barcos', style: TextStyle(color: ctx.txtPrimary)),
-          content: Text(
-            'Tu plan ${account.planLabel} permite hasta ${account.maxBoats} '
-            '${account.maxBoats == 1 ? 'barco' : 'barcos'}. '
-            'Mejora tu plan para añadir más.',
-            style: TextStyle(color: ctx.txtSecondary),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Entendido'),
-            ),
-          ],
-        ),
+    final maxBoats = isPro ? 3 : (account?.maxBoats ?? 1);
+
+    if (boats.length >= maxBoats) {
+      if (isPro) {
+        NavisSnackbar.info(
+          context,
+          'Has alcanzado el máximo de barcos de tu plan.',
+        );
+        return;
+      }
+      final purchased = await showPaywall(
+        context,
+        ref,
+        reason: 'Tu plan Free permite 1 barco. '
+            'Hazte Pro para gestionar hasta 3.',
       );
-      return;
+      if (!purchased || !mounted) return;
     }
+    if (!mounted) return;
     context.go('/boats/new');
   }
 
@@ -153,7 +152,7 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
               icon: Icons.sailing_outlined,
               message: l.noBoats,
               actionLabel: l.addBoat,
-              onAction: () => context.go('/boats/new'),
+              onAction: _onAddBoat,
             );
           }
 

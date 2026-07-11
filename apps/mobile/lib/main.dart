@@ -13,6 +13,7 @@ import 'package:navis_mobile/app/app.dart';
 import 'package:navis_mobile/app/router.dart';
 import 'package:navis_mobile/core/config/env.dart';
 import 'package:navis_mobile/core/config/settings_service.dart';
+import 'package:navis_mobile/features/billing/billing.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(
@@ -72,6 +73,9 @@ Future<void> main() async {
     url: Env.supabaseUrl,
     anonKey: Env.supabaseAnonKey,
   );
+
+  // Configure in-app purchases (no-op if no RevenueCat key is provided).
+  await BillingService.instance.configure();
 
   if (Env.sentryDsn.isNotEmpty) {
     await SentryFlutter.init(

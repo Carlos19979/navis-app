@@ -109,7 +109,7 @@ func main() {
 	weatherSvc := service.NewWeatherService(weatherProvider)
 
 	// Create and start expiration checker cron.
-	expirationChecker := cron.New(docRepo, notifLogRepo, notifier, logger)
+	expirationChecker := cron.New(docRepo, notifLogRepo, profileRepo, notifier, logger)
 	expirationChecker.Start()
 	defer expirationChecker.Stop()
 
@@ -132,15 +132,19 @@ func main() {
 	userH := handler.NewUserHandler(boatRepo, docRepo, tripRepo, trackRepo, deviceTokenRepo)
 	profileH := handler.NewProfileHandler(profileSvc)
 	maintenanceH := handler.NewMaintenanceHandler(maintenanceSvc)
+	webhookH := handler.NewWebhookHandler(profileSvc, cfg.RevenueCatWebhookSecret, logger)
 
 	// Create router.
 	jwksURL := cfg.SupabaseURL + "/auth/v1/.well-known/jwks.json"
+	enableDevPlanSwitcher := cfg.AppEnv != "production"
 
 	r := router.New(
 		boatH, docH, tripH, eventH, groupH, regattaH, portH, weatherH, deviceH, userH, profileH, maintenanceH,
+		webhookH,
 		cfg.SupabaseJWTSecret,
 		jwksURL,
 		cfg.CORSAllowedOrigins,
+		enableDevPlanSwitcher,
 		logger,
 	)
 

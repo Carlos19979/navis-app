@@ -71,6 +71,23 @@ func (m *mockNotifier) EnsureSubscriber(_ context.Context, _ string) error   { r
 func (m *mockNotifier) SetPushToken(_ context.Context, _, _ string) error    { return nil }
 func (m *mockNotifier) RemovePushToken(_ context.Context, _, _ string) error { return nil }
 
+// mockProfileRepo returns a fixed plan for every user (default: Pro, so existing
+// tests keep notifying every document).
+type mockProfileRepo struct {
+	plan domain.Plan
+}
+
+func (m *mockProfileRepo) GetOrCreate(_ context.Context, userID string) (*domain.Profile, error) {
+	plan := m.plan
+	if plan == "" {
+		plan = domain.PlanPro
+	}
+	return &domain.Profile{UserID: userID, Plan: plan}, nil
+}
+func (m *mockProfileRepo) SetPlan(_ context.Context, userID string, plan domain.Plan) (*domain.Profile, error) {
+	return &domain.Profile{UserID: userID, Plan: plan}, nil
+}
+
 // --- Helpers ---
 
 func newTestChecker(
@@ -78,7 +95,7 @@ func newTestChecker(
 	notifLogs *mockNotifLogRepo,
 	notifier *mockNotifier,
 ) *ExpirationChecker {
-	return New(docs, notifLogs, notifier, slog.Default())
+	return New(docs, notifLogs, &mockProfileRepo{plan: domain.PlanPro}, notifier, slog.Default())
 }
 
 func docExpiringIn(id, userID string, days int, alertDays []int) domain.Document {
@@ -271,6 +288,44 @@ func TestExpirationChecker_Check_ExpiredDocument(t *testing.T) {
 	title, _ := notifier.triggered[0].Payload["title"].(string)
 	if title != "Document Expired" {
 		t.Errorf("expected 'Document Expired' title, got %q", title)
+	}
+}
+
+func TestExpirationChecker_Check_FreePlanLimitsToNearestDoc(t *testing.T) {
+	t.Parallel()
+
+	notifier := &mockNotifier{}
+	// Free user with three expiring documents; only the nearest (doc-near, 3d)
+	// should notify. A separate Pro user's document still notifies.
+	ec := New(
+		&mockDocRepo{
+			listExpiringFn: func(_ context.Context, _ int) ([]domain.Document, error) {
+				return []domain.Document{
+					docExpiringIn("doc-far", "free-user", 40, []int{30, 7}),
+					docExpiringIn("doc-near", "free-user", 3, []int{30, 7}),
+					docExpiringIn("doc-mid", "free-user", 20, []int{30, 7}),
+				}, nil
+			},
+		},
+		&mockNotifLogRepo{
+			existsFn: func(_ context.Context, _, _ string, _ int) (bool, error) { return false, nil },
+			createFn: func(_ context.Context, _, _ string, _ int) error { return nil },
+		},
+		&mockProfileRepo{plan: domain.PlanFree},
+		notifier,
+		slog.Default(),
+	)
+
+	ec.check(context.Background())
+
+	for _, tw := range notifier.triggered {
+		docID, _ := tw.Payload["document_id"].(string)
+		if docID != "doc-near" {
+			t.Errorf("free user should only be notified for doc-near, got %q", docID)
+		}
+	}
+	if len(notifier.triggered) == 0 {
+		t.Fatal("expected the nearest document to notify")
 	}
 }
 

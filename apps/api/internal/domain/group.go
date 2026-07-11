@@ -32,7 +32,7 @@ const (
 // MembershipNone is the sentinel returned for a viewer who is not related to a group.
 const MembershipNone = "none"
 
-// Group represents a club or crew created by an owner (armador). Public groups are
+// Group represents a club or crew created by a Pro user. Public groups are
 // join-by-request (owner approval); private groups are joined with an invite code.
 type Group struct {
 	ID          string
