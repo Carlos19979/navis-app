@@ -64,6 +64,10 @@ Future<void> _initPushNotifications() async {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Fail fast on a production build wired to dev defaults (belt-and-suspenders
+  // to the Makefile release-target guards).
+  Env.assertProductionConfig();
+
   // Firebase must be ready before runApp; only the APNs-bound parts are deferred.
   await _initPushNotifications();
 

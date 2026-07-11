@@ -46,4 +46,27 @@ class Env {
   static const revenueCatIosKey = String.fromEnvironment('REVENUECAT_IOS_KEY');
   static const revenueCatAndroidKey =
       String.fromEnvironment('REVENUECAT_ANDROID_KEY');
+
+  static const _devSupabaseUrl = 'http://Carloss-MacBook-Pro.local:54321';
+  static const _devApiUrl = 'http://Carloss-MacBook-Pro.local:8080';
+
+  /// Belt-and-suspenders: a production build must never ship the dev defaults.
+  /// Called once at startup; throws (fails fast, caught by the Sentry-wrapped
+  /// zone) rather than silently talking to a laptop that isn't there.
+  static void assertProductionConfig() {
+    if (!isProduction) return;
+    final problems = <String>[
+      if (apiUrl == _devApiUrl) 'API_URL is the dev default',
+      if (supabaseUrl == _devSupabaseUrl) 'SUPABASE_URL is the dev default',
+      if (apiUrl.startsWith('http://')) 'API_URL must use https in production',
+      if (sentryDsn.isEmpty) 'SENTRY_DSN is empty',
+    ];
+    if (problems.isNotEmpty) {
+      throw StateError(
+        'Invalid production build configuration: ${problems.join('; ')}. '
+        'Pass the real values via --dart-define (see the Makefile release '
+        'targets and docs/deploy.md).',
+      );
+    }
+  }
 }
