@@ -15,11 +15,15 @@ import 'package:navis_mobile/features/maintenance/data/maintenance_repository.da
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
+import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
+import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_empty_state.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
+import 'package:navis_mobile/shared/widgets/navis_gradient_fab.dart';
 import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
+import 'package:navis_mobile/shared/widgets/navis_text_field.dart';
 
 String _fmtDate(DateTime d) =>
     '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
@@ -178,24 +182,10 @@ class _MaintenanceTab extends ConsumerWidget {
           Positioned(
             right: 16,
             bottom: 16,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: AppColors.cyanGradient,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.cyan.withValues(alpha: 0.4),
-                    blurRadius: 16,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: FloatingActionButton(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                onPressed: () => _editMaintenance(context, ref),
-                child: const Icon(Icons.add, color: Colors.white),
-              ),
+            child: NavisGradientFab(
+              icon: Icons.add,
+              tooltip: l.newMaintenance,
+              onPressed: () => _editMaintenance(context, ref),
             ),
           ),
       ],
@@ -237,26 +227,26 @@ class _MaintenanceTab extends ConsumerWidget {
                         fontSize: 18,
                         fontWeight: FontWeight.w700)),
                 const SizedBox(height: 12),
-                TextField(
+                NavisTextField(
                   controller: typeCtrl,
-                  decoration: InputDecoration(labelText: l.maintenanceTypeHint),
+                  label: l.maintenanceTypeHint,
                 ),
                 const SizedBox(height: 10),
-                TextField(
+                NavisTextField(
                   controller: hoursCtrl,
                   keyboardType: TextInputType.number,
-                  decoration: InputDecoration(labelText: l.engineHoursOptional),
+                  label: l.engineHoursOptional,
                 ),
                 const SizedBox(height: 10),
-                TextField(
+                NavisTextField(
                   controller: costCtrl,
                   keyboardType: TextInputType.number,
-                  decoration: InputDecoration(labelText: l.costOptional),
+                  label: l.costOptional,
                 ),
                 const SizedBox(height: 10),
-                TextField(
+                NavisTextField(
                   controller: providerCtrl,
-                  decoration: InputDecoration(labelText: l.providerOptional),
+                  label: l.providerOptional,
                 ),
                 const SizedBox(height: 10),
                 ListTile(
@@ -279,15 +269,21 @@ class _MaintenanceTab extends ConsumerWidget {
                   onPicked: (u) => setState(() => invoiceUrl = u),
                 ),
                 const SizedBox(height: 12),
-                FilledButton(
-                  style:
-                      FilledButton.styleFrom(backgroundColor: AppColors.cyan),
+                NavisButton(
+                  label: l.save,
                   onPressed: () => Navigator.of(ctx).pop(true),
-                  child: Text(l.save),
                 ),
                 if (existing != null)
                   TextButton(
                     onPressed: () async {
+                      final ok = await NavisConfirmDialog.show(
+                        ctx,
+                        title: l.delete,
+                        message: l.deleteConfirm,
+                        confirmLabel: l.delete,
+                        destructive: true,
+                      );
+                      if (!ok) return;
                       await ref
                           .read(maintenanceRepositoryProvider)
                           .deleteLog(boatId, existing.id);
@@ -467,24 +463,10 @@ class _ExpensesTab extends ConsumerWidget {
           Positioned(
             right: 16,
             bottom: 16,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: AppColors.cyanGradient,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.cyan.withValues(alpha: 0.4),
-                    blurRadius: 16,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: FloatingActionButton(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                onPressed: () => _editExpense(context, ref),
-                child: const Icon(Icons.add, color: Colors.white),
-              ),
+            child: NavisGradientFab(
+              icon: Icons.add,
+              tooltip: l.newExpense,
+              onPressed: () => _editExpense(context, ref),
             ),
           ),
       ],
@@ -494,7 +476,7 @@ class _ExpensesTab extends ConsumerWidget {
   Future<void> _editExpense(BuildContext context, WidgetRef ref,
       {Expense? existing}) async {
     final l = AppLocalizations.of(context)!;
-    final categoryCtrl = TextEditingController(text: existing?.category ?? '');
+    var category = existing?.category ?? '';
     final amountCtrl =
         TextEditingController(text: existing?.amount.toStringAsFixed(0) ?? '');
     var date = existing?.incurredOn ?? DateTime.now();
@@ -531,28 +513,30 @@ class _ExpensesTab extends ConsumerWidget {
                         fontSize: 18,
                         fontWeight: FontWeight.w700)),
                 const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    l.categoryLabel,
+                    style: TextStyle(color: context.txtSecondary, fontSize: 13),
+                  ),
+                ),
+                const SizedBox(height: 6),
                 Wrap(
                   spacing: 6,
                   children: [
                     for (final c in categories)
                       ChoiceChip(
                         label: Text(_categoryLabel(l, c)),
-                        selected: categoryCtrl.text == c,
-                        onSelected: (_) =>
-                            setState(() => categoryCtrl.text = c),
+                        selected: category == c,
+                        onSelected: (_) => setState(() => category = c),
                       ),
                   ],
                 ),
                 const SizedBox(height: 10),
-                TextField(
-                  controller: categoryCtrl,
-                  decoration: InputDecoration(labelText: l.categoryLabel),
-                ),
-                const SizedBox(height: 10),
-                TextField(
+                NavisTextField(
                   controller: amountCtrl,
                   keyboardType: TextInputType.number,
-                  decoration: InputDecoration(labelText: l.amountEur),
+                  label: l.amountEur,
                 ),
                 const SizedBox(height: 10),
                 ListTile(
@@ -575,15 +559,21 @@ class _ExpensesTab extends ConsumerWidget {
                   onPicked: (u) => setState(() => invoiceUrl = u),
                 ),
                 const SizedBox(height: 12),
-                FilledButton(
-                  style:
-                      FilledButton.styleFrom(backgroundColor: AppColors.cyan),
+                NavisButton(
+                  label: l.save,
                   onPressed: () => Navigator.of(ctx).pop(true),
-                  child: Text(l.save),
                 ),
                 if (existing != null)
                   TextButton(
                     onPressed: () async {
+                      final ok = await NavisConfirmDialog.show(
+                        ctx,
+                        title: l.delete,
+                        message: l.deleteConfirm,
+                        confirmLabel: l.delete,
+                        destructive: true,
+                      );
+                      if (!ok) return;
                       await ref
                           .read(maintenanceRepositoryProvider)
                           .deleteExpense(boatId, existing.id);
@@ -601,13 +591,11 @@ class _ExpensesTab extends ConsumerWidget {
       ),
     );
 
-    if (saved != true ||
-        categoryCtrl.text.trim().isEmpty ||
-        amountCtrl.text.trim().isEmpty) {
+    if (saved != true || category.isEmpty || amountCtrl.text.trim().isEmpty) {
       return;
     }
     final body = <String, dynamic>{
-      'category': categoryCtrl.text.trim(),
+      'category': category,
       'amount': double.tryParse(amountCtrl.text.trim()) ?? 0,
       'incurred_on': _isoDate(date),
       'invoice_url': invoiceUrl,
