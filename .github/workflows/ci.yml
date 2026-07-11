@@ -96,3 +96,25 @@ jobs:
       # - name: Build APK (compile check)
       #   if: github.ref == 'refs/heads/main'
       #   run: flutter build apk --debug
+
+  # ─────────────────────────────────────────────
+  # Deploy — Go API to Railway on main push.
+  # DISABLED until the Railway project exists and RAILWAY_TOKEN is added as a
+  # repo secret. Flip `if: false` to the commented condition to enable.
+  # See docs/deploy.md.
+  # ─────────────────────────────────────────────
+  deploy-api:
+    name: Deploy API (Railway)
+    needs: [go, flutter]
+    runs-on: ubuntu-latest
+    # if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Railway CLI
+        run: npm i -g @railway/cli
+      - name: Deploy
+        working-directory: apps/api
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: railway up --service navis-api --detach

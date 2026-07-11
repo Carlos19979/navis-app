@@ -29,7 +29,7 @@ make mobile-run
 
 ## Prerequisites
 
-- Go 1.22+
+- Go 1.26+
 - Flutter 3.22+
 - Docker & Docker Compose
 - Supabase CLI
