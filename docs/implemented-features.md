@@ -61,10 +61,31 @@ tier; a B2B "fleet" tier is future work). Migration `00027_plan_free_pro.sql` re
 - Dedup via `sent_notifications`. Document-expiry cron now applies the plan reminder quota (Free=1 nearest doc).
 - (Removed: overdue float-plan alert — see Float plan row.)
 
-## Migrations added (00018–00027)
+## Migrations added (00018–00029)
 `sent_notifications`, `event stream urls`, `profiles`, `trip share_token`,
 `maintenance_logs`+`expenses`, `trip float_plan`, `boat_members`+`boats.share_code`,
-`invoice_url`, `boat_member_permissions`, **`00027 plan free/pro`**.
+`invoice_url`, `boat_member_permissions`, **`00027 plan free/pro`**,
+**`00028 security hardening`** (RLS on `sent_notifications`, private `documents`
+bucket + signed-URL policy), **`00029 pagination indexes`**.
+
+## Launch hardening (2026-07-11, plan `docs/launch-hardening-plan.md`)
+Five merged phases getting the app from "feature-complete" to launchable:
+- **Backend security** — fail-fast config validation, real Sentry capture,
+  complete account deletion (Storage + `auth.users` cascade), RLS + private
+  documents bucket, rate-limit by real IP, body limits, `/readyz` DB ping,
+  device-token IDOR fix.
+- **App Store compliance** — in-app account deletion, camera/photo Info.plist
+  keys, scoped ATS, privacy/terms served at `/legal/*`, full i18n, email-
+  confirmation signup flow.
+- **Backend quality** — keyset cursor pagination (one query per page),
+  handler/service dedup, consumer-side service interfaces, async notifier,
+  plan-gating tests.
+- **Mobile quality** — crash-safe trip recording (`TripRecordingNotifier` +
+  sqlite per-fix persistence, resume-on-relaunch), signed document URLs,
+  shared dialog/FAB widgets, image mem-caching. Deferred: full autoDispose
+  sweep, `.select()`, sealed `Failure` adoption (needs on-device verification).
+- **Deploy** — `railway.toml`, release-build guards + production config assert,
+  runbook `docs/deploy.md`, CI deploy job (gated off until Railway exists).
 
 ## Test data (local DB)
 - `test@navis.app` / `password123` → owner of seeded boats. Plan defaults to **free** after `db reset`; flip via the dev switcher or the RevenueCat webhook.
