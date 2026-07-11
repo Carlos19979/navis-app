@@ -15,6 +15,7 @@ class NavisAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.actions,
     this.transparent = false,
     this.bottom,
+    this.showProfileAction = true,
   });
 
   final String title;
@@ -22,6 +23,10 @@ class NavisAppBar extends StatelessWidget implements PreferredSizeWidget {
   final List<Widget>? actions;
   final bool transparent;
   final PreferredSizeWidget? bottom;
+
+  /// Whether to append the circular profile shortcut. False once Profile is a
+  /// bottom-nav tab.
+  final bool showProfileAction;
 
   @override
   Size get preferredSize =>
@@ -102,6 +107,9 @@ class NavisAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   List<Widget> _buildActions(BuildContext context) {
+    if (!showProfileAction) {
+      return [...?actions];
+    }
     return [
       ...?actions,
       Padding(
