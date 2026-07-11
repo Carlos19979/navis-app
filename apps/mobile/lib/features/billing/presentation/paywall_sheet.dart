@@ -29,8 +29,10 @@ Future<bool> showPaywall(
 }
 
 const _proBenefits = <(IconData, String)>[
-  (Icons.notifications_active_rounded,
-      'Recordatorios ilimitados de caducidad de documentos'),
+  (
+    Icons.notifications_active_rounded,
+    'Recordatorios ilimitados de caducidad de documentos'
+  ),
   (Icons.build_rounded, 'Recordatorios de mantenimiento programado'),
   (Icons.directions_boat_rounded, 'Hasta 3 barcos'),
   (Icons.groups_rounded, 'Crea clubes y eventos'),
@@ -203,9 +205,8 @@ class _PaywallSheetState extends ConsumerState<_PaywallSheet> {
                   label: _packageLabel(package),
                   price: package.storeProduct.priceString,
                   selected: identical(package, _selected),
-                  onTap: _busy
-                      ? null
-                      : () => setState(() => _selected = package),
+                  onTap:
+                      _busy ? null : () => setState(() => _selected = package),
                 ),
               const SizedBox(height: 16),
               NavisButton(

@@ -105,7 +105,8 @@ func (h *TripHandler) PublicView(w http.ResponseWriter, r *http.Request) {
 		"Date":      trip.DepartureTime.Format("02/01/2006"),
 		"Distance":  distance,
 		"Duration":  duration,
-		"Coords":    template.JS(coordsJSON),
+		//nolint:gosec // G203: coordsJSON is json.Marshal output of server-side floats (lat/lng), never user-controlled strings
+		"Coords": template.JS(coordsJSON),
 	})
 }
 
