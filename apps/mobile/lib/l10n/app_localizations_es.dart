@@ -1734,4 +1734,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get manageBoat => 'Gestionar barco';
+
+  @override
+  String get openSettings => 'Abrir ajustes';
+
+  @override
+  String get locationUnavailable => 'Ubicación no disponible';
 }

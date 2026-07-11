@@ -3361,6 +3361,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Manage boat'**
   String get manageBoat;
+
+  /// No description provided for @openSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get openSettings;
+
+  /// No description provided for @locationUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Location unavailable'**
+  String get locationUnavailable;
 }
 
 class _AppLocalizationsDelegate

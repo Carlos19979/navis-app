@@ -592,5 +592,7 @@
   "tideRange": "Carrera {range} m",
   "tideHigh": "Pleamar",
   "tideLow": "Bajamar",
-  "manageBoat": "Gestionar barco"
+  "manageBoat": "Gestionar barco",
+  "openSettings": "Abrir ajustes",
+  "locationUnavailable": "Ubicación no disponible"
 }

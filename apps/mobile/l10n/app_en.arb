@@ -703,5 +703,7 @@
   },
   "tideHigh": "High tide",
   "tideLow": "Low tide",
-  "manageBoat": "Manage boat"
+  "manageBoat": "Manage boat",
+  "openSettings": "Open settings",
+  "locationUnavailable": "Location unavailable"
 }

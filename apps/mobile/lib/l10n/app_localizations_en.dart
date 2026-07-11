@@ -1718,4 +1718,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get manageBoat => 'Manage boat';
+
+  @override
+  String get openSettings => 'Open settings';
+
+  @override
+  String get locationUnavailable => 'Location unavailable';
 }

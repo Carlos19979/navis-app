@@ -239,9 +239,12 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                     children: [
                       // Follow the regatta live (external YouTube / tracker).
                       if (event.hasLiveCoverage) ...[
+                        // Supplementary → secondary, so "Join as group" reads
+                        // as the single primary action for a regatta.
                         NavisButton(
                           label: l.followLive,
                           icon: Icons.live_tv,
+                          variant: NavisButtonVariant.secondary,
                           onPressed: () => _openLive(event),
                         ),
                         const SizedBox(height: 10),

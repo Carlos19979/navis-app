@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
@@ -14,6 +15,7 @@ import 'package:navis_mobile/features/weather/presentation/widgets/wind_indicato
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
+import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
@@ -345,6 +347,14 @@ class _LocationDenied extends StatelessWidget {
                   .textTheme
                   .bodyMedium
                   ?.copyWith(color: context.txtSecondary),
+            ),
+            const SizedBox(height: 24),
+            NavisButton(
+              label: AppLocalizations.of(context)!.openSettings,
+              icon: Icons.settings_outlined,
+              variant: NavisButtonVariant.secondary,
+              compact: true,
+              onPressed: Geolocator.openLocationSettings,
             ),
           ],
         ),
