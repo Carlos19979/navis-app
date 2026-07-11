@@ -47,6 +47,11 @@ func Auth(jwtSecret string, jwksURL string) func(http.Handler) http.Handler {
 			keyFunc := func(token *jwt.Token) (any, error) {
 				switch token.Method.(type) {
 				case *jwt.SigningMethodHMAC:
+					// An empty secret must never validate anything: a token signed
+					// with "" would otherwise pass (auth bypass on misconfigured envs).
+					if jwtSecret == "" {
+						return nil, jwt.ErrSignatureInvalid
+					}
 					return []byte(jwtSecret), nil
 				case *jwt.SigningMethodECDSA:
 					if k != nil {
@@ -58,7 +63,10 @@ func Auth(jwtSecret string, jwksURL string) func(http.Handler) http.Handler {
 				}
 			}
 
-			token, err := jwt.Parse(tokenString, keyFunc)
+			token, err := jwt.Parse(tokenString, keyFunc,
+				jwt.WithValidMethods([]string{"HS256", "ES256"}),
+				jwt.WithExpirationRequired(),
+			)
 			if err != nil || !token.Valid {
 				writeAuthError(w, "invalid or expired token")
 				return

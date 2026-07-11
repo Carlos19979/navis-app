@@ -1,10 +1,52 @@
 package handler
 
 import (
+	"log/slog"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 )
+
+func TestWebhookAuthorization(t *testing.T) {
+	t.Parallel()
+	logger := slog.New(slog.DiscardHandler)
+	body := `{"event":{"type":"TEST","app_user_id":"u1"}}`
+
+	tests := []struct {
+		name       string
+		secret     string
+		authHeader string
+		wantStatus int
+	}{
+		{"empty configured secret always rejects", "", "", http.StatusUnauthorized},
+		{"empty secret rejects even matching empty header", "", "anything", http.StatusUnauthorized},
+		{"wrong secret rejects", "expected", "wrong", http.StatusUnauthorized},
+		{"missing header rejects", "expected", "", http.StatusUnauthorized},
+		{"matching secret accepts", "expected", "expected", http.StatusOK},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			h := NewWebhookHandler(nil, tc.secret, logger)
+			req := httptest.NewRequest(http.MethodPost, "/api/v1/webhooks/revenuecat",
+				strings.NewReader(body))
+			if tc.authHeader != "" {
+				req.Header.Set("Authorization", tc.authHeader)
+			}
+			rec := httptest.NewRecorder()
+
+			h.RevenueCat(rec, req)
+
+			if rec.Code != tc.wantStatus {
+				t.Fatalf("status = %d, want %d (body: %s)", rec.Code, tc.wantStatus, rec.Body.String())
+			}
+		})
+	}
+}
 
 func TestPlanForEvent(t *testing.T) {
 	t.Parallel()

@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/getsentry/sentry-go"
+
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 	"github.com/Carlos19979/navis-app/apps/api/pkg/validator"
 )
@@ -97,6 +99,7 @@ func MapDomainError(w http.ResponseWriter, err error) {
 		Error(w, http.StatusPaymentRequired, err.Error(), "PLAN_FORBIDDEN")
 
 	default:
+		sentry.CaptureException(err)
 		slog.Error("unhandled error", slog.String("error", err.Error()))
 		Error(w, http.StatusInternalServerError, "internal server error", "INTERNAL_ERROR")
 	}

@@ -27,6 +27,10 @@ func main() {
 	_ = godotenv.Load()
 
 	cfg := config.Load()
+	if err := cfg.Validate(); err != nil {
+		fmt.Fprintf(os.Stderr, "fatal: %v\n", err)
+		os.Exit(1)
+	}
 
 	// Set up structured logger.
 	logLevel := slog.LevelInfo
@@ -44,12 +48,17 @@ func main() {
 	}))
 	slog.SetDefault(logger)
 
+	if cfg.IsProduction() && cfg.NovuAPIKey == "" {
+		logger.Warn("NOVU_API_KEY is empty in production — " +
+			"NO notifications (document expiry, regatta reminders) will be delivered")
+	}
+
 	// Initialize Sentry.
 	if cfg.SentryDSN != "" {
 		if err := sentry.Init(sentry.ClientOptions{
 			Dsn:              cfg.SentryDSN,
 			TracesSampleRate: 0.2,
-			Environment:      cfg.LogLevel,
+			Environment:      cfg.AppEnv,
 		}); err != nil {
 			logger.Error("failed to init sentry", slog.String("error", err.Error()))
 		} else {
