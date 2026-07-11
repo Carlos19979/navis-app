@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
 
 class AppTypography {
   AppTypography._();
 
+  /// Bundled Inter (variable font) — no runtime Google Fonts fetch.
+  static const _family = 'Inter';
+
   static TextTheme get darkTextTheme {
-    return GoogleFonts.interTextTheme(const TextTheme(
+    return const TextTheme(
       displayLarge: TextStyle(
         fontSize: 36,
         fontWeight: FontWeight.w800,
@@ -108,11 +110,11 @@ class AppTypography {
         letterSpacing: 0.3,
         height: 1.4,
       ),
-    ));
+    ).apply(fontFamily: _family);
   }
 
   static TextTheme get lightTextTheme {
-    return GoogleFonts.interTextTheme(const TextTheme(
+    return const TextTheme(
       displayLarge: TextStyle(
         fontSize: 36,
         fontWeight: FontWeight.w800,
@@ -213,6 +215,6 @@ class AppTypography {
         letterSpacing: 0.3,
         height: 1.4,
       ),
-    ));
+    ).apply(fontFamily: _family);
   }
 }
