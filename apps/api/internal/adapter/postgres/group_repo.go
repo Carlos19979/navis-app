@@ -222,18 +222,6 @@ func NewGroupMemberRepo(pool *pgxpool.Pool) *GroupMemberRepo {
 	return &GroupMemberRepo{pool: pool}
 }
 
-func scanMembers(rows pgx.Rows) ([]domain.GroupMember, error) {
-	members := make([]domain.GroupMember, 0)
-	for rows.Next() {
-		m := domain.GroupMember{}
-		if err := rows.Scan(&m.GroupID, &m.UserID, &m.Role, &m.Status, &m.JoinedAt); err != nil {
-			return nil, err
-		}
-		members = append(members, m)
-	}
-	return members, rows.Err()
-}
-
 // scanMembersWithName scans member rows that additionally select a display name.
 func scanMembersWithName(rows pgx.Rows) ([]domain.GroupMember, error) {
 	members := make([]domain.GroupMember, 0)
