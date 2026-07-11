@@ -1,16 +1,13 @@
 package handler
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/dto"
-	"github.com/Carlos19979/navis-app/apps/api/internal/middleware"
 	"github.com/Carlos19979/navis-app/apps/api/internal/service"
 	"github.com/Carlos19979/navis-app/apps/api/pkg/pagination"
-	"github.com/Carlos19979/navis-app/apps/api/pkg/validator"
 )
 
 // BoatHandler handles HTTP requests for boat operations.
@@ -25,22 +22,13 @@ func NewBoatHandler(svc *service.BoatService) *BoatHandler {
 
 // Create handles POST /boats.
 func (h *BoatHandler) Create(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 
-	var req dto.CreateBoatRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		Error(w, http.StatusBadRequest, "invalid request body", "BAD_REQUEST")
-		return
-	}
-
-	validator.TrimStrings(&req)
-
-	if errs := validator.Validate(req); errs != nil {
-		ValidationError(w, errs)
+	req, ok := decodeAndValidate[dto.CreateBoatRequest](w, r)
+	if !ok {
 		return
 	}
 
@@ -56,9 +44,8 @@ func (h *BoatHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 // GetByID handles GET /boats/{id}.
 func (h *BoatHandler) GetByID(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 
@@ -79,9 +66,8 @@ func (h *BoatHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 
 // List handles GET /boats.
 func (h *BoatHandler) List(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 
@@ -92,35 +78,20 @@ func (h *BoatHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var meta *Meta
-	if nextCursor != "" {
-		encoded := pagination.EncodeCursor(nextCursor)
-		meta = &Meta{NextCursor: &encoded}
-	}
-
-	JSONWithMeta(w, http.StatusOK, dto.BoatListResponseFromDomain(boats), meta)
+	JSONWithMeta(w, http.StatusOK, dto.BoatListResponseFromDomain(boats), metaFromCursor(nextCursor))
 }
 
 // Update handles PUT /boats/{id}.
 func (h *BoatHandler) Update(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 
 	id := chi.URLParam(r, "id")
 
-	var req dto.UpdateBoatRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		Error(w, http.StatusBadRequest, "invalid request body", "BAD_REQUEST")
-		return
-	}
-
-	validator.TrimStrings(&req)
-
-	if errs := validator.Validate(req); errs != nil {
-		ValidationError(w, errs)
+	req, ok := decodeAndValidate[dto.UpdateBoatRequest](w, r)
+	if !ok {
 		return
 	}
 
@@ -143,9 +114,8 @@ func (h *BoatHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 // Delete handles DELETE /boats/{id}.
 func (h *BoatHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 

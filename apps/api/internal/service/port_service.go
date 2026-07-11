@@ -6,6 +6,7 @@ import (
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 	"github.com/Carlos19979/navis-app/apps/api/internal/port"
+	"github.com/Carlos19979/navis-app/apps/api/pkg/pagination"
 )
 
 // PortService implements business logic for port operations.
@@ -30,9 +31,7 @@ func (s *PortService) GetByID(ctx context.Context, id string) (*domain.Port, err
 
 // NearLocation returns ports within a given radius of coordinates.
 func (s *PortService) NearLocation(ctx context.Context, lat, lon, radiusKM float64, cursor string, limit int) ([]domain.Port, string, error) {
-	if limit <= 0 || limit > 50 {
-		limit = 20
-	}
+	limit = pagination.ClampLimit(limit)
 	if radiusKM <= 0 {
 		radiusKM = 50
 	}

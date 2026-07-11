@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
+	"github.com/Carlos19979/navis-app/apps/api/pkg/pagination"
 )
 
 // TripRepo implements port.TripRepository using PostgreSQL.
@@ -125,7 +126,21 @@ func (r *TripRepo) List(ctx context.Context, userID, boatID, cursor string, limi
 		err  error
 	)
 
-	if cursor == "" {
+	if cursorTime, cursorID, ok := pagination.DecodeKeysetTime(cursor); ok {
+		if boatID != "" {
+			query := `SELECT ` + tripColumns + ` FROM trips
+				WHERE user_id = $1 AND boat_id = $2 AND (created_at, id) < ($3, $4)
+				ORDER BY created_at DESC, id DESC
+				LIMIT $5`
+			rows, err = r.pool.Query(ctx, query, userID, boatID, cursorTime, cursorID, limit+1)
+		} else {
+			query := `SELECT ` + tripColumns + ` FROM trips
+				WHERE user_id = $1 AND (created_at, id) < ($2, $3)
+				ORDER BY created_at DESC, id DESC
+				LIMIT $4`
+			rows, err = r.pool.Query(ctx, query, userID, cursorTime, cursorID, limit+1)
+		}
+	} else {
 		if boatID != "" {
 			query := `SELECT ` + tripColumns + ` FROM trips
 				WHERE user_id = $1 AND boat_id = $2
@@ -138,28 +153,6 @@ func (r *TripRepo) List(ctx context.Context, userID, boatID, cursor string, limi
 				ORDER BY created_at DESC, id DESC
 				LIMIT $2`
 			rows, err = r.pool.Query(ctx, query, userID, limit+1)
-		}
-	} else {
-		var cursorCreatedAt time.Time
-		cErr := r.pool.QueryRow(ctx,
-			`SELECT created_at FROM trips WHERE id = $1`, cursor,
-		).Scan(&cursorCreatedAt)
-		if cErr != nil {
-			return r.List(ctx, userID, boatID, "", limit)
-		}
-
-		if boatID != "" {
-			query := `SELECT ` + tripColumns + ` FROM trips
-				WHERE user_id = $1 AND boat_id = $2 AND (created_at, id) < ($3, $4)
-				ORDER BY created_at DESC, id DESC
-				LIMIT $5`
-			rows, err = r.pool.Query(ctx, query, userID, boatID, cursorCreatedAt, cursor, limit+1)
-		} else {
-			query := `SELECT ` + tripColumns + ` FROM trips
-				WHERE user_id = $1 AND (created_at, id) < ($2, $3)
-				ORDER BY created_at DESC, id DESC
-				LIMIT $4`
-			rows, err = r.pool.Query(ctx, query, userID, cursorCreatedAt, cursor, limit+1)
 		}
 	}
 	if err != nil {
@@ -174,8 +167,9 @@ func (r *TripRepo) List(ctx context.Context, userID, boatID, cursor string, limi
 
 	var nextCursor string
 	if len(trips) > limit {
-		nextCursor = trips[limit].ID
 		trips = trips[:limit]
+		last := trips[limit-1]
+		nextCursor = pagination.EncodeKeysetTime(last.CreatedAt, last.ID)
 	}
 
 	return trips, nextCursor, nil
@@ -231,26 +225,18 @@ func (r *TripRepo) ListByGroup(ctx context.Context, groupID, cursor string, limi
 		err  error
 	)
 
-	if cursor == "" {
+	if cursorTime, cursorID, ok := pagination.DecodeKeysetTime(cursor); ok {
+		query := `SELECT ` + tripColumns + ` FROM trips
+			WHERE group_id = $1 AND (COALESCE(scheduled_at, created_at), id) < ($2, $3)
+			ORDER BY COALESCE(scheduled_at, created_at) DESC, id DESC
+			LIMIT $4`
+		rows, err = r.pool.Query(ctx, query, groupID, cursorTime, cursorID, limit+1)
+	} else {
 		query := `SELECT ` + tripColumns + ` FROM trips
 			WHERE group_id = $1
 			ORDER BY COALESCE(scheduled_at, created_at) DESC, id DESC
 			LIMIT $2`
 		rows, err = r.pool.Query(ctx, query, groupID, limit+1)
-	} else {
-		var cursorTime time.Time
-		cErr := r.pool.QueryRow(ctx,
-			`SELECT COALESCE(scheduled_at, created_at) FROM trips WHERE id = $1`, cursor,
-		).Scan(&cursorTime)
-		if cErr != nil {
-			return r.ListByGroup(ctx, groupID, "", limit)
-		}
-
-		query := `SELECT ` + tripColumns + ` FROM trips
-			WHERE group_id = $1 AND (COALESCE(scheduled_at, created_at), id) < ($2, $3)
-			ORDER BY COALESCE(scheduled_at, created_at) DESC, id DESC
-			LIMIT $4`
-		rows, err = r.pool.Query(ctx, query, groupID, cursorTime, cursor, limit+1)
 	}
 	if err != nil {
 		return nil, "", fmt.Errorf("listing group trips: %w", err)
@@ -264,8 +250,14 @@ func (r *TripRepo) ListByGroup(ctx context.Context, groupID, cursor string, limi
 
 	var nextCursor string
 	if len(trips) > limit {
-		nextCursor = trips[limit].ID
 		trips = trips[:limit]
+		last := trips[limit-1]
+		// The sort key is COALESCE(scheduled_at, created_at).
+		sortTime := last.CreatedAt
+		if last.ScheduledAt != nil {
+			sortTime = *last.ScheduledAt
+		}
+		nextCursor = pagination.EncodeKeysetTime(sortTime, last.ID)
 	}
 	return trips, nextCursor, nil
 }
@@ -401,24 +393,18 @@ func (r *TripRepo) ListByBoatAll(ctx context.Context, boatID, cursor string, lim
 		rows pgx.Rows
 		err  error
 	)
-	if cursor == "" {
+	if cursorTime, cursorID, ok := pagination.DecodeKeysetTime(cursor); ok {
+		query := `SELECT ` + tripColumns + ` FROM trips
+			WHERE boat_id = $1 AND (created_at, id) < ($2, $3)
+			ORDER BY created_at DESC, id DESC
+			LIMIT $4`
+		rows, err = r.pool.Query(ctx, query, boatID, cursorTime, cursorID, limit+1)
+	} else {
 		query := `SELECT ` + tripColumns + ` FROM trips
 			WHERE boat_id = $1
 			ORDER BY created_at DESC, id DESC
 			LIMIT $2`
 		rows, err = r.pool.Query(ctx, query, boatID, limit+1)
-	} else {
-		var cursorCreatedAt time.Time
-		cErr := r.pool.QueryRow(ctx,
-			`SELECT created_at FROM trips WHERE id = $1`, cursor).Scan(&cursorCreatedAt)
-		if cErr != nil {
-			return r.ListByBoatAll(ctx, boatID, "", limit)
-		}
-		query := `SELECT ` + tripColumns + ` FROM trips
-			WHERE boat_id = $1 AND (created_at, id) < ($2, $3)
-			ORDER BY created_at DESC, id DESC
-			LIMIT $4`
-		rows, err = r.pool.Query(ctx, query, boatID, cursorCreatedAt, cursor, limit+1)
 	}
 	if err != nil {
 		return nil, "", fmt.Errorf("listing boat trips: %w", err)
@@ -430,8 +416,9 @@ func (r *TripRepo) ListByBoatAll(ctx context.Context, boatID, cursor string, lim
 	}
 	var nextCursor string
 	if len(trips) > limit {
-		nextCursor = trips[limit].ID
 		trips = trips[:limit]
+		last := trips[limit-1]
+		nextCursor = pagination.EncodeKeysetTime(last.CreatedAt, last.ID)
 	}
 	return trips, nextCursor, nil
 }

@@ -9,6 +9,7 @@ import (
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 	"github.com/Carlos19979/navis-app/apps/api/internal/port"
+	"github.com/Carlos19979/navis-app/apps/api/pkg/pagination"
 )
 
 // TripService implements business logic for trip operations.
@@ -75,9 +76,7 @@ func (s *TripService) GetByID(ctx context.Context, userID, id string) (*domain.T
 // List returns a paginated list of trips. For a specific boat, members with
 // shared access read the boat owner's trips (read-only).
 func (s *TripService) List(ctx context.Context, userID, boatID, cursor string, limit int) ([]domain.Trip, string, error) {
-	if limit <= 0 || limit > 50 {
-		limit = 20
-	}
+	limit = pagination.ClampLimit(limit)
 
 	// For a specific boat, return the whole shared logbook (every member's
 	// trips) after verifying access. Without a boat, return the user's own trips.
@@ -174,12 +173,13 @@ func computeTrackStats(tracks []domain.TripTrack) (distNM, maxSpeed, avgSpeed fl
 	var speedSum float64
 	var speedCount int
 
-	for i := 1; i < len(tracks); i++ {
-		d := haversineNM(tracks[i-1].Lat, tracks[i-1].Lon, tracks[i].Lat, tracks[i].Lon)
+	for i := range len(tracks) - 1 {
+		prev, cur := tracks[i], tracks[i+1]
+		d := haversineNM(prev.Lat, prev.Lon, cur.Lat, cur.Lon)
 		totalDist += d
 
-		if tracks[i].SpeedKnots != nil {
-			spd := *tracks[i].SpeedKnots
+		if cur.SpeedKnots != nil {
+			spd := *cur.SpeedKnots
 			speedSum += spd
 			speedCount++
 			if spd > maxSpd {

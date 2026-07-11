@@ -4,13 +4,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
+	"github.com/Carlos19979/navis-app/apps/api/pkg/pagination"
 )
+
+// boatColumns is the shared column list for boat queries.
+const boatColumns = `id, user_id, name, registration, type, length_m, home_port,
+	ST_Y(home_port_location::geometry) AS home_port_lat,
+	ST_X(home_port_location::geometry) AS home_port_lon,
+	photo_url, engine_hours, created_at, updated_at`
 
 // BoatRepo implements port.BoatRepository using PostgreSQL.
 type BoatRepo struct {
@@ -32,10 +38,7 @@ func (r *BoatRepo) Create(ctx context.Context, boat *domain.Boat) (*domain.Boat,
 				ELSE NULL
 			END,
 			$9, $10)
-		RETURNING id, user_id, name, registration, type, length_m, home_port,
-			ST_Y(home_port_location::geometry) AS home_port_lat,
-			ST_X(home_port_location::geometry) AS home_port_lon,
-			photo_url, engine_hours, created_at, updated_at`
+		RETURNING ` + boatColumns
 
 	b := &domain.Boat{}
 	err := r.pool.QueryRow(ctx, query,
@@ -56,13 +59,7 @@ func (r *BoatRepo) Create(ctx context.Context, boat *domain.Boat) (*domain.Boat,
 
 // GetByID retrieves a boat by ID, scoped to the given user.
 func (r *BoatRepo) GetByID(ctx context.Context, userID, id string) (*domain.Boat, error) {
-	query := `
-		SELECT id, user_id, name, registration, type, length_m, home_port,
-			ST_Y(home_port_location::geometry) AS home_port_lat,
-			ST_X(home_port_location::geometry) AS home_port_lon,
-			photo_url, engine_hours, created_at, updated_at
-		FROM boats
-		WHERE user_id = $1 AND id = $2`
+	query := `SELECT ` + boatColumns + ` FROM boats WHERE user_id = $1 AND id = $2`
 
 	b := &domain.Boat{}
 	err := r.pool.QueryRow(ctx, query, userID, id).Scan(
@@ -80,46 +77,27 @@ func (r *BoatRepo) GetByID(ctx context.Context, userID, id string) (*domain.Boat
 	return b, nil
 }
 
-// List returns a paginated list of boats for a user using cursor-based pagination.
-// The cursor is the ID of the last item. We fetch limit+1 to determine if there is a next page.
+// List returns a paginated list of boats for a user using keyset pagination.
+// The cursor encodes the (created_at, id) position of the last returned item.
+// We fetch limit+1 to determine if there is a next page.
 func (r *BoatRepo) List(ctx context.Context, userID, cursor string, limit int) ([]domain.Boat, string, error) {
 	var (
 		rows pgx.Rows
 		err  error
 	)
 
-	if cursor == "" {
-		query := `
-			SELECT id, user_id, name, registration, type, length_m, home_port,
-				ST_Y(home_port_location::geometry) AS home_port_lat,
-				ST_X(home_port_location::geometry) AS home_port_lon,
-				photo_url, engine_hours, created_at, updated_at
-			FROM boats
+	if cursorTime, cursorID, ok := pagination.DecodeKeysetTime(cursor); ok {
+		query := `SELECT ` + boatColumns + ` FROM boats
+			WHERE user_id = $1 AND (created_at, id) < ($2, $3)
+			ORDER BY created_at DESC, id DESC
+			LIMIT $4`
+		rows, err = r.pool.Query(ctx, query, userID, cursorTime, cursorID, limit+1)
+	} else {
+		query := `SELECT ` + boatColumns + ` FROM boats
 			WHERE user_id = $1
 			ORDER BY created_at DESC, id DESC
 			LIMIT $2`
 		rows, err = r.pool.Query(ctx, query, userID, limit+1)
-	} else {
-		// Fetch the created_at of the cursor to paginate accurately.
-		var cursorCreatedAt time.Time
-		cErr := r.pool.QueryRow(ctx,
-			`SELECT created_at FROM boats WHERE id = $1`, cursor,
-		).Scan(&cursorCreatedAt)
-		if cErr != nil {
-			// If cursor is invalid, just start from the beginning.
-			return r.List(ctx, userID, "", limit)
-		}
-
-		query := `
-			SELECT id, user_id, name, registration, type, length_m, home_port,
-				ST_Y(home_port_location::geometry) AS home_port_lat,
-				ST_X(home_port_location::geometry) AS home_port_lon,
-				photo_url, engine_hours, created_at, updated_at
-			FROM boats
-			WHERE user_id = $1 AND (created_at, id) < ($2, $3)
-			ORDER BY created_at DESC, id DESC
-			LIMIT $4`
-		rows, err = r.pool.Query(ctx, query, userID, cursorCreatedAt, cursor, limit+1)
 	}
 	if err != nil {
 		return nil, "", fmt.Errorf("listing boats: %w", err)
@@ -144,8 +122,9 @@ func (r *BoatRepo) List(ctx context.Context, userID, cursor string, limit int) (
 
 	var nextCursor string
 	if len(boats) > limit {
-		nextCursor = boats[limit].ID
 		boats = boats[:limit]
+		last := boats[limit-1]
+		nextCursor = pagination.EncodeKeysetTime(last.CreatedAt, last.ID)
 	}
 
 	return boats, nextCursor, nil
@@ -162,10 +141,7 @@ func (r *BoatRepo) Update(ctx context.Context, userID string, boat *domain.Boat)
 			END,
 			photo_url = $10, engine_hours = $11, updated_at = now()
 		WHERE user_id = $1 AND id = $2
-		RETURNING id, user_id, name, registration, type, length_m, home_port,
-			ST_Y(home_port_location::geometry) AS home_port_lat,
-			ST_X(home_port_location::geometry) AS home_port_lon,
-			photo_url, engine_hours, created_at, updated_at`
+		RETURNING ` + boatColumns
 
 	b := &domain.Boat{}
 	err := r.pool.QueryRow(ctx, query,
@@ -211,11 +187,6 @@ func (r *BoatRepo) Count(ctx context.Context, userID string) (int, error) {
 	return n, nil
 }
 
-const boatSelectCols = `id, user_id, name, registration, type, length_m, home_port,
-	ST_Y(home_port_location::geometry) AS home_port_lat,
-	ST_X(home_port_location::geometry) AS home_port_lon,
-	photo_url, engine_hours, created_at, updated_at`
-
 func scanBoatRow(row interface{ Scan(...any) error }) (*domain.Boat, error) {
 	b := &domain.Boat{}
 	err := row.Scan(&b.ID, &b.UserID, &b.Name, &b.Registration, &b.Type, &b.LengthM,
@@ -226,7 +197,7 @@ func scanBoatRow(row interface{ Scan(...any) error }) (*domain.Boat, error) {
 
 // GetByIDAccessible returns a boat the user owns OR is a shared member of.
 func (r *BoatRepo) GetByIDAccessible(ctx context.Context, userID, id string) (*domain.Boat, error) {
-	query := `SELECT ` + boatSelectCols + ` FROM boats
+	query := `SELECT ` + boatColumns + ` FROM boats
 		WHERE id = $2 AND (user_id = $1
 			OR id IN (SELECT boat_id FROM boat_members WHERE user_id = $1))`
 	b, err := scanBoatRow(r.pool.QueryRow(ctx, query, userID, id))
@@ -256,7 +227,7 @@ func (r *BoatRepo) HasAccess(ctx context.Context, userID, boatID string) (bool, 
 // not the owner).
 func (r *BoatRepo) ListShared(ctx context.Context, userID string) ([]domain.Boat, error) {
 	rows, err := r.pool.Query(ctx,
-		`SELECT `+boatSelectCols+` FROM boats
+		`SELECT `+boatColumns+` FROM boats
 		 WHERE id IN (SELECT boat_id FROM boat_members WHERE user_id = $1)
 		 ORDER BY created_at DESC`, userID)
 	if err != nil {

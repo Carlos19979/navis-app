@@ -7,6 +7,7 @@ import (
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 	"github.com/Carlos19979/navis-app/apps/api/internal/port"
+	"github.com/Carlos19979/navis-app/apps/api/pkg/pagination"
 )
 
 // DocumentService implements business logic for document operations.
@@ -65,9 +66,7 @@ func (s *DocumentService) GetByID(ctx context.Context, userID, id string) (*doma
 
 // List returns a paginated list of all documents for a user.
 func (s *DocumentService) List(ctx context.Context, userID, cursor string, limit int) ([]domain.Document, string, error) {
-	if limit <= 0 || limit > 50 {
-		limit = 20
-	}
+	limit = pagination.ClampLimit(limit)
 
 	docs, nextCursor, err := s.docRepo.List(ctx, userID, cursor, limit)
 	if err != nil {
@@ -78,9 +77,7 @@ func (s *DocumentService) List(ctx context.Context, userID, cursor string, limit
 
 // ListByBoat returns documents for a specific boat.
 func (s *DocumentService) ListByBoat(ctx context.Context, userID, boatID, cursor string, limit int) ([]domain.Document, string, error) {
-	if limit <= 0 || limit > 50 {
-		limit = 20
-	}
+	limit = pagination.ClampLimit(limit)
 
 	perms, ok, err := s.boatRepo.GetPermissions(ctx, userID, boatID)
 	if err != nil {

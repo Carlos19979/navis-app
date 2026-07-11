@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
+	"github.com/Carlos19979/navis-app/apps/api/pkg/pagination"
 )
 
 // EventRepo implements port.EventRepository using PostgreSQL.
@@ -81,25 +82,17 @@ func (r *EventRepo) List(ctx context.Context, cursor string, limit int) ([]domai
 		err  error
 	)
 
-	if cursor == "" {
-		query := `SELECT ` + eventColumns + ` FROM events
-			ORDER BY start_date DESC, id DESC
-			LIMIT $1`
-		rows, err = r.pool.Query(ctx, query, limit+1)
-	} else {
-		var cursorStartDate time.Time
-		cErr := r.pool.QueryRow(ctx,
-			`SELECT start_date FROM events WHERE id = $1`, cursor,
-		).Scan(&cursorStartDate)
-		if cErr != nil {
-			return r.List(ctx, "", limit)
-		}
-
+	if cursorTime, cursorID, ok := pagination.DecodeKeysetTime(cursor); ok {
 		query := `SELECT ` + eventColumns + ` FROM events
 			WHERE (start_date, id) < ($1, $2)
 			ORDER BY start_date DESC, id DESC
 			LIMIT $3`
-		rows, err = r.pool.Query(ctx, query, cursorStartDate, cursor, limit+1)
+		rows, err = r.pool.Query(ctx, query, cursorTime, cursorID, limit+1)
+	} else {
+		query := `SELECT ` + eventColumns + ` FROM events
+			ORDER BY start_date DESC, id DESC
+			LIMIT $1`
+		rows, err = r.pool.Query(ctx, query, limit+1)
 	}
 	if err != nil {
 		return nil, "", fmt.Errorf("listing events: %w", err)
@@ -113,8 +106,9 @@ func (r *EventRepo) List(ctx context.Context, cursor string, limit int) ([]domai
 
 	var nextCursor string
 	if len(events) > limit {
-		nextCursor = events[limit].ID
 		events = events[:limit]
+		last := events[limit-1]
+		nextCursor = pagination.EncodeKeysetTime(last.StartDate, last.ID)
 	}
 
 	return events, nextCursor, nil
@@ -127,26 +121,18 @@ func (r *EventRepo) ListUpcoming(ctx context.Context, cursor string, limit int) 
 		err  error
 	)
 
-	if cursor == "" {
+	if cursorTime, cursorID, ok := pagination.DecodeKeysetTime(cursor); ok {
+		query := `SELECT ` + eventColumns + ` FROM events
+			WHERE start_date >= now() AND (start_date, id) > ($1, $2)
+			ORDER BY start_date ASC, id ASC
+			LIMIT $3`
+		rows, err = r.pool.Query(ctx, query, cursorTime, cursorID, limit+1)
+	} else {
 		query := `SELECT ` + eventColumns + ` FROM events
 			WHERE start_date >= now()
 			ORDER BY start_date ASC, id ASC
 			LIMIT $1`
 		rows, err = r.pool.Query(ctx, query, limit+1)
-	} else {
-		var cursorStartDate time.Time
-		cErr := r.pool.QueryRow(ctx,
-			`SELECT start_date FROM events WHERE id = $1`, cursor,
-		).Scan(&cursorStartDate)
-		if cErr != nil {
-			return r.ListUpcoming(ctx, "", limit)
-		}
-
-		query := `SELECT ` + eventColumns + ` FROM events
-			WHERE start_date >= now() AND (start_date, id) > ($1, $2)
-			ORDER BY start_date ASC, id ASC
-			LIMIT $3`
-		rows, err = r.pool.Query(ctx, query, cursorStartDate, cursor, limit+1)
 	}
 	if err != nil {
 		return nil, "", fmt.Errorf("listing upcoming events: %w", err)
@@ -160,8 +146,9 @@ func (r *EventRepo) ListUpcoming(ctx context.Context, cursor string, limit int) 
 
 	var nextCursor string
 	if len(events) > limit {
-		nextCursor = events[limit].ID
 		events = events[:limit]
+		last := events[limit-1]
+		nextCursor = pagination.EncodeKeysetTime(last.StartDate, last.ID)
 	}
 
 	return events, nextCursor, nil
@@ -177,29 +164,21 @@ func (r *EventRepo) NearLocation(ctx context.Context, lat, lon, radiusKM float64
 		err  error
 	)
 
-	if cursor == "" {
-		query := `SELECT ` + eventColumns + ` FROM events
-			WHERE location IS NOT NULL
-				AND ST_DWithin(location, ST_MakePoint($2, $1)::geography, $3)
-			ORDER BY start_date ASC, id ASC
-			LIMIT $4`
-		rows, err = r.pool.Query(ctx, query, lat, lon, radiusM, limit+1)
-	} else {
-		var cursorStartDate time.Time
-		cErr := r.pool.QueryRow(ctx,
-			`SELECT start_date FROM events WHERE id = $1`, cursor,
-		).Scan(&cursorStartDate)
-		if cErr != nil {
-			return r.NearLocation(ctx, lat, lon, radiusKM, "", limit)
-		}
-
+	if cursorTime, cursorID, ok := pagination.DecodeKeysetTime(cursor); ok {
 		query := `SELECT ` + eventColumns + ` FROM events
 			WHERE location IS NOT NULL
 				AND ST_DWithin(location, ST_MakePoint($2, $1)::geography, $3)
 				AND (start_date, id) > ($4, $5)
 			ORDER BY start_date ASC, id ASC
 			LIMIT $6`
-		rows, err = r.pool.Query(ctx, query, lat, lon, radiusM, cursorStartDate, cursor, limit+1)
+		rows, err = r.pool.Query(ctx, query, lat, lon, radiusM, cursorTime, cursorID, limit+1)
+	} else {
+		query := `SELECT ` + eventColumns + ` FROM events
+			WHERE location IS NOT NULL
+				AND ST_DWithin(location, ST_MakePoint($2, $1)::geography, $3)
+			ORDER BY start_date ASC, id ASC
+			LIMIT $4`
+		rows, err = r.pool.Query(ctx, query, lat, lon, radiusM, limit+1)
 	}
 	if err != nil {
 		return nil, "", fmt.Errorf("listing events near %.4f,%.4f: %w", lat, lon, err)
@@ -213,8 +192,9 @@ func (r *EventRepo) NearLocation(ctx context.Context, lat, lon, radiusKM float64
 
 	var nextCursor string
 	if len(events) > limit {
-		nextCursor = events[limit].ID
 		events = events[:limit]
+		last := events[limit-1]
+		nextCursor = pagination.EncodeKeysetTime(last.StartDate, last.ID)
 	}
 
 	return events, nextCursor, nil

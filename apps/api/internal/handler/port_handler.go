@@ -57,13 +57,7 @@ func (h *PortHandler) Nearby(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var meta *Meta
-	if nextCursor != "" {
-		encoded := pagination.EncodeCursor(nextCursor)
-		meta = &Meta{NextCursor: &encoded}
-	}
-
-	JSONWithMeta(w, http.StatusOK, dto.PortListResponseFromDomain(ports), meta)
+	JSONWithMeta(w, http.StatusOK, dto.PortListResponseFromDomain(ports), metaFromCursor(nextCursor))
 }
 
 // GetByID handles GET /ports/{id}.

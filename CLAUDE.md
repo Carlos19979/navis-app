@@ -100,16 +100,8 @@ Dependency flow: `handler → service → port ← adapter`
 - Domain entities are plain structs — no JSON tags, no DB tags.
 - Use `*float64` / `*string` for nullable optional fields, not zero values.
 - Typed string enums: `type BoatType string` with const block.
-- Use generics for common repository patterns:
-  ```go
-  type Repository[T any] interface {
-      GetByID(ctx context.Context, userID, id string) (*T, error)
-      List(ctx context.Context, userID string, cursor string, limit int) ([]T, string, error)
-      Create(ctx context.Context, entity *T) error
-      Update(ctx context.Context, entity *T) error
-      Delete(ctx context.Context, userID, id string) error
-  }
-  ```
+- Repository interfaces are hand-written per entity in `internal/port/` — a generic `Repository[T]` does not fit the per-entity SQL (PostGIS expressions, shared-access scoping, keyset pagination) and is deliberately NOT used.
+- Generics ARE used for cross-cutting handler helpers (e.g. `decodeAndValidate[T]`).
 - Use `slices` and `maps` stdlib packages instead of manual loops for sorting, filtering, and lookups.
 - Use range over integers (`for i := range n`) instead of `for i := 0; i < n; i++`.
 
@@ -571,7 +563,7 @@ code → local checks → push → PR → CI green → merge → delete branch
 
 - **MVP:** Supabase Cloud + Railway (Go API, EU region) + App Store / Google Play
 - **Scale:** Migrate to K8s on Hetzner + self-hosted Supabase + Cloudflare R2/CDN + self-hosted Novu
-- **CI/CD:** GitHub Actions — lint+test on develop push, full deploy on main push
+- **CI/CD:** GitHub Actions — lint+test on every PR and main push. Deploy to Railway is manual until the Railway project exists (see docs/deploy.md, phase 5 of the launch plan).
 
 ## Stack Versions
 

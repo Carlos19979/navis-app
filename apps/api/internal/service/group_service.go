@@ -2,12 +2,12 @@ package service
 
 import (
 	"context"
-	"crypto/rand"
 	"errors"
 	"fmt"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 	"github.com/Carlos19979/navis-app/apps/api/internal/port"
+	"github.com/Carlos19979/navis-app/apps/api/pkg/pagination"
 )
 
 // GroupService implements business logic for groups (clubs/crews) and membership.
@@ -31,22 +31,6 @@ func (s *GroupService) withinTx(ctx context.Context, fn func(ctx context.Context
 		return fn(ctx)
 	}
 	return s.txm.WithinTx(ctx, fn)
-}
-
-// inviteCodeAlphabet excludes ambiguous characters (0/O, 1/I/L) for readability.
-const inviteCodeAlphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
-
-// generateInviteCode returns a random 8-character invite code.
-func generateInviteCode() (string, error) {
-	const n = 8
-	buf := make([]byte, n)
-	if _, err := rand.Read(buf); err != nil {
-		return "", fmt.Errorf("generating invite code: %w", err)
-	}
-	for i := range buf {
-		buf[i] = inviteCodeAlphabet[int(buf[i])%len(inviteCodeAlphabet)]
-	}
-	return string(buf), nil
 }
 
 // Create persists a new group and registers the owner as an active member.
@@ -78,9 +62,9 @@ func (s *GroupService) Create(ctx context.Context, group *domain.Group) (*domain
 	// Postgres, so each collision retry restarts a fresh one.
 	private := group.Visibility == domain.GroupVisibilityPrivate
 	const maxAttempts = 5
-	for attempt := 0; attempt < maxAttempts; attempt++ {
+	for range maxAttempts {
 		if private {
-			code, err := generateInviteCode()
+			code, err := randomCode(8)
 			if err != nil {
 				return nil, fmt.Errorf("creating group: %w", err)
 			}
@@ -123,9 +107,7 @@ func (s *GroupService) GetByID(ctx context.Context, userID, id string) (*domain.
 
 // List returns groups the user is an active member of.
 func (s *GroupService) List(ctx context.Context, userID, cursor string, limit int) ([]domain.Group, string, error) {
-	if limit <= 0 || limit > 50 {
-		limit = 20
-	}
+	limit = pagination.ClampLimit(limit)
 	groups, next, err := s.groupRepo.List(ctx, userID, cursor, limit)
 	if err != nil {
 		return nil, "", fmt.Errorf("listing groups: %w", err)
@@ -135,9 +117,7 @@ func (s *GroupService) List(ctx context.Context, userID, cursor string, limit in
 
 // ListPublic returns discoverable public groups the user has not yet joined.
 func (s *GroupService) ListPublic(ctx context.Context, userID, cursor string, limit int) ([]domain.Group, string, error) {
-	if limit <= 0 || limit > 50 {
-		limit = 20
-	}
+	limit = pagination.ClampLimit(limit)
 	groups, next, err := s.groupRepo.ListPublic(ctx, userID, cursor, limit)
 	if err != nil {
 		return nil, "", fmt.Errorf("listing public groups: %w", err)

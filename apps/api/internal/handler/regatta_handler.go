@@ -1,17 +1,14 @@
 package handler
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 	"github.com/Carlos19979/navis-app/apps/api/internal/dto"
-	"github.com/Carlos19979/navis-app/apps/api/internal/middleware"
 	"github.com/Carlos19979/navis-app/apps/api/internal/service"
 	"github.com/Carlos19979/navis-app/apps/api/pkg/pagination"
-	"github.com/Carlos19979/navis-app/apps/api/pkg/validator"
 )
 
 // RegattaHandler handles HTTP requests for group regattas, RSVP and checklists.
@@ -24,14 +21,6 @@ func NewRegattaHandler(svc *service.RegattaService) *RegattaHandler {
 	return &RegattaHandler{svc: svc}
 }
 
-func requireUserID(w http.ResponseWriter, r *http.Request) (string, bool) {
-	uid, ok := middleware.UserIDFromContext(r.Context())
-	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
-	}
-	return uid, ok
-}
-
 // Schedule handles POST /groups/{id}/trips.
 func (h *RegattaHandler) Schedule(w http.ResponseWriter, r *http.Request) {
 	uid, ok := requireUserID(w, r)
@@ -39,16 +28,8 @@ func (h *RegattaHandler) Schedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req dto.ScheduleRegattaRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		Error(w, http.StatusBadRequest, "invalid request body", "BAD_REQUEST")
-		return
-	}
-
-	validator.TrimStrings(&req)
-
-	if errs := validator.Validate(req); errs != nil {
-		ValidationError(w, errs)
+	req, ok := decodeAndValidate[dto.ScheduleRegattaRequest](w, r)
+	if !ok {
 		return
 	}
 
@@ -75,13 +56,7 @@ func (h *RegattaHandler) ListGroupTrips(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	var meta *Meta
-	if nextCursor != "" {
-		encoded := pagination.EncodeCursor(nextCursor)
-		meta = &Meta{NextCursor: &encoded}
-	}
-
-	JSONWithMeta(w, http.StatusOK, dto.TripListResponseFromDomain(trips), meta)
+	JSONWithMeta(w, http.StatusOK, dto.TripListResponseFromDomain(trips), metaFromCursor(nextCursor))
 }
 
 // SetRSVP handles POST /trips/{id}/rsvp.
@@ -91,14 +66,8 @@ func (h *RegattaHandler) SetRSVP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req dto.RSVPRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		Error(w, http.StatusBadRequest, "invalid request body", "BAD_REQUEST")
-		return
-	}
-
-	if errs := validator.Validate(req); errs != nil {
-		ValidationError(w, errs)
+	req, ok := decodeAndValidate[dto.RSVPRequest](w, r)
+	if !ok {
 		return
 	}
 
@@ -197,16 +166,8 @@ func (h *RegattaHandler) AddChecklistItem(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	var req dto.ChecklistAddItemRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		Error(w, http.StatusBadRequest, "invalid request body", "BAD_REQUEST")
-		return
-	}
-
-	validator.TrimStrings(&req)
-
-	if errs := validator.Validate(req); errs != nil {
-		ValidationError(w, errs)
+	req, ok := decodeAndValidate[dto.ChecklistAddItemRequest](w, r)
+	if !ok {
 		return
 	}
 
@@ -226,9 +187,8 @@ func (h *RegattaHandler) SetChecklistItem(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	var req dto.ChecklistSetCheckedRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		Error(w, http.StatusBadRequest, "invalid request body", "BAD_REQUEST")
+	req, ok := decodeAndValidate[dto.ChecklistSetCheckedRequest](w, r)
+	if !ok {
 		return
 	}
 

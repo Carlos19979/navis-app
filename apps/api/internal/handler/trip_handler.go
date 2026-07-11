@@ -10,7 +10,6 @@ import (
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 	"github.com/Carlos19979/navis-app/apps/api/internal/dto"
-	"github.com/Carlos19979/navis-app/apps/api/internal/middleware"
 	"github.com/Carlos19979/navis-app/apps/api/internal/service"
 	"github.com/Carlos19979/navis-app/apps/api/pkg/pagination"
 	"github.com/Carlos19979/navis-app/apps/api/pkg/validator"
@@ -28,9 +27,8 @@ func NewTripHandler(svc *service.TripService) *TripHandler {
 
 // Create handles POST /boats/{boatId}/trips.
 func (h *TripHandler) Create(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 
@@ -65,9 +63,8 @@ func (h *TripHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 // GetByID handles GET /trips/{id}.
 func (h *TripHandler) GetByID(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 
@@ -83,9 +80,8 @@ func (h *TripHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 
 // List handles GET /boats/{boatId}/trips.
 func (h *TripHandler) List(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 
@@ -97,20 +93,13 @@ func (h *TripHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var meta *Meta
-	if nextCursor != "" {
-		encoded := pagination.EncodeCursor(nextCursor)
-		meta = &Meta{NextCursor: &encoded}
-	}
-
-	JSONWithMeta(w, http.StatusOK, dto.TripListResponseFromDomain(trips), meta)
+	JSONWithMeta(w, http.StatusOK, dto.TripListResponseFromDomain(trips), metaFromCursor(nextCursor))
 }
 
 // Update handles PUT /trips/{id}.
 func (h *TripHandler) Update(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 
@@ -161,24 +150,15 @@ func (h *TripHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 // Complete handles PUT /trips/{id}/complete.
 func (h *TripHandler) Complete(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 
 	id := chi.URLParam(r, "id")
 
-	var req dto.CompleteTripRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		Error(w, http.StatusBadRequest, "invalid request body", "BAD_REQUEST")
-		return
-	}
-
-	validator.TrimStrings(&req)
-
-	if errs := validator.Validate(req); errs != nil {
-		ValidationError(w, errs)
+	req, ok := decodeAndValidate[dto.CompleteTripRequest](w, r)
+	if !ok {
 		return
 	}
 
@@ -193,9 +173,8 @@ func (h *TripHandler) Complete(w http.ResponseWriter, r *http.Request) {
 
 // Delete handles DELETE /trips/{id}.
 func (h *TripHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 
@@ -210,22 +189,15 @@ func (h *TripHandler) Delete(w http.ResponseWriter, r *http.Request) {
 
 // AddTracks handles POST /trips/{id}/tracks.
 func (h *TripHandler) AddTracks(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 
 	tripID := chi.URLParam(r, "id")
 
-	var req dto.BatchTrackRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		Error(w, http.StatusBadRequest, "invalid request body", "BAD_REQUEST")
-		return
-	}
-
-	if errs := validator.Validate(req); errs != nil {
-		ValidationError(w, errs)
+	req, ok := decodeAndValidate[dto.BatchTrackRequest](w, r)
+	if !ok {
 		return
 	}
 
@@ -246,9 +218,8 @@ func (h *TripHandler) AddTracks(w http.ResponseWriter, r *http.Request) {
 // GetTracks handles GET /trips/{id}/tracks?simplify=0.0001.
 // Returns track points, optionally simplified with Douglas-Peucker.
 func (h *TripHandler) GetTracks(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 
@@ -298,11 +269,11 @@ func dpSimplify(points []point2D, epsilon float64) []point2D {
 
 	maxDist := 0.0
 	maxIdx := 0
-	for i := 1; i < len(points)-1; i++ {
-		d := perpDist(points[i], points[0], points[len(points)-1])
-		if d > maxDist {
+	first, last := points[0], points[len(points)-1]
+	for i, p := range points[1 : len(points)-1] {
+		if d := perpDist(p, first, last); d > maxDist {
 			maxDist = d
-			maxIdx = i
+			maxIdx = i + 1
 		}
 	}
 

@@ -164,7 +164,7 @@ func TestEventService_List_DefaultLimit(t *testing.T) {
 	}{
 		{"zero limit defaults to 20", 0, 20},
 		{"negative limit defaults to 20", -1, 20},
-		{"over 50 defaults to 20", 51, 20},
+		{"over 50 clamps to 50", 51, 50},
 		{"valid limit preserved", 25, 25},
 	}
 

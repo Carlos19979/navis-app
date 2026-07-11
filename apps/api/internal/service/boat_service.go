@@ -2,11 +2,11 @@ package service
 
 import (
 	"context"
-	"crypto/rand"
 	"fmt"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 	"github.com/Carlos19979/navis-app/apps/api/internal/port"
+	"github.com/Carlos19979/navis-app/apps/api/pkg/pagination"
 )
 
 // BoatService implements business logic for boat operations.
@@ -62,9 +62,7 @@ func (s *BoatService) GetByID(ctx context.Context, userID, id string) (*domain.B
 
 // List returns a paginated list of boats for a user.
 func (s *BoatService) List(ctx context.Context, userID, cursor string, limit int) ([]domain.Boat, string, error) {
-	if limit <= 0 || limit > 50 {
-		limit = 20
-	}
+	limit = pagination.ClampLimit(limit)
 
 	boats, nextCursor, err := s.repo.List(ctx, userID, cursor, limit)
 	if err != nil {
@@ -94,21 +92,6 @@ func (s *BoatService) Delete(ctx context.Context, userID, id string) error {
 	return nil
 }
 
-// boatShareAlphabet excludes ambiguous characters.
-const boatShareAlphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
-
-func generateBoatShareCode() (string, error) {
-	const n = 8
-	buf := make([]byte, n)
-	if _, err := rand.Read(buf); err != nil {
-		return "", fmt.Errorf("generating boat share code: %w", err)
-	}
-	for i := range buf {
-		buf[i] = boatShareAlphabet[int(buf[i])%len(boatShareAlphabet)]
-	}
-	return string(buf), nil
-}
-
 // GetAccessible returns a boat the user owns or is a shared member of. Used by
 // the boat-detail read path only; ownership checks elsewhere stay strict.
 func (s *BoatService) GetAccessible(ctx context.Context, userID, id string) (*domain.Boat, error) {
@@ -126,7 +109,7 @@ func (s *BoatService) ListShared(ctx context.Context, userID string) ([]domain.B
 
 // ShareCode returns (creating if needed) the boat's invite code. Owner only.
 func (s *BoatService) ShareCode(ctx context.Context, userID, boatID string) (string, error) {
-	candidate, err := generateBoatShareCode()
+	candidate, err := randomCode(8)
 	if err != nil {
 		return "", err
 	}

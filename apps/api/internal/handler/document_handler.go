@@ -7,7 +7,6 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/dto"
-	"github.com/Carlos19979/navis-app/apps/api/internal/middleware"
 	"github.com/Carlos19979/navis-app/apps/api/internal/service"
 	"github.com/Carlos19979/navis-app/apps/api/pkg/pagination"
 	"github.com/Carlos19979/navis-app/apps/api/pkg/validator"
@@ -25,9 +24,8 @@ func NewDocumentHandler(svc *service.DocumentService) *DocumentHandler {
 
 // Create handles POST /boats/{boatId}/documents.
 func (h *DocumentHandler) Create(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 
@@ -62,9 +60,8 @@ func (h *DocumentHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 // GetByID handles GET /documents/{id}.
 func (h *DocumentHandler) GetByID(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 
@@ -80,9 +77,8 @@ func (h *DocumentHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 
 // ListByBoat handles GET /boats/{boatId}/documents.
 func (h *DocumentHandler) ListByBoat(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 
@@ -95,35 +91,20 @@ func (h *DocumentHandler) ListByBoat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var meta *Meta
-	if nextCursor != "" {
-		encoded := pagination.EncodeCursor(nextCursor)
-		meta = &Meta{NextCursor: &encoded}
-	}
-
-	JSONWithMeta(w, http.StatusOK, dto.DocumentListResponseFromDomain(docs), meta)
+	JSONWithMeta(w, http.StatusOK, dto.DocumentListResponseFromDomain(docs), metaFromCursor(nextCursor))
 }
 
 // Update handles PUT /documents/{id}.
 func (h *DocumentHandler) Update(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 
 	id := chi.URLParam(r, "id")
 
-	var req dto.UpdateDocumentRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		Error(w, http.StatusBadRequest, "invalid request body", "BAD_REQUEST")
-		return
-	}
-
-	validator.TrimStrings(&req)
-
-	if errs := validator.Validate(req); errs != nil {
-		ValidationError(w, errs)
+	req, ok := decodeAndValidate[dto.UpdateDocumentRequest](w, r)
+	if !ok {
 		return
 	}
 
@@ -145,9 +126,8 @@ func (h *DocumentHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 // Delete handles DELETE /documents/{id}.
 func (h *DocumentHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 

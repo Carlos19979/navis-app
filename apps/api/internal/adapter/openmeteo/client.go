@@ -307,14 +307,14 @@ func buildTides(ok bool, times []string, levels []float64, now time.Time) ([]por
 		return nil, nil
 	}
 
-	// Detect strict local turning points.
+	// Detect strict local turning points (sliding three-point window).
 	var raw []port.TideExtreme
-	for i := 1; i < len(series)-1; i++ {
-		prev, cur, next := series[i-1].h, series[i].h, series[i+1].h
+	for i := range len(series) - 2 {
+		prev, cur, next := series[i].h, series[i+1].h, series[i+2].h
 		if cur > prev && cur > next {
-			raw = append(raw, port.TideExtreme{Time: series[i].t, Height: cur, Kind: "high"})
+			raw = append(raw, port.TideExtreme{Time: series[i+1].t, Height: cur, Kind: "high"})
 		} else if cur < prev && cur < next {
-			raw = append(raw, port.TideExtreme{Time: series[i].t, Height: cur, Kind: "low"})
+			raw = append(raw, port.TideExtreme{Time: series[i+1].t, Height: cur, Kind: "low"})
 		}
 	}
 
@@ -433,9 +433,10 @@ func buildHourly(fc *overviewResponse, waves map[string]float64, now time.Time) 
 		}
 	}
 
+	n := min(len(fc.Hourly.Time)-start, hoursAhead)
 	points := make([]port.HourlyPoint, 0, hoursAhead)
-	for i := start; i < len(fc.Hourly.Time) && len(points) < hoursAhead; i++ {
-		points = append(points, hourlyPointAt(fc, waves, i))
+	for i := range n {
+		points = append(points, hourlyPointAt(fc, waves, start+i))
 	}
 	return points
 }

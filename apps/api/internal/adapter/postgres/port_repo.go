@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
+	"github.com/Carlos19979/navis-app/apps/api/pkg/pagination"
 )
 
 // PortRepo implements port.PortRepository using PostgreSQL.
@@ -73,27 +74,19 @@ func (r *PortRepo) NearLocation(ctx context.Context, lat, lon, radiusKM float64,
 		err  error
 	)
 
-	if cursor == "" {
-		query := `SELECT ` + portColumns + ` FROM ports
-			WHERE ST_DWithin(location, ST_MakePoint($2, $1)::geography, $3)
-			ORDER BY name ASC, id ASC
-			LIMIT $4`
-		rows, err = r.pool.Query(ctx, query, lat, lon, radiusM, limit+1)
-	} else {
-		var cursorName string
-		cErr := r.pool.QueryRow(ctx,
-			`SELECT name FROM ports WHERE id = $1`, cursor,
-		).Scan(&cursorName)
-		if cErr != nil {
-			return r.NearLocation(ctx, lat, lon, radiusKM, "", limit)
-		}
-
+	if cursorName, cursorID, ok := pagination.DecodeKeysetText(cursor); ok {
 		query := `SELECT ` + portColumns + ` FROM ports
 			WHERE ST_DWithin(location, ST_MakePoint($2, $1)::geography, $3)
 				AND (name, id) > ($4, $5)
 			ORDER BY name ASC, id ASC
 			LIMIT $6`
-		rows, err = r.pool.Query(ctx, query, lat, lon, radiusM, cursorName, cursor, limit+1)
+		rows, err = r.pool.Query(ctx, query, lat, lon, radiusM, cursorName, cursorID, limit+1)
+	} else {
+		query := `SELECT ` + portColumns + ` FROM ports
+			WHERE ST_DWithin(location, ST_MakePoint($2, $1)::geography, $3)
+			ORDER BY name ASC, id ASC
+			LIMIT $4`
+		rows, err = r.pool.Query(ctx, query, lat, lon, radiusM, limit+1)
 	}
 	if err != nil {
 		return nil, "", fmt.Errorf("listing ports near %.4f,%.4f: %w", lat, lon, err)
@@ -107,8 +100,9 @@ func (r *PortRepo) NearLocation(ctx context.Context, lat, lon, radiusKM float64,
 
 	var nextCursor string
 	if len(ports) > limit {
-		nextCursor = ports[limit].ID
 		ports = ports[:limit]
+		last := ports[limit-1]
+		nextCursor = pagination.EncodeKeysetText(last.Name, last.ID)
 	}
 
 	return ports, nextCursor, nil

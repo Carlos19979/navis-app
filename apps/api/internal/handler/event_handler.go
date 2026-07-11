@@ -56,13 +56,9 @@ func (h *EventHandler) List(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		var meta *Meta
-		if nextCursor != "" {
-			encoded := pagination.EncodeCursor(nextCursor)
-			meta = &Meta{NextCursor: &encoded}
-		}
-
-		JSONWithMeta(w, http.StatusOK, dto.EventListResponseFromDomain(events, h.interestedMap(r, events)), meta)
+		JSONWithMeta(w, http.StatusOK,
+			dto.EventListResponseFromDomain(events, h.interestedMap(r, events)),
+			metaFromCursor(nextCursor))
 		return
 	}
 
@@ -74,13 +70,9 @@ func (h *EventHandler) List(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		var meta *Meta
-		if nextCursor != "" {
-			encoded := pagination.EncodeCursor(nextCursor)
-			meta = &Meta{NextCursor: &encoded}
-		}
-
-		JSONWithMeta(w, http.StatusOK, dto.EventListResponseFromDomain(events, h.interestedMap(r, events)), meta)
+		JSONWithMeta(w, http.StatusOK,
+			dto.EventListResponseFromDomain(events, h.interestedMap(r, events)),
+			metaFromCursor(nextCursor))
 		return
 	}
 
@@ -91,13 +83,7 @@ func (h *EventHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var meta *Meta
-	if nextCursor != "" {
-		encoded := pagination.EncodeCursor(nextCursor)
-		meta = &Meta{NextCursor: &encoded}
-	}
-
-	JSONWithMeta(w, http.StatusOK, dto.EventListResponseFromDomain(events, h.interestedMap(r, events)), meta)
+	JSONWithMeta(w, http.StatusOK, dto.EventListResponseFromDomain(events, h.interestedMap(r, events)), metaFromCursor(nextCursor))
 }
 
 // GetByID handles GET /events/{id}.
@@ -137,9 +123,8 @@ func (h *EventHandler) interestedMap(r *http.Request, events []domain.Event) map
 
 // ToggleInterest handles POST /events/{id}/interest.
 func (h *EventHandler) ToggleInterest(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 

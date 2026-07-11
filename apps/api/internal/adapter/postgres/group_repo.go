@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
+	"github.com/Carlos19979/navis-app/apps/api/pkg/pagination"
 )
 
 // GroupRepo implements port.GroupRepository using PostgreSQL.
@@ -22,6 +22,9 @@ type GroupRepo struct {
 func NewGroupRepo(pool *pgxpool.Pool) *GroupRepo {
 	return &GroupRepo{pool: pool}
 }
+
+// groupColumns is the stored column list for group queries (no derived fields).
+const groupColumns = `id, owner_id, name, description, photo_url, visibility, invite_code, created_at, updated_at`
 
 // groupSelectBase selects the stored columns plus derived fields for viewer $1.
 const groupSelectBase = `
@@ -63,7 +66,7 @@ func (r *GroupRepo) Create(ctx context.Context, group *domain.Group) (*domain.Gr
 	query := `
 		INSERT INTO groups (owner_id, name, description, photo_url, visibility, invite_code)
 		VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING id, owner_id, name, description, photo_url, visibility, invite_code, created_at, updated_at`
+		RETURNING ` + groupColumns
 
 	g := &domain.Group{}
 	err := querier(ctx, r.pool).QueryRow(ctx, query,
@@ -136,26 +139,18 @@ func (r *GroupRepo) listWhere(ctx context.Context, userID, condition, cursor str
 		err  error
 	)
 
-	if cursor == "" {
+	if cursorTime, cursorID, ok := pagination.DecodeKeysetTime(cursor); ok {
+		query := `SELECT ` + groupSelectBase + ` FROM groups g
+			WHERE ` + condition + ` AND (g.created_at, g.id) < ($2, $3)
+			ORDER BY g.created_at DESC, g.id DESC
+			LIMIT $4`
+		rows, err = r.pool.Query(ctx, query, userID, cursorTime, cursorID, limit+1)
+	} else {
 		query := `SELECT ` + groupSelectBase + ` FROM groups g
 			WHERE ` + condition + `
 			ORDER BY g.created_at DESC, g.id DESC
 			LIMIT $2`
 		rows, err = r.pool.Query(ctx, query, userID, limit+1)
-	} else {
-		var cursorCreatedAt time.Time
-		cErr := r.pool.QueryRow(ctx,
-			`SELECT created_at FROM groups WHERE id = $1`, cursor,
-		).Scan(&cursorCreatedAt)
-		if cErr != nil {
-			return r.listWhere(ctx, userID, condition, "", limit)
-		}
-
-		query := `SELECT ` + groupSelectBase + ` FROM groups g
-			WHERE ` + condition + ` AND (g.created_at, g.id) < ($2, $3)
-			ORDER BY g.created_at DESC, g.id DESC
-			LIMIT $4`
-		rows, err = r.pool.Query(ctx, query, userID, cursorCreatedAt, cursor, limit+1)
 	}
 	if err != nil {
 		return nil, "", fmt.Errorf("listing groups: %w", err)
@@ -169,8 +164,9 @@ func (r *GroupRepo) listWhere(ctx context.Context, userID, condition, cursor str
 
 	var nextCursor string
 	if len(groups) > limit {
-		nextCursor = groups[limit].ID
 		groups = groups[:limit]
+		last := groups[limit-1]
+		nextCursor = pagination.EncodeKeysetTime(last.CreatedAt, last.ID)
 	}
 	return groups, nextCursor, nil
 }
@@ -181,7 +177,7 @@ func (r *GroupRepo) Update(ctx context.Context, userID string, group *domain.Gro
 		UPDATE groups
 		SET name = $3, description = $4, photo_url = $5, visibility = $6, updated_at = now()
 		WHERE owner_id = $1 AND id = $2
-		RETURNING id, owner_id, name, description, photo_url, visibility, invite_code, created_at, updated_at`
+		RETURNING ` + groupColumns
 
 	g := &domain.Group{}
 	err := r.pool.QueryRow(ctx, query,

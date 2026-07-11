@@ -2,15 +2,12 @@ package handler
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 	"github.com/Carlos19979/navis-app/apps/api/internal/dto"
-	"github.com/Carlos19979/navis-app/apps/api/internal/middleware"
-	"github.com/Carlos19979/navis-app/apps/api/pkg/validator"
 )
 
 type deviceRepo interface {
@@ -37,22 +34,13 @@ func NewDeviceHandler(repo deviceRepo, notifier notificationProvider) *DeviceHan
 
 // Create registers or updates a device token.
 func (h *DeviceHandler) Create(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "missing user", "UNAUTHORIZED")
 		return
 	}
 
-	var req dto.CreateDeviceRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		Error(w, http.StatusBadRequest, "invalid request body", "BAD_REQUEST")
-		return
-	}
-
-	validator.TrimStrings(&req)
-
-	if errs := validator.Validate(req); errs != nil {
-		ValidationError(w, errs)
+	req, ok := decodeAndValidate[dto.CreateDeviceRequest](w, r)
+	if !ok {
 		return
 	}
 
@@ -70,9 +58,8 @@ func (h *DeviceHandler) Create(w http.ResponseWriter, r *http.Request) {
 // Delete removes one of the caller's own device tokens. Scoping by user ID
 // prevents unregistering another user's device (IDOR).
 func (h *DeviceHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "missing user", "UNAUTHORIZED")
 		return
 	}
 
