@@ -714,8 +714,16 @@ class _InvoiceFieldState extends ConsumerState<_InvoiceField> {
         IconButton(
           icon: const Icon(Icons.open_in_new, size: 18),
           tooltip: l.view,
-          onPressed: () => launchUrl(Uri.parse(widget.url!),
-              mode: LaunchMode.externalApplication),
+          onPressed: () async {
+            // Private bucket: exchange the stored URL for a signed one.
+            final signed = await ref
+                .read(storageServiceProvider)
+                .signedDocumentUrl(widget.url!);
+            if (signed != null) {
+              await launchUrl(Uri.parse(signed),
+                  mode: LaunchMode.externalApplication);
+            }
+          },
         ),
         IconButton(
           icon: const Icon(Icons.close, size: 18, color: AppColors.red),
