@@ -39,9 +39,16 @@
 	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
-		<key>NSAllowsArbitraryLoads</key>
+		<!-- Development talks to the dev API over plain HTTP on the local
+		     network. Unlike NSAllowsArbitraryLoads, this keeps full ATS for
+		     internet hosts and is an accepted App Store exception. -->
+		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Navis usa la cámara para escanear documentos y fotografiar tu barco. / Navis uses the camera to scan documents and photograph your boat.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Navis accede a tu galería para adjuntar fotos de tu barco y documentos. / Navis accesses your photo library to attach photos of your boat and documents.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Navis connects to your local development server on this network.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>

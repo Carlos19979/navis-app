@@ -185,6 +185,13 @@
   "imageCacheCleared": "Image cache cleared",
   "offlineDataCleared": "Offline data cleared",
   "account": "Account",
+  "deleteAccount": "Delete account",
+  "deleteAccountSubtitle": "Permanently delete your account and all your data",
+  "deleteAccountWarning": "This permanently deletes your account: boats, documents, trips, maintenance history, groups you own and all uploaded files. This cannot be undone.",
+  "deleteAccountTypeToConfirm": "Type {word} to confirm",
+  "@deleteAccountTypeToConfirm": {"placeholders": {"word": {"type": "String"}}},
+  "deleteAccountConfirmWord": "DELETE",
+  "deleteAccountFailed": "Could not delete the account. Try again.",
   "deleteBoat": "Delete Boat",
   "deleteBoatConfirm": "Are you sure you want to delete \"{name}\"? This will also remove all associated documents and trips.",
   "@deleteBoatConfirm": {

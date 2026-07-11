@@ -502,6 +502,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get account => 'Account';
 
   @override
+  String get deleteAccount => 'Delete account';
+
+  @override
+  String get deleteAccountSubtitle =>
+      'Permanently delete your account and all your data';
+
+  @override
+  String get deleteAccountWarning =>
+      'This permanently deletes your account: boats, documents, trips, maintenance history, groups you own and all uploaded files. This cannot be undone.';
+
+  @override
+  String deleteAccountTypeToConfirm(String word) {
+    return 'Type $word to confirm';
+  }
+
+  @override
+  String get deleteAccountConfirmWord => 'DELETE';
+
+  @override
+  String get deleteAccountFailed => 'Could not delete the account. Try again.';
+
+  @override
   String get deleteBoat => 'Delete Boat';
 
   @override
