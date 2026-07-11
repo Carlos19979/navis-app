@@ -20,6 +20,7 @@ import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
+import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 
@@ -503,35 +504,14 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                     variant: NavisButtonVariant.danger,
                     onPressed: () async {
                       unawaited(HapticFeedback.mediumImpact());
-                      final confirmed = await showDialog<bool>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          backgroundColor: context.dialogSurfaceElevated,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            side: BorderSide(
-                              color: context.glassBorderColor,
-                              width: 0.5,
-                            ),
-                          ),
-                          title: Text(l.deleteBoat),
-                          content: Text(l.deleteConfirm),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: Text(l.cancel),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              style: TextButton.styleFrom(
-                                foregroundColor: AppColors.red,
-                              ),
-                              child: Text(l.delete),
-                            ),
-                          ],
-                        ),
+                      final confirmed = await NavisConfirmDialog.show(
+                        context,
+                        title: l.deleteBoat,
+                        message: l.deleteConfirm,
+                        confirmLabel: l.delete,
+                        destructive: true,
                       );
-                      if (confirmed == true && context.mounted) {
+                      if (confirmed && context.mounted) {
                         try {
                           await ref
                               .read(boatsProvider.notifier)

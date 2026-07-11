@@ -390,8 +390,8 @@ void main() {
         await tester.tap(find.text('Delete Boat'));
         await pumpScreen(tester);
 
-        // Tap Delete in the dialog
-        await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+        // Tap Delete in the dialog (shared NavisConfirmDialog uses TextButton)
+        await tester.tap(find.widgetWithText(TextButton, 'Delete'));
         await pumpScreen(tester);
 
         expect(fakeBoatsNotifier.deleteBoatCalled, isTrue);
@@ -441,7 +441,7 @@ void main() {
 
         expect(find.text('Cancel'), findsOneWidget);
         expect(
-          find.widgetWithText(FilledButton, 'Delete'),
+          find.widgetWithText(TextButton, 'Delete'),
           findsOneWidget,
         );
       });

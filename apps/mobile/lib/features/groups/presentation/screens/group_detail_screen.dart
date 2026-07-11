@@ -16,6 +16,7 @@ import 'package:navis_mobile/features/regattas/presentation/providers/regatta_pr
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
+import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
@@ -211,7 +212,12 @@ class GroupDetailScreen extends ConsumerWidget {
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
     final l = AppLocalizations.of(context)!;
-    final ok = await _confirm(context, l.deleteGroup, l.deleteGroupConfirm);
+    final ok = await NavisConfirmDialog.show(
+      context,
+      title: l.deleteGroup,
+      message: l.deleteGroupConfirm,
+      destructive: true,
+    );
     if (!ok) return;
     try {
       await ref.read(groupRepositoryProvider).deleteGroup(groupId);
@@ -227,7 +233,12 @@ class GroupDetailScreen extends ConsumerWidget {
 
   Future<void> _leave(BuildContext context, WidgetRef ref) async {
     final l = AppLocalizations.of(context)!;
-    final ok = await _confirm(context, l.leaveGroup, l.leaveGroupConfirm);
+    final ok = await NavisConfirmDialog.show(
+      context,
+      title: l.leaveGroup,
+      message: l.leaveGroupConfirm,
+      destructive: true,
+    );
     if (!ok) return;
     try {
       await ref.read(groupRepositoryProvider).leaveGroup(groupId);
@@ -239,32 +250,6 @@ class GroupDetailScreen extends ConsumerWidget {
       if (!context.mounted) return;
       NavisSnackbar.error(context, l.couldNotLeave);
     }
-  }
-
-  Future<bool> _confirm(
-      BuildContext context, String title, String message) async {
-    final l = AppLocalizations.of(context)!;
-    return await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            backgroundColor: context.dialogSurface,
-            title: Text(title, style: TextStyle(color: context.txtPrimary)),
-            content:
-                Text(message, style: TextStyle(color: context.txtSecondary)),
-            actions: [
-              TextButton(
-                onPressed: () => context.pop(false),
-                child: Text(l.cancel),
-              ),
-              TextButton(
-                onPressed: () => context.pop(true),
-                child: Text(l.confirm,
-                    style: const TextStyle(color: AppColors.red)),
-              ),
-            ],
-          ),
-        ) ??
-        false;
   }
 }
 

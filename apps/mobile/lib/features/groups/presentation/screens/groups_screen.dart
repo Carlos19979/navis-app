@@ -15,8 +15,10 @@ import 'package:navis_mobile/features/groups/presentation/widgets/group_card.dar
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
+import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_empty_state.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
+import 'package:navis_mobile/shared/widgets/navis_gradient_fab.dart';
 import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 
@@ -55,33 +57,12 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen>
 
   Future<void> _joinByCode() async {
     final l = AppLocalizations.of(context)!;
-    final controller = TextEditingController();
-    final code = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.dialogSurface,
-        title: Text(l.joinByCode, style: TextStyle(color: context.txtPrimary)),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          textCapitalization: TextCapitalization.characters,
-          style: TextStyle(color: context.txtPrimary),
-          decoration: InputDecoration(
-            hintText: l.inviteCode,
-            hintStyle: TextStyle(color: context.txtSecondary),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => context.pop(),
-            child: Text(l.cancel),
-          ),
-          TextButton(
-            onPressed: () => context.pop(controller.text.trim()),
-            child: Text(l.join),
-          ),
-        ],
-      ),
+    final code = await NavisInputDialog.show(
+      context,
+      title: l.joinByCode,
+      hintText: l.inviteCode,
+      confirmLabel: l.join,
+      uppercase: true,
     );
     if (code == null || code.isEmpty) return;
 
@@ -115,32 +96,10 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen>
       ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 112),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: AppColors.cyanGradient,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.cyan.withValues(alpha: 0.4),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: FloatingActionButton(
-            onPressed: _onCreateGroup,
-            tooltip: l.createGroup,
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(
-              Icons.add,
-              color: Colors.white,
-              semanticLabel: l.createGroup,
-            ),
-          ),
+        child: NavisGradientFab(
+          icon: Icons.add,
+          onPressed: _onCreateGroup,
+          tooltip: l.createGroup,
         ),
       ),
       body: GradientBackground(

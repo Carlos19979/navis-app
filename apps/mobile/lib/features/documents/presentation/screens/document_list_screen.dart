@@ -15,6 +15,7 @@ import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_empty_state.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
+import 'package:navis_mobile/shared/widgets/navis_gradient_fab.dart';
 import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
 
 class DocumentListScreen extends ConsumerWidget {
@@ -88,29 +89,10 @@ class DocumentListScreen extends ConsumerWidget {
                   ?.permissions
                   .canManageDocuments ??
               true)
-          ? Container(
-              decoration: BoxDecoration(
-                gradient: AppColors.cyanGradient,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.cyan.withValues(alpha: 0.4),
-                    blurRadius: 16,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: FloatingActionButton(
-                onPressed: () => context.push('/boats/$boatId/documents/new'),
-                tooltip: l.newDocument,
-                elevation: 0,
-                backgroundColor: Colors.transparent,
-                child: Icon(
-                  Icons.add,
-                  color: Colors.white,
-                  semanticLabel: l.newDocument,
-                ),
-              ),
+          ? NavisGradientFab(
+              icon: Icons.add,
+              onPressed: () => context.push('/boats/$boatId/documents/new'),
+              tooltip: l.newDocument,
             )
           : null,
     );

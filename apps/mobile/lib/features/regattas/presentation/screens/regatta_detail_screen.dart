@@ -14,6 +14,7 @@ import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
+import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
@@ -198,28 +199,14 @@ class RegattaDetailScreen extends ConsumerWidget {
 
   Future<void> _delete(BuildContext context, WidgetRef ref, Regatta r) async {
     final l = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: ctx.dialogSurface,
-        title: Text(l.deleteRegatta, style: TextStyle(color: ctx.txtPrimary)),
-        content: Text(
-          l.deleteRegattaConfirm,
-          style: TextStyle(color: ctx.txtSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(l.delete, style: const TextStyle(color: AppColors.red)),
-          ),
-        ],
-      ),
+    final confirmed = await NavisConfirmDialog.show(
+      context,
+      title: l.deleteRegatta,
+      message: l.deleteRegattaConfirm,
+      confirmLabel: l.delete,
+      destructive: true,
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
     try {
       await ref.read(regattaRepositoryProvider).delete(r.id);
       if (r.groupId != null) {

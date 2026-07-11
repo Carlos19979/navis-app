@@ -21,6 +21,7 @@ import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
+import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_empty_state.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
@@ -137,31 +138,12 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
 
   Future<void> _joinBoat() async {
     final l = AppLocalizations.of(context)!;
-    final controller = TextEditingController();
-    final code = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: ctx.dialogSurface,
-        title: Text(l.joinBoat, style: TextStyle(color: ctx.txtPrimary)),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          textCapitalization: TextCapitalization.characters,
-          style: TextStyle(color: ctx.txtPrimary),
-          decoration: InputDecoration(hintText: l.inviteCode),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(l.cancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.cyan),
-            onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
-            child: Text(l.join),
-          ),
-        ],
-      ),
+    final code = await NavisInputDialog.show(
+      context,
+      title: l.joinBoat,
+      hintText: l.inviteCode,
+      confirmLabel: l.join,
+      uppercase: true,
     );
     if (code == null || code.isEmpty) return;
     try {
