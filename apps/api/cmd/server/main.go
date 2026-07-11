@@ -16,6 +16,7 @@ import (
 	"github.com/Carlos19979/navis-app/apps/api/internal/adapter/novu"
 	"github.com/Carlos19979/navis-app/apps/api/internal/adapter/openmeteo"
 	"github.com/Carlos19979/navis-app/apps/api/internal/adapter/postgres"
+	"github.com/Carlos19979/navis-app/apps/api/internal/adapter/supabase"
 	"github.com/Carlos19979/navis-app/apps/api/internal/config"
 	"github.com/Carlos19979/navis-app/apps/api/internal/cron"
 	"github.com/Carlos19979/navis-app/apps/api/internal/handler"
@@ -104,6 +105,7 @@ func main() {
 	weatherProvider := openmeteo.New()
 	notifier := novu.New(cfg.NovuAPIKey, logger)
 	notifySvc := service.NewNotifier(notifier, userRepo, logger)
+	supabaseAdmin := supabase.NewAdmin(cfg.SupabaseURL, cfg.SupabaseServiceRoleKey, logger)
 
 	// Create services.
 	boatSvc := service.NewBoatService(boatRepo, profileRepo)
@@ -116,6 +118,10 @@ func main() {
 	regattaSvc := service.NewRegattaService(tripRepo, participantRepo, checklistRepo, groupMemberRepo, notifySvc)
 	portSvc := service.NewPortService(portRepo)
 	weatherSvc := service.NewWeatherService(weatherProvider)
+	userSvc := service.NewUserService(
+		supabaseAdmin, boatRepo, docRepo, tripRepo, trackRepo, participantRepo,
+		checklistRepo, maintenanceRepo, expenseRepo, groupRepo, deviceTokenRepo,
+		profileRepo, logger)
 
 	// Create and start expiration checker cron.
 	expirationChecker := cron.New(docRepo, notifLogRepo, profileRepo, notifier, logger)
@@ -138,7 +144,7 @@ func main() {
 	portH := handler.NewPortHandler(portSvc)
 	weatherH := handler.NewWeatherHandler(weatherSvc)
 	deviceH := handler.NewDeviceHandler(deviceTokenRepo, notifier)
-	userH := handler.NewUserHandler(boatRepo, docRepo, tripRepo, trackRepo, deviceTokenRepo)
+	userH := handler.NewUserHandler(userSvc)
 	profileH := handler.NewProfileHandler(profileSvc)
 	maintenanceH := handler.NewMaintenanceHandler(maintenanceSvc)
 	webhookH := handler.NewWebhookHandler(profileSvc, cfg.RevenueCatWebhookSecret, logger)
