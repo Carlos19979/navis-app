@@ -1,4 +1,4 @@
-.PHONY: help dev stop api-run api-build api-test api-lint api-dev mobile-run mobile-test mobile-lint mobile-analyze mobile-codegen db-start db-stop db-reset db-migrate install-hooks lint
+.PHONY: help dev stop api-run api-build api-test api-lint api-dev mobile-run mobile-run-emu mobile-test mobile-lint mobile-analyze mobile-format mobile-build-apk mobile-build-ios mobile-codegen db-start db-stop db-reset db-migrate install-hooks lint
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -45,11 +45,13 @@ api-dev: ## Run Go API with hot reload (air)
 
 # === Flutter ===
 
+# SENTRY_DSN is read from the environment (set it in your shell or .env).
+# It is optional for dev — leave unset to run without Sentry.
 mobile-run: ## Run Flutter app on connected device
-	cd apps/mobile && flutter run --dart-define=SENTRY_DSN=https://8d4df83b941529996aff13bc6546ec4d@o4511287726702592.ingest.de.sentry.io/4511287738433616
+	cd apps/mobile && flutter run --dart-define=SENTRY_DSN=$(SENTRY_DSN)
 
 mobile-run-emu: ## Run Flutter app on Android emulator with local backend
-	cd apps/mobile && flutter run --dart-define=API_URL=http://10.0.2.2:8080 --dart-define=SUPABASE_URL=http://10.0.2.2:54321 --dart-define=SENTRY_DSN=https://8d4df83b941529996aff13bc6546ec4d@o4511287726702592.ingest.de.sentry.io/4511287738433616
+	cd apps/mobile && flutter run --dart-define=API_URL=http://10.0.2.2:8080 --dart-define=SUPABASE_URL=http://10.0.2.2:54321 --dart-define=SENTRY_DSN=$(SENTRY_DSN)
 
 mobile-test: ## Run Flutter tests
 	cd apps/mobile && flutter test
@@ -63,11 +65,42 @@ mobile-format: ## Format Flutter code
 mobile-analyze: ## Run Flutter analyze (alias)
 	cd apps/mobile && flutter analyze
 
-mobile-build-apk: ## Build Android APK
-	cd apps/mobile && flutter build apk --release
+# Release builds require every production secret. `make` errors out naming
+# the first missing one instead of shipping a build wired to dev defaults.
+# Provide them via env/CI secrets:
+#   API_URL SUPABASE_URL SUPABASE_ANON_KEY SENTRY_DSN APP_VERSION
+#   REVENUECAT_IOS_KEY (iOS) / REVENUECAT_ANDROID_KEY (Android)
+define require
+$(if $($(1)),,$(error $(1) is required for a release build — set it in the environment))
+endef
 
-mobile-build-ios: ## Build iOS
-	cd apps/mobile && flutter build ios --release
+RELEASE_COMMON = \
+	--dart-define=ENVIRONMENT=production \
+	--dart-define=API_URL=$(API_URL) \
+	--dart-define=SUPABASE_URL=$(SUPABASE_URL) \
+	--dart-define=SUPABASE_ANON_KEY=$(SUPABASE_ANON_KEY) \
+	--dart-define=SENTRY_DSN=$(SENTRY_DSN) \
+	--dart-define=APP_VERSION=$(APP_VERSION)
+
+mobile-build-apk: ## Build a production Android APK (requires release env vars)
+	$(call require,API_URL)
+	$(call require,SUPABASE_URL)
+	$(call require,SUPABASE_ANON_KEY)
+	$(call require,SENTRY_DSN)
+	$(call require,APP_VERSION)
+	$(call require,REVENUECAT_ANDROID_KEY)
+	cd apps/mobile && flutter build apk --release $(RELEASE_COMMON) \
+		--dart-define=REVENUECAT_ANDROID_KEY=$(REVENUECAT_ANDROID_KEY)
+
+mobile-build-ios: ## Build a production iOS release (requires release env vars)
+	$(call require,API_URL)
+	$(call require,SUPABASE_URL)
+	$(call require,SUPABASE_ANON_KEY)
+	$(call require,SENTRY_DSN)
+	$(call require,APP_VERSION)
+	$(call require,REVENUECAT_IOS_KEY)
+	cd apps/mobile && flutter build ios --release $(RELEASE_COMMON) \
+		--dart-define=REVENUECAT_IOS_KEY=$(REVENUECAT_IOS_KEY)
 
 mobile-codegen: ## Run Flutter build_runner code generation
 	cd apps/mobile && dart run build_runner build --delete-conflicting-outputs
