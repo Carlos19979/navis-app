@@ -27,6 +27,7 @@ func New(
 	profileH *handler.ProfileHandler,
 	maintenanceH *handler.MaintenanceHandler,
 	webhookH *handler.WebhookHandler,
+	legalH *handler.LegalHandler,
 	jwtSecret string,
 	jwksURL string,
 	allowedOrigins []string,
@@ -80,6 +81,13 @@ func New(
 		r.Use(middleware.RateLimit(30, time.Minute))
 		r.Get("/{token}", tripH.PublicJSON)
 		r.With(middleware.PublicPageCSP).Get("/{token}/view", tripH.PublicView)
+	})
+
+	// Legal pages (no auth) — linked from App Store Connect and the app.
+	r.Route("/legal", func(r chi.Router) {
+		r.Use(middleware.PublicPageCSP)
+		r.Get("/privacy", legalH.Privacy)
+		r.Get("/terms", legalH.Terms)
 	})
 
 	// Provider webhooks (no JWT — authenticated by a shared secret in the

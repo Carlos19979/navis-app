@@ -642,6 +642,31 @@ class AppLocalizationsEs extends AppLocalizations {
   String get aboutNavis => 'Acerca de Navis';
 
   @override
+  String get close => 'Cerrar';
+
+  @override
+  String get privacyPolicy => 'Política de privacidad';
+
+  @override
+  String get termsOfService => 'Términos de servicio';
+
+  @override
+  String get paywallAutoRenewNotice =>
+      'La suscripción se renueva automáticamente salvo que la canceles en los ajustes de tu cuenta del App Store al menos 24 horas antes del fin del período en curso.';
+
+  @override
+  String aboutVersion(String version) {
+    return 'Versión $version';
+  }
+
+  @override
+  String get aboutDescription =>
+      'El cuaderno de bitácora digital de tu barco: documentos, viajes, mantenimiento y meteo en un solo sitio.';
+
+  @override
+  String get couldNotOpenLink => 'No se pudo abrir el enlace';
+
+  @override
   String get speedAbbr => 'VEL';
 
   @override

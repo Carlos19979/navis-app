@@ -1316,6 +1316,48 @@ abstract class AppLocalizations {
   /// **'About Navis'**
   String get aboutNavis;
 
+  /// No description provided for @close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicy;
+
+  /// No description provided for @termsOfService.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get termsOfService;
+
+  /// No description provided for @paywallAutoRenewNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'The subscription renews automatically unless you cancel it in your App Store account settings at least 24 hours before the end of the current period.'**
+  String get paywallAutoRenewNotice;
+
+  /// No description provided for @aboutVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version}'**
+  String aboutVersion(String version);
+
+  /// No description provided for @aboutDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Your boat\'s digital logbook: documents, trips, maintenance and weather in one place.'**
+  String get aboutDescription;
+
+  /// No description provided for @couldNotOpenLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the link'**
+  String get couldNotOpenLink;
+
   /// No description provided for @speedAbbr.
   ///
   /// In en, this message translates to:

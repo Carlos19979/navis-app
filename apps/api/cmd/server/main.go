@@ -148,6 +148,7 @@ func main() {
 	profileH := handler.NewProfileHandler(profileSvc)
 	maintenanceH := handler.NewMaintenanceHandler(maintenanceSvc)
 	webhookH := handler.NewWebhookHandler(profileSvc, cfg.RevenueCatWebhookSecret, logger)
+	legalH := handler.NewLegalHandler()
 
 	// Create router.
 	jwksURL := cfg.SupabaseURL + "/auth/v1/.well-known/jwks.json"
@@ -156,6 +157,7 @@ func main() {
 	r := router.New(
 		boatH, docH, tripH, eventH, groupH, regattaH, portH, weatherH, deviceH, userH, profileH, maintenanceH,
 		webhookH,
+		legalH,
 		cfg.SupabaseJWTSecret,
 		jwksURL,
 		cfg.CORSAllowedOrigins,

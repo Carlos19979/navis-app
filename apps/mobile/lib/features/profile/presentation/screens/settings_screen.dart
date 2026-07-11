@@ -323,7 +323,8 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _confirmDeleteAccount(BuildContext context, WidgetRef ref) async {
+  Future<void> _confirmDeleteAccount(
+      BuildContext context, WidgetRef ref) async {
     final l = AppLocalizations.of(context)!;
     final confirmWord = l.deleteAccountConfirmWord;
 
