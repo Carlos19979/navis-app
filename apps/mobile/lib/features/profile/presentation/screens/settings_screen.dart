@@ -295,6 +295,24 @@ class SettingsScreen extends ConsumerWidget {
                         },
                       ),
                     ),
+                    Divider(
+                      height: 1,
+                      color: context.glassBorderColor.withValues(alpha: 0.3),
+                      indent: 16,
+                      endIndent: 16,
+                    ),
+                    ListTile(
+                      leading: const Icon(
+                        Icons.delete_forever,
+                        color: AppColors.red,
+                      ),
+                      title: Text(
+                        l.deleteAccount,
+                        style: const TextStyle(color: AppColors.red),
+                      ),
+                      subtitle: Text(l.deleteAccountSubtitle),
+                      onTap: () => _confirmDeleteAccount(context, ref),
+                    ),
                   ],
                 ),
               ),
@@ -303,6 +321,96 @@ class SettingsScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _confirmDeleteAccount(BuildContext context, WidgetRef ref) async {
+    final l = AppLocalizations.of(context)!;
+    final confirmWord = l.deleteAccountConfirmWord;
+
+    // Step 1: explain exactly what gets deleted.
+    final proceed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.deleteAccount),
+        content: Text(l.deleteAccountWarning),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.red),
+            child: Text(l.delete),
+          ),
+        ],
+      ),
+    );
+    if (proceed != true || !context.mounted) return;
+
+    // Step 2: type-to-confirm.
+    final controller = TextEditingController();
+    final typed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setState) => AlertDialog(
+          title: Text(l.deleteAccount),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l.deleteAccountTypeToConfirm(confirmWord)),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                textCapitalization: TextCapitalization.characters,
+                decoration: InputDecoration(hintText: confirmWord),
+                onChanged: (_) => setState(() {}),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l.cancel),
+            ),
+            TextButton(
+              onPressed: controller.text.trim() == confirmWord
+                  ? () => Navigator.pop(ctx, true)
+                  : null,
+              style: TextButton.styleFrom(foregroundColor: AppColors.red),
+              child: Text(l.delete),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (typed != true || !context.mounted) return;
+
+    try {
+      await ref.read(accountRepositoryProvider).deleteAccount();
+    } catch (_) {
+      if (context.mounted) {
+        NavisSnackbar.error(context, l.deleteAccountFailed);
+      }
+      return;
+    }
+
+    // Clear local state: cached rows and the (now invalid) session.
+    final db = ref.read(localDatabaseProvider);
+    await db.clearTable('boats');
+    await db.clearTable('documents');
+    await db.clearTable('trips');
+    try {
+      await ref.read(authProvider.notifier).logout();
+    } catch (_) {
+      // The auth user no longer exists server-side; the local session is
+      // stale either way, so proceed to login.
+    }
+    if (context.mounted) {
+      context.go('/login');
+    }
   }
 
   void _showLanguagePicker(

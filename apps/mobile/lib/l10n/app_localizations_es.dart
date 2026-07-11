@@ -507,6 +507,29 @@ class AppLocalizationsEs extends AppLocalizations {
   String get account => 'Cuenta';
 
   @override
+  String get deleteAccount => 'Eliminar cuenta';
+
+  @override
+  String get deleteAccountSubtitle =>
+      'Elimina permanentemente tu cuenta y todos tus datos';
+
+  @override
+  String get deleteAccountWarning =>
+      'Esto elimina permanentemente tu cuenta: barcos, documentos, viajes, historial de mantenimiento, grupos que posees y todos los archivos subidos. No se puede deshacer.';
+
+  @override
+  String deleteAccountTypeToConfirm(String word) {
+    return 'Escribe $word para confirmar';
+  }
+
+  @override
+  String get deleteAccountConfirmWord => 'ELIMINAR';
+
+  @override
+  String get deleteAccountFailed =>
+      'No se pudo eliminar la cuenta. Inténtalo de nuevo.';
+
+  @override
   String get deleteBoat => 'Eliminar barco';
 
   @override

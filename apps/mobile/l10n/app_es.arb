@@ -185,6 +185,12 @@
   "imageCacheCleared": "Caché de imágenes limpiada",
   "offlineDataCleared": "Datos offline eliminados",
   "account": "Cuenta",
+  "deleteAccount": "Eliminar cuenta",
+  "deleteAccountSubtitle": "Elimina permanentemente tu cuenta y todos tus datos",
+  "deleteAccountWarning": "Esto elimina permanentemente tu cuenta: barcos, documentos, viajes, historial de mantenimiento, grupos que posees y todos los archivos subidos. No se puede deshacer.",
+  "deleteAccountTypeToConfirm": "Escribe {word} para confirmar",
+  "deleteAccountConfirmWord": "ELIMINAR",
+  "deleteAccountFailed": "No se pudo eliminar la cuenta. Inténtalo de nuevo.",
   "deleteBoat": "Eliminar barco",
   "deleteBoatConfirm": "¿Estás seguro de que deseas eliminar \"{name}\"? También se eliminarán todos los documentos y viajes asociados.",
   "@deleteBoatConfirm": {

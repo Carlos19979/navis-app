@@ -1064,6 +1064,42 @@ abstract class AppLocalizations {
   /// **'Account'**
   String get account;
 
+  /// No description provided for @deleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get deleteAccount;
+
+  /// No description provided for @deleteAccountSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently delete your account and all your data'**
+  String get deleteAccountSubtitle;
+
+  /// No description provided for @deleteAccountWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This permanently deletes your account: boats, documents, trips, maintenance history, groups you own and all uploaded files. This cannot be undone.'**
+  String get deleteAccountWarning;
+
+  /// No description provided for @deleteAccountTypeToConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Type {word} to confirm'**
+  String deleteAccountTypeToConfirm(String word);
+
+  /// No description provided for @deleteAccountConfirmWord.
+  ///
+  /// In en, this message translates to:
+  /// **'DELETE'**
+  String get deleteAccountConfirmWord;
+
+  /// No description provided for @deleteAccountFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete the account. Try again.'**
+  String get deleteAccountFailed;
+
   /// No description provided for @deleteBoat.
   ///
   /// In en, this message translates to:

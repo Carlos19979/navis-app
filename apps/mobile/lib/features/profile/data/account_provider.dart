@@ -72,6 +72,12 @@ class AccountRepository {
     );
     return Account.fromJson(response.data!['data'] as Map<String, dynamic>);
   }
+
+  /// Permanently deletes the account, its data and files (GDPR). The backend
+  /// removes the auth user, so the session is invalid afterwards.
+  Future<void> deleteAccount() async {
+    await _apiClient.delete<void>('/api/v1/user');
+  }
 }
 
 final accountRepositoryProvider = Provider<AccountRepository>(
