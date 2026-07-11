@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/boat/domain/repositories/boat_repository.dart';
@@ -124,6 +125,7 @@ void main() {
   Widget buildSubject({
     List<Boat> boats = const [],
     bool useError = false,
+    bool isPro = false,
   }) {
     final router = _testRouter(const BoatDashboardScreen());
     return ProviderScope(
@@ -131,6 +133,7 @@ void main() {
         boatsProvider.overrideWith(
           () => useError ? ErrorBoatsNotifier() : FakeBoatsNotifier(boats),
         ),
+        proEntitlementProvider.overrideWith((ref) => isPro),
         currentWeatherProvider.overrideWith((ref) async => null),
         boatDocumentSummaryProvider.overrideWith(
           (ref, boatId) async => const DocumentSummary(),
@@ -222,7 +225,20 @@ void main() {
       expect(fabWidget.tooltip, 'Add new boat');
     });
 
-    testWidgets('FAB navigates to new boat page', (tester) async {
+    testWidgets('FAB navigates to new boat page when under plan limit',
+        (tester) async {
+      await setPhoneSize(tester);
+      await tester.pumpWidget(buildSubject(boats: testBoats, isPro: true));
+      await pumpScreen(tester);
+
+      await tester.tap(find.byType(FloatingActionButton));
+      await pumpScreen(tester);
+
+      expect(find.text('New Boat Page'), findsOneWidget);
+    });
+
+    testWidgets('FAB shows paywall when free plan boat limit is reached',
+        (tester) async {
       await setPhoneSize(tester);
       await tester.pumpWidget(buildSubject(boats: testBoats));
       await pumpScreen(tester);
@@ -230,7 +246,8 @@ void main() {
       await tester.tap(find.byType(FloatingActionButton));
       await pumpScreen(tester);
 
-      expect(find.text('New Boat Page'), findsOneWidget);
+      expect(find.text('New Boat Page'), findsNothing);
+      expect(find.text('Navis Pro'), findsOneWidget);
     });
 
     testWidgets('shows empty state when no boats', (tester) async {
