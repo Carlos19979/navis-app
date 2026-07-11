@@ -2047,6 +2047,1206 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'—'**
   String get wcUnknown;
+
+  /// No description provided for @inviteCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite code'**
+  String get inviteCode;
+
+  /// No description provided for @codeCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Code copied'**
+  String get codeCopied;
+
+  /// No description provided for @copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get copy;
+
+  /// No description provided for @share.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get share;
+
+  /// No description provided for @join.
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get join;
+
+  /// No description provided for @leave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get leave;
+
+  /// No description provided for @view.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get view;
+
+  /// No description provided for @remove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get remove;
+
+  /// No description provided for @couldNotSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save'**
+  String get couldNotSave;
+
+  /// No description provided for @couldNotDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete'**
+  String get couldNotDelete;
+
+  /// No description provided for @errorWithMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: {message}'**
+  String errorWithMessage(String message);
+
+  /// No description provided for @membersLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Members'**
+  String get membersLabel;
+
+  /// No description provided for @socialLoginFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not sign in with that provider'**
+  String get socialLoginFailed;
+
+  /// No description provided for @continueWithApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Apple'**
+  String get continueWithApple;
+
+  /// No description provided for @continueWithGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Google'**
+  String get continueWithGoogle;
+
+  /// No description provided for @paywallDefaultReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your boat legal, maintained and safe. For less than a single fine for expired paperwork.'**
+  String get paywallDefaultReason;
+
+  /// No description provided for @purchaseFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not complete the purchase.'**
+  String get purchaseFailed;
+
+  /// No description provided for @nothingToRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'No purchases to restore.'**
+  String get nothingToRestore;
+
+  /// No description provided for @welcomeToPro.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Navis Pro!'**
+  String get welcomeToPro;
+
+  /// No description provided for @subscribe.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe'**
+  String get subscribe;
+
+  /// No description provided for @restorePurchases.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore purchases'**
+  String get restorePurchases;
+
+  /// No description provided for @subscriptionsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscriptions are not available right now. Try again later.'**
+  String get subscriptionsUnavailable;
+
+  /// No description provided for @paywallMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get paywallMonthly;
+
+  /// No description provided for @paywallYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly'**
+  String get paywallYearly;
+
+  /// No description provided for @paywallWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get paywallWeekly;
+
+  /// No description provided for @paywallLifetime.
+  ///
+  /// In en, this message translates to:
+  /// **'Lifetime'**
+  String get paywallLifetime;
+
+  /// No description provided for @proBenefitReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited document expiry reminders'**
+  String get proBenefitReminders;
+
+  /// No description provided for @proBenefitMaintenance.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled maintenance reminders'**
+  String get proBenefitMaintenance;
+
+  /// No description provided for @proBenefitBoats.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to 3 boats'**
+  String get proBenefitBoats;
+
+  /// No description provided for @proBenefitGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Create clubs and events'**
+  String get proBenefitGroups;
+
+  /// No description provided for @proBenefitAttachments.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited document attachments'**
+  String get proBenefitAttachments;
+
+  /// No description provided for @planBoatLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve reached your plan\'s boat limit.'**
+  String get planBoatLimitReached;
+
+  /// No description provided for @paywallReasonBoatLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Free plan allows 1 boat. Go Pro to manage up to 3.'**
+  String get paywallReasonBoatLimit;
+
+  /// No description provided for @joinBoat.
+  ///
+  /// In en, this message translates to:
+  /// **'Join a boat'**
+  String get joinBoat;
+
+  /// No description provided for @joinedBoat.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve joined the boat'**
+  String get joinedBoat;
+
+  /// No description provided for @invalidCodeOrJoinError.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid code or error joining'**
+  String get invalidCodeOrJoinError;
+
+  /// No description provided for @maintenanceAndExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance & expenses'**
+  String get maintenanceAndExpenses;
+
+  /// No description provided for @maintenanceAndExpensesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Boat services and costs'**
+  String get maintenanceAndExpensesSubtitle;
+
+  /// No description provided for @shareBoat.
+  ///
+  /// In en, this message translates to:
+  /// **'Share boat'**
+  String get shareBoat;
+
+  /// No description provided for @shareBoatSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Crew and co-owners'**
+  String get shareBoatSubtitle;
+
+  /// No description provided for @leaveSharedBoat.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave shared boat'**
+  String get leaveSharedBoat;
+
+  /// No description provided for @leaveSharedBoatSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop having access'**
+  String get leaveSharedBoatSubtitle;
+
+  /// No description provided for @couldNotGetCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not get the code'**
+  String get couldNotGetCode;
+
+  /// No description provided for @shareBoatExplainer.
+  ///
+  /// In en, this message translates to:
+  /// **'Share this code. Whoever enters it will see the boat. Turn on \"can record trips\" below to grant editor permission.'**
+  String get shareBoatExplainer;
+
+  /// No description provided for @shareBoatMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Join my boat \"{name}\" on Navis with the code: {code}'**
+  String shareBoatMessage(String name, String code);
+
+  /// No description provided for @withAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'With access'**
+  String get withAccess;
+
+  /// No description provided for @notSharedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'You haven\'t shared with anyone yet.'**
+  String get notSharedYet;
+
+  /// No description provided for @leaveBoat.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave boat'**
+  String get leaveBoat;
+
+  /// No description provided for @leaveBoatConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'You will lose access to \"{name}\".'**
+  String leaveBoatConfirm(String name);
+
+  /// No description provided for @removeAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove access'**
+  String get removeAccess;
+
+  /// No description provided for @groupsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Groups'**
+  String get groupsTitle;
+
+  /// No description provided for @publicLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Public'**
+  String get publicLabel;
+
+  /// No description provided for @privateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Private'**
+  String get privateLabel;
+
+  /// No description provided for @membersCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} members'**
+  String membersCount(int count);
+
+  /// No description provided for @deleteGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete group'**
+  String get deleteGroup;
+
+  /// No description provided for @deleteGroupConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this group? This cannot be undone.'**
+  String get deleteGroupConfirm;
+
+  /// No description provided for @leaveGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave group'**
+  String get leaveGroup;
+
+  /// No description provided for @leaveGroupConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to leave this group?'**
+  String get leaveGroupConfirm;
+
+  /// No description provided for @groupDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Group deleted'**
+  String get groupDeleted;
+
+  /// No description provided for @leftGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve left the group'**
+  String get leftGroup;
+
+  /// No description provided for @couldNotLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not leave'**
+  String get couldNotLeave;
+
+  /// No description provided for @admit.
+  ///
+  /// In en, this message translates to:
+  /// **'Admit'**
+  String get admit;
+
+  /// No description provided for @rejectAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get rejectAction;
+
+  /// No description provided for @couldNotProcess.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not process'**
+  String get couldNotProcess;
+
+  /// No description provided for @noScheduledRegattas.
+  ///
+  /// In en, this message translates to:
+  /// **'No regattas scheduled.'**
+  String get noScheduledRegattas;
+
+  /// No description provided for @expelMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get expelMember;
+
+  /// No description provided for @memberExpelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Member removed'**
+  String get memberExpelled;
+
+  /// No description provided for @couldNotExpel.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not remove'**
+  String get couldNotExpel;
+
+  /// No description provided for @youLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get youLabel;
+
+  /// No description provided for @userLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'User {id}'**
+  String userLabel(String id);
+
+  /// No description provided for @scheduleAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule'**
+  String get scheduleAction;
+
+  /// No description provided for @groupCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Group created'**
+  String get groupCreated;
+
+  /// No description provided for @couldNotCreateGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create the group'**
+  String get couldNotCreateGroup;
+
+  /// No description provided for @createGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Create group'**
+  String get createGroup;
+
+  /// No description provided for @groupName.
+  ///
+  /// In en, this message translates to:
+  /// **'Group name'**
+  String get groupName;
+
+  /// No description provided for @descriptionOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Description (optional)'**
+  String get descriptionOptional;
+
+  /// No description provided for @groupPublicSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone can request to join (you approve).'**
+  String get groupPublicSubtitle;
+
+  /// No description provided for @groupPrivateSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Members join with an invite code only.'**
+  String get groupPrivateSubtitle;
+
+  /// No description provided for @paywallReasonGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating clubs and events is a Navis Pro feature.'**
+  String get paywallReasonGroups;
+
+  /// No description provided for @joinByCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Join by code'**
+  String get joinByCode;
+
+  /// No description provided for @joinedGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve joined {name}'**
+  String joinedGroup(String name);
+
+  /// No description provided for @requestSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Request sent'**
+  String get requestSent;
+
+  /// No description provided for @couldNotRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send request'**
+  String get couldNotRequest;
+
+  /// No description provided for @requestAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Request'**
+  String get requestAction;
+
+  /// No description provided for @notInAnyGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re not in any group yet.'**
+  String get notInAnyGroup;
+
+  /// No description provided for @noPublicGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'No public groups to discover.'**
+  String get noPublicGroups;
+
+  /// No description provided for @cancelTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel trip'**
+  String get cancelTrip;
+
+  /// No description provided for @cancelTripRegattaWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'The regatta will return to \"scheduled\" and the recording will be discarded.'**
+  String get cancelTripRegattaWarning;
+
+  /// No description provided for @cancelTripWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This trip will be discarded without saving.'**
+  String get cancelTripWarning;
+
+  /// No description provided for @exitWithoutSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit without saving'**
+  String get exitWithoutSaving;
+
+  /// No description provided for @exitRegattaWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'The recording will be discarded and the regatta will return to \"scheduled\".'**
+  String get exitRegattaWarning;
+
+  /// No description provided for @exitTripWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'You will leave the map and the recording will be discarded without saving the trip.'**
+  String get exitTripWarning;
+
+  /// No description provided for @keepGoing.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep going'**
+  String get keepGoing;
+
+  /// No description provided for @noMaintenanceRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'No maintenance records'**
+  String get noMaintenanceRecords;
+
+  /// No description provided for @invoiceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice'**
+  String get invoiceLabel;
+
+  /// No description provided for @maintenanceTypeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Type (e.g. oil change)'**
+  String get maintenanceTypeHint;
+
+  /// No description provided for @costOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost € (opt.)'**
+  String get costOptional;
+
+  /// No description provided for @providerOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider (opt.)'**
+  String get providerOptional;
+
+  /// No description provided for @dateWithValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Date: {date}'**
+  String dateWithValue(String date);
+
+  /// No description provided for @totalSpent.
+  ///
+  /// In en, this message translates to:
+  /// **'Total spent'**
+  String get totalSpent;
+
+  /// No description provided for @noExpensesRecorded.
+  ///
+  /// In en, this message translates to:
+  /// **'No expenses recorded'**
+  String get noExpensesRecorded;
+
+  /// No description provided for @categoryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get categoryLabel;
+
+  /// No description provided for @amountEur.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount €'**
+  String get amountEur;
+
+  /// No description provided for @couldNotUploadInvoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not upload the invoice'**
+  String get couldNotUploadInvoice;
+
+  /// No description provided for @attachInvoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach invoice'**
+  String get attachInvoice;
+
+  /// No description provided for @expenseCategoryFuel.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel'**
+  String get expenseCategoryFuel;
+
+  /// No description provided for @expenseCategoryMooring.
+  ///
+  /// In en, this message translates to:
+  /// **'Mooring'**
+  String get expenseCategoryMooring;
+
+  /// No description provided for @expenseCategoryInsurance.
+  ///
+  /// In en, this message translates to:
+  /// **'Insurance'**
+  String get expenseCategoryInsurance;
+
+  /// No description provided for @expenseCategoryRepair.
+  ///
+  /// In en, this message translates to:
+  /// **'Repair'**
+  String get expenseCategoryRepair;
+
+  /// No description provided for @expenseCategoryCleaning.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleaning'**
+  String get expenseCategoryCleaning;
+
+  /// No description provided for @expenseCategoryOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get expenseCategoryOther;
+
+  /// No description provided for @safetyChecklist.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety checklist'**
+  String get safetyChecklist;
+
+  /// No description provided for @addItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Add item'**
+  String get addItem;
+
+  /// No description provided for @descriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get descriptionLabel;
+
+  /// No description provided for @couldNotAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not add'**
+  String get couldNotAdd;
+
+  /// No description provided for @couldNotUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not update'**
+  String get couldNotUpdate;
+
+  /// No description provided for @couldNotStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start'**
+  String get couldNotStart;
+
+  /// No description provided for @checklistSkipHint.
+  ///
+  /// In en, this message translates to:
+  /// **'We recommend checking every safety item, but you may set sail anyway at your own responsibility.'**
+  String get checklistSkipHint;
+
+  /// No description provided for @checklistLifejackets.
+  ///
+  /// In en, this message translates to:
+  /// **'Lifejackets for the whole crew'**
+  String get checklistLifejackets;
+
+  /// No description provided for @checklistFlares.
+  ///
+  /// In en, this message translates to:
+  /// **'Flares and pyrotechnic signals in date'**
+  String get checklistFlares;
+
+  /// No description provided for @checklistVhf.
+  ///
+  /// In en, this message translates to:
+  /// **'VHF radio working'**
+  String get checklistVhf;
+
+  /// No description provided for @checklistFuel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sufficient fuel level'**
+  String get checklistFuel;
+
+  /// No description provided for @checklistBilgePump.
+  ///
+  /// In en, this message translates to:
+  /// **'Bilge pump working'**
+  String get checklistBilgePump;
+
+  /// No description provided for @checklistFirstAid.
+  ///
+  /// In en, this message translates to:
+  /// **'First aid kit'**
+  String get checklistFirstAid;
+
+  /// No description provided for @checklistAnchor.
+  ///
+  /// In en, this message translates to:
+  /// **'Anchor and lines in good condition'**
+  String get checklistAnchor;
+
+  /// No description provided for @checklistNavLights.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigation lights working'**
+  String get checklistNavLights;
+
+  /// No description provided for @checklistWeather.
+  ///
+  /// In en, this message translates to:
+  /// **'Weather forecast checked'**
+  String get checklistWeather;
+
+  /// No description provided for @checklistFloatPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Passage plan shared ashore'**
+  String get checklistFloatPlan;
+
+  /// No description provided for @areYouGoing.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you going?'**
+  String get areYouGoing;
+
+  /// No description provided for @prepareChecklistAndSail.
+  ///
+  /// In en, this message translates to:
+  /// **'Prepare checklist and set sail'**
+  String get prepareChecklistAndSail;
+
+  /// No description provided for @cancelRegatta.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel regatta'**
+  String get cancelRegatta;
+
+  /// No description provided for @regattaInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'The regatta is under way (recording).'**
+  String get regattaInProgress;
+
+  /// No description provided for @deleteRegatta.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete regatta'**
+  String get deleteRegatta;
+
+  /// No description provided for @deleteRegattaConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'This regatta will be permanently deleted.'**
+  String get deleteRegattaConfirm;
+
+  /// No description provided for @regattaDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Regatta deleted'**
+  String get regattaDeleted;
+
+  /// No description provided for @regattaCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Regatta cancelled'**
+  String get regattaCancelled;
+
+  /// No description provided for @couldNotCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not cancel'**
+  String get couldNotCancel;
+
+  /// No description provided for @couldNotRespond.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not respond'**
+  String get couldNotRespond;
+
+  /// No description provided for @rsvpGoing.
+  ///
+  /// In en, this message translates to:
+  /// **'Going'**
+  String get rsvpGoing;
+
+  /// No description provided for @rsvpMaybe.
+  ///
+  /// In en, this message translates to:
+  /// **'Maybe'**
+  String get rsvpMaybe;
+
+  /// No description provided for @rsvpNotGoing.
+  ///
+  /// In en, this message translates to:
+  /// **'Not going'**
+  String get rsvpNotGoing;
+
+  /// No description provided for @rsvpGoingCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Going'**
+  String get rsvpGoingCount;
+
+  /// No description provided for @rsvpNotGoingCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Not going'**
+  String get rsvpNotGoingCount;
+
+  /// No description provided for @selectABoat.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a boat'**
+  String get selectABoat;
+
+  /// No description provided for @selectDeparturePortFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Select the departure port'**
+  String get selectDeparturePortFirst;
+
+  /// No description provided for @regattaScheduled.
+  ///
+  /// In en, this message translates to:
+  /// **'Regatta scheduled'**
+  String get regattaScheduled;
+
+  /// No description provided for @couldNotSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not schedule'**
+  String get couldNotSchedule;
+
+  /// No description provided for @scheduleRegatta.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule regatta'**
+  String get scheduleRegatta;
+
+  /// No description provided for @regattaTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Title (e.g. Spring regatta)'**
+  String get regattaTitleHint;
+
+  /// No description provided for @selectBoatFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a boat first.'**
+  String get selectBoatFirst;
+
+  /// No description provided for @addBoatFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a boat first.'**
+  String get addBoatFirst;
+
+  /// No description provided for @addCrewMemberHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add crew member…'**
+  String get addCrewMemberHint;
+
+  /// No description provided for @checkEmailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your email'**
+  String get checkEmailTitle;
+
+  /// No description provided for @checkEmailBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ve sent a confirmation link to {email}. Open it to activate your account, then log in.'**
+  String checkEmailBody(String email);
+
+  /// No description provided for @resendEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend email'**
+  String get resendEmail;
+
+  /// No description provided for @emailResent.
+  ///
+  /// In en, this message translates to:
+  /// **'Email sent'**
+  String get emailResent;
+
+  /// No description provided for @couldNotResend.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not resend the email'**
+  String get couldNotResend;
+
+  /// No description provided for @backToLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to login'**
+  String get backToLogin;
+
+  /// No description provided for @orDivider.
+  ///
+  /// In en, this message translates to:
+  /// **'or'**
+  String get orDivider;
+
+  /// No description provided for @completeAndSail.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete and set sail'**
+  String get completeAndSail;
+
+  /// No description provided for @sailAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Set sail anyway'**
+  String get sailAnyway;
+
+  /// No description provided for @statusScheduled.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled'**
+  String get statusScheduled;
+
+  /// No description provided for @statusInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get statusInProgress;
+
+  /// No description provided for @statusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get statusCompleted;
+
+  /// No description provided for @statusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get statusCancelled;
+
+  /// No description provided for @regattaLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Regatta'**
+  String get regattaLabel;
+
+  /// No description provided for @memberLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Member'**
+  String get memberLabel;
+
+  /// No description provided for @joinAsGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Join as a group'**
+  String get joinAsGroup;
+
+  /// No description provided for @selectAGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a group'**
+  String get selectAGroup;
+
+  /// No description provided for @joinedWithGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve joined with your group'**
+  String get joinedWithGroup;
+
+  /// No description provided for @couldNotJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not join'**
+  String get couldNotJoin;
+
+  /// No description provided for @groupLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Group'**
+  String get groupLabel;
+
+  /// No description provided for @createGroupFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a group first to join with your team.'**
+  String get createGroupFirst;
+
+  /// No description provided for @joinWithMyGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Join with my group'**
+  String get joinWithMyGroup;
+
+  /// No description provided for @sharedWithMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared with me'**
+  String get sharedWithMe;
+
+  /// No description provided for @sharedBoatInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'This boat is shared with you. You have the permissions its owner granted.'**
+  String get sharedBoatInfo;
+
+  /// No description provided for @permissionsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 permission} other{{count} permissions}}'**
+  String permissionsCount(int count);
+
+  /// No description provided for @permRecordTrips.
+  ///
+  /// In en, this message translates to:
+  /// **'Record trips'**
+  String get permRecordTrips;
+
+  /// No description provided for @permManageExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage expenses'**
+  String get permManageExpenses;
+
+  /// No description provided for @permManageMaintenance.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage maintenance'**
+  String get permManageMaintenance;
+
+  /// No description provided for @permViewDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'View documents'**
+  String get permViewDocuments;
+
+  /// No description provided for @permManageDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage documents'**
+  String get permManageDocuments;
+
+  /// No description provided for @maintenanceTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance'**
+  String get maintenanceTab;
+
+  /// No description provided for @expensesTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses'**
+  String get expensesTab;
+
+  /// No description provided for @newMaintenance.
+  ///
+  /// In en, this message translates to:
+  /// **'New maintenance'**
+  String get newMaintenance;
+
+  /// No description provided for @newExpense.
+  ///
+  /// In en, this message translates to:
+  /// **'New expense'**
+  String get newExpense;
+
+  /// No description provided for @editExpense.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit expense'**
+  String get editExpense;
+
+  /// No description provided for @invoiceAttached.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice attached'**
+  String get invoiceAttached;
+
+  /// No description provided for @regattasAndOutings.
+  ///
+  /// In en, this message translates to:
+  /// **'Regattas & outings'**
+  String get regattasAndOutings;
+
+  /// No description provided for @requestsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests ({count})'**
+  String requestsCount(int count);
+
+  /// No description provided for @requestAdmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Request admitted'**
+  String get requestAdmitted;
+
+  /// No description provided for @requestRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Request rejected'**
+  String get requestRejected;
+
+  /// No description provided for @roleOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner'**
+  String get roleOwner;
+
+  /// No description provided for @visibilityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Visibility'**
+  String get visibilityLabel;
+
+  /// No description provided for @myGroupsTab.
+  ///
+  /// In en, this message translates to:
+  /// **'My groups'**
+  String get myGroupsTab;
+
+  /// No description provided for @discoverTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover'**
+  String get discoverTab;
+
+  /// No description provided for @pendingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get pendingLabel;
+
+  /// No description provided for @pendingCountShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} pending'**
+  String pendingCountShort(int count);
+
+  /// No description provided for @followLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch live'**
+  String get followLive;
+
+  /// No description provided for @couldNotOpenLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the live stream'**
+  String get couldNotOpenLive;
 }
 
 class _AppLocalizationsDelegate

@@ -351,12 +351,12 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
   }
 
   Future<void> _cancelRecording() async {
+    final l = AppLocalizations.of(context)!;
     final confirmed = await _confirmDiscard(
-      title: 'Cancelar viaje',
-      message: widget.isRegatta
-          ? 'La regata volverá a "programada" y se descartará la grabación.'
-          : 'Se descartará este viaje sin guardarlo.',
-      confirmLabel: 'Cancelar viaje',
+      title: l.cancelTrip,
+      message:
+          widget.isRegatta ? l.cancelTripRegattaWarning : l.cancelTripWarning,
+      confirmLabel: l.cancelTrip,
     );
     if (confirmed) await _discardTripAndPop();
   }
@@ -368,12 +368,11 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
       context.pop();
       return;
     }
+    final l = AppLocalizations.of(context)!;
     final confirmed = await _confirmDiscard(
-      title: 'Salir sin guardar',
-      message: widget.isRegatta
-          ? 'Se descartará la grabación y la regata volverá a "programada".'
-          : 'Saldrás del mapa y se descartará la grabación sin guardar el viaje.',
-      confirmLabel: 'Salir sin guardar',
+      title: l.exitWithoutSaving,
+      message: widget.isRegatta ? l.exitRegattaWarning : l.exitTripWarning,
+      confirmLabel: l.exitWithoutSaving,
     );
     if (confirmed) await _discardTripAndPop();
   }
@@ -383,6 +382,7 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
     required String message,
     required String confirmLabel,
   }) async {
+    final l = AppLocalizations.of(context)!;
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -396,7 +396,7 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Seguir'),
+            child: Text(l.keepGoing),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
@@ -735,7 +735,7 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
                     onPressed:
                         isRecording ? _exitWithoutSaving : () => context.pop(),
                     semanticLabel: isRecording
-                        ? 'Salir sin guardar'
+                        ? AppLocalizations.of(context)!.exitWithoutSaving
                         : AppLocalizations.of(context)!.goBack,
                   ),
                 ),

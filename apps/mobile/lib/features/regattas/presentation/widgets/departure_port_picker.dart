@@ -5,6 +5,7 @@ import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/ports/presentation/providers/port_provider.dart';
 import 'package:navis_mobile/features/ports/presentation/widgets/port_selector_field.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 
 /// Loads ports near the boat's home port and shows the shared
 /// [PortSelectorField] so the user can choose a departure port.
@@ -20,6 +21,7 @@ class DeparturePortPicker extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final lat = boat.homePortLat;
     final lon = boat.homePortLon;
 
@@ -30,7 +32,7 @@ class DeparturePortPicker extends ConsumerWidget {
         icon: Icons.anchor,
         ports: const [],
         initialName: boat.homePort,
-        mapTitle: 'Puerto de salida',
+        mapTitle: l.departurePort,
         onChanged: onChanged,
       );
     }
@@ -50,7 +52,7 @@ class DeparturePortPicker extends ConsumerWidget {
         refLat: lat,
         refLon: lon,
         initialName: boat.homePort,
-        mapTitle: 'Puerto de salida',
+        mapTitle: l.departurePort,
         onChanged: onChanged,
       ),
       data: (ports) => PortSelectorField(
@@ -60,7 +62,7 @@ class DeparturePortPicker extends ConsumerWidget {
         refLat: lat,
         refLon: lon,
         initialName: boat.homePort,
-        mapTitle: 'Puerto de salida',
+        mapTitle: l.departurePort,
         onChanged: onChanged,
       ),
     );

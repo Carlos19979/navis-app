@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/groups/domain/entities/group.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
 
 /// A summary card for a group, used in both "my groups" and "discover" lists.
@@ -20,6 +21,7 @@ class GroupCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return NavisCard(
       onTap: onTap,
       margin: const EdgeInsets.only(bottom: 12),
@@ -59,7 +61,7 @@ class GroupCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      group.isPublic ? 'Público' : 'Privado',
+                      group.isPublic ? l.publicLabel : l.privateLabel,
                       style: TextStyle(
                         color: context.txtSecondary,
                         fontSize: 12,
@@ -86,7 +88,7 @@ class GroupCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
-                          '${group.pendingCount} pend.',
+                          l.pendingCountShort(group.pendingCount),
                           style: const TextStyle(
                             color: AppColors.amber,
                             fontSize: 11,

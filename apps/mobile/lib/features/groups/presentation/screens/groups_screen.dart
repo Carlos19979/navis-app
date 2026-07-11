@@ -12,6 +12,7 @@ import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
 import 'package:navis_mobile/features/profile/data/account_provider.dart';
 import 'package:navis_mobile/features/groups/presentation/widgets/group_card.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_empty_state.dart';
@@ -38,12 +39,13 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen>
   }
 
   Future<void> _onCreateGroup() async {
+    final l = AppLocalizations.of(context)!;
     final isPro = ref.read(isProProvider);
     if (!isPro) {
       final purchased = await showPaywall(
         context,
         ref,
-        reason: 'Crear clubes y eventos es una función de Navis Pro.',
+        reason: l.paywallReasonGroups,
       );
       if (!purchased || !mounted) return;
     }
@@ -52,31 +54,31 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen>
   }
 
   Future<void> _joinByCode() async {
+    final l = AppLocalizations.of(context)!;
     final controller = TextEditingController();
     final code = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: context.dialogSurface,
-        title: Text('Unirse por código',
-            style: TextStyle(color: context.txtPrimary)),
+        title: Text(l.joinByCode, style: TextStyle(color: context.txtPrimary)),
         content: TextField(
           controller: controller,
           autofocus: true,
           textCapitalization: TextCapitalization.characters,
           style: TextStyle(color: context.txtPrimary),
           decoration: InputDecoration(
-            hintText: 'Código de invitación',
+            hintText: l.inviteCode,
             hintStyle: TextStyle(color: context.txtSecondary),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => context.pop(),
-            child: const Text('Cancelar'),
+            child: Text(l.cancel),
           ),
           TextButton(
             onPressed: () => context.pop(controller.text.trim()),
-            child: const Text('Unirse'),
+            child: Text(l.join),
           ),
         ],
       ),
@@ -87,25 +89,26 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen>
       final group = await ref.read(groupRepositoryProvider).joinByCode(code);
       ref.invalidate(myGroupsProvider);
       if (!mounted) return;
-      NavisSnackbar.success(context, 'Te has unido a ${group.name}');
+      NavisSnackbar.success(context, l.joinedGroup(group.name));
     } catch (_) {
       if (!mounted) return;
-      NavisSnackbar.error(context, 'Código inválido o error al unirse');
+      NavisSnackbar.error(context, l.invalidCodeOrJoinError);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     ref.watch(accountProvider); // warm the plan for create-group gating
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
       appBar: NavisAppBar(
-        title: 'Grupos',
+        title: l.groupsTitle,
         actions: [
           IconButton(
             icon: Icon(Icons.vpn_key_outlined, color: context.txtPrimary),
-            tooltip: 'Unirse por código',
+            tooltip: l.joinByCode,
             onPressed: _joinByCode,
           ),
         ],
@@ -126,16 +129,16 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen>
           ),
           child: FloatingActionButton(
             onPressed: _onCreateGroup,
-            tooltip: 'Crear grupo',
+            tooltip: l.createGroup,
             backgroundColor: Colors.transparent,
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.add,
               color: Colors.white,
-              semanticLabel: 'Crear grupo',
+              semanticLabel: l.createGroup,
             ),
           ),
         ),
@@ -150,9 +153,9 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen>
                 labelColor: AppColors.cyan,
                 unselectedLabelColor: context.txtSecondary,
                 indicatorColor: AppColors.cyan,
-                tabs: const [
-                  Tab(text: 'Mis grupos'),
-                  Tab(text: 'Descubrir'),
+                tabs: [
+                  Tab(text: l.myGroupsTab),
+                  Tab(text: l.discoverTab),
                 ],
               ),
               Expanded(
@@ -162,7 +165,7 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen>
                     _GroupList(
                       provider: myGroupsProvider,
                       emptyIcon: Icons.groups_outlined,
-                      emptyMessage: 'Aún no estás en ningún grupo.',
+                      emptyMessage: l.notInAnyGroup,
                       onTap: (g) => context.push('/groups/${g.id}'),
                     ),
                     _DiscoverList(),
@@ -227,10 +230,11 @@ class _GroupList extends ConsumerWidget {
 class _DiscoverList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     return _GroupList(
       provider: discoverGroupsProvider,
       emptyIcon: Icons.travel_explore_outlined,
-      emptyMessage: 'No hay grupos públicos para descubrir.',
+      emptyMessage: l.noPublicGroups,
       onTap: (g) => context.push('/groups/${g.id}'),
       trailingBuilder: (g) => _JoinButton(group: g),
     );
@@ -244,10 +248,11 @@ class _JoinButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     if (group.isPending) {
-      return const Text(
-        'Pendiente',
-        style: TextStyle(color: AppColors.amber, fontSize: 13),
+      return Text(
+        l.pendingLabel,
+        style: const TextStyle(color: AppColors.amber, fontSize: 13),
       );
     }
     return TextButton(
@@ -256,13 +261,14 @@ class _JoinButton extends ConsumerWidget {
           await ref.read(groupRepositoryProvider).requestJoin(group.id);
           ref.invalidate(discoverGroupsProvider);
           if (!context.mounted) return;
-          NavisSnackbar.success(context, 'Solicitud enviada');
+          NavisSnackbar.success(context, l.requestSent);
         } catch (_) {
           if (!context.mounted) return;
-          NavisSnackbar.error(context, 'No se pudo solicitar');
+          NavisSnackbar.error(context, l.couldNotRequest);
         }
       },
-      child: const Text('Solicitar', style: TextStyle(color: AppColors.cyan)),
+      child:
+          Text(l.requestAction, style: const TextStyle(color: AppColors.cyan)),
     );
   }
 }

@@ -7,6 +7,7 @@ import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/regattas/data/repositories/regatta_repository.dart';
 import 'package:navis_mobile/features/regattas/domain/entities/regatta.dart';
 import 'package:navis_mobile/features/regattas/presentation/providers/regatta_provider.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
@@ -51,19 +52,6 @@ class PreTripChecklistScreen extends ConsumerStatefulWidget {
 
 class _PreTripChecklistScreenState
     extends ConsumerState<PreTripChecklistScreen> {
-  static const _defaultSafetyItems = [
-    'Chalecos salvavidas para toda la tripulación',
-    'Bengalas y señales pirotécnicas en vigor',
-    'Radio VHF operativa',
-    'Nivel de combustible suficiente',
-    'Bomba de achique funcionando',
-    'Botiquín de primeros auxilios',
-    'Ancla y cabos en buen estado',
-    'Luces de navegación operativas',
-    'Previsión meteorológica revisada',
-    'Plan de navegación compartido en tierra',
-  ];
-
   List<ChecklistItem>? _items;
   bool _busy = false;
   int _localCounter = 0;
@@ -76,11 +64,24 @@ class _PreTripChecklistScreenState
       _items != null && _items!.isNotEmpty && _items!.every((i) => i.isChecked);
 
   List<ChecklistItem> _defaultItems() {
+    final l = AppLocalizations.of(context)!;
+    final labels = [
+      l.checklistLifejackets,
+      l.checklistFlares,
+      l.checklistVhf,
+      l.checklistFuel,
+      l.checklistBilgePump,
+      l.checklistFirstAid,
+      l.checklistAnchor,
+      l.checklistNavLights,
+      l.checklistWeather,
+      l.checklistFloatPlan,
+    ];
     return [
-      for (var i = 0; i < _defaultSafetyItems.length; i++)
+      for (var i = 0; i < labels.length; i++)
         ChecklistItem(
           id: 'local-$i',
-          label: _defaultSafetyItems[i],
+          label: labels[i],
           isChecked: false,
           position: i,
         ),
@@ -103,29 +104,30 @@ class _PreTripChecklistScreenState
             .map((i) => i.id == item.id ? i.copyWith(isChecked: !value) : i)
             .toList();
       });
-      NavisSnackbar.error(context, 'No se pudo actualizar');
+      NavisSnackbar.error(
+          context, AppLocalizations.of(context)!.couldNotUpdate);
     }
   }
 
   Future<void> _addItem() async {
+    final l = AppLocalizations.of(context)!;
     final controller = TextEditingController();
     final label = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: context.dialogSurface,
-        title: Text('Añadir ítem', style: TextStyle(color: context.txtPrimary)),
+        title: Text(l.addItem, style: TextStyle(color: context.txtPrimary)),
         content: TextField(
           controller: controller,
           autofocus: true,
           style: TextStyle(color: context.txtPrimary),
-          decoration: const InputDecoration(hintText: 'Descripción'),
+          decoration: InputDecoration(hintText: l.descriptionLabel),
         ),
         actions: [
-          TextButton(
-              onPressed: () => context.pop(), child: const Text('Cancelar')),
+          TextButton(onPressed: () => context.pop(), child: Text(l.cancel)),
           TextButton(
               onPressed: () => context.pop(controller.text.trim()),
-              child: const Text('Añadir')),
+              child: Text(l.add)),
         ],
       ),
     );
@@ -147,7 +149,7 @@ class _PreTripChecklistScreenState
       setState(() => _items = [...?_items, item]);
     } catch (_) {
       if (!mounted) return;
-      NavisSnackbar.error(context, 'No se pudo añadir');
+      NavisSnackbar.error(context, AppLocalizations.of(context)!.couldNotAdd);
     }
   }
 
@@ -160,7 +162,8 @@ class _PreTripChecklistScreenState
     } catch (_) {
       if (!mounted) return;
       setState(() => _items = prev);
-      NavisSnackbar.error(context, 'No se pudo eliminar');
+      NavisSnackbar.error(
+          context, AppLocalizations.of(context)!.couldNotDelete);
     }
   }
 
@@ -182,7 +185,7 @@ class _PreTripChecklistScreenState
     } catch (_) {
       if (!mounted) return;
       setState(() => _busy = false);
-      NavisSnackbar.error(context, 'No se pudo iniciar');
+      NavisSnackbar.error(context, AppLocalizations.of(context)!.couldNotStart);
     }
   }
 
@@ -199,16 +202,17 @@ class _PreTripChecklistScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
       appBar: NavisAppBar(
-        title: 'Checklist de seguridad',
+        title: l.safetyChecklist,
         showBack: true,
         actions: [
           IconButton(
             icon: Icon(Icons.add, color: context.txtPrimary),
-            tooltip: 'Añadir ítem',
+            tooltip: l.addItem,
             onPressed: _addItem,
           ),
         ],
@@ -223,7 +227,7 @@ class _PreTripChecklistScreenState
     _items ??= _defaultItems();
     return _content(
       items: _items!,
-      primaryLabel: 'Empezar viaje',
+      primaryLabel: AppLocalizations.of(context)!.startTrip,
       showSkipHint: false,
       onPrimary: _startSoloTrip,
     );
@@ -242,7 +246,9 @@ class _PreTripChecklistScreenState
       ),
       data: (_) => _content(
         items: _items ?? const <ChecklistItem>[],
-        primaryLabel: _allChecked ? 'Completar y zarpar' : 'Zarpar igualmente',
+        primaryLabel: _allChecked
+            ? AppLocalizations.of(context)!.completeAndSail
+            : AppLocalizations.of(context)!.sailAnyway,
         showSkipHint: !_allChecked,
         onPrimary: _completeAndStart,
       ),
@@ -287,7 +293,7 @@ class _PreTripChecklistScreenState
                       IconButton(
                         icon: Icon(Icons.close,
                             size: 18, color: context.txtSecondary),
-                        tooltip: 'Eliminar',
+                        tooltip: AppLocalizations.of(context)!.delete,
                         onPressed: () => _remove(item),
                       ),
                     ],
@@ -301,13 +307,13 @@ class _PreTripChecklistScreenState
           child: Column(
             children: [
               if (showSkipHint)
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 8),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
                   child: Text(
-                    'Recomendamos marcar todos los ítems de seguridad, '
-                    'pero puedes zarpar igualmente bajo tu responsabilidad.',
+                    AppLocalizations.of(context)!.checklistSkipHint,
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: AppColors.amber, fontSize: 13),
+                    style:
+                        const TextStyle(color: AppColors.amber, fontSize: 13),
                   ),
                 ),
               NavisButton(

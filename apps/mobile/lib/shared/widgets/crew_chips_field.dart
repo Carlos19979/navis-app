@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 
 /// A chip-based crew editor: existing names show as removable chips, a text
 /// field adds arbitrary names (type + Enter/comma), and optional suggestions
@@ -60,6 +61,7 @@ class _CrewChipsFieldState extends State<CrewChipsField> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final available = widget.suggestions
         .where((s) =>
             s.trim().isNotEmpty &&
@@ -110,11 +112,11 @@ class _CrewChipsFieldState extends State<CrewChipsField> {
           ],
           style: TextStyle(color: context.txtPrimary),
           decoration: InputDecoration(
-            hintText: 'Añadir tripulante…',
+            hintText: l.addCrewMemberHint,
             prefixIcon: const Icon(Icons.person_add_alt_1, size: 20),
             suffixIcon: IconButton(
               icon: const Icon(Icons.add, size: 20),
-              tooltip: 'Añadir',
+              tooltip: l.add,
               onPressed: () => _add(_ctrl.text),
             ),
           ),
