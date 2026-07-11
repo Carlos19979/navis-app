@@ -177,7 +177,6 @@ void main() {
             boatId: 'boat-1',
             departurePort: 'Palma',
             departureTime: DateTime(2026, 7, 11, 10),
-            status: TripStatus.completed,
           ));
 
       final notifier = container.read(tripRecordingProvider.notifier);

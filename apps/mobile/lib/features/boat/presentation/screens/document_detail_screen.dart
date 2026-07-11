@@ -15,6 +15,7 @@ import 'package:navis_mobile/features/documents/presentation/widgets/document_st
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
+import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
 
@@ -364,46 +365,32 @@ class DocumentDetailScreen extends ConsumerWidget {
     );
   }
 
-  void _confirmDelete(BuildContext context, WidgetRef ref) {
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
     final l = AppLocalizations.of(context)!;
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l.deleteDocument),
-        content: Text(l.deleteDocumentConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(l.cancel),
-          ),
-          FilledButton(
-            onPressed: () async {
-              Navigator.of(ctx).pop();
-              try {
-                final repo = ref.read(documentRepositoryProvider);
-                await repo.deleteDocument(documentId);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l.documentDeleted)),
-                  );
-                  context.pop();
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l.failedToDelete)),
-                  );
-                }
-              }
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.red,
-            ),
-            child: Text(l.delete),
-          ),
-        ],
-      ),
+    final confirmed = await NavisConfirmDialog.show(
+      context,
+      title: l.deleteDocument,
+      message: l.deleteDocumentConfirm,
+      confirmLabel: l.delete,
+      destructive: true,
     );
+    if (!confirmed) return;
+    try {
+      final repo = ref.read(documentRepositoryProvider);
+      await repo.deleteDocument(documentId);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l.documentDeleted)),
+        );
+        context.pop();
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l.failedToDelete)),
+        );
+      }
+    }
   }
 }
 

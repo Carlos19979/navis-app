@@ -15,6 +15,7 @@ import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
+import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
@@ -194,52 +195,30 @@ class _BoatDetailView extends ConsumerWidget {
     );
   }
 
-  void _confirmDelete(BuildContext context, WidgetRef ref) {
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
     final l = AppLocalizations.of(context)!;
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: context.dialogSurfaceElevated,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(
-            color: context.glassBorderColor,
-            width: 0.5,
-          ),
-        ),
-        title: Text(l.deleteBoat),
-        content: Text(l.deleteBoatConfirm(boat.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(l.cancel),
-          ),
-          FilledButton(
-            onPressed: () async {
-              Navigator.of(ctx).pop();
-              try {
-                await ref.read(boatsProvider.notifier).deleteBoat(boat.id);
-                if (context.mounted) {
-                  context.go('/boats');
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('${l.failedToDelete}: $e'),
-                    ),
-                  );
-                }
-              }
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.red,
-            ),
-            child: Text(l.delete),
-          ),
-        ],
-      ),
+    final confirmed = await NavisConfirmDialog.show(
+      context,
+      title: l.deleteBoat,
+      message: l.deleteBoatConfirm(boat.name),
+      confirmLabel: l.delete,
+      destructive: true,
     );
+    if (!confirmed) return;
+    try {
+      await ref.read(boatsProvider.notifier).deleteBoat(boat.id);
+      if (context.mounted) {
+        context.go('/boats');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${l.failedToDelete}: $e'),
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _shareBoat(
@@ -366,26 +345,14 @@ class _BoatDetailView extends ConsumerWidget {
   Future<void> _leaveBoat(
       BuildContext context, WidgetRef ref, Boat boat) async {
     final l = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: context.dialogSurfaceElevated,
-        title: Text(l.leaveBoat),
-        content: Text(l.leaveBoatConfirm(boat.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l.cancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.red),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(l.leave),
-          ),
-        ],
-      ),
+    final confirmed = await NavisConfirmDialog.show(
+      context,
+      title: l.leaveBoat,
+      message: l.leaveBoatConfirm(boat.name),
+      confirmLabel: l.leave,
+      destructive: true,
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
     await ref.read(boatShareRepositoryProvider).leaveBoat(boat.id);
     ref.invalidate(sharedBoatsProvider);
     if (context.mounted) context.go('/boats');

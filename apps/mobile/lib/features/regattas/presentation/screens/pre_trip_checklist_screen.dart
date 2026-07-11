@@ -12,6 +12,7 @@ import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
+import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
@@ -111,25 +112,11 @@ class _PreTripChecklistScreenState
 
   Future<void> _addItem() async {
     final l = AppLocalizations.of(context)!;
-    final controller = TextEditingController();
-    final label = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.dialogSurface,
-        title: Text(l.addItem, style: TextStyle(color: context.txtPrimary)),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          style: TextStyle(color: context.txtPrimary),
-          decoration: InputDecoration(hintText: l.descriptionLabel),
-        ),
-        actions: [
-          TextButton(onPressed: () => context.pop(), child: Text(l.cancel)),
-          TextButton(
-              onPressed: () => context.pop(controller.text.trim()),
-              child: Text(l.add)),
-        ],
-      ),
+    final label = await NavisInputDialog.show(
+      context,
+      title: l.addItem,
+      hintText: l.descriptionLabel,
+      confirmLabel: l.add,
     );
     if (label == null || label.isEmpty) return;
     if (_isLocal) {

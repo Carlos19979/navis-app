@@ -17,8 +17,8 @@ import 'package:navis_mobile/features/logbook/domain/entities/trip.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
-import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
+import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
 
@@ -467,120 +467,37 @@ class TripDetailScreen extends ConsumerWidget {
     }
   }
 
-  void _confirmDelete(BuildContext context, WidgetRef ref) {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-        child: Dialog(
-          backgroundColor: Colors.transparent,
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: AppColors.surfaceGradient,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: context.glassBorderColor,
-                width: 0.5,
-              ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: AppColors.red.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.delete_outline,
-                    color: AppColors.red,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  AppLocalizations.of(context)!.deleteTrip,
-                  style: Theme.of(ctx)
-                      .textTheme
-                      .titleLarge
-                      ?.copyWith(fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  AppLocalizations.of(context)!.deleteTripConfirm,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(ctx)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(color: context.txtSecondary),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: NavisButton(
-                        label: AppLocalizations.of(context)!.cancel,
-                        variant: NavisButtonVariant.secondary,
-                        compact: true,
-                        onPressed: () => Navigator.of(ctx).pop(),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: NavisButton(
-                        label: AppLocalizations.of(context)!.delete,
-                        variant: NavisButtonVariant.danger,
-                        icon: Icons.delete_outline,
-                        onPressed: () async {
-                          Navigator.of(ctx).pop();
-                          final trip =
-                              ref.read(tripProvider(tripId)).valueOrNull;
-                          try {
-                            final repo = ref.read(
-                              tripRepositoryProvider,
-                            );
-                            await repo.deleteTrip(tripId);
-                            if (trip != null) {
-                              ref.invalidate(
-                                boatTripsProvider(trip.boatId),
-                              );
-                            }
-                            ref.invalidate(tripProvider(tripId));
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    AppLocalizations.of(context)!.tripDeleted,
-                                  ),
-                                ),
-                              );
-                              context.pop();
-                            }
-                          } catch (e) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    '${AppLocalizations.of(context)!.failedToDelete}: $e',
-                                  ),
-                                ),
-                              );
-                            }
-                          }
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
+    final l = AppLocalizations.of(context)!;
+    final confirmed = await NavisConfirmDialog.show(
+      context,
+      title: l.deleteTrip,
+      message: l.deleteTripConfirm,
+      confirmLabel: l.delete,
+      destructive: true,
     );
+    if (!confirmed) return;
+    final trip = ref.read(tripProvider(tripId)).valueOrNull;
+    try {
+      final repo = ref.read(tripRepositoryProvider);
+      await repo.deleteTrip(tripId);
+      if (trip != null) {
+        ref.invalidate(boatTripsProvider(trip.boatId));
+      }
+      ref.invalidate(tripProvider(tripId));
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l.tripDeleted)),
+        );
+        context.pop();
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${l.failedToDelete}: $e')),
+        );
+      }
+    }
   }
 }
 
