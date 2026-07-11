@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -46,7 +48,7 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen>
       if (!purchased || !mounted) return;
     }
     if (!mounted) return;
-    context.push('/groups/new');
+    unawaited(context.push('/groups/new'));
   }
 
   Future<void> _joinByCode() async {
