@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
+	"github.com/Carlos19979/navis-app/apps/api/pkg/pagination"
 )
 
 // DocumentRepo implements port.DocumentRepository using PostgreSQL.
@@ -109,26 +109,18 @@ func (r *DocumentRepo) List(ctx context.Context, userID, cursor string, limit in
 		err  error
 	)
 
-	if cursor == "" {
+	if cursorTime, cursorID, ok := pagination.DecodeKeysetTime(cursor); ok {
+		query := `SELECT ` + documentColumns + ` FROM documents
+			WHERE user_id = $1 AND (created_at, id) < ($2, $3)
+			ORDER BY created_at DESC, id DESC
+			LIMIT $4`
+		rows, err = r.pool.Query(ctx, query, userID, cursorTime, cursorID, limit+1)
+	} else {
 		query := `SELECT ` + documentColumns + ` FROM documents
 			WHERE user_id = $1
 			ORDER BY created_at DESC, id DESC
 			LIMIT $2`
 		rows, err = r.pool.Query(ctx, query, userID, limit+1)
-	} else {
-		var cursorCreatedAt time.Time
-		cErr := r.pool.QueryRow(ctx,
-			`SELECT created_at FROM documents WHERE id = $1`, cursor,
-		).Scan(&cursorCreatedAt)
-		if cErr != nil {
-			return r.List(ctx, userID, "", limit)
-		}
-
-		query := `SELECT ` + documentColumns + ` FROM documents
-			WHERE user_id = $1 AND (created_at, id) < ($2, $3)
-			ORDER BY created_at DESC, id DESC
-			LIMIT $4`
-		rows, err = r.pool.Query(ctx, query, userID, cursorCreatedAt, cursor, limit+1)
 	}
 	if err != nil {
 		return nil, "", fmt.Errorf("listing documents: %w", err)
@@ -142,8 +134,9 @@ func (r *DocumentRepo) List(ctx context.Context, userID, cursor string, limit in
 
 	var nextCursor string
 	if len(docs) > limit {
-		nextCursor = docs[limit].ID
 		docs = docs[:limit]
+		last := docs[limit-1]
+		nextCursor = pagination.EncodeKeysetTime(last.CreatedAt, last.ID)
 	}
 
 	return docs, nextCursor, nil
@@ -156,26 +149,18 @@ func (r *DocumentRepo) ListByBoat(ctx context.Context, boatID, cursor string, li
 		err  error
 	)
 
-	if cursor == "" {
+	if cursorTime, cursorID, ok := pagination.DecodeKeysetTime(cursor); ok {
+		query := `SELECT ` + documentColumns + ` FROM documents
+			WHERE boat_id = $1 AND (created_at, id) < ($2, $3)
+			ORDER BY created_at DESC, id DESC
+			LIMIT $4`
+		rows, err = r.pool.Query(ctx, query, boatID, cursorTime, cursorID, limit+1)
+	} else {
 		query := `SELECT ` + documentColumns + ` FROM documents
 			WHERE boat_id = $1
 			ORDER BY created_at DESC, id DESC
 			LIMIT $2`
 		rows, err = r.pool.Query(ctx, query, boatID, limit+1)
-	} else {
-		var cursorCreatedAt time.Time
-		cErr := r.pool.QueryRow(ctx,
-			`SELECT created_at FROM documents WHERE id = $1`, cursor,
-		).Scan(&cursorCreatedAt)
-		if cErr != nil {
-			return r.ListByBoat(ctx, boatID, "", limit)
-		}
-
-		query := `SELECT ` + documentColumns + ` FROM documents
-			WHERE boat_id = $1 AND (created_at, id) < ($2, $3)
-			ORDER BY created_at DESC, id DESC
-			LIMIT $4`
-		rows, err = r.pool.Query(ctx, query, boatID, cursorCreatedAt, cursor, limit+1)
 	}
 	if err != nil {
 		return nil, "", fmt.Errorf("listing documents for boat %s: %w", boatID, err)
@@ -189,8 +174,9 @@ func (r *DocumentRepo) ListByBoat(ctx context.Context, boatID, cursor string, li
 
 	var nextCursor string
 	if len(docs) > limit {
-		nextCursor = docs[limit].ID
 		docs = docs[:limit]
+		last := docs[limit-1]
+		nextCursor = pagination.EncodeKeysetTime(last.CreatedAt, last.ID)
 	}
 
 	return docs, nextCursor, nil

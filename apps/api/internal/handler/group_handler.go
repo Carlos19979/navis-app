@@ -1,16 +1,13 @@
 package handler
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/dto"
-	"github.com/Carlos19979/navis-app/apps/api/internal/middleware"
 	"github.com/Carlos19979/navis-app/apps/api/internal/service"
 	"github.com/Carlos19979/navis-app/apps/api/pkg/pagination"
-	"github.com/Carlos19979/navis-app/apps/api/pkg/validator"
 )
 
 // GroupHandler handles HTTP requests for group operations.
@@ -25,22 +22,13 @@ func NewGroupHandler(svc *service.GroupService) *GroupHandler {
 
 // Create handles POST /groups.
 func (h *GroupHandler) Create(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 
-	var req dto.CreateGroupRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		Error(w, http.StatusBadRequest, "invalid request body", "BAD_REQUEST")
-		return
-	}
-
-	validator.TrimStrings(&req)
-
-	if errs := validator.Validate(req); errs != nil {
-		ValidationError(w, errs)
+	req, ok := decodeAndValidate[dto.CreateGroupRequest](w, r)
+	if !ok {
 		return
 	}
 
@@ -55,9 +43,8 @@ func (h *GroupHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 // List handles GET /groups. With ?discover=true it lists joinable public groups.
 func (h *GroupHandler) List(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 
@@ -74,20 +61,13 @@ func (h *GroupHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var meta *Meta
-	if nextCursor != "" {
-		encoded := pagination.EncodeCursor(nextCursor)
-		meta = &Meta{NextCursor: &encoded}
-	}
-
-	JSONWithMeta(w, http.StatusOK, dto.GroupListResponseFromDomain(groups), meta)
+	JSONWithMeta(w, http.StatusOK, dto.GroupListResponseFromDomain(groups), metaFromCursor(nextCursor))
 }
 
 // GetByID handles GET /groups/{id}.
 func (h *GroupHandler) GetByID(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 
@@ -102,24 +82,15 @@ func (h *GroupHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 
 // Update handles PUT /groups/{id}.
 func (h *GroupHandler) Update(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 
 	id := chi.URLParam(r, "id")
 
-	var req dto.UpdateGroupRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		Error(w, http.StatusBadRequest, "invalid request body", "BAD_REQUEST")
-		return
-	}
-
-	validator.TrimStrings(&req)
-
-	if errs := validator.Validate(req); errs != nil {
-		ValidationError(w, errs)
+	req, ok := decodeAndValidate[dto.UpdateGroupRequest](w, r)
+	if !ok {
 		return
 	}
 
@@ -141,9 +112,8 @@ func (h *GroupHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 // Delete handles DELETE /groups/{id}.
 func (h *GroupHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 
@@ -157,9 +127,8 @@ func (h *GroupHandler) Delete(w http.ResponseWriter, r *http.Request) {
 
 // RequestJoin handles POST /groups/{id}/join (public groups, owner approval).
 func (h *GroupHandler) RequestJoin(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 
@@ -174,22 +143,13 @@ func (h *GroupHandler) RequestJoin(w http.ResponseWriter, r *http.Request) {
 
 // JoinByCode handles POST /groups/join (private groups, invite code).
 func (h *GroupHandler) JoinByCode(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 
-	var req dto.JoinByCodeRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		Error(w, http.StatusBadRequest, "invalid request body", "BAD_REQUEST")
-		return
-	}
-
-	validator.TrimStrings(&req)
-
-	if errs := validator.Validate(req); errs != nil {
-		ValidationError(w, errs)
+	req, ok := decodeAndValidate[dto.JoinByCodeRequest](w, r)
+	if !ok {
 		return
 	}
 
@@ -204,9 +164,8 @@ func (h *GroupHandler) JoinByCode(w http.ResponseWriter, r *http.Request) {
 
 // Leave handles POST /groups/{id}/leave.
 func (h *GroupHandler) Leave(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 
@@ -220,9 +179,8 @@ func (h *GroupHandler) Leave(w http.ResponseWriter, r *http.Request) {
 
 // ListMembers handles GET /groups/{id}/members.
 func (h *GroupHandler) ListMembers(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 
@@ -237,9 +195,8 @@ func (h *GroupHandler) ListMembers(w http.ResponseWriter, r *http.Request) {
 
 // RemoveMember handles DELETE /groups/{id}/members/{userId} (owner only).
 func (h *GroupHandler) RemoveMember(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 
@@ -254,9 +211,8 @@ func (h *GroupHandler) RemoveMember(w http.ResponseWriter, r *http.Request) {
 
 // ListRequests handles GET /groups/{id}/requests (owner only).
 func (h *GroupHandler) ListRequests(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 
@@ -271,9 +227,8 @@ func (h *GroupHandler) ListRequests(w http.ResponseWriter, r *http.Request) {
 
 // ApproveRequest handles POST /groups/{id}/requests/{userId}/approve (owner only).
 func (h *GroupHandler) ApproveRequest(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 
@@ -288,9 +243,8 @@ func (h *GroupHandler) ApproveRequest(w http.ResponseWriter, r *http.Request) {
 
 // RejectRequest handles POST /groups/{id}/requests/{userId}/reject (owner only).
 func (h *GroupHandler) RejectRequest(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 

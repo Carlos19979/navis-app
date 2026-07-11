@@ -294,7 +294,7 @@ func TestBoatService_List_DefaultLimit(t *testing.T) {
 	}{
 		{"zero limit defaults to 20", 0, 20},
 		{"negative limit defaults to 20", -5, 20},
-		{"over 50 defaults to 20", 100, 20},
+		{"over 50 clamps to 50", 100, 50},
 		{"valid limit preserved", 15, 15},
 	}
 

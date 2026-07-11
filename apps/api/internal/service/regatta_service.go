@@ -8,6 +8,7 @@ import (
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 	"github.com/Carlos19979/navis-app/apps/api/internal/port"
+	"github.com/Carlos19979/navis-app/apps/api/pkg/pagination"
 )
 
 // RegattaService handles group trips/regattas: scheduling, RSVP, the pre-departure
@@ -126,9 +127,7 @@ func (s *RegattaService) ListByGroup(ctx context.Context, userID, groupID, curso
 	if err := s.assertActiveMember(ctx, groupID, userID); err != nil {
 		return nil, "", err
 	}
-	if limit <= 0 || limit > 50 {
-		limit = 20
-	}
+	limit = pagination.ClampLimit(limit)
 	trips, next, err := s.tripRepo.ListByGroup(ctx, groupID, cursor, limit)
 	if err != nil {
 		return nil, "", fmt.Errorf("listing group trips: %w", err)

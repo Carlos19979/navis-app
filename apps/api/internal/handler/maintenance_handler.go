@@ -1,16 +1,13 @@
 package handler
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 	"github.com/Carlos19979/navis-app/apps/api/internal/dto"
-	"github.com/Carlos19979/navis-app/apps/api/internal/middleware"
 	"github.com/Carlos19979/navis-app/apps/api/internal/service"
-	"github.com/Carlos19979/navis-app/apps/api/pkg/validator"
 )
 
 // MaintenanceHandler handles maintenance log and expense endpoints.
@@ -25,9 +22,8 @@ func NewMaintenanceHandler(svc *service.MaintenanceService) *MaintenanceHandler 
 
 // ListLogs handles GET /boats/{boatId}/maintenance.
 func (h *MaintenanceHandler) ListLogs(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 	boatID := chi.URLParam(r, "id")
@@ -41,20 +37,14 @@ func (h *MaintenanceHandler) ListLogs(w http.ResponseWriter, r *http.Request) {
 
 // CreateLog handles POST /boats/{boatId}/maintenance.
 func (h *MaintenanceHandler) CreateLog(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 	boatID := chi.URLParam(r, "id")
 
-	var req dto.CreateMaintenanceRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		Error(w, http.StatusBadRequest, "invalid request body", "BAD_REQUEST")
-		return
-	}
-	if errs := validator.Validate(req); errs != nil {
-		ValidationError(w, errs)
+	req, ok := decodeAndValidate[dto.CreateMaintenanceRequest](w, r)
+	if !ok {
 		return
 	}
 	performedAt, err := dto.ParseDate(req.PerformedAt)
@@ -84,18 +74,12 @@ func (h *MaintenanceHandler) CreateLog(w http.ResponseWriter, r *http.Request) {
 
 // UpdateLog handles PUT /boats/{boatId}/maintenance/{logId}.
 func (h *MaintenanceHandler) UpdateLog(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
-	var req dto.CreateMaintenanceRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		Error(w, http.StatusBadRequest, "invalid request body", "BAD_REQUEST")
-		return
-	}
-	if errs := validator.Validate(req); errs != nil {
-		ValidationError(w, errs)
+	req, ok := decodeAndValidate[dto.CreateMaintenanceRequest](w, r)
+	if !ok {
 		return
 	}
 	performedAt, err := dto.ParseDate(req.PerformedAt)
@@ -125,9 +109,8 @@ func (h *MaintenanceHandler) UpdateLog(w http.ResponseWriter, r *http.Request) {
 
 // DeleteLog handles DELETE /boats/{boatId}/maintenance/{logId}.
 func (h *MaintenanceHandler) DeleteLog(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 	if err := h.svc.DeleteLog(r.Context(), userID,
@@ -140,9 +123,8 @@ func (h *MaintenanceHandler) DeleteLog(w http.ResponseWriter, r *http.Request) {
 
 // ListExpenses handles GET /boats/{boatId}/expenses.
 func (h *MaintenanceHandler) ListExpenses(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 	boatID := chi.URLParam(r, "id")
@@ -156,20 +138,14 @@ func (h *MaintenanceHandler) ListExpenses(w http.ResponseWriter, r *http.Request
 
 // CreateExpense handles POST /boats/{boatId}/expenses.
 func (h *MaintenanceHandler) CreateExpense(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 	boatID := chi.URLParam(r, "id")
 
-	var req dto.CreateExpenseRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		Error(w, http.StatusBadRequest, "invalid request body", "BAD_REQUEST")
-		return
-	}
-	if errs := validator.Validate(req); errs != nil {
-		ValidationError(w, errs)
+	req, ok := decodeAndValidate[dto.CreateExpenseRequest](w, r)
+	if !ok {
 		return
 	}
 	incurredOn, err := dto.ParseDate(req.IncurredOn)
@@ -197,18 +173,12 @@ func (h *MaintenanceHandler) CreateExpense(w http.ResponseWriter, r *http.Reques
 
 // UpdateExpense handles PUT /boats/{boatId}/expenses/{expenseId}.
 func (h *MaintenanceHandler) UpdateExpense(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
-	var req dto.CreateExpenseRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		Error(w, http.StatusBadRequest, "invalid request body", "BAD_REQUEST")
-		return
-	}
-	if errs := validator.Validate(req); errs != nil {
-		ValidationError(w, errs)
+	req, ok := decodeAndValidate[dto.CreateExpenseRequest](w, r)
+	if !ok {
 		return
 	}
 	incurredOn, err := dto.ParseDate(req.IncurredOn)
@@ -236,9 +206,8 @@ func (h *MaintenanceHandler) UpdateExpense(w http.ResponseWriter, r *http.Reques
 
 // DeleteExpense handles DELETE /boats/{boatId}/expenses/{expenseId}.
 func (h *MaintenanceHandler) DeleteExpense(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 	if err := h.svc.DeleteExpense(r.Context(), userID,
@@ -251,9 +220,8 @@ func (h *MaintenanceHandler) DeleteExpense(w http.ResponseWriter, r *http.Reques
 
 // ExpenseSummary handles GET /boats/{boatId}/expenses/summary.
 func (h *MaintenanceHandler) ExpenseSummary(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 	boatID := chi.URLParam(r, "id")

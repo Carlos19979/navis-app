@@ -6,6 +6,7 @@ import (
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 	"github.com/Carlos19979/navis-app/apps/api/internal/port"
+	"github.com/Carlos19979/navis-app/apps/api/pkg/pagination"
 )
 
 // EventService implements business logic for event operations.
@@ -34,9 +35,7 @@ func (s *EventService) GetByID(ctx context.Context, id string) (*domain.Event, e
 
 // List returns a paginated list of all events.
 func (s *EventService) List(ctx context.Context, cursor string, limit int) ([]domain.Event, string, error) {
-	if limit <= 0 || limit > 50 {
-		limit = 20
-	}
+	limit = pagination.ClampLimit(limit)
 
 	events, nextCursor, err := s.eventRepo.List(ctx, cursor, limit)
 	if err != nil {
@@ -47,9 +46,7 @@ func (s *EventService) List(ctx context.Context, cursor string, limit int) ([]do
 
 // ListUpcoming returns upcoming events in chronological order.
 func (s *EventService) ListUpcoming(ctx context.Context, cursor string, limit int) ([]domain.Event, string, error) {
-	if limit <= 0 || limit > 50 {
-		limit = 20
-	}
+	limit = pagination.ClampLimit(limit)
 
 	events, nextCursor, err := s.eventRepo.ListUpcoming(ctx, cursor, limit)
 	if err != nil {
@@ -60,9 +57,7 @@ func (s *EventService) ListUpcoming(ctx context.Context, cursor string, limit in
 
 // NearLocation returns events within a given radius of coordinates.
 func (s *EventService) NearLocation(ctx context.Context, lat, lon, radiusKM float64, cursor string, limit int) ([]domain.Event, string, error) {
-	if limit <= 0 || limit > 50 {
-		limit = 20
-	}
+	limit = pagination.ClampLimit(limit)
 	if radiusKM <= 0 {
 		radiusKM = 50
 	}

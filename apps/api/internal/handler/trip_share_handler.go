@@ -9,7 +9,6 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/dto"
-	"github.com/Carlos19979/navis-app/apps/api/internal/middleware"
 )
 
 // publicTripURL builds the shareable public URL for a trip token.
@@ -23,9 +22,8 @@ func publicTripURL(r *http.Request, token string) string {
 
 // Share handles PUT /trips/{id}/share — makes a trip public and returns its link.
 func (h *TripHandler) Share(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 	tripID := chi.URLParam(r, "id")
@@ -44,9 +42,8 @@ func (h *TripHandler) Share(w http.ResponseWriter, r *http.Request) {
 
 // Unshare handles DELETE /trips/{id}/share — revokes the public link.
 func (h *TripHandler) Unshare(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 	tripID := chi.URLParam(r, "id")

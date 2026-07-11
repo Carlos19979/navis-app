@@ -3,7 +3,6 @@ package handler
 import (
 	"net/http"
 
-	"github.com/Carlos19979/navis-app/apps/api/internal/middleware"
 	"github.com/Carlos19979/navis-app/apps/api/internal/service"
 )
 
@@ -19,9 +18,8 @@ func NewUserHandler(users *service.UserService) *UserHandler {
 
 // ExportData returns all user data as a JSON download.
 func (h *UserHandler) ExportData(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 
@@ -37,9 +35,8 @@ func (h *UserHandler) ExportData(w http.ResponseWriter, r *http.Request) {
 
 // DeleteAccount permanently deletes the user's files, data, and auth account.
 func (h *UserHandler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
 		return
 	}
 
