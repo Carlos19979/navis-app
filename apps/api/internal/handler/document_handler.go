@@ -1,24 +1,34 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 	"github.com/Carlos19979/navis-app/apps/api/internal/dto"
-	"github.com/Carlos19979/navis-app/apps/api/internal/service"
 	"github.com/Carlos19979/navis-app/apps/api/pkg/pagination"
 	"github.com/Carlos19979/navis-app/apps/api/pkg/validator"
 )
 
+// documentService is the service surface the document handlers consume.
+type documentService interface {
+	Create(ctx context.Context, doc *domain.Document) (*domain.Document, error)
+	GetByID(ctx context.Context, userID, id string) (*domain.Document, error)
+	ListByBoat(ctx context.Context, userID, boatID, cursor string, limit int) ([]domain.Document, string, error)
+	Update(ctx context.Context, userID string, doc *domain.Document) (*domain.Document, error)
+	Delete(ctx context.Context, userID, id string) error
+}
+
 // DocumentHandler handles HTTP requests for document operations.
 type DocumentHandler struct {
-	svc *service.DocumentService
+	svc documentService
 }
 
 // NewDocumentHandler creates a new DocumentHandler.
-func NewDocumentHandler(svc *service.DocumentService) *DocumentHandler {
+func NewDocumentHandler(svc documentService) *DocumentHandler {
 	return &DocumentHandler{svc: svc}
 }
 

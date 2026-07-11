@@ -1,22 +1,42 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 	"github.com/Carlos19979/navis-app/apps/api/internal/dto"
-	"github.com/Carlos19979/navis-app/apps/api/internal/service"
 	"github.com/Carlos19979/navis-app/apps/api/pkg/pagination"
 )
 
+// boatService is the service surface the boat handlers consume
+// (boat_handler.go and boat_share_handler.go).
+type boatService interface {
+	Create(ctx context.Context, boat *domain.Boat) (*domain.Boat, error)
+	GetByID(ctx context.Context, userID, id string) (*domain.Boat, error)
+	GetAccessible(ctx context.Context, userID, id string) (*domain.Boat, error)
+	List(ctx context.Context, userID, cursor string, limit int) ([]domain.Boat, string, error)
+	Update(ctx context.Context, userID string, boat *domain.Boat) (*domain.Boat, error)
+	Delete(ctx context.Context, userID, id string) error
+	Permissions(ctx context.Context, userID, boatID string) (domain.BoatPermissions, bool, error)
+	ShareCode(ctx context.Context, userID, boatID string) (string, error)
+	JoinByCode(ctx context.Context, userID, code string) (*domain.Boat, error)
+	ListShared(ctx context.Context, userID string) ([]domain.Boat, error)
+	ListMembers(ctx context.Context, userID, boatID string) ([]domain.BoatMember, error)
+	RemoveMember(ctx context.Context, ownerID, boatID, memberUserID string) error
+	SetMemberPermissions(ctx context.Context, ownerID, boatID, memberUserID string, p domain.BoatPermissions) error
+	Leave(ctx context.Context, userID, boatID string) error
+}
+
 // BoatHandler handles HTTP requests for boat operations.
 type BoatHandler struct {
-	svc *service.BoatService
+	svc boatService
 }
 
 // NewBoatHandler creates a new BoatHandler.
-func NewBoatHandler(svc *service.BoatService) *BoatHandler {
+func NewBoatHandler(svc boatService) *BoatHandler {
 	return &BoatHandler{svc: svc}
 }
 

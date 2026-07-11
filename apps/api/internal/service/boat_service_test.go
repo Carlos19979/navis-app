@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
+	"github.com/Carlos19979/navis-app/apps/api/internal/testutil"
 )
 
 // --- mock BoatRepository ---
@@ -18,6 +19,7 @@ type mockBoatRepo struct {
 	updateFn         func(ctx context.Context, userID string, boat *domain.Boat) (*domain.Boat, error)
 	deleteFn         func(ctx context.Context, userID, id string) error
 	getPermissionsFn func(ctx context.Context, userID, boatID string) (domain.BoatPermissions, bool, error)
+	countFn          func(ctx context.Context, userID string) (int, error)
 }
 
 func (m *mockBoatRepo) Create(ctx context.Context, boat *domain.Boat) (*domain.Boat, error) {
@@ -159,6 +161,75 @@ func TestBoatService_Create_RepoError(t *testing.T) {
 	}
 	if !errors.Is(err, repoErr) {
 		t.Errorf("expected underlying error %v, got %v", repoErr, err)
+	}
+}
+
+func TestBoatService_Create_PlanLimits(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name          string
+		plan          domain.Plan
+		existingBoats int
+		wantErr       error
+	}{
+		{"free plan under limit succeeds", domain.PlanFree, 0, nil},
+		{"free plan at limit of 1 rejected", domain.PlanFree, 1, domain.ErrPlanLimit},
+		{"pro plan under limit succeeds", domain.PlanPro, 2, nil},
+		{"pro plan at limit of 3 rejected", domain.PlanPro, 3, domain.ErrPlanLimit},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			created := false
+			repo := &mockBoatRepo{
+				createFn: func(_ context.Context, b *domain.Boat) (*domain.Boat, error) {
+					created = true
+					b.ID = "boat-new"
+					return b, nil
+				},
+				countFn: func(_ context.Context, _ string) (int, error) {
+					return tt.existingBoats, nil
+				},
+			}
+			svc := NewBoatService(repo, &testutil.FakeProfileRepo{Plan: tt.plan})
+
+			result, err := svc.Create(context.Background(), newTestBoat())
+
+			if tt.wantErr != nil {
+				if !errors.Is(err, tt.wantErr) {
+					t.Fatalf("expected %v, got %v", tt.wantErr, err)
+				}
+				if created {
+					t.Error("expected repo.Create not to be called when over plan limit")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("expected no error, got %v", err)
+			}
+			if result.ID != "boat-new" {
+				t.Errorf("expected boat ID %q, got %q", "boat-new", result.ID)
+			}
+		})
+	}
+}
+
+func TestBoatService_Create_PlanCountError(t *testing.T) {
+	t.Parallel()
+
+	countErr := errors.New("count query failed")
+	repo := &mockBoatRepo{
+		createFn: func(_ context.Context, b *domain.Boat) (*domain.Boat, error) { return b, nil },
+		countFn:  func(_ context.Context, _ string) (int, error) { return 0, countErr },
+	}
+	svc := NewBoatService(repo, &testutil.FakeProfileRepo{Plan: domain.PlanFree})
+
+	_, err := svc.Create(context.Background(), newTestBoat())
+	if !errors.Is(err, countErr) {
+		t.Errorf("expected underlying count error, got %v", err)
 	}
 }
 
@@ -430,7 +501,10 @@ func TestBoatService_Delete_NotFound(t *testing.T) {
 	}
 }
 
-func (m *mockBoatRepo) Count(_ context.Context, _ string) (int, error) {
+func (m *mockBoatRepo) Count(ctx context.Context, userID string) (int, error) {
+	if m.countFn != nil {
+		return m.countFn(ctx, userID)
+	}
 	return 0, nil
 }
 

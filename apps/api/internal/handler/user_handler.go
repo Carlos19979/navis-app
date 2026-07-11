@@ -1,18 +1,23 @@
 package handler
 
 import (
+	"context"
 	"net/http"
-
-	"github.com/Carlos19979/navis-app/apps/api/internal/service"
 )
+
+// userService is the service surface the user handlers consume.
+type userService interface {
+	ExportData(ctx context.Context, userID string) (map[string]any, error)
+	DeleteAccount(ctx context.Context, userID string) error
+}
 
 // UserHandler handles GDPR data export and account deletion.
 type UserHandler struct {
-	users *service.UserService
+	users userService
 }
 
 // NewUserHandler creates a UserHandler backed by the user service.
-func NewUserHandler(users *service.UserService) *UserHandler {
+func NewUserHandler(users userService) *UserHandler {
 	return &UserHandler{users: users}
 }
 

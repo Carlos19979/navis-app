@@ -1,23 +1,39 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 	"github.com/Carlos19979/navis-app/apps/api/internal/dto"
-	"github.com/Carlos19979/navis-app/apps/api/internal/service"
 	"github.com/Carlos19979/navis-app/apps/api/pkg/pagination"
 )
 
+// regattaService is the service surface the regatta handlers consume.
+type regattaService interface {
+	Schedule(ctx context.Context, userID, groupID string, trip *domain.Trip) (*domain.Trip, error)
+	ListByGroup(ctx context.Context, userID, groupID, cursor string, limit int) ([]domain.Trip, string, error)
+	Cancel(ctx context.Context, userID, tripID string) (*domain.Trip, error)
+	RevertToPlanned(ctx context.Context, userID, tripID string) (*domain.Trip, error)
+	Start(ctx context.Context, userID, tripID string) (*domain.Trip, error)
+	SetRSVP(ctx context.Context, userID, tripID string, rsvp domain.RSVP) error
+	ListParticipants(ctx context.Context, userID, tripID string) ([]domain.TripParticipant, error)
+	GetChecklist(ctx context.Context, userID, tripID string) ([]domain.ChecklistItem, error)
+	AddChecklistItem(ctx context.Context, userID, tripID, label string) (*domain.ChecklistItem, error)
+	SetChecklistItemChecked(ctx context.Context, userID, tripID, itemID string, checked bool) (*domain.ChecklistItem, error)
+	RemoveChecklistItem(ctx context.Context, userID, tripID, itemID string) error
+	CompleteChecklist(ctx context.Context, userID, tripID string) (*domain.Trip, error)
+}
+
 // RegattaHandler handles HTTP requests for group regattas, RSVP and checklists.
 type RegattaHandler struct {
-	svc *service.RegattaService
+	svc regattaService
 }
 
 // NewRegattaHandler creates a new RegattaHandler.
-func NewRegattaHandler(svc *service.RegattaService) *RegattaHandler {
+func NewRegattaHandler(svc regattaService) *RegattaHandler {
 	return &RegattaHandler{svc: svc}
 }
 

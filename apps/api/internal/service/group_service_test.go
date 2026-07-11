@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
+	"github.com/Carlos19979/navis-app/apps/api/internal/testutil"
 )
 
 // --- mock GroupRepository ---
@@ -180,6 +181,78 @@ func TestGroupService_Create_EmptyName(t *testing.T) {
 	}
 	if ve.Field != "name" {
 		t.Errorf("expected field %q, got %q", "name", ve.Field)
+	}
+}
+
+func TestGroupService_Create_PlanGating(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name       string
+		plan       domain.Plan
+		visibility domain.GroupVisibility
+		wantErr    error
+	}{
+		{"free plan cannot create groups", domain.PlanFree, domain.GroupVisibilityPublic, domain.ErrPlanForbidden},
+		{"pro plan creates public group", domain.PlanPro, domain.GroupVisibilityPublic, nil},
+		{"pro plan creates private group with invite code", domain.PlanPro, domain.GroupVisibilityPrivate, nil},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			var (
+				created     bool
+				createdCode *string
+				addedRole   domain.GroupMemberRole
+				addedStatus domain.GroupMemberStatus
+			)
+			groupRepo := &mockGroupRepo{
+				createFn: func(_ context.Context, g *domain.Group) (*domain.Group, error) {
+					created = true
+					createdCode = g.InviteCode
+					g.ID = "group-1"
+					return g, nil
+				},
+				getByIDFn: func(_ context.Context, _, _ string) (*domain.Group, error) {
+					return newTestGroup(tt.visibility), nil
+				},
+			}
+			memberRepo := &mockGroupMemberRepo{
+				addFn: func(_ context.Context, _, _ string, role domain.GroupMemberRole, status domain.GroupMemberStatus) error {
+					addedRole, addedStatus = role, status
+					return nil
+				},
+			}
+			svc := NewGroupService(groupRepo, memberRepo, &testutil.FakeProfileRepo{Plan: tt.plan}, nil, nil)
+
+			g := &domain.Group{OwnerID: "user-1", Name: "Club Test", Visibility: tt.visibility}
+			_, err := svc.Create(context.Background(), g)
+
+			if tt.wantErr != nil {
+				if !errors.Is(err, tt.wantErr) {
+					t.Fatalf("expected %v, got %v", tt.wantErr, err)
+				}
+				if created {
+					t.Error("expected repo.Create not to be called for a gated plan")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("expected no error, got %v", err)
+			}
+			if addedRole != domain.GroupRoleOwner || addedStatus != domain.GroupMemberStatusActive {
+				t.Errorf("expected owner added as active, got role=%q status=%q", addedRole, addedStatus)
+			}
+			if tt.visibility == domain.GroupVisibilityPrivate {
+				if createdCode == nil || len(*createdCode) != 8 {
+					t.Errorf("expected an 8-char invite code for a private group, got %v", createdCode)
+				}
+			} else if createdCode != nil {
+				t.Errorf("expected no invite code for a public group, got %q", *createdCode)
+			}
+		})
 	}
 }
 

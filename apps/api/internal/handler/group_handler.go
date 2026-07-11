@@ -1,22 +1,41 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 	"github.com/Carlos19979/navis-app/apps/api/internal/dto"
-	"github.com/Carlos19979/navis-app/apps/api/internal/service"
 	"github.com/Carlos19979/navis-app/apps/api/pkg/pagination"
 )
 
+// groupService is the service surface the group handlers consume.
+type groupService interface {
+	Create(ctx context.Context, group *domain.Group) (*domain.Group, error)
+	GetByID(ctx context.Context, userID, id string) (*domain.Group, error)
+	List(ctx context.Context, userID, cursor string, limit int) ([]domain.Group, string, error)
+	ListPublic(ctx context.Context, userID, cursor string, limit int) ([]domain.Group, string, error)
+	Update(ctx context.Context, userID string, group *domain.Group) (*domain.Group, error)
+	Delete(ctx context.Context, userID, id string) error
+	RequestJoin(ctx context.Context, userID, groupID string) (*domain.Group, error)
+	JoinByCode(ctx context.Context, userID, code string) (*domain.Group, error)
+	ListMembers(ctx context.Context, userID, groupID string) ([]domain.GroupMember, error)
+	Leave(ctx context.Context, userID, groupID string) error
+	ListPendingRequests(ctx context.Context, ownerID, groupID string) ([]domain.GroupMember, error)
+	ApproveRequest(ctx context.Context, ownerID, groupID, targetUserID string) error
+	RejectRequest(ctx context.Context, ownerID, groupID, targetUserID string) error
+	RemoveMember(ctx context.Context, ownerID, groupID, targetUserID string) error
+}
+
 // GroupHandler handles HTTP requests for group operations.
 type GroupHandler struct {
-	svc *service.GroupService
+	svc groupService
 }
 
 // NewGroupHandler creates a new GroupHandler.
-func NewGroupHandler(svc *service.GroupService) *GroupHandler {
+func NewGroupHandler(svc groupService) *GroupHandler {
 	return &GroupHandler{svc: svc}
 }
 
