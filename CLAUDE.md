@@ -345,15 +345,14 @@ Use these Dart 3.x features everywhere they apply:
 
 ### Flutter — UI/UX
 
-- Dark mode by default (nautical theme).
+- Nautical glass identity, light AND dark are first-class (theme via `themeModeProvider`, default dark). Pick colors through the `ThemeColorsX` context getters (`context.txtPrimary`, `.glassBg`, `.dialogSurface`, `.glassBorderColor`), NOT the dark-only `AppColors.*` constants.
 - Palette: navy (#1B2A4A), cyan (#4DA8DA), green (#2ECC71), amber (#F39C12), red (#E74C3C).
-- Shared widgets in `shared/widgets/` with `Navis` prefix.
-- All UI strings in `.arb` files for i18n (Spanish + English).
+- **Design tokens** in `core/theme/`: `Dimens` (spacing/radii/blur/icon scales, `minTouchTarget`, `navClearance`) + `Insets`, `Shadows` (card/glowCyan/glowRed/nav), `Motion` (durations/curves + `.entrance(index)` for list stagger). Use these, not magic numbers.
+- **Shared widgets** (`shared/widgets/`, `Navis` prefix) — compose these instead of re-rolling: `NavisScaffold` (screen chrome), `NavisTextField` (the one glass field), `NavisSection`/`NavisSectionHeader`, `NavisSelectableCard`, `NavisStatusBadge`/`DocumentStatusBadge`, `NavisAsyncListView<T>` (when+shimmer+error+empty+refresh, empty CTA), `NavisDangerAction` (separated, always-confirmed destructive), `NavisGradientFab`, `NavisConfirmDialog`/`NavisInputDialog`, `NavisEmptyState` (icon+message+description+CTA), `NavisButton`, `NavisCard`, `NavisAppBar` (no profile action by default — Profile is a tab).
+- **Bottom nav / IA**: 5 tabs — Home (`/boats`), Chart, Weather, Community (`/community`, merges Events+Groups: Regattas · My clubs · Discover), Profile. All tab labels localized.
+- All UI strings in `.arb` files for i18n (Spanish + English). Gate: no accented literals outside `lib/l10n`.
 - Imports use package paths: `package:navis_mobile/features/...`.
-- Consistent spacing: use theme-defined constants, not magic numbers.
-- Loading states: skeleton shimmer for lists, centered spinner for full-page loads.
-- Empty states: illustration + helpful message + CTA button.
-- Error states: retry button + clear error message. Never show raw exceptions.
+- Loading = shimmer for lists / centered spinner for full-page. Empty = icon + message + CTA. Error = retry + clear message, never raw exceptions. Destructive actions always confirm.
 
 ### Flutter — Maps
 
