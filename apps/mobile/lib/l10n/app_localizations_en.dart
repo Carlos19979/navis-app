@@ -1654,4 +1654,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get couldNotOpenLive => 'Could not open the live stream';
+
+  @override
+  String get backgroundLocationAdvice =>
+      'To keep recording with the screen off, allow “Always” location access for Navis in Settings.';
+
+  @override
+  String get resumeRecordingTitle => 'Recording in progress';
+
+  @override
+  String get resumeRecordingBody =>
+      'A trip recording was interrupted. Do you want to resume it?';
+
+  @override
+  String get resumeAction => 'Resume';
+
+  @override
+  String get discardRecording => 'Discard';
 }

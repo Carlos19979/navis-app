@@ -1670,4 +1670,21 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get couldNotOpenLive => 'No se pudo abrir el directo';
+
+  @override
+  String get backgroundLocationAdvice =>
+      'Para seguir grabando con la pantalla apagada, permite el acceso a ubicación «Siempre» para Navis en Ajustes.';
+
+  @override
+  String get resumeRecordingTitle => 'Grabación en curso';
+
+  @override
+  String get resumeRecordingBody =>
+      'Se interrumpió la grabación de un viaje. ¿Quieres reanudarla?';
+
+  @override
+  String get resumeAction => 'Reanudar';
+
+  @override
+  String get discardRecording => 'Descartar';
 }

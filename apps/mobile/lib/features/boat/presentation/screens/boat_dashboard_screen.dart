@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,6 +16,7 @@ import 'package:navis_mobile/features/profile/data/account_provider.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 import 'package:navis_mobile/features/boat/presentation/widgets/boat_header.dart';
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
+import 'package:navis_mobile/features/logbook/presentation/providers/trip_recording_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
@@ -37,6 +40,60 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _offerRecordingRecovery();
+    });
+  }
+
+  /// If the app was killed mid-recording, the session survives in sqlite —
+  /// offer to resume it (restores points + stats and reopens the map) or
+  /// discard it.
+  Future<void> _offerRecordingRecovery() async {
+    final notifier = ref.read(tripRecordingProvider.notifier);
+    if (!await notifier.hasPersistedSession()) return;
+    if (!mounted) return;
+
+    final l = AppLocalizations.of(context)!;
+    final resume = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.resumeRecordingTitle),
+        content: Text(l.resumeRecordingBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              l.discardRecording,
+              style: const TextStyle(color: AppColors.red),
+            ),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l.resumeAction),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || resume == null) return;
+
+    if (resume) {
+      final restored = await notifier.recoverSession();
+      final state = ref.read(tripRecordingProvider);
+      if (restored && mounted && state.boatId != null) {
+        // The screen sees the already-active recording and won't auto-start.
+        final params = [
+          if (state.isRegatta && state.trip != null) 'tripId=${state.trip!.id}',
+          if (state.isRegatta) 'regatta=true',
+        ];
+        final query = params.isEmpty ? '' : '?${params.join('&')}';
+        unawaited(context.push('/boats/${state.boatId}/record$query'));
+      }
+    } else {
+      // Load the session so discard() can clean up the server-side trip too.
+      await notifier.recoverSession();
+      await notifier.discard();
+    }
   }
 
   @override
