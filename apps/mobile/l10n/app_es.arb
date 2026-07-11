@@ -583,5 +583,13 @@
   "home": "Inicio",
   "community": "Comunidad",
   "communityRegattas": "Regatas",
-  "communityClubs": "Clubes"
+  "communityClubs": "Clubes",
+  "sailConditionsGood": "Buenas condiciones para navegar",
+  "sailConditionsModerate": "Condiciones moderadas",
+  "sailConditionsAdverse": "Condiciones adversas",
+  "windWavesSummary": "Viento {wind} kt · Olas {wave} m",
+  "tides": "Mareas",
+  "tideRange": "Carrera {range} m",
+  "tideHigh": "Pleamar",
+  "tideLow": "Bajamar"
 }

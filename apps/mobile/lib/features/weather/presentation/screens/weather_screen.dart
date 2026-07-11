@@ -361,23 +361,24 @@ class _NavWindowBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final wind = overview.current.windSpeed;
     final wave = overview.current.waveHeight;
 
     final (color, label, icon) = switch (null) {
       _ when wind <= 12 && wave <= 0.5 => (
           AppColors.green,
-          'Buenas condiciones para navegar',
+          l.sailConditionsGood,
           Icons.check_circle,
         ),
       _ when wind <= 20 && wave <= 1.2 => (
           AppColors.amber,
-          'Condiciones moderadas',
+          l.sailConditionsModerate,
           Icons.info,
         ),
       _ => (
           AppColors.red,
-          'Condiciones adversas',
+          l.sailConditionsAdverse,
           Icons.warning_amber_rounded,
         ),
     };
@@ -405,7 +406,10 @@ class _NavWindowBadge extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'Viento ${wind.round()} kt · Olas ${wave.toStringAsFixed(1)} m',
+                  l.windWavesSummary(
+                    wind.round().toString(),
+                    wave.toStringAsFixed(1),
+                  ),
                   style: TextStyle(color: context.txtSecondary, fontSize: 12),
                 ),
               ],
@@ -425,6 +429,7 @@ class _TidesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     String hhmm(DateTime t) =>
         '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
 
@@ -450,7 +455,7 @@ class _TidesCard extends StatelessWidget {
               const Icon(Icons.waves, color: AppColors.cyan, size: 20),
               const SizedBox(width: 8),
               Text(
-                'Mareas',
+                l.tides,
                 style: TextStyle(
                   color: context.txtPrimary,
                   fontWeight: FontWeight.w700,
@@ -458,7 +463,7 @@ class _TidesCard extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                'Carrera ${range.toStringAsFixed(1)} m',
+                l.tideRange(range.toStringAsFixed(1)),
                 style: const TextStyle(
                   color: AppColors.cyan,
                   fontSize: 12,
@@ -480,7 +485,7 @@ class _TidesCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    e.isHigh ? 'Pleamar' : 'Bajamar',
+                    e.isHigh ? l.tideHigh : l.tideLow,
                     style: TextStyle(color: context.txtPrimary),
                   ),
                   const Spacer(),

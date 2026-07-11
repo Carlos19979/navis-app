@@ -677,5 +677,30 @@
   "home": "Home",
   "community": "Community",
   "communityRegattas": "Regattas",
-  "communityClubs": "Clubs"
+  "communityClubs": "Clubs",
+  "sailConditionsGood": "Good conditions to sail",
+  "sailConditionsModerate": "Moderate conditions",
+  "sailConditionsAdverse": "Adverse conditions",
+  "windWavesSummary": "Wind {wind} kt · Waves {wave} m",
+  "@windWavesSummary": {
+    "placeholders": {
+      "wind": {
+        "type": "String"
+      },
+      "wave": {
+        "type": "String"
+      }
+    }
+  },
+  "tides": "Tides",
+  "tideRange": "Range {range} m",
+  "@tideRange": {
+    "placeholders": {
+      "range": {
+        "type": "String"
+      }
+    }
+  },
+  "tideHigh": "High tide",
+  "tideLow": "Low tide"
 }

@@ -1687,4 +1687,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get communityClubs => 'Clubs';
+
+  @override
+  String get sailConditionsGood => 'Good conditions to sail';
+
+  @override
+  String get sailConditionsModerate => 'Moderate conditions';
+
+  @override
+  String get sailConditionsAdverse => 'Adverse conditions';
+
+  @override
+  String windWavesSummary(String wind, String wave) {
+    return 'Wind $wind kt · Waves $wave m';
+  }
+
+  @override
+  String get tides => 'Tides';
+
+  @override
+  String tideRange(String range) {
+    return 'Range $range m';
+  }
+
+  @override
+  String get tideHigh => 'High tide';
+
+  @override
+  String get tideLow => 'Low tide';
 }

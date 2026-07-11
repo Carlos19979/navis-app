@@ -3307,6 +3307,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clubs'**
   String get communityClubs;
+
+  /// No description provided for @sailConditionsGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Good conditions to sail'**
+  String get sailConditionsGood;
+
+  /// No description provided for @sailConditionsModerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate conditions'**
+  String get sailConditionsModerate;
+
+  /// No description provided for @sailConditionsAdverse.
+  ///
+  /// In en, this message translates to:
+  /// **'Adverse conditions'**
+  String get sailConditionsAdverse;
+
+  /// No description provided for @windWavesSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Wind {wind} kt · Waves {wave} m'**
+  String windWavesSummary(String wind, String wave);
+
+  /// No description provided for @tides.
+  ///
+  /// In en, this message translates to:
+  /// **'Tides'**
+  String get tides;
+
+  /// No description provided for @tideRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Range {range} m'**
+  String tideRange(String range);
+
+  /// No description provided for @tideHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High tide'**
+  String get tideHigh;
+
+  /// No description provided for @tideLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low tide'**
+  String get tideLow;
 }
 
 class _AppLocalizationsDelegate
