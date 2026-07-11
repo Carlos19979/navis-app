@@ -7,16 +7,24 @@ import (
 	"time"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/dto"
-	"github.com/Carlos19979/navis-app/apps/api/internal/service"
+	"github.com/Carlos19979/navis-app/apps/api/internal/port"
 )
+
+// weatherService is the service surface the weather handlers consume.
+type weatherService interface {
+	GetCurrent(ctx context.Context, lat, lon float64) (*port.WeatherData, error)
+	GetForecast(ctx context.Context, lat, lon float64, days int) ([]port.WeatherData, error)
+	GetOverview(ctx context.Context, lat, lon float64) (*port.WeatherOverview, error)
+	GetHourly(ctx context.Context, lat, lon float64, date string) ([]port.HourlyPoint, error)
+}
 
 // WeatherHandler handles HTTP requests for weather data.
 type WeatherHandler struct {
-	svc *service.WeatherService
+	svc weatherService
 }
 
 // NewWeatherHandler creates a new WeatherHandler.
-func NewWeatherHandler(svc *service.WeatherService) *WeatherHandler {
+func NewWeatherHandler(svc weatherService) *WeatherHandler {
 	return &WeatherHandler{svc: svc}
 }
 

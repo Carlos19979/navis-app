@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 
@@ -9,17 +10,27 @@ import (
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 	"github.com/Carlos19979/navis-app/apps/api/internal/dto"
 	"github.com/Carlos19979/navis-app/apps/api/internal/middleware"
-	"github.com/Carlos19979/navis-app/apps/api/internal/service"
 	"github.com/Carlos19979/navis-app/apps/api/pkg/pagination"
 )
 
+// eventService is the service surface the event handlers consume.
+type eventService interface {
+	GetByID(ctx context.Context, id string) (*domain.Event, error)
+	List(ctx context.Context, cursor string, limit int) ([]domain.Event, string, error)
+	ListUpcoming(ctx context.Context, cursor string, limit int) ([]domain.Event, string, error)
+	NearLocation(ctx context.Context, lat, lon, radiusKM float64, cursor string, limit int) ([]domain.Event, string, error)
+	ToggleInterest(ctx context.Context, userID, eventID string) (bool, error)
+	IsInterested(ctx context.Context, userID, eventID string) (bool, error)
+	InterestedIn(ctx context.Context, userID string, eventIDs []string) (map[string]bool, error)
+}
+
 // EventHandler handles HTTP requests for event operations.
 type EventHandler struct {
-	svc *service.EventService
+	svc eventService
 }
 
 // NewEventHandler creates a new EventHandler.
-func NewEventHandler(svc *service.EventService) *EventHandler {
+func NewEventHandler(svc eventService) *EventHandler {
 	return &EventHandler{svc: svc}
 }
 

@@ -1,30 +1,35 @@
 package handler
 
 import (
+	"context"
 	"crypto/subtle"
 	"encoding/json"
 	"log/slog"
 	"net/http"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
-	"github.com/Carlos19979/navis-app/apps/api/internal/service"
 )
 
 // entitlementPro is the RevenueCat entitlement identifier that unlocks Navis Pro.
 // It must match the entitlement configured in the RevenueCat dashboard.
 const entitlementPro = "pro"
 
+// planSetter is the profile service surface the webhook handler consumes.
+type planSetter interface {
+	SetPlan(ctx context.Context, userID string, plan domain.Plan) (*domain.Profile, error)
+}
+
 // WebhookHandler receives provider webhooks (currently RevenueCat) and is the
 // source of truth for a user's paid plan. It is mounted OUTSIDE the JWT
 // middleware and authenticated by a shared secret in the Authorization header.
 type WebhookHandler struct {
-	profiles *service.ProfileService
+	profiles planSetter
 	secret   string
 	logger   *slog.Logger
 }
 
 // NewWebhookHandler creates a new WebhookHandler.
-func NewWebhookHandler(profiles *service.ProfileService, secret string, logger *slog.Logger) *WebhookHandler {
+func NewWebhookHandler(profiles planSetter, secret string, logger *slog.Logger) *WebhookHandler {
 	return &WebhookHandler{profiles: profiles, secret: secret, logger: logger}
 }
 

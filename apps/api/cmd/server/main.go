@@ -105,6 +105,9 @@ func main() {
 	weatherProvider := openmeteo.New()
 	notifier := novu.New(cfg.NovuAPIKey, logger)
 	notifySvc := service.NewNotifier(notifier, userRepo, logger)
+	// Deliver notifications off the request path; drained on shutdown.
+	notifySvc.Start()
+	defer notifySvc.Stop()
 	supabaseAdmin := supabase.NewAdmin(cfg.SupabaseURL, cfg.SupabaseServiceRoleKey, logger)
 
 	// Create services.

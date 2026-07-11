@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"math"
 	"net/http"
@@ -10,18 +11,33 @@ import (
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 	"github.com/Carlos19979/navis-app/apps/api/internal/dto"
-	"github.com/Carlos19979/navis-app/apps/api/internal/service"
 	"github.com/Carlos19979/navis-app/apps/api/pkg/pagination"
 	"github.com/Carlos19979/navis-app/apps/api/pkg/validator"
 )
 
+// tripService is the service surface the trip handlers consume
+// (trip_handler.go and trip_share_handler.go).
+type tripService interface {
+	Create(ctx context.Context, trip *domain.Trip) (*domain.Trip, error)
+	GetByID(ctx context.Context, userID, id string) (*domain.Trip, error)
+	List(ctx context.Context, userID, boatID, cursor string, limit int) ([]domain.Trip, string, error)
+	Update(ctx context.Context, userID string, trip *domain.Trip) (*domain.Trip, error)
+	Complete(ctx context.Context, userID, id string, arrivalPort *string, distanceNM, engineHours, fuelConsumedL *float64) (*domain.Trip, error)
+	Delete(ctx context.Context, userID, id string) error
+	AddTrackPoints(ctx context.Context, userID string, tracks []domain.TripTrack) error
+	GetTrackPoints(ctx context.Context, userID, tripID string) ([]domain.TripTrack, error)
+	Share(ctx context.Context, userID, tripID string) (string, error)
+	Unshare(ctx context.Context, userID, tripID string) error
+	PublicByToken(ctx context.Context, token string) (*domain.Trip, []domain.TripTrack, error)
+}
+
 // TripHandler handles HTTP requests for trip operations.
 type TripHandler struct {
-	svc *service.TripService
+	svc tripService
 }
 
 // NewTripHandler creates a new TripHandler.
-func NewTripHandler(svc *service.TripService) *TripHandler {
+func NewTripHandler(svc tripService) *TripHandler {
 	return &TripHandler{svc: svc}
 }
 

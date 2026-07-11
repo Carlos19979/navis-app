@@ -1,20 +1,26 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 	"github.com/Carlos19979/navis-app/apps/api/internal/dto"
-	"github.com/Carlos19979/navis-app/apps/api/internal/service"
 )
+
+// profileService is the service surface the profile handlers consume.
+type profileService interface {
+	Me(ctx context.Context, userID string) (*domain.Profile, int, error)
+	SetPlan(ctx context.Context, userID string, plan domain.Plan) (*domain.Profile, error)
+}
 
 // ProfileHandler exposes the current user's plan and limits.
 type ProfileHandler struct {
-	svc *service.ProfileService
+	svc profileService
 }
 
 // NewProfileHandler creates a new ProfileHandler.
-func NewProfileHandler(svc *service.ProfileService) *ProfileHandler {
+func NewProfileHandler(svc profileService) *ProfileHandler {
 	return &ProfileHandler{svc: svc}
 }
 

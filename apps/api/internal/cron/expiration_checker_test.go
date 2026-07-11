@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
+	"github.com/Carlos19979/navis-app/apps/api/internal/testutil"
 )
 
 // --- Mocks ---
@@ -48,54 +49,14 @@ func (m *mockNotifLogRepo) Create(ctx context.Context, userID, docID string, day
 	return m.createFn(ctx, userID, docID, daysBefore)
 }
 
-type mockNotifier struct {
-	triggerFn func(ctx context.Context, workflowID, subscriberID string, payload map[string]any) error
-	triggered []triggeredWorkflow
-}
-
-type triggeredWorkflow struct {
-	WorkflowID   string
-	SubscriberID string
-	Payload      map[string]any
-}
-
-func (m *mockNotifier) TriggerWorkflow(ctx context.Context, workflowID, subscriberID string, payload map[string]any) error {
-	m.triggered = append(m.triggered, triggeredWorkflow{workflowID, subscriberID, payload})
-	if m.triggerFn != nil {
-		return m.triggerFn(ctx, workflowID, subscriberID, payload)
-	}
-	return nil
-}
-
-func (m *mockNotifier) EnsureSubscriber(_ context.Context, _ string) error   { return nil }
-func (m *mockNotifier) SetPushToken(_ context.Context, _, _ string) error    { return nil }
-func (m *mockNotifier) RemovePushToken(_ context.Context, _, _ string) error { return nil }
-
-// mockProfileRepo returns a fixed plan for every user (default: Pro, so existing
-// tests keep notifying every document).
-type mockProfileRepo struct {
-	plan domain.Plan
-}
-
-func (m *mockProfileRepo) GetOrCreate(_ context.Context, userID string) (*domain.Profile, error) {
-	plan := m.plan
-	if plan == "" {
-		plan = domain.PlanPro
-	}
-	return &domain.Profile{UserID: userID, Plan: plan}, nil
-}
-func (m *mockProfileRepo) SetPlan(_ context.Context, userID string, plan domain.Plan) (*domain.Profile, error) {
-	return &domain.Profile{UserID: userID, Plan: plan}, nil
-}
-
 // --- Helpers ---
 
 func newTestChecker(
 	docs *mockDocRepo,
 	notifLogs *mockNotifLogRepo,
-	notifier *mockNotifier,
+	notifier *testutil.FakeNotificationProvider,
 ) *ExpirationChecker {
-	return New(docs, notifLogs, &mockProfileRepo{plan: domain.PlanPro}, notifier, slog.Default())
+	return New(docs, notifLogs, &testutil.FakeProfileRepo{Plan: domain.PlanPro}, notifier, slog.Default())
 }
 
 func docExpiringIn(id, userID string, days int, alertDays []int) domain.Document {
@@ -114,7 +75,7 @@ func docExpiringIn(id, userID string, days int, alertDays []int) domain.Document
 func TestExpirationChecker_Check_TriggersWorkflows(t *testing.T) {
 	t.Parallel()
 
-	notifier := &mockNotifier{}
+	notifier := &testutil.FakeNotificationProvider{}
 	var loggedDocID string
 	var loggedAlertDay int
 
@@ -139,14 +100,14 @@ func TestExpirationChecker_Check_TriggersWorkflows(t *testing.T) {
 
 	ec.check(context.Background())
 
-	if len(notifier.triggered) != 2 {
-		t.Fatalf("expected 2 workflow triggers (2 alert days), got %d", len(notifier.triggered))
+	if len(notifier.Triggered) != 2 {
+		t.Fatalf("expected 2 workflow triggers (2 alert days), got %d", len(notifier.Triggered))
 	}
-	if notifier.triggered[0].WorkflowID != "document-expiry" {
-		t.Errorf("expected workflow 'document-expiry', got %s", notifier.triggered[0].WorkflowID)
+	if notifier.Triggered[0].WorkflowID != "document-expiry" {
+		t.Errorf("expected workflow 'document-expiry', got %s", notifier.Triggered[0].WorkflowID)
 	}
-	if notifier.triggered[0].SubscriberID != "user-1" {
-		t.Errorf("expected subscriber user-1, got %s", notifier.triggered[0].SubscriberID)
+	if notifier.Triggered[0].SubscriberID != "user-1" {
+		t.Errorf("expected subscriber user-1, got %s", notifier.Triggered[0].SubscriberID)
 	}
 	if loggedDocID != "doc-1" {
 		t.Errorf("expected notification log for doc-1, got %s", loggedDocID)
@@ -159,7 +120,7 @@ func TestExpirationChecker_Check_TriggersWorkflows(t *testing.T) {
 func TestExpirationChecker_Check_SkipsAlreadyNotified(t *testing.T) {
 	t.Parallel()
 
-	notifier := &mockNotifier{}
+	notifier := &testutil.FakeNotificationProvider{}
 
 	ec := newTestChecker(
 		&mockDocRepo{
@@ -178,15 +139,15 @@ func TestExpirationChecker_Check_SkipsAlreadyNotified(t *testing.T) {
 
 	ec.check(context.Background())
 
-	if len(notifier.triggered) != 0 {
-		t.Fatalf("expected 0 triggers (already notified), got %d", len(notifier.triggered))
+	if len(notifier.Triggered) != 0 {
+		t.Fatalf("expected 0 triggers (already notified), got %d", len(notifier.Triggered))
 	}
 }
 
 func TestExpirationChecker_Check_RespectsAlertDays(t *testing.T) {
 	t.Parallel()
 
-	notifier := &mockNotifier{}
+	notifier := &testutil.FakeNotificationProvider{}
 
 	ec := newTestChecker(
 		&mockDocRepo{
@@ -205,15 +166,15 @@ func TestExpirationChecker_Check_RespectsAlertDays(t *testing.T) {
 
 	ec.check(context.Background())
 
-	if len(notifier.triggered) != 0 {
-		t.Fatalf("expected 0 triggers (60 days > all alert days), got %d", len(notifier.triggered))
+	if len(notifier.Triggered) != 0 {
+		t.Fatalf("expected 0 triggers (60 days > all alert days), got %d", len(notifier.Triggered))
 	}
 }
 
 func TestExpirationChecker_Check_NoExpiringDocs(t *testing.T) {
 	t.Parallel()
 
-	notifier := &mockNotifier{}
+	notifier := &testutil.FakeNotificationProvider{}
 
 	ec := newTestChecker(
 		&mockDocRepo{
@@ -230,15 +191,15 @@ func TestExpirationChecker_Check_NoExpiringDocs(t *testing.T) {
 
 	ec.check(context.Background())
 
-	if len(notifier.triggered) != 0 {
-		t.Fatalf("expected 0 triggers, got %d", len(notifier.triggered))
+	if len(notifier.Triggered) != 0 {
+		t.Fatalf("expected 0 triggers, got %d", len(notifier.Triggered))
 	}
 }
 
 func TestExpirationChecker_Check_ListExpiringError(t *testing.T) {
 	t.Parallel()
 
-	notifier := &mockNotifier{}
+	notifier := &testutil.FakeNotificationProvider{}
 
 	ec := newTestChecker(
 		&mockDocRepo{
@@ -255,15 +216,15 @@ func TestExpirationChecker_Check_ListExpiringError(t *testing.T) {
 
 	ec.check(context.Background())
 
-	if len(notifier.triggered) != 0 {
-		t.Fatalf("expected 0 triggers on error, got %d", len(notifier.triggered))
+	if len(notifier.Triggered) != 0 {
+		t.Fatalf("expected 0 triggers on error, got %d", len(notifier.Triggered))
 	}
 }
 
 func TestExpirationChecker_Check_ExpiredDocument(t *testing.T) {
 	t.Parallel()
 
-	notifier := &mockNotifier{}
+	notifier := &testutil.FakeNotificationProvider{}
 
 	ec := newTestChecker(
 		&mockDocRepo{
@@ -282,10 +243,10 @@ func TestExpirationChecker_Check_ExpiredDocument(t *testing.T) {
 
 	ec.check(context.Background())
 
-	if len(notifier.triggered) == 0 {
+	if len(notifier.Triggered) == 0 {
 		t.Fatal("expected workflow trigger for expired document")
 	}
-	title, _ := notifier.triggered[0].Payload["title"].(string)
+	title, _ := notifier.Triggered[0].Payload["title"].(string)
 	if title != "Document Expired" {
 		t.Errorf("expected 'Document Expired' title, got %q", title)
 	}
@@ -294,7 +255,7 @@ func TestExpirationChecker_Check_ExpiredDocument(t *testing.T) {
 func TestExpirationChecker_Check_FreePlanLimitsToNearestDoc(t *testing.T) {
 	t.Parallel()
 
-	notifier := &mockNotifier{}
+	notifier := &testutil.FakeNotificationProvider{}
 	// Free user with three expiring documents; only the nearest (doc-near, 3d)
 	// should notify. A separate Pro user's document still notifies.
 	ec := New(
@@ -311,21 +272,62 @@ func TestExpirationChecker_Check_FreePlanLimitsToNearestDoc(t *testing.T) {
 			existsFn: func(_ context.Context, _, _ string, _ int) (bool, error) { return false, nil },
 			createFn: func(_ context.Context, _, _ string, _ int) error { return nil },
 		},
-		&mockProfileRepo{plan: domain.PlanFree},
+		&testutil.FakeProfileRepo{Plan: domain.PlanFree},
 		notifier,
 		slog.Default(),
 	)
 
 	ec.check(context.Background())
 
-	for _, tw := range notifier.triggered {
+	for _, tw := range notifier.Triggered {
 		docID, _ := tw.Payload["document_id"].(string)
 		if docID != "doc-near" {
 			t.Errorf("free user should only be notified for doc-near, got %q", docID)
 		}
 	}
-	if len(notifier.triggered) == 0 {
+	if len(notifier.Triggered) == 0 {
 		t.Fatal("expected the nearest document to notify")
+	}
+}
+
+func TestExpirationChecker_Check_ProPlanNotifiesAllDocs(t *testing.T) {
+	t.Parallel()
+
+	notifier := &testutil.FakeNotificationProvider{}
+	// Pro user with three expiring documents: no reminder cap, all notify.
+	ec := New(
+		&mockDocRepo{
+			listExpiringFn: func(_ context.Context, _ int) ([]domain.Document, error) {
+				return []domain.Document{
+					docExpiringIn("doc-a", "pro-user", 3, []int{7}),
+					docExpiringIn("doc-b", "pro-user", 5, []int{7}),
+					docExpiringIn("doc-c", "pro-user", 6, []int{7}),
+				}, nil
+			},
+		},
+		&mockNotifLogRepo{
+			existsFn: func(_ context.Context, _, _ string, _ int) (bool, error) { return false, nil },
+			createFn: func(_ context.Context, _, _ string, _ int) error { return nil },
+		},
+		&testutil.FakeProfileRepo{Plan: domain.PlanPro},
+		notifier,
+		slog.Default(),
+	)
+
+	ec.check(context.Background())
+
+	if len(notifier.Triggered) != 3 {
+		t.Fatalf("expected 3 triggers (one per document), got %d", len(notifier.Triggered))
+	}
+	seen := make(map[string]bool)
+	for _, tw := range notifier.Triggered {
+		docID, _ := tw.Payload["document_id"].(string)
+		seen[docID] = true
+	}
+	for _, id := range []string{"doc-a", "doc-b", "doc-c"} {
+		if !seen[id] {
+			t.Errorf("expected a trigger for %s", id)
+		}
 	}
 }
 

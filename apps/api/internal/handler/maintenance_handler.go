@@ -1,22 +1,35 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 	"github.com/Carlos19979/navis-app/apps/api/internal/dto"
-	"github.com/Carlos19979/navis-app/apps/api/internal/service"
 )
+
+// maintenanceService is the service surface the maintenance handlers consume.
+type maintenanceService interface {
+	AddLog(ctx context.Context, log *domain.MaintenanceLog) (*domain.MaintenanceLog, error)
+	ListLogs(ctx context.Context, userID, boatID string) ([]domain.MaintenanceLog, error)
+	UpdateLog(ctx context.Context, userID string, log *domain.MaintenanceLog) (*domain.MaintenanceLog, error)
+	DeleteLog(ctx context.Context, userID, boatID, id string) error
+	AddExpense(ctx context.Context, e *domain.Expense) (*domain.Expense, error)
+	ListExpenses(ctx context.Context, userID, boatID string) ([]domain.Expense, error)
+	UpdateExpense(ctx context.Context, userID string, e *domain.Expense) (*domain.Expense, error)
+	DeleteExpense(ctx context.Context, userID, boatID, id string) error
+	ExpenseTotals(ctx context.Context, userID, boatID string) (map[string]float64, error)
+}
 
 // MaintenanceHandler handles maintenance log and expense endpoints.
 type MaintenanceHandler struct {
-	svc *service.MaintenanceService
+	svc maintenanceService
 }
 
 // NewMaintenanceHandler creates a new MaintenanceHandler.
-func NewMaintenanceHandler(svc *service.MaintenanceService) *MaintenanceHandler {
+func NewMaintenanceHandler(svc maintenanceService) *MaintenanceHandler {
 	return &MaintenanceHandler{svc: svc}
 }
 

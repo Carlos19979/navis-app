@@ -1,23 +1,30 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 	"github.com/Carlos19979/navis-app/apps/api/internal/dto"
-	"github.com/Carlos19979/navis-app/apps/api/internal/service"
 	"github.com/Carlos19979/navis-app/apps/api/pkg/pagination"
 )
 
+// portService is the service surface the port handlers consume.
+type portService interface {
+	GetByID(ctx context.Context, id string) (*domain.Port, error)
+	NearLocation(ctx context.Context, lat, lon, radiusKM float64, cursor string, limit int) ([]domain.Port, string, error)
+}
+
 // PortHandler handles HTTP requests for port operations.
 type PortHandler struct {
-	svc *service.PortService
+	svc portService
 }
 
 // NewPortHandler creates a new PortHandler.
-func NewPortHandler(svc *service.PortService) *PortHandler {
+func NewPortHandler(svc portService) *PortHandler {
 	return &PortHandler{svc: svc}
 }
 
