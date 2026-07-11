@@ -160,6 +160,7 @@ func main() {
 		jwksURL,
 		cfg.CORSAllowedOrigins,
 		enableDevPlanSwitcher,
+		pool.Ping,
 		logger,
 	)
 

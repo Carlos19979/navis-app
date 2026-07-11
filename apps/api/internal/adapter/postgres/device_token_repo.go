@@ -32,10 +32,11 @@ func (r *DeviceTokenRepo) Upsert(ctx context.Context, userID, token string, plat
 	return err
 }
 
-// Delete removes a device token by its token string.
-func (r *DeviceTokenRepo) Delete(ctx context.Context, token string) error {
-	query := `DELETE FROM device_tokens WHERE token = $1`
-	_, err := r.pool.Exec(ctx, query, token)
+// Delete removes a device token owned by the given user. The user_id filter
+// prevents one user from unregistering another user's device.
+func (r *DeviceTokenRepo) Delete(ctx context.Context, userID, token string) error {
+	query := `DELETE FROM device_tokens WHERE user_id = $1 AND token = $2`
+	_, err := r.pool.Exec(ctx, query, userID, token)
 	return err
 }
 

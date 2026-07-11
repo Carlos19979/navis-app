@@ -116,6 +116,14 @@ var publicTripTemplate = template.Must(template.New("trip").Parse(`<!DOCTYPE htm
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{.Departure}} → {{.Arrival}} · Navis</title>
+<meta name="description" content="Travesía de {{.Departure}} a {{.Arrival}} ({{.Distance}}, {{.Duration}}) registrada con Navis, el cuaderno de bitácora digital.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Navis">
+<meta property="og:title" content="{{.Departure}} → {{.Arrival}} · Navis">
+<meta property="og:description" content="Travesía de {{.Distance}} en {{.Duration}} el {{.Date}}. Mira la ruta en el mapa.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="{{.Departure}} → {{.Arrival}} · Navis">
+<meta name="twitter:description" content="Travesía de {{.Distance}} en {{.Duration}} el {{.Date}}. Mira la ruta en el mapa.">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
   :root { --navy:#1B2A4A; --cyan:#4DA8DA; }

@@ -1,6 +1,7 @@
 package router
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"time"
@@ -30,6 +31,7 @@ func New(
 	jwksURL string,
 	allowedOrigins []string,
 	enableDevPlanSwitcher bool,
+	readyCheck func(ctx context.Context) error,
 	logger *slog.Logger,
 ) chi.Router {
 	r := chi.NewRouter()
@@ -40,6 +42,7 @@ func New(
 	r.Use(middleware.SecurityHeaders)
 	r.Use(middleware.CORS(allowedOrigins))
 	r.Use(middleware.RateLimit(100, time.Minute))
+	r.Use(middleware.MaxBodyBytes)
 	r.Use(middleware.Logging(logger))
 
 	// Health check endpoints (no auth required).
@@ -48,8 +51,18 @@ func New(
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	})
-	r.Get("/readyz", func(w http.ResponseWriter, _ *http.Request) {
+	// Readiness probes the DB so the orchestrator stops routing traffic to an
+	// instance that lost its pool.
+	r.Get("/readyz", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
+		ctx, cancel := context.WithTimeout(req.Context(), 2*time.Second)
+		defer cancel()
+		if err := readyCheck(ctx); err != nil {
+			logger.Error("readiness check failed", slog.String("error", err.Error()))
+			w.WriteHeader(http.StatusServiceUnavailable)
+			_, _ = w.Write([]byte(`{"status":"unavailable"}`))
+			return
+		}
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	})
@@ -61,14 +74,18 @@ func New(
 		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	})
 
-	// Public shared trips (no auth) — the share/landing pages.
+	// Public shared trips (no auth) — the share/landing pages. Tighter rate
+	// limit: unauthenticated surface reachable by anyone with a link.
 	r.Route("/public/trips", func(r chi.Router) {
+		r.Use(middleware.RateLimit(30, time.Minute))
 		r.Get("/{token}", tripH.PublicJSON)
-		r.Get("/{token}/view", tripH.PublicView)
+		r.With(middleware.PublicPageCSP).Get("/{token}/view", tripH.PublicView)
 	})
 
-	// Provider webhooks (no JWT — authenticated by a shared secret in the handler).
-	r.Post("/api/v1/webhooks/revenuecat", webhookH.RevenueCat)
+	// Provider webhooks (no JWT — authenticated by a shared secret in the
+	// handler). Strict rate limit: RevenueCat sends single events, not bursts.
+	r.With(middleware.RateLimit(20, time.Minute)).
+		Post("/api/v1/webhooks/revenuecat", webhookH.RevenueCat)
 
 	// API v1 routes (all require authentication).
 	r.Route("/api/v1", func(r chi.Router) {
