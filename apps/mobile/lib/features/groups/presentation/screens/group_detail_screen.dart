@@ -16,6 +16,7 @@ import 'package:navis_mobile/features/regattas/presentation/providers/regatta_pr
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
+import 'package:navis_mobile/shared/widgets/navis_danger_zone.dart';
 import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
@@ -192,11 +193,12 @@ class GroupDetailScreen extends ConsumerWidget {
   Widget _actions(BuildContext context, WidgetRef ref, Group group) {
     final l = AppLocalizations.of(context)!;
     if (group.isOwner) {
-      return TextButton.icon(
-        icon: const Icon(Icons.delete_outline, color: AppColors.red),
-        label:
-            Text(l.deleteGroup, style: const TextStyle(color: AppColors.red)),
-        onPressed: () => _confirmDelete(context, ref),
+      return NavisDangerAction(
+        label: l.deleteGroup,
+        icon: Icons.delete_outline,
+        confirmTitle: l.deleteGroup,
+        confirmMessage: l.deleteGroupConfirm,
+        onConfirmed: () => _doDelete(context, ref),
       );
     }
     if (group.isActiveMember) {
@@ -210,15 +212,8 @@ class GroupDetailScreen extends ConsumerWidget {
     return const SizedBox.shrink();
   }
 
-  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
+  Future<void> _doDelete(BuildContext context, WidgetRef ref) async {
     final l = AppLocalizations.of(context)!;
-    final ok = await NavisConfirmDialog.show(
-      context,
-      title: l.deleteGroup,
-      message: l.deleteGroupConfirm,
-      destructive: true,
-    );
-    if (!ok) return;
     try {
       await ref.read(groupRepositoryProvider).deleteGroup(groupId);
       ref.invalidate(myGroupsProvider);
@@ -306,7 +301,9 @@ class _RequestsSection extends ConsumerWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              l.userLabel(m.userId.substring(0, 8)),
+              m.name.trim().isNotEmpty
+                  ? m.name
+                  : l.userLabel(m.userId.substring(0, 8)),
               style: TextStyle(color: context.txtPrimary),
             ),
           ),
@@ -486,7 +483,7 @@ class _MembersSection extends ConsumerWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              '${isMe ? l.youLabel : l.userLabel(m.userId.substring(0, 8))} · $label',
+              '${isMe ? l.youLabel : (m.name.trim().isNotEmpty ? m.name : l.userLabel(m.userId.substring(0, 8)))} · $label',
               style: TextStyle(color: context.txtPrimary),
             ),
           ),

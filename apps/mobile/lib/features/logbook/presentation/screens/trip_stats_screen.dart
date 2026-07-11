@@ -18,14 +18,14 @@ class TripStatsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     final tripsAsync = ref.watch(boatTripsProvider(boatId));
 
     return GradientBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: NavisAppBar(
-          title: l10n?.tripStatistics ?? 'Trip Statistics',
+          title: l.tripStatistics,
           showBack: true,
         ),
         body: tripsAsync.when(
@@ -65,32 +65,32 @@ class TripStatsScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(16),
               children: [
                 _SectionTitle(
-                  label: l10n?.allTime ?? 'All Time',
+                  label: l.allTime,
                 ),
                 const SizedBox(height: 8),
                 _StatsGrid(children: [
                   _StatCard(
                     icon: Icons.route,
                     value: stats.totalTrips.toString(),
-                    label: l10n?.totalTrips ?? 'Trips',
+                    label: l.totalTrips,
                     color: AppColors.cyan,
                   ),
                   _StatCard(
                     icon: Icons.straighten,
                     value: stats.totalDistanceNm.toStringAsFixed(1),
-                    label: l10n?.totalDistanceNm ?? 'NM sailed',
+                    label: l.totalDistanceNm,
                     color: AppColors.green,
                   ),
                   _StatCard(
                     icon: Icons.schedule,
                     value: stats.totalHours.toStringAsFixed(1),
-                    label: l10n?.totalHoursAtSea ?? 'Hours at sea',
+                    label: l.totalHoursAtSea,
                     color: AppColors.amber,
                   ),
                   _StatCard(
                     icon: Icons.anchor,
                     value: ports.length.toString(),
-                    label: l10n?.portsVisited ?? 'Ports visited',
+                    label: l.portsVisited,
                     color: AppColors.cyan,
                   ),
                   _StatCard(
@@ -98,7 +98,7 @@ class TripStatsScreen extends ConsumerWidget {
                     value: maxSpeed > 0
                         ? '${maxSpeed.toStringAsFixed(1)} kn'
                         : '-',
-                    label: l10n?.topSpeed ?? 'Top speed',
+                    label: l.topSpeed,
                     color: AppColors.red,
                   ),
                   _StatCard(
@@ -106,7 +106,7 @@ class TripStatsScreen extends ConsumerWidget {
                     value: totalFuel > 0
                         ? '${totalFuel.toStringAsFixed(0)} L'
                         : '-',
-                    label: l10n?.fuelConsumed ?? 'Fuel consumed',
+                    label: l.fuelConsumed,
                     color: AppColors.amber,
                   ),
                 ]),
@@ -114,7 +114,7 @@ class TripStatsScreen extends ConsumerWidget {
                 if (totalEngine > 0) ...[
                   _StatRow(
                     icon: Icons.engineering,
-                    label: l10n?.totalEngineHours ?? 'Total engine hours',
+                    label: l.totalEngineHours,
                     value: '${totalEngine.toStringAsFixed(1)} h',
                   ),
                   const SizedBox(height: 8),
@@ -122,7 +122,7 @@ class TripStatsScreen extends ConsumerWidget {
                 if (stats.totalDistanceNm > 0 && stats.totalHours > 0) ...[
                   _StatRow(
                     icon: Icons.speed,
-                    label: l10n?.averageSpeed ?? 'Average speed',
+                    label: l.averageSpeed,
                     value:
                         '${(stats.totalDistanceNm / stats.totalHours).toStringAsFixed(1)} kn',
                   ),
@@ -130,27 +130,26 @@ class TripStatsScreen extends ConsumerWidget {
                 ],
                 const SizedBox(height: 16),
                 _SectionTitle(
-                  label: l10n?.thisYear(thisYear.toString()) ??
-                      'This Year ($thisYear)',
+                  label: l.thisYear(thisYear.toString()),
                 ),
                 const SizedBox(height: 8),
                 _StatsGrid(children: [
                   _StatCard(
                     icon: Icons.route,
                     value: yearStats.totalTrips.toString(),
-                    label: l10n?.totalTrips ?? 'Trips',
+                    label: l.totalTrips,
                     color: AppColors.cyan,
                   ),
                   _StatCard(
                     icon: Icons.straighten,
                     value: yearStats.totalDistanceNm.toStringAsFixed(1),
-                    label: l10n?.totalDistanceNm ?? 'NM sailed',
+                    label: l.totalDistanceNm,
                     color: AppColors.green,
                   ),
                   _StatCard(
                     icon: Icons.schedule,
                     value: yearStats.totalHours.toStringAsFixed(1),
-                    label: l10n?.totalHoursAtSea ?? 'Hours at sea',
+                    label: l.totalHoursAtSea,
                     color: AppColors.amber,
                   ),
                 ]),
@@ -330,6 +329,7 @@ class _MonthlyChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final monthCounts = List.filled(12, 0);
     for (final trip in trips) {
       final month = trip.departureTime.month - 1;
@@ -357,7 +357,7 @@ class _MonthlyChart extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            AppLocalizations.of(context)?.monthlyActivity ?? 'Monthly Activity',
+            l.monthlyActivity,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
