@@ -1731,4 +1731,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tideLow => 'Bajamar';
+
+  @override
+  String get manageBoat => 'Gestionar barco';
 }

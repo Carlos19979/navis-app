@@ -3355,6 +3355,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Low tide'**
   String get tideLow;
+
+  /// No description provided for @manageBoat.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage boat'**
+  String get manageBoat;
 }
 
 class _AppLocalizationsDelegate

@@ -591,5 +591,6 @@
   "tides": "Mareas",
   "tideRange": "Carrera {range} m",
   "tideHigh": "Pleamar",
-  "tideLow": "Bajamar"
+  "tideLow": "Bajamar",
+  "manageBoat": "Gestionar barco"
 }

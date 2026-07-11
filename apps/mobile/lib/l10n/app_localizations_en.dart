@@ -1715,4 +1715,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tideLow => 'Low tide';
+
+  @override
+  String get manageBoat => 'Manage boat';
 }

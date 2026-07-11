@@ -262,6 +262,18 @@ void main() {
       expect(find.text('Add Boat'), findsOneWidget);
     });
 
+    testWidgets('single boat renders the boat overview (focus mode)',
+        (tester) async {
+      await setPhoneSize(tester);
+      await tester.pumpWidget(buildSubject(boats: [makeBoat()]));
+      await pumpScreen(tester);
+
+      // Focus mode surfaces the Maintenance action and a manage-boat link
+      // that the multi-boat card does not.
+      expect(find.text('Manage boat'), findsOneWidget);
+      expect(find.text('Maintenance'), findsOneWidget);
+    });
+
     testWidgets('empty state Add Boat button navigates', (tester) async {
       await setPhoneSize(tester);
       await tester.pumpWidget(buildSubject(boats: []));

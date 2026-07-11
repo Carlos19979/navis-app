@@ -702,5 +702,6 @@
     }
   },
   "tideHigh": "High tide",
-  "tideLow": "Low tide"
+  "tideLow": "Low tide",
+  "manageBoat": "Manage boat"
 }
