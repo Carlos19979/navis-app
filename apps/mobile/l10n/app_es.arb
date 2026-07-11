@@ -579,5 +579,9 @@
   "resumeRecordingBody": "Se interrumpió la grabación de un viaje. ¿Quieres reanudarla?",
   "resumeAction": "Reanudar",
   "discardRecording": "Descartar",
-  "noBoatsValueProp": "Añade tu barco para controlar la caducidad de documentos, recibir avisos antes de las multas y llevar el mantenimiento en un solo sitio."
+  "noBoatsValueProp": "Añade tu barco para controlar la caducidad de documentos, recibir avisos antes de las multas y llevar el mantenimiento en un solo sitio.",
+  "home": "Inicio",
+  "community": "Comunidad",
+  "communityRegattas": "Regatas",
+  "communityClubs": "Clubes"
 }

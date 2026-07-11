@@ -1675,4 +1675,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noBoatsValueProp =>
       'Add your boat to track document expiry, get reminders before fines, and keep your maintenance log in one place.';
+
+  @override
+  String get home => 'Home';
+
+  @override
+  String get community => 'Community';
+
+  @override
+  String get communityRegattas => 'Regattas';
+
+  @override
+  String get communityClubs => 'Clubs';
 }

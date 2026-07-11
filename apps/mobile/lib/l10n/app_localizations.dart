@@ -3283,6 +3283,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add your boat to track document expiry, get reminders before fines, and keep your maintenance log in one place.'**
   String get noBoatsValueProp;
+
+  /// No description provided for @home.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get home;
+
+  /// No description provided for @community.
+  ///
+  /// In en, this message translates to:
+  /// **'Community'**
+  String get community;
+
+  /// No description provided for @communityRegattas.
+  ///
+  /// In en, this message translates to:
+  /// **'Regattas'**
+  String get communityRegattas;
+
+  /// No description provided for @communityClubs.
+  ///
+  /// In en, this message translates to:
+  /// **'Clubs'**
+  String get communityClubs;
 }
 
 class _AppLocalizationsDelegate
