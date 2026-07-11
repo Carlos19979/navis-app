@@ -6,6 +6,8 @@ import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/groups/domain/entities/group.dart';
 import 'package:navis_mobile/features/groups/presentation/providers/group_provider.dart';
+import 'package:navis_mobile/features/billing/billing.dart';
+import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
 import 'package:navis_mobile/features/profile/data/account_provider.dart';
 import 'package:navis_mobile/features/groups/presentation/widgets/group_card.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
@@ -33,29 +35,17 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen>
     super.dispose();
   }
 
-  void _onCreateGroup() {
-    final account = ref.read(accountProvider).valueOrNull;
-    if (account != null && !account.canCreateGroups) {
-      showDialog<void>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: ctx.dialogSurface,
-          title: Text('Crear grupos', style: TextStyle(color: ctx.txtPrimary)),
-          content: Text(
-            'Crear grupos está disponible en los planes Armador y Gestor. '
-            'Tu plan actual es ${account.planLabel}.',
-            style: TextStyle(color: ctx.txtSecondary),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Entendido'),
-            ),
-          ],
-        ),
+  Future<void> _onCreateGroup() async {
+    final isPro = ref.read(isProProvider);
+    if (!isPro) {
+      final purchased = await showPaywall(
+        context,
+        ref,
+        reason: 'Crear clubes y eventos es una función de Navis Pro.',
       );
-      return;
+      if (!purchased || !mounted) return;
     }
+    if (!mounted) return;
     context.push('/groups/new');
   }
 

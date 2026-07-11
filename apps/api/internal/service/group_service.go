@@ -48,7 +48,7 @@ func (s *GroupService) Create(ctx context.Context, group *domain.Group) (*domain
 		return nil, fmt.Errorf("creating group: %w", domain.ErrUnauthorized)
 	}
 
-	// Only paid plans (armador/gestor) may create groups.
+	// Only the paid (Pro) plan may create groups.
 	if s.profiles != nil {
 		profile, err := s.profiles.GetOrCreate(ctx, group.OwnerID)
 		if err != nil {

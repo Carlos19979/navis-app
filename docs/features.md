@@ -92,12 +92,15 @@ Target: Public launch + monetization.
 - Annual sailing summary (year in review)
 - Boat profile page (shareable)
 
-### User Plans / Tiers (implemented; billing pending)
-- Tiers `normal` / `armador` / `gestor` with boat limits 1 / 2 / 15 and group
-  creation gated to armador+ (server-enforced, HTTP 402).
-- `profiles.plan`, `GET/PUT /me`, mobile FAB gating + plan badge + dev switcher.
-- **Pending:** real in-app purchase (App Store / Google Play) → payment webhook
-  writes `profiles.plan`; advanced analytics; logbook PDF export.
+### User Plans / Tiers — Free / Pro (implemented; store config pending)
+- **Free** (1 boat, no group creation, reminders for 1 document) vs **Pro** (3 boats,
+  create groups/events, unlimited document reminders + maintenance schedules, unlimited
+  attachments). Server-enforced, HTTP 402. B2B "fleet" tier is future work.
+- `profiles.plan` (`free|pro`), `GET /me` (`entitlements`), RevenueCat IAP + webhook
+  (`POST /api/v1/webhooks/revenuecat`) driving the paid tier; mobile paywall + FAB gating;
+  dev switcher (debug builds only).
+- **Pending (config, not code):** RevenueCat + App Store/Play product setup, sandbox
+  purchase test; Novu email reminder workflow; advanced analytics; logbook PDF export.
 
 ### Admin / Organizer Panel (Future)
 - Web dashboard for event organizers to create and manage events

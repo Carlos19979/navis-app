@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -43,62 +44,63 @@ class SettingsScreen extends ConsumerWidget {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              // Dev-only plan switcher (real apps drive plan from payment).
-              NavisCard(
-                padding: EdgeInsets.zero,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const _SectionHeader(label: 'PLAN (PRUEBAS)'),
-                    Consumer(
-                      builder: (context, ref, _) {
-                        final current =
-                            ref.watch(accountProvider).valueOrNull?.plan ??
-                                'normal';
-                        Widget tile(String value, String label, String sub) {
-                          return ListTile(
-                            title: Text(label),
-                            subtitle: Text(sub),
-                            trailing: current == value
-                                ? const Icon(Icons.check_circle,
-                                    color: AppColors.cyan)
-                                : null,
-                            onTap: () async {
-                              if (current == value) return;
-                              try {
-                                await ref
-                                    .read(accountRepositoryProvider)
-                                    .setPlan(value);
-                                ref.invalidate(accountProvider);
-                                if (context.mounted) {
-                                  NavisSnackbar.success(
-                                      context, 'Plan cambiado a $label');
+              // Dev-only plan switcher (debug builds only). In production the
+              // plan is driven by the RevenueCat purchase/webhook flow.
+              if (kDebugMode) ...[
+                NavisCard(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const _SectionHeader(label: 'PLAN (PRUEBAS)'),
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final current =
+                              ref.watch(accountProvider).valueOrNull?.plan ??
+                                  'free';
+                          Widget tile(String value, String label, String sub) {
+                            return ListTile(
+                              title: Text(label),
+                              subtitle: Text(sub),
+                              trailing: current == value
+                                  ? const Icon(Icons.check_circle,
+                                      color: AppColors.cyan)
+                                  : null,
+                              onTap: () async {
+                                if (current == value) return;
+                                try {
+                                  await ref
+                                      .read(accountRepositoryProvider)
+                                      .setPlan(value);
+                                  ref.invalidate(accountProvider);
+                                  if (context.mounted) {
+                                    NavisSnackbar.success(
+                                        context, 'Plan cambiado a $label');
+                                  }
+                                } catch (_) {
+                                  if (context.mounted) {
+                                    NavisSnackbar.error(
+                                        context, 'No se pudo cambiar el plan');
+                                  }
                                 }
-                              } catch (_) {
-                                if (context.mounted) {
-                                  NavisSnackbar.error(
-                                      context, 'No se pudo cambiar el plan');
-                                }
-                              }
-                            },
-                          );
-                        }
+                              },
+                            );
+                          }
 
-                        return Column(
-                          children: [
-                            tile('normal', 'Normal', '1 barco · sin grupos'),
-                            tile('armador', 'Armador',
-                                '2 barcos · crear grupos'),
-                            tile(
-                                'gestor', 'Gestor', '15 barcos · crear grupos'),
-                          ],
-                        );
-                      },
-                    ),
-                  ],
+                          return Column(
+                            children: [
+                              tile('free', 'Free', '1 barco · sin grupos'),
+                              tile('pro', 'Pro',
+                                  '3 barcos · grupos · recordatorios'),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
+                const SizedBox(height: 12),
+              ],
               NavisCard(
                 padding: EdgeInsets.zero,
                 child: Column(

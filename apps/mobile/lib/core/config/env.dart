@@ -12,7 +12,7 @@ class Env {
 
   static const supabaseUrl = String.fromEnvironment(
     'SUPABASE_URL',
-    defaultValue: 'http://localhost:54321',
+    defaultValue: 'http://Carloss-MacBook-Pro.local:54321',
   );
 
   static const supabaseAnonKey = String.fromEnvironment(
@@ -23,8 +23,14 @@ class Env {
 
   static const apiUrl = String.fromEnvironment(
     'API_URL',
-    defaultValue: 'http://localhost:8080',
+    defaultValue: 'http://Carloss-MacBook-Pro.local:8080',
   );
 
   static const sentryDsn = String.fromEnvironment('SENTRY_DSN');
+
+  // RevenueCat public SDK keys (per platform). Empty disables in-app purchases
+  // (billing degrades gracefully). Pass via --dart-define.
+  static const revenueCatIosKey = String.fromEnvironment('REVENUECAT_IOS_KEY');
+  static const revenueCatAndroidKey =
+      String.fromEnvironment('REVENUECAT_ANDROID_KEY');
 }

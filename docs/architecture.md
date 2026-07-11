@@ -100,7 +100,7 @@
 ### PostgreSQL Schema
 
 ```
-  auth.users ---1:1--- profiles (plan: normal|armador|gestor)
+  auth.users ---1:1--- profiles (plan: free|pro)
       |
       | 1:N (owner)        N:M shared crew/co-owners (read-only)
       v                     ^
@@ -136,9 +136,11 @@ Key tables: `profiles`, `boats` (+`share_code`), `boat_members`, `documents`,
 ### Document Expiry Notifications
 1. Go cron job runs daily at 08:00 UTC
 2. Queries documents where `expiry_date - CURRENT_DATE` matches any value in `alert_days`
-3. Cross-references `notification_logs` to avoid duplicate sends
-4. Sends push notification via Firebase FCM
-5. Records the notification in `notification_logs`
+3. Applies the plan reminder quota: Free users are notified only for their single
+   nearest-expiry document; Pro users for all (`Plan.ReminderDocLimit()`)
+4. Cross-references `notification_logs` to avoid duplicate sends
+5. Triggers the Novu `document-expiry` workflow (Email via Resend; FCM push is a
+   fast-follow) and records the send in `notification_logs`
 
 ### GPS Trip Recording
 1. Flutter uses `geolocator` to capture position every 10 seconds
@@ -147,11 +149,14 @@ Key tables: `profiles`, `boats` (+`share_code`), `boat_members`, `documents`,
 4. On trip completion, the API calculates total `distance_nm` from the track
 
 ### Plans / entitlements
-1. `profiles.plan` (normal/armador/gestor) is read by `BoatService.Create` and
-   `GroupService.Create` to enforce boat-count and group-creation limits
+1. `profiles.plan` (free/pro) is read by `BoatService.Create`, `GroupService.Create`
+   and the expiration cron to enforce boat-count, group-creation and reminder limits
 2. Over-limit actions return HTTP 402 (`PLAN_LIMIT` / `PLAN_FORBIDDEN`)
-3. Flutter reads `GET /me` to gate the create FABs; a dev switcher writes
-   `PUT /me/plan` (replaced by a payment webhook in production)
+3. Flutter reads `GET /me` (`entitlements` + `is_pro`) to gate the create FABs and
+   show the RevenueCat paywall
+4. The paid tier is set by the RevenueCat webhook (`POST /api/v1/webhooks/revenuecat`,
+   secret-authenticated, outside JWT) which writes `profiles.plan`. `PUT /me/plan`
+   is a dev-only switcher (non-production builds)
 
 ### Boat sharing (crew / co-owners)
 1. Owner generates `boats.share_code`; an invitee `POST /boats/join` is added to
