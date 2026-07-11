@@ -294,6 +294,7 @@ class DocumentDetailScreen extends ConsumerWidget {
                               AsyncData(:final value) when value != null =>
                                 CachedNetworkImage(
                                   imageUrl: value,
+                                  memCacheWidth: 1200,
                                   fit: BoxFit.cover,
                                   placeholder: (context, url) =>
                                       const AspectRatio(

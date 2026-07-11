@@ -3277,6 +3277,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Discard'**
   String get discardRecording;
+
+  /// No description provided for @noBoatsValueProp.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your boat to track document expiry, get reminders before fines, and keep your maintenance log in one place.'**
+  String get noBoatsValueProp;
 }
 
 class _AppLocalizationsDelegate

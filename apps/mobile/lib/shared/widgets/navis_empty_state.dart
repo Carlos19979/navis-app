@@ -9,12 +9,16 @@ class NavisEmptyState extends StatelessWidget {
     super.key,
     required this.icon,
     required this.message,
+    this.description,
     this.actionLabel,
     this.onAction,
   });
 
   final IconData icon;
   final String message;
+
+  /// Optional secondary line under the message (e.g. a value proposition).
+  final String? description;
   final String? actionLabel;
   final VoidCallback? onAction;
 
@@ -59,10 +63,21 @@ class NavisEmptyState extends StatelessWidget {
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: context.txtSecondary,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: context.txtPrimary,
+                      fontWeight: FontWeight.w600,
                     ),
               ),
+              if (description != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  description!,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: context.txtSecondary,
+                      ),
+                ),
+              ],
               if (actionLabel != null && onAction != null) ...[
                 const SizedBox(height: 24),
                 NavisButton(

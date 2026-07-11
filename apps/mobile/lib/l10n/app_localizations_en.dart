@@ -1671,4 +1671,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get discardRecording => 'Discard';
+
+  @override
+  String get noBoatsValueProp =>
+      'Add your boat to track document expiry, get reminders before fines, and keep your maintenance log in one place.';
 }

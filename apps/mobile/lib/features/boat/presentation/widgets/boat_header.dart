@@ -24,6 +24,7 @@ class BoatHeader extends StatelessWidget {
                 label: AppLocalizations.of(context)!.boatPhoto,
                 child: CachedNetworkImage(
                   imageUrl: boat.photoUrl!,
+                  memCacheWidth: 1200,
                   fit: BoxFit.cover,
                   placeholder: (context, url) => Container(
                     color: AppColors.darkCard,

@@ -259,9 +259,8 @@ Use these Dart 3.x features everywhere they apply:
 
 ### Flutter — State Management (Riverpod 2)
 
-- `flutter_riverpod` + `riverpod_annotation` + `riverpod_generator`.
-- Use `@riverpod` annotation with code generation. Run `dart run build_runner watch`.
-- **`autoDispose` by default** — all providers auto-dispose when no longer listened. Only add `keepAlive: true` for data that must survive navigation (e.g., user session, boat list cache).
+- `flutter_riverpod` — providers are **hand-written** (`Provider`, `StateNotifierProvider`, `FutureProvider`, `StateNotifierProvider.family`). Riverpod codegen (`@riverpod`/`riverpod_generator`) is NOT used; do not add `.g.dart` provider files. (build_runner is still used for freezed/json_serializable models.)
+- Prefer `autoDispose` for parameterized/detail providers so per-item state is released on navigation; keep long-lived caches (user session, boat list) alive. Recording state (`tripRecordingProvider`) is intentionally long-lived so a trip survives leaving the map.
 - `AsyncNotifierProvider` + `AsyncNotifier` for async data with mutations.
 - `ref.watch()` for reactive dependencies in `build()`, `ref.read()` for one-shot actions in methods.
 - Providers do NOT contain business logic. They delegate to repositories.

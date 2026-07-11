@@ -1687,4 +1687,8 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get discardRecording => 'Descartar';
+
+  @override
+  String get noBoatsValueProp =>
+      'Añade tu barco para controlar la caducidad de documentos, recibir avisos antes de las multas y llevar el mantenimiento en un solo sitio.';
 }
