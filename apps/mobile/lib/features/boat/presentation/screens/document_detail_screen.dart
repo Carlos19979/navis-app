@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/core/network/storage_service.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -276,7 +277,9 @@ class DocumentDetailScreen extends ConsumerWidget {
                           ),
                     ],
 
-                    // Document scan image
+                    // Document scan image. The bucket is private: the stored
+                    // URL is a stable identifier that gets exchanged for a
+                    // short-lived signed URL at display time.
                     if (doc.photoUrl != null) ...[
                       const SizedBox(height: 16),
                       NavisCard(
@@ -285,29 +288,54 @@ class DocumentDetailScreen extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(16),
                           child: Semantics(
                             label: 'Document scan',
-                            child: CachedNetworkImage(
-                              imageUrl: doc.photoUrl!,
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) => const AspectRatio(
-                                aspectRatio: 4 / 3,
-                                child: Center(
-                                  child: CircularProgressIndicator(
-                                    color: AppColors.cyan,
-                                    strokeWidth: 2,
+                            child: switch (ref.watch(
+                                signedDocumentUrlProvider(doc.photoUrl!))) {
+                              AsyncData(:final value) when value != null =>
+                                CachedNetworkImage(
+                                  imageUrl: value,
+                                  fit: BoxFit.cover,
+                                  placeholder: (context, url) =>
+                                      const AspectRatio(
+                                    aspectRatio: 4 / 3,
+                                    child: Center(
+                                      child: CircularProgressIndicator(
+                                        color: AppColors.cyan,
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                  ),
+                                  errorWidget: (context, url, error) =>
+                                      AspectRatio(
+                                    aspectRatio: 4 / 3,
+                                    child: Center(
+                                      child: Icon(
+                                        Icons.broken_image_outlined,
+                                        size: 48,
+                                        color: context.txtSecondary,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                              errorWidget: (context, url, error) => AspectRatio(
-                                aspectRatio: 4 / 3,
-                                child: Center(
-                                  child: Icon(
-                                    Icons.broken_image_outlined,
-                                    size: 48,
-                                    color: context.txtSecondary,
+                              AsyncLoading() => const AspectRatio(
+                                  aspectRatio: 4 / 3,
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      color: AppColors.cyan,
+                                      strokeWidth: 2,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
+                              _ => AspectRatio(
+                                  aspectRatio: 4 / 3,
+                                  child: Center(
+                                    child: Icon(
+                                      Icons.broken_image_outlined,
+                                      size: 48,
+                                      color: context.txtSecondary,
+                                    ),
+                                  ),
+                                ),
+                            },
                           ),
                         ),
                       )
