@@ -3247,6 +3247,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not open the live stream'**
   String get couldNotOpenLive;
+
+  /// No description provided for @backgroundLocationAdvice.
+  ///
+  /// In en, this message translates to:
+  /// **'To keep recording with the screen off, allow “Always” location access for Navis in Settings.'**
+  String get backgroundLocationAdvice;
+
+  /// No description provided for @resumeRecordingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording in progress'**
+  String get resumeRecordingTitle;
+
+  /// No description provided for @resumeRecordingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A trip recording was interrupted. Do you want to resume it?'**
+  String get resumeRecordingBody;
+
+  /// No description provided for @resumeAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get resumeAction;
+
+  /// No description provided for @discardRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get discardRecording;
 }
 
 class _AppLocalizationsDelegate

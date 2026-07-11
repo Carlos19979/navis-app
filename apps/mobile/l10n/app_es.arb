@@ -573,5 +573,10 @@
   "pendingLabel": "Pendiente",
   "pendingCountShort": "{count} pend.",
   "followLive": "Seguir en directo",
-  "couldNotOpenLive": "No se pudo abrir el directo"
+  "couldNotOpenLive": "No se pudo abrir el directo",
+  "backgroundLocationAdvice": "Para seguir grabando con la pantalla apagada, permite el acceso a ubicación «Siempre» para Navis en Ajustes.",
+  "resumeRecordingTitle": "Grabación en curso",
+  "resumeRecordingBody": "Se interrumpió la grabación de un viaje. ¿Quieres reanudarla?",
+  "resumeAction": "Reanudar",
+  "discardRecording": "Descartar"
 }

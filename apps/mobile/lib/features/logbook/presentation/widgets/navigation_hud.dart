@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -11,24 +12,18 @@ class NavigationHud extends StatelessWidget {
     required this.speedKnots,
     required this.heading,
     required this.distanceNm,
-    required this.elapsed,
+    required this.startTime,
     this.gpsAccuracy,
   });
 
   final double speedKnots;
   final double? heading;
   final double distanceNm;
-  final Duration elapsed;
-  final double? gpsAccuracy;
 
-  String get _formattedTime {
-    final h = elapsed.inHours;
-    final m = elapsed.inMinutes.remainder(60);
-    final s = elapsed.inSeconds.remainder(60);
-    return '${h.toString().padLeft(2, '0')}:'
-        '${m.toString().padLeft(2, '0')}:'
-        '${s.toString().padLeft(2, '0')}';
-  }
+  /// Recording start; the elapsed clock ticks inside its own widget so the
+  /// map is not rebuilt every second.
+  final DateTime? startTime;
+  final double? gpsAccuracy;
 
   String get _headingLabel {
     if (heading == null) return '---';
@@ -99,11 +94,9 @@ class NavigationHud extends StatelessWidget {
                     ),
                     _divider(),
                     Expanded(
-                      child: _HudStat(
+                      child: _ElapsedClock(
                         label: l.timeAbbr,
-                        value: _formattedTime,
-                        unit: '',
-                        valueColor: AppColors.textPrimary,
+                        startTime: startTime,
                       ),
                     ),
                   ],
@@ -142,6 +135,58 @@ class NavigationHud extends StatelessWidget {
       width: 0.5,
       height: 32,
       color: AppColors.glassBorder,
+    );
+  }
+}
+
+/// Self-ticking elapsed clock: rebuilds only itself once per second instead
+/// of forcing the whole map screen through setState.
+class _ElapsedClock extends StatefulWidget {
+  const _ElapsedClock({required this.label, required this.startTime});
+
+  final String label;
+  final DateTime? startTime;
+
+  @override
+  State<_ElapsedClock> createState() => _ElapsedClockState();
+}
+
+class _ElapsedClockState extends State<_ElapsedClock> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  String get _formatted {
+    final start = widget.startTime;
+    if (start == null) return '00:00:00';
+    final elapsed = DateTime.now().difference(start);
+    final h = elapsed.inHours;
+    final m = elapsed.inMinutes.remainder(60);
+    final s = elapsed.inSeconds.remainder(60);
+    return '${h.toString().padLeft(2, '0')}:'
+        '${m.toString().padLeft(2, '0')}:'
+        '${s.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _HudStat(
+      label: widget.label,
+      value: _formatted,
+      unit: '',
+      valueColor: AppColors.textPrimary,
     );
   }
 }

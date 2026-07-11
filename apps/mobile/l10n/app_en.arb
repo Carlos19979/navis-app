@@ -667,5 +667,10 @@
     }
   },
   "followLive": "Watch live",
-  "couldNotOpenLive": "Could not open the live stream"
+  "couldNotOpenLive": "Could not open the live stream",
+  "backgroundLocationAdvice": "To keep recording with the screen off, allow “Always” location access for Navis in Settings.",
+  "resumeRecordingTitle": "Recording in progress",
+  "resumeRecordingBody": "A trip recording was interrupted. Do you want to resume it?",
+  "resumeAction": "Resume",
+  "discardRecording": "Discard"
 }

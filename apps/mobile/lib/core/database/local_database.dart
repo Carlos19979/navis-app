@@ -21,7 +21,7 @@ class LocalDatabase {
 
     return openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -81,6 +81,7 @@ class LocalDatabase {
     await db.execute(
       'CREATE INDEX idx_mutations_created ON pending_mutations(created_at)',
     );
+    await _createRecordingTables(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -105,6 +106,36 @@ class LocalDatabase {
         'CREATE INDEX IF NOT EXISTS idx_mutations_created ON pending_mutations(created_at)',
       );
     }
+    if (oldVersion < 3) {
+      await _createRecordingTables(db);
+    }
+  }
+
+  /// Crash-safe trip recording: the active session and every GPS fix are
+  /// written to disk as they happen, so killing the app mid-passage loses
+  /// nothing — the session is offered for resume on next launch.
+  Future<void> _createRecordingTables(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS recording_session (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        boat_id TEXT NOT NULL,
+        trip_id TEXT,
+        is_regatta INTEGER NOT NULL DEFAULT 0,
+        departure_port TEXT,
+        started_at TEXT NOT NULL,
+        status TEXT NOT NULL
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS recording_points (
+        seq INTEGER PRIMARY KEY AUTOINCREMENT,
+        lat REAL NOT NULL,
+        lon REAL NOT NULL,
+        timestamp TEXT NOT NULL,
+        speed_knots REAL,
+        handed_off INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
   }
 
   Future<void> upsert(
@@ -204,6 +235,98 @@ class LocalDatabase {
     await db.rawUpdate(
       'UPDATE pending_mutations SET retry_count = retry_count + 1 WHERE id = ?',
       [id],
+    );
+  }
+
+  // ── Trip recording persistence ────────────────────────────────────────
+
+  /// Starts (or replaces) the single active recording session and clears any
+  /// leftover points from a previous session.
+  Future<void> startRecordingSession({
+    required String boatId,
+    String? tripId,
+    required bool isRegatta,
+    String? departurePort,
+    required DateTime startedAt,
+  }) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete('recording_points');
+      await txn.insert(
+        'recording_session',
+        {
+          'id': 1,
+          'boat_id': boatId,
+          'trip_id': tripId,
+          'is_regatta': isRegatta ? 1 : 0,
+          'departure_port': departurePort,
+          'started_at': startedAt.toIso8601String(),
+          'status': 'recording',
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    });
+  }
+
+  Future<Map<String, dynamic>?> getRecordingSession() async {
+    final db = await database;
+    final rows = await db.query('recording_session', where: 'id = 1');
+    return rows.isEmpty ? null : rows.first;
+  }
+
+  Future<void> updateRecordingSession(Map<String, dynamic> fields) async {
+    final db = await database;
+    await db.update('recording_session', fields, where: 'id = 1');
+  }
+
+  Future<void> clearRecordingSession() async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete('recording_session');
+      await txn.delete('recording_points');
+    });
+  }
+
+  /// Persists one GPS fix and returns its sequence number.
+  Future<int> insertRecordingPoint({
+    required double lat,
+    required double lon,
+    required DateTime timestamp,
+    double? speedKnots,
+  }) async {
+    final db = await database;
+    return db.insert('recording_points', {
+      'lat': lat,
+      'lon': lon,
+      'timestamp': timestamp.toIso8601String(),
+      'speed_knots': speedKnots,
+    });
+  }
+
+  /// All recorded points in order (for resume / final save).
+  Future<List<Map<String, dynamic>>> getRecordingPoints() async {
+    final db = await database;
+    return db.query('recording_points', orderBy: 'seq ASC');
+  }
+
+  /// Points not yet handed off to an upload (direct POST or mutation queue).
+  Future<List<Map<String, dynamic>>> getPendingRecordingPoints() async {
+    final db = await database;
+    return db.query(
+      'recording_points',
+      where: 'handed_off = 0',
+      orderBy: 'seq ASC',
+    );
+  }
+
+  /// Marks points up to [maxSeq] as handed off so they are not uploaded twice.
+  Future<void> markRecordingPointsHandedOff(int maxSeq) async {
+    final db = await database;
+    await db.update(
+      'recording_points',
+      {'handed_off': 1},
+      where: 'seq <= ?',
+      whereArgs: [maxSeq],
     );
   }
 
