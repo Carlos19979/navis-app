@@ -13,15 +13,18 @@ const devDatabaseURL = "postgres://postgres:postgres@localhost:54322/postgres?ss
 
 // Config holds the application configuration loaded from environment variables.
 type Config struct {
-	Port               string
-	AppEnv             string
-	DatabaseURL        string
-	SupabaseJWTSecret  string
-	SupabaseURL        string
-	LogLevel           string
-	CORSAllowedOrigins []string
-	NovuAPIKey         string
-	SentryDSN          string
+	Port              string
+	AppEnv            string
+	DatabaseURL       string
+	SupabaseJWTSecret string
+	SupabaseURL       string
+	// SupabaseServiceRoleKey authorizes privileged admin operations (account
+	// deletion: auth.users + Storage). Required in production.
+	SupabaseServiceRoleKey string
+	LogLevel               string
+	CORSAllowedOrigins     []string
+	NovuAPIKey             string
+	SentryDSN              string
 	// RevenueCatWebhookSecret is the exact value RevenueCat is configured to send
 	// in the Authorization header of webhook requests. Required in production;
 	// requests are rejected with 401 when empty.
@@ -39,15 +42,16 @@ func Load() *Config {
 	}
 
 	return &Config{
-		Port:               getEnv("PORT", "8080"),
-		AppEnv:             appEnv,
-		DatabaseURL:        getEnv("DATABASE_URL", devDatabaseURL),
-		SupabaseJWTSecret:  getEnv("SUPABASE_JWT_SECRET", ""),
-		SupabaseURL:        getEnv("SUPABASE_URL", "http://localhost:54321"),
-		LogLevel:           getEnv("LOG_LEVEL", defaultLogLevel),
-		CORSAllowedOrigins: strings.Split(getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000"), ","),
-		NovuAPIKey:         getEnv("NOVU_API_KEY", ""),
-		SentryDSN:          getEnv("SENTRY_DSN", ""),
+		Port:                   getEnv("PORT", "8080"),
+		AppEnv:                 appEnv,
+		DatabaseURL:            getEnv("DATABASE_URL", devDatabaseURL),
+		SupabaseJWTSecret:      getEnv("SUPABASE_JWT_SECRET", ""),
+		SupabaseURL:            getEnv("SUPABASE_URL", "http://localhost:54321"),
+		SupabaseServiceRoleKey: getEnv("SUPABASE_SERVICE_ROLE_KEY", ""),
+		LogLevel:               getEnv("LOG_LEVEL", defaultLogLevel),
+		CORSAllowedOrigins:     strings.Split(getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000"), ","),
+		NovuAPIKey:             getEnv("NOVU_API_KEY", ""),
+		SentryDSN:              getEnv("SENTRY_DSN", ""),
 
 		RevenueCatWebhookSecret: getEnv("REVENUECAT_WEBHOOK_SECRET", ""),
 	}
@@ -72,6 +76,9 @@ func (c *Config) Validate() error {
 	}
 	if c.RevenueCatWebhookSecret == "" {
 		errs = append(errs, errors.New("REVENUECAT_WEBHOOK_SECRET must be set in production"))
+	}
+	if c.SupabaseServiceRoleKey == "" {
+		errs = append(errs, errors.New("SUPABASE_SERVICE_ROLE_KEY must be set in production (account deletion)"))
 	}
 	if c.DatabaseURL == devDatabaseURL {
 		errs = append(errs, errors.New("DATABASE_URL must be set in production (local dev default detected)"))

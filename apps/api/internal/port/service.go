@@ -71,6 +71,17 @@ type WeatherProvider interface {
 	GetHourly(ctx context.Context, lat, lon float64, date string) ([]HourlyPoint, error)
 }
 
+// SupabaseAdmin abstracts privileged Supabase operations that require the
+// service role key: deleting a user from auth.users (which cascades to every
+// app table) and purging their files from Storage buckets.
+type SupabaseAdmin interface {
+	// DeleteUserFiles removes every object under the user's folder in a bucket.
+	DeleteUserFiles(ctx context.Context, bucket, userID string) error
+	// DeleteAuthUser removes the user from auth.users. Deleting an already
+	// absent user is not an error (idempotent).
+	DeleteAuthUser(ctx context.Context, userID string) error
+}
+
 // NotificationProvider abstracts notification delivery (e.g. Novu).
 type NotificationProvider interface {
 	TriggerWorkflow(ctx context.Context, workflowID, subscriberID string, payload map[string]any) error

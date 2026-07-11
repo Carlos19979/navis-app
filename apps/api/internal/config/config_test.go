@@ -11,6 +11,7 @@ func productionConfig() *Config {
 		DatabaseURL:             "postgres://app:secret@db.example.com:5432/navis?sslmode=require",
 		SupabaseJWTSecret:       "a-real-secret",
 		RevenueCatWebhookSecret: "a-webhook-secret",
+		SupabaseServiceRoleKey:  "a-service-role-key",
 	}
 }
 
@@ -45,6 +46,11 @@ func TestValidate_Production_Failures(t *testing.T) {
 			name:    "empty webhook secret",
 			mutate:  func(c *Config) { c.RevenueCatWebhookSecret = "" },
 			wantMsg: "REVENUECAT_WEBHOOK_SECRET",
+		},
+		{
+			name:    "empty service role key",
+			mutate:  func(c *Config) { c.SupabaseServiceRoleKey = "" },
+			wantMsg: "SUPABASE_SERVICE_ROLE_KEY",
 		},
 		{
 			name:    "dev default database URL",
