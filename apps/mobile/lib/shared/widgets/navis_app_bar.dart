@@ -15,7 +15,7 @@ class NavisAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.actions,
     this.transparent = false,
     this.bottom,
-    this.showProfileAction = true,
+    this.showProfileAction = false,
   });
 
   final String title;

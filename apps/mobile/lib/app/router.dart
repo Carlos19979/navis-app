@@ -14,11 +14,10 @@ import 'package:navis_mobile/features/charts/presentation/screens/chart_screen.d
 import 'package:navis_mobile/features/documents/presentation/screens/document_form_screen.dart';
 import 'package:navis_mobile/features/documents/presentation/screens/document_list_screen.dart';
 import 'package:navis_mobile/features/maintenance/presentation/screens/maintenance_screen.dart';
+import 'package:navis_mobile/features/community/presentation/screens/community_screen.dart';
 import 'package:navis_mobile/features/events/presentation/screens/event_detail_screen.dart';
-import 'package:navis_mobile/features/events/presentation/screens/events_screen.dart';
 import 'package:navis_mobile/features/groups/presentation/screens/group_detail_screen.dart';
 import 'package:navis_mobile/features/groups/presentation/screens/group_form_screen.dart';
-import 'package:navis_mobile/features/groups/presentation/screens/groups_screen.dart';
 import 'package:navis_mobile/features/regattas/presentation/screens/pre_trip_checklist_screen.dart';
 import 'package:navis_mobile/features/regattas/presentation/screens/regatta_detail_screen.dart';
 import 'package:navis_mobile/features/regattas/presentation/screens/schedule_regatta_screen.dart';
@@ -114,29 +113,27 @@ final routerProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/events',
-                builder: (context, state) => const EventsScreen(),
-                routes: [
-                  GoRoute(
-                    path: ':id',
-                    builder: (context, state) {
-                      final id = state.pathParameters['id']!;
-                      return EventDetailScreen(eventId: id);
-                    },
-                  ),
-                ],
+                path: '/community',
+                builder: (context, state) => const CommunityScreen(),
               ),
             ],
           ),
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/groups',
-                builder: (context, state) => const GroupsScreen(),
+                path: '/profile',
+                builder: (context, state) => const ProfileScreen(),
               ),
             ],
           ),
         ],
+      ),
+      GoRoute(
+        path: '/events/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return EventDetailScreen(eventId: id);
+        },
       ),
       GoRoute(
         path: '/groups/new',
@@ -295,10 +292,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           final id = state.pathParameters['id']!;
           return TripEditScreen(tripId: id);
         },
-      ),
-      GoRoute(
-        path: '/profile',
-        builder: (context, state) => const ProfileScreen(),
       ),
       GoRoute(
         path: '/settings',
