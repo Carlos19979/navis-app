@@ -112,7 +112,7 @@ func main() {
 	docSvc := service.NewDocumentService(docRepo, boatRepo)
 	tripSvc := service.NewTripService(tripRepo, trackRepo, boatRepo)
 	eventSvc := service.NewEventService(eventRepo, interestRepo)
-	groupSvc := service.NewGroupService(groupRepo, groupMemberRepo, profileRepo, notifySvc)
+	groupSvc := service.NewGroupService(groupRepo, groupMemberRepo, profileRepo, notifySvc, postgres.NewTxManager(pool))
 	profileSvc := service.NewProfileService(profileRepo, boatRepo)
 	maintenanceSvc := service.NewMaintenanceService(maintenanceRepo, expenseRepo, boatRepo)
 	regattaSvc := service.NewRegattaService(tripRepo, participantRepo, checklistRepo, groupMemberRepo, notifySvc)

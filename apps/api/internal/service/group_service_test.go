@@ -123,7 +123,7 @@ func TestGroupService_Create_PrivateGeneratesInviteCode(t *testing.T) {
 			return nil
 		},
 	}
-	svc := NewGroupService(groupRepo, memberRepo, nil, nil)
+	svc := NewGroupService(groupRepo, memberRepo, nil, nil, nil)
 
 	g := &domain.Group{OwnerID: "user-1", Name: "Club Test", Visibility: domain.GroupVisibilityPrivate}
 	_, err := svc.Create(context.Background(), g)
@@ -157,7 +157,7 @@ func TestGroupService_Create_PublicHasNoInviteCode(t *testing.T) {
 			return nil
 		},
 	}
-	svc := NewGroupService(groupRepo, memberRepo, nil, nil)
+	svc := NewGroupService(groupRepo, memberRepo, nil, nil, nil)
 
 	g := &domain.Group{OwnerID: "user-1", Name: "Club Test", Visibility: domain.GroupVisibilityPublic}
 	if _, err := svc.Create(context.Background(), g); err != nil {
@@ -171,7 +171,7 @@ func TestGroupService_Create_PublicHasNoInviteCode(t *testing.T) {
 func TestGroupService_Create_EmptyName(t *testing.T) {
 	t.Parallel()
 
-	svc := NewGroupService(&mockGroupRepo{}, &mockGroupMemberRepo{}, nil, nil)
+	svc := NewGroupService(&mockGroupRepo{}, &mockGroupMemberRepo{}, nil, nil, nil)
 	_, err := svc.Create(context.Background(), &domain.Group{OwnerID: "user-1", Visibility: domain.GroupVisibilityPublic})
 
 	var ve *domain.ValidationError
@@ -202,7 +202,7 @@ func TestGroupService_RequestJoin_Public(t *testing.T) {
 			return nil
 		},
 	}
-	svc := NewGroupService(groupRepo, memberRepo, nil, nil)
+	svc := NewGroupService(groupRepo, memberRepo, nil, nil, nil)
 
 	if _, err := svc.RequestJoin(context.Background(), "user-2", "group-1"); err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -220,7 +220,7 @@ func TestGroupService_RequestJoin_PrivateForbidden(t *testing.T) {
 	groupRepo := &mockGroupRepo{
 		getByIDFn: func(_ context.Context, _, _ string) (*domain.Group, error) { return private, nil },
 	}
-	svc := NewGroupService(groupRepo, &mockGroupMemberRepo{}, nil, nil)
+	svc := NewGroupService(groupRepo, &mockGroupMemberRepo{}, nil, nil, nil)
 
 	_, err := svc.RequestJoin(context.Background(), "user-2", "group-1")
 	if !errors.Is(err, domain.ErrForbidden) {
@@ -236,7 +236,7 @@ func TestGroupService_RequestJoin_AlreadyMemberConflict(t *testing.T) {
 	groupRepo := &mockGroupRepo{
 		getByIDFn: func(_ context.Context, _, _ string) (*domain.Group, error) { return public, nil },
 	}
-	svc := NewGroupService(groupRepo, &mockGroupMemberRepo{}, nil, nil)
+	svc := NewGroupService(groupRepo, &mockGroupMemberRepo{}, nil, nil, nil)
 
 	_, err := svc.RequestJoin(context.Background(), "user-2", "group-1")
 	if !errors.Is(err, domain.ErrConflict) {
@@ -262,7 +262,7 @@ func TestGroupService_JoinByCode_Success(t *testing.T) {
 			return nil
 		},
 	}
-	svc := NewGroupService(groupRepo, memberRepo, nil, nil)
+	svc := NewGroupService(groupRepo, memberRepo, nil, nil, nil)
 
 	if _, err := svc.JoinByCode(context.Background(), "user-2", "ABCD2345"); err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -280,7 +280,7 @@ func TestGroupService_JoinByCode_Invalid(t *testing.T) {
 			return nil, domain.ErrInvalidInviteCode
 		},
 	}
-	svc := NewGroupService(groupRepo, &mockGroupMemberRepo{}, nil, nil)
+	svc := NewGroupService(groupRepo, &mockGroupMemberRepo{}, nil, nil, nil)
 
 	_, err := svc.JoinByCode(context.Background(), "user-2", "BADCODE1")
 	if !errors.Is(err, domain.ErrInvalidInviteCode) {
@@ -308,7 +308,7 @@ func TestGroupService_ApproveRequest_Success(t *testing.T) {
 			return nil
 		},
 	}
-	svc := NewGroupService(groupRepo, memberRepo, nil, nil)
+	svc := NewGroupService(groupRepo, memberRepo, nil, nil, nil)
 
 	if err := svc.ApproveRequest(context.Background(), "user-1", "group-1", "user-2"); err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -328,7 +328,7 @@ func TestGroupService_ApproveRequest_NotOwnerForbidden(t *testing.T) {
 			return g, nil
 		},
 	}
-	svc := NewGroupService(groupRepo, &mockGroupMemberRepo{}, nil, nil)
+	svc := NewGroupService(groupRepo, &mockGroupMemberRepo{}, nil, nil, nil)
 
 	err := svc.ApproveRequest(context.Background(), "user-2", "group-1", "user-3")
 	if !errors.Is(err, domain.ErrForbidden) {
@@ -346,7 +346,7 @@ func TestGroupService_Leave_OwnerCannotLeave(t *testing.T) {
 			return newTestGroup(domain.GroupVisibilityPublic), nil // owner == user-1
 		},
 	}
-	svc := NewGroupService(groupRepo, &mockGroupMemberRepo{}, nil, nil)
+	svc := NewGroupService(groupRepo, &mockGroupMemberRepo{}, nil, nil, nil)
 
 	err := svc.Leave(context.Background(), "user-1", "group-1")
 	if !errors.Is(err, domain.ErrConflict) {
@@ -369,7 +369,7 @@ func TestGroupService_Leave_MemberSuccess(t *testing.T) {
 			return nil
 		},
 	}
-	svc := NewGroupService(groupRepo, memberRepo, nil, nil)
+	svc := NewGroupService(groupRepo, memberRepo, nil, nil, nil)
 
 	if err := svc.Leave(context.Background(), "user-2", "group-1"); err != nil {
 		t.Fatalf("expected no error, got %v", err)

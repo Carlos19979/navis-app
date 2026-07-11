@@ -66,7 +66,7 @@ func (r *GroupRepo) Create(ctx context.Context, group *domain.Group) (*domain.Gr
 		RETURNING id, owner_id, name, description, photo_url, visibility, invite_code, created_at, updated_at`
 
 	g := &domain.Group{}
-	err := r.pool.QueryRow(ctx, query,
+	err := querier(ctx, r.pool).QueryRow(ctx, query,
 		group.OwnerID, group.Name, group.Description, group.PhotoURL, group.Visibility, group.InviteCode,
 	).Scan(
 		&g.ID, &g.OwnerID, &g.Name, &g.Description, &g.PhotoURL, &g.Visibility, &g.InviteCode,
@@ -91,7 +91,7 @@ func (r *GroupRepo) GetByID(ctx context.Context, userID, id string) (*domain.Gro
 			AND (g.visibility = 'public' OR g.owner_id = $1
 				OR EXISTS (SELECT 1 FROM group_members m WHERE m.group_id = g.id AND m.user_id = $1 AND m.status = 'active'))`
 
-	g, err := scanGroup(r.pool.QueryRow(ctx, query, userID, id))
+	g, err := scanGroup(querier(ctx, r.pool).QueryRow(ctx, query, userID, id))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, domain.ErrGroupNotFound
@@ -247,7 +247,7 @@ const memberNameExpr = `COALESCE(
 
 // Add inserts a membership row (idempotent: existing rows are left untouched).
 func (r *GroupMemberRepo) Add(ctx context.Context, groupID, userID string, role domain.GroupMemberRole, status domain.GroupMemberStatus) error {
-	_, err := r.pool.Exec(ctx,
+	_, err := querier(ctx, r.pool).Exec(ctx,
 		`INSERT INTO group_members (group_id, user_id, role, status)
 		 VALUES ($1, $2, $3, $4)
 		 ON CONFLICT (group_id, user_id) DO NOTHING`,
