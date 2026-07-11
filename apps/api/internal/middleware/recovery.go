@@ -4,10 +4,13 @@ import (
 	"log/slog"
 	"net/http"
 	"runtime/debug"
+	"time"
+
+	"github.com/getsentry/sentry-go"
 )
 
-// Recovery returns a middleware that recovers from panics, logs the stack trace,
-// and returns a 500 Internal Server Error response.
+// Recovery returns a middleware that recovers from panics, reports them to
+// Sentry, logs the stack trace, and returns a 500 Internal Server Error.
 func Recovery(logger *slog.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -16,6 +19,20 @@ func Recovery(logger *slog.Logger) func(http.Handler) http.Handler {
 					stack := debug.Stack()
 					requestID := RequestIDFromContext(r.Context())
 					userID, _ := UserIDFromContext(r.Context())
+
+					hub := sentry.GetHubFromContext(r.Context())
+					if hub == nil {
+						hub = sentry.CurrentHub().Clone()
+					}
+					hub.WithScope(func(scope *sentry.Scope) {
+						scope.SetTag("request_id", requestID)
+						scope.SetTag("user_id", userID)
+						scope.SetRequest(r)
+						hub.Recover(rec)
+					})
+					// A panic may precede a crash; give the event a moment to leave.
+					sentry.Flush(2 * time.Second)
+
 					logger.Error("panic recovered",
 						slog.Any("panic", rec),
 						slog.String("stack", string(stack)),

@@ -85,12 +85,12 @@ func (h *WebhookHandler) RevenueCat(w http.ResponseWriter, r *http.Request) {
 }
 
 // authorized compares the request's Authorization header to the configured
-// secret in constant time. An empty configured secret disables the check (local
-// development only).
+// secret in constant time. An empty configured secret rejects every request —
+// local dev must set REVENUECAT_WEBHOOK_SECRET in .env to exercise the webhook.
 func (h *WebhookHandler) authorized(r *http.Request) bool {
 	if h.secret == "" {
-		h.logger.Warn("revenuecat webhook: no secret configured; skipping auth")
-		return true
+		h.logger.Warn("revenuecat webhook: no secret configured; rejecting request")
+		return false
 	}
 	got := r.Header.Get("Authorization")
 	return subtle.ConstantTimeCompare([]byte(got), []byte(h.secret)) == 1
