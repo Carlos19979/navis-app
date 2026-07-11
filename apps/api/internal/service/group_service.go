@@ -16,11 +16,21 @@ type GroupService struct {
 	memberRepo port.GroupMemberRepository
 	profiles   port.ProfileRepository
 	notifier   *Notifier
+	txm        port.TxManager
 }
 
-// NewGroupService creates a new GroupService.
-func NewGroupService(groupRepo port.GroupRepository, memberRepo port.GroupMemberRepository, profiles port.ProfileRepository, notifier *Notifier) *GroupService {
-	return &GroupService{groupRepo: groupRepo, memberRepo: memberRepo, profiles: profiles, notifier: notifier}
+// NewGroupService creates a new GroupService. txm may be nil (tests), in which
+// case multi-step writes run without a transaction.
+func NewGroupService(groupRepo port.GroupRepository, memberRepo port.GroupMemberRepository, profiles port.ProfileRepository, notifier *Notifier, txm port.TxManager) *GroupService {
+	return &GroupService{groupRepo: groupRepo, memberRepo: memberRepo, profiles: profiles, notifier: notifier, txm: txm}
+}
+
+// withinTx runs fn inside a transaction when a TxManager is configured.
+func (s *GroupService) withinTx(ctx context.Context, fn func(ctx context.Context) error) error {
+	if s.txm == nil {
+		return fn(ctx)
+	}
+	return s.txm.WithinTx(ctx, fn)
 }
 
 // inviteCodeAlphabet excludes ambiguous characters (0/O, 1/I/L) for readability.
@@ -62,9 +72,12 @@ func (s *GroupService) Create(ctx context.Context, group *domain.Group) (*domain
 	// Private groups are joined with an invite code; public groups are
 	// join-by-request. Retry on the (astronomically rare) code collision by
 	// regenerating the code — the DB's UNIQUE constraint is the source of truth.
+	//
+	// Group insert + owner membership run in one transaction so a failure can't
+	// leave an ownerless group. A failed INSERT aborts the whole transaction in
+	// Postgres, so each collision retry restarts a fresh one.
 	private := group.Visibility == domain.GroupVisibilityPrivate
 	const maxAttempts = 5
-	var created *domain.Group
 	for attempt := 0; attempt < maxAttempts; attempt++ {
 		if private {
 			code, err := generateInviteCode()
@@ -73,28 +86,30 @@ func (s *GroupService) Create(ctx context.Context, group *domain.Group) (*domain
 			}
 			group.InviteCode = &code
 		}
-		var err error
-		created, err = s.groupRepo.Create(ctx, group)
+
+		var result *domain.Group
+		err := s.withinTx(ctx, func(ctx context.Context) error {
+			created, err := s.groupRepo.Create(ctx, group)
+			if err != nil {
+				return err
+			}
+			if err := s.memberRepo.Add(ctx, created.ID, created.OwnerID,
+				domain.GroupRoleOwner, domain.GroupMemberStatusActive); err != nil {
+				return fmt.Errorf("adding group owner %s: %w", created.OwnerID, err)
+			}
+			// Re-read so derived fields (member count, my role/status) are populated.
+			result, err = s.groupRepo.GetByID(ctx, created.OwnerID, created.ID)
+			return err
+		})
 		if err == nil {
-			break
+			return result, nil
 		}
 		if private && errors.Is(err, domain.ErrConflict) {
-			created = nil
 			continue // invite code collided — regenerate and retry
 		}
 		return nil, fmt.Errorf("creating group: %w", err)
 	}
-	if created == nil {
-		return nil, fmt.Errorf("creating group: %w", domain.ErrConflict)
-	}
-
-	if err := s.memberRepo.Add(ctx, created.ID, created.OwnerID,
-		domain.GroupRoleOwner, domain.GroupMemberStatusActive); err != nil {
-		return nil, fmt.Errorf("adding group owner %s: %w", created.OwnerID, err)
-	}
-
-	// Re-read so derived fields (member count, my role/status) are populated.
-	return s.groupRepo.GetByID(ctx, created.OwnerID, created.ID)
+	return nil, fmt.Errorf("creating group: %w", domain.ErrConflict)
 }
 
 // GetByID returns a group visible to the user (public, owned, or a member).

@@ -71,6 +71,12 @@ type WeatherProvider interface {
 	GetHourly(ctx context.Context, lat, lon float64, date string) ([]HourlyPoint, error)
 }
 
+// TxManager runs a function inside a database transaction. Services start the
+// transaction; repositories called with the provided context join it.
+type TxManager interface {
+	WithinTx(ctx context.Context, fn func(ctx context.Context) error) error
+}
+
 // SupabaseAdmin abstracts privileged Supabase operations that require the
 // service role key: deleting a user from auth.users (which cascades to every
 // app table) and purging their files from Storage buckets.
