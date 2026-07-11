@@ -9,6 +9,7 @@ import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.
 import 'package:navis_mobile/features/events/presentation/providers/event_provider.dart';
 import 'package:navis_mobile/features/groups/presentation/providers/group_provider.dart';
 import 'package:navis_mobile/features/regattas/presentation/providers/regatta_provider.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
@@ -42,12 +43,13 @@ class _StartEventRegattaScreenState
   }
 
   Future<void> _join(List<Boat> boats) async {
+    final l = AppLocalizations.of(context)!;
     if (_groupId == null) {
-      NavisSnackbar.error(context, 'Selecciona un grupo');
+      NavisSnackbar.error(context, l.selectAGroup);
       return;
     }
     if (_boatId == null) {
-      NavisSnackbar.error(context, 'Selecciona un barco');
+      NavisSnackbar.error(context, l.selectABoat);
       return;
     }
 
@@ -68,17 +70,18 @@ class _StartEventRegattaScreenState
           );
       ref.invalidate(groupRegattasProvider(_groupId!));
       if (!mounted) return;
-      NavisSnackbar.success(context, 'Te has unido con tu grupo');
+      NavisSnackbar.success(context, l.joinedWithGroup);
       context.pushReplacement('/regattas/${regatta.id}');
     } catch (_) {
       if (!mounted) return;
       setState(() => _saving = false);
-      NavisSnackbar.error(context, 'No se pudo unir');
+      NavisSnackbar.error(context, l.couldNotJoin);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final groupsAsync = ref.watch(myGroupsProvider);
     final boatsAsync = ref.watch(boatsProvider);
     final boats = boatsAsync.valueOrNull ?? const <Boat>[];
@@ -88,7 +91,7 @@ class _StartEventRegattaScreenState
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
-      appBar: const NavisAppBar(title: 'Unirse como grupo', showBack: true),
+      appBar: NavisAppBar(title: l.joinAsGroup, showBack: true),
       body: GradientBackground(
         child: SafeArea(
           child: ListView(
@@ -114,19 +117,19 @@ class _StartEventRegattaScreenState
                 ),
                 const SizedBox(height: 20),
               ],
-              const _Label('Grupo'),
+              _Label(l.groupLabel),
               const SizedBox(height: 8),
               groupsAsync.when(
                 loading: () => const Center(
                     child: CircularProgressIndicator(color: AppColors.cyan)),
-                error: (e, _) => Text('Error: $e',
+                error: (e, _) => Text(l.errorWithMessage(e.toString()),
                     style: const TextStyle(color: AppColors.red)),
                 data: (groups) {
                   final owned =
                       groups.where((g) => g.isOwner).toList(growable: false);
                   if (owned.isEmpty) {
                     return Text(
-                      'Crea un grupo primero para unirte con tu equipo.',
+                      l.createGroupFirst,
                       style: TextStyle(color: context.txtSecondary),
                     );
                   }
@@ -143,17 +146,17 @@ class _StartEventRegattaScreenState
                 },
               ),
               const SizedBox(height: 20),
-              const _Label('Barco'),
+              _Label(l.boat),
               const SizedBox(height: 8),
               boatsAsync.when(
                 loading: () => const Center(
                     child: CircularProgressIndicator(color: AppColors.cyan)),
-                error: (e, _) => Text('Error: $e',
+                error: (e, _) => Text(l.errorWithMessage(e.toString()),
                     style: const TextStyle(color: AppColors.red)),
                 data: (boats) {
                   if (boats.isEmpty) {
                     return Text(
-                      'Primero añade un barco.',
+                      l.addBoatFirst,
                       style: TextStyle(color: context.txtSecondary),
                     );
                   }
@@ -171,7 +174,7 @@ class _StartEventRegattaScreenState
               ),
               const SizedBox(height: 28),
               NavisButton(
-                label: 'Unirse con mi grupo',
+                label: l.joinWithMyGroup,
                 icon: Icons.flag,
                 isLoading: _saving,
                 isDisabled: _saving,

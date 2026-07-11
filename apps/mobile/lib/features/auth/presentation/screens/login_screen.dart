@@ -49,8 +49,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No se pudo iniciar sesión con ese proveedor'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.socialLoginFailed),
           ),
         );
       }
@@ -339,7 +339,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           child: Text(
-                            'o',
+                            l.orDivider,
                             style: TextStyle(color: context.txtSecondary),
                           ),
                         ),
@@ -353,14 +353,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     // -- Social sign-in --
                     _SocialButton(
                       icon: Icons.apple,
-                      label: 'Continuar con Apple',
+                      label: l.continueWithApple,
                       onPressed: () => _onOAuth(
                           ref.read(authRepositoryProvider).signInWithApple),
                     ),
                     const SizedBox(height: 10),
                     _SocialButton(
                       icon: Icons.g_mobiledata,
-                      label: 'Continuar con Google',
+                      label: l.continueWithGoogle,
                       onPressed: () => _onOAuth(
                           ref.read(authRepositoryProvider).signInWithGoogle),
                     ),

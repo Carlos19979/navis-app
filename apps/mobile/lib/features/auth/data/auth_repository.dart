@@ -67,4 +67,9 @@ class AuthRepository {
   Future<void> resetPassword(String email) async {
     await _auth.resetPasswordForEmail(email);
   }
+
+  /// Resends the signup confirmation email.
+  Future<void> resendConfirmation(String email) async {
+    await _auth.resend(type: OtpType.signup, email: email);
+  }
 }

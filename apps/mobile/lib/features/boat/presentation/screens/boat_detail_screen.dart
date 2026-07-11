@@ -101,8 +101,8 @@ class _BoatDetailView extends ConsumerWidget {
                     const SizedBox(height: 10),
                     _ActionTile(
                       icon: Icons.build_outlined,
-                      title: 'Mantenimiento y gastos',
-                      subtitle: 'Servicios y costes del barco',
+                      title: l.maintenanceAndExpenses,
+                      subtitle: l.maintenanceAndExpensesSubtitle,
                       color: AppColors.amber,
                       onTap: () =>
                           context.push('/boats/${boat.id}/maintenance'),
@@ -110,8 +110,8 @@ class _BoatDetailView extends ConsumerWidget {
                     const SizedBox(height: 10),
                     _ActionTile(
                       icon: Icons.people_outline,
-                      title: 'Compartir barco',
-                      subtitle: 'Tripulación y copropietarios',
+                      title: l.shareBoat,
+                      subtitle: l.shareBoatSubtitle,
                       color: AppColors.cyan,
                       onTap: () => _shareBoat(context, ref, boat),
                     ),
@@ -140,8 +140,7 @@ class _BoatDetailView extends ConsumerWidget {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              'Barco compartido contigo. Tienes los permisos '
-                              'que te haya dado el propietario.',
+                              l.sharedBoatInfo,
                               style: TextStyle(color: context.txtSecondary),
                             ),
                           ),
@@ -170,8 +169,8 @@ class _BoatDetailView extends ConsumerWidget {
                     const SizedBox(height: 10),
                     _ActionTile(
                       icon: Icons.build_outlined,
-                      title: 'Mantenimiento y gastos',
-                      subtitle: 'Servicios y costes del barco',
+                      title: l.maintenanceAndExpenses,
+                      subtitle: l.maintenanceAndExpensesSubtitle,
                       color: AppColors.amber,
                       onTap: () =>
                           context.push('/boats/${boat.id}/maintenance'),
@@ -179,8 +178,8 @@ class _BoatDetailView extends ConsumerWidget {
                     const SizedBox(height: 10),
                     _ActionTile(
                       icon: Icons.logout,
-                      title: 'Salir del barco compartido',
-                      subtitle: 'Dejar de tener acceso',
+                      title: l.leaveSharedBoat,
+                      subtitle: l.leaveSharedBoatSubtitle,
                       color: AppColors.red,
                       onTap: () => _leaveBoat(context, ref, boat),
                     ),
@@ -245,13 +244,14 @@ class _BoatDetailView extends ConsumerWidget {
 
   Future<void> _shareBoat(
       BuildContext context, WidgetRef ref, Boat boat) async {
+    final l = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
     String code;
     try {
       code = await ref.read(boatShareRepositoryProvider).shareCode(boat.id);
     } catch (_) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('No se pudo obtener el código')),
+        SnackBar(content: Text(l.couldNotGetCode)),
       );
       return;
     }
@@ -267,15 +267,14 @@ class _BoatDetailView extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Compartir barco',
+            Text(l.shareBoat,
                 style: TextStyle(
                     color: context.txtPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.w700)),
             const SizedBox(height: 4),
             Text(
-              'Comparte este código. Quien lo introduzca verá el barco. '
-              'Activa "puede grabar viajes" abajo para darle permiso de editor.',
+              l.shareBoatExplainer,
               style: TextStyle(color: context.txtSecondary, fontSize: 13),
             ),
             const SizedBox(height: 16),
@@ -308,11 +307,11 @@ class _BoatDetailView extends ConsumerWidget {
                     onPressed: () {
                       Clipboard.setData(ClipboardData(text: code));
                       messenger.showSnackBar(
-                        const SnackBar(content: Text('Código copiado')),
+                        SnackBar(content: Text(l.codeCopied)),
                       );
                     },
                     icon: const Icon(Icons.copy, size: 18),
-                    label: const Text('Copiar'),
+                    label: Text(l.copy),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -320,17 +319,16 @@ class _BoatDetailView extends ConsumerWidget {
                   child: FilledButton.icon(
                     style:
                         FilledButton.styleFrom(backgroundColor: AppColors.cyan),
-                    onPressed: () => Share.share(
-                        'Únete a mi barco "${boat.name}" en Navis con el '
-                        'código: $code'),
+                    onPressed: () =>
+                        Share.share(l.shareBoatMessage(boat.name, code)),
                     icon: const Icon(Icons.share, size: 18),
-                    label: const Text('Compartir'),
+                    label: Text(l.share),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 18),
-            Text('Con acceso',
+            Text(l.withAccess,
                 style: TextStyle(
                     color: context.txtPrimary, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
@@ -342,11 +340,11 @@ class _BoatDetailView extends ConsumerWidget {
                     padding: EdgeInsets.all(8),
                     child: LinearProgressIndicator(),
                   ),
-                  error: (e, _) => Text('Error: $e',
+                  error: (e, _) => Text(l.errorWithMessage(e.toString()),
                       style: TextStyle(color: context.txtSecondary)),
                   data: (members) {
                     if (members.isEmpty) {
-                      return Text('Aún no has compartido con nadie.',
+                      return Text(l.notSharedYet,
                           style: TextStyle(color: context.txtSecondary));
                     }
                     return Column(
@@ -367,21 +365,22 @@ class _BoatDetailView extends ConsumerWidget {
 
   Future<void> _leaveBoat(
       BuildContext context, WidgetRef ref, Boat boat) async {
+    final l = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: context.dialogSurfaceElevated,
-        title: const Text('Salir del barco'),
-        content: Text('Dejarás de tener acceso a "${boat.name}".'),
+        title: Text(l.leaveBoat),
+        content: Text(l.leaveBoatConfirm(boat.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancelar'),
+            child: Text(l.cancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppColors.red),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Salir'),
+            child: Text(l.leave),
           ),
         ],
       ),
@@ -711,6 +710,7 @@ class _MemberPermissionsTileState
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final granted = [
       _perms.canRecordTrips,
       _perms.canManageExpenses,
@@ -727,18 +727,18 @@ class _MemberPermissionsTileState
         leading: const Icon(Icons.person_outline),
         title: Text(widget.member.name,
             style: TextStyle(color: context.txtPrimary)),
-        subtitle: Text('$granted ${granted == 1 ? 'permiso' : 'permisos'}',
+        subtitle: Text(l.permissionsCount(granted),
             style: TextStyle(color: context.txtSecondary, fontSize: 12)),
         children: [
-          _toggle('Grabar viajes', _perms.canRecordTrips,
+          _toggle(l.permRecordTrips, _perms.canRecordTrips,
               (v) => _perms.copyWith(canRecordTrips: v)),
-          _toggle('Gestionar gastos', _perms.canManageExpenses,
+          _toggle(l.permManageExpenses, _perms.canManageExpenses,
               (v) => _perms.copyWith(canManageExpenses: v)),
-          _toggle('Gestionar mantenimiento', _perms.canManageMaintenance,
+          _toggle(l.permManageMaintenance, _perms.canManageMaintenance,
               (v) => _perms.copyWith(canManageMaintenance: v)),
-          _toggle('Ver documentos', _perms.canViewDocuments,
+          _toggle(l.permViewDocuments, _perms.canViewDocuments,
               (v) => _perms.copyWith(canViewDocuments: v)),
-          _toggle('Gestionar documentos', _perms.canManageDocuments,
+          _toggle(l.permManageDocuments, _perms.canManageDocuments,
               (v) => _perms.copyWith(canManageDocuments: v)),
           Align(
             alignment: Alignment.centerLeft,
@@ -751,8 +751,8 @@ class _MemberPermissionsTileState
               },
               icon: const Icon(Icons.remove_circle_outline,
                   color: AppColors.red, size: 18),
-              label: const Text('Quitar acceso',
-                  style: TextStyle(color: AppColors.red)),
+              label: Text(AppLocalizations.of(context)!.removeAccess,
+                  style: const TextStyle(color: AppColors.red)),
             ),
           ),
         ],

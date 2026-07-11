@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/groups/presentation/providers/group_provider.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
@@ -34,6 +35,7 @@ class _GroupFormScreenState extends ConsumerState<GroupFormScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    final l = AppLocalizations.of(context)!;
     setState(() => _saving = true);
     try {
       final group = await ref.read(groupRepositoryProvider).createGroup(
@@ -43,21 +45,22 @@ class _GroupFormScreenState extends ConsumerState<GroupFormScreen> {
           );
       ref.invalidate(myGroupsProvider);
       if (!mounted) return;
-      NavisSnackbar.success(context, 'Grupo creado');
+      NavisSnackbar.success(context, l.groupCreated);
       context.pushReplacement('/groups/${group.id}');
     } catch (_) {
       if (!mounted) return;
       setState(() => _saving = false);
-      NavisSnackbar.error(context, 'No se pudo crear el grupo');
+      NavisSnackbar.error(context, l.couldNotCreateGroup);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
-      appBar: const NavisAppBar(title: 'Crear grupo', showBack: true),
+      appBar: NavisAppBar(title: l.createGroup, showBack: true),
       body: GradientBackground(
         child: SafeArea(
           child: Form(
@@ -67,19 +70,19 @@ class _GroupFormScreenState extends ConsumerState<GroupFormScreen> {
               children: [
                 _field(
                   controller: _nameController,
-                  label: 'Nombre del grupo',
+                  label: l.groupName,
                   validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Obligatorio' : null,
+                      (v == null || v.trim().isEmpty) ? l.requiredField : null,
                 ),
                 const SizedBox(height: 16),
                 _field(
                   controller: _descriptionController,
-                  label: 'Descripción (opcional)',
+                  label: l.descriptionOptional,
                   maxLines: 3,
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'Visibilidad',
+                  l.visibilityLabel,
                   style: TextStyle(
                     color: context.txtPrimary,
                     fontSize: 15,
@@ -89,20 +92,20 @@ class _GroupFormScreenState extends ConsumerState<GroupFormScreen> {
                 const SizedBox(height: 8),
                 _visibilityOption(
                   value: 'public',
-                  title: 'Público',
-                  subtitle: 'Cualquiera puede solicitar unirse (tú apruebas).',
+                  title: l.publicLabel,
+                  subtitle: l.groupPublicSubtitle,
                   icon: Icons.public,
                 ),
                 const SizedBox(height: 8),
                 _visibilityOption(
                   value: 'private',
-                  title: 'Privado',
-                  subtitle: 'Solo se unen con un código de invitación.',
+                  title: l.privateLabel,
+                  subtitle: l.groupPrivateSubtitle,
                   icon: Icons.lock_outline,
                 ),
                 const SizedBox(height: 28),
                 NavisButton(
-                  label: 'Crear grupo',
+                  label: l.createGroup,
                   isLoading: _saving,
                   isDisabled: _saving,
                   onPressed: _submit,

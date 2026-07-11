@@ -1014,4 +1014,644 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get wcUnknown => '—';
+
+  @override
+  String get inviteCode => 'Invite code';
+
+  @override
+  String get codeCopied => 'Code copied';
+
+  @override
+  String get copy => 'Copy';
+
+  @override
+  String get share => 'Share';
+
+  @override
+  String get join => 'Join';
+
+  @override
+  String get leave => 'Leave';
+
+  @override
+  String get view => 'View';
+
+  @override
+  String get remove => 'Remove';
+
+  @override
+  String get couldNotSave => 'Could not save';
+
+  @override
+  String get couldNotDelete => 'Could not delete';
+
+  @override
+  String errorWithMessage(String message) {
+    return 'Error: $message';
+  }
+
+  @override
+  String get membersLabel => 'Members';
+
+  @override
+  String get socialLoginFailed => 'Could not sign in with that provider';
+
+  @override
+  String get continueWithApple => 'Continue with Apple';
+
+  @override
+  String get continueWithGoogle => 'Continue with Google';
+
+  @override
+  String get paywallDefaultReason =>
+      'Keep your boat legal, maintained and safe. For less than a single fine for expired paperwork.';
+
+  @override
+  String get purchaseFailed => 'Could not complete the purchase.';
+
+  @override
+  String get nothingToRestore => 'No purchases to restore.';
+
+  @override
+  String get welcomeToPro => 'Welcome to Navis Pro!';
+
+  @override
+  String get subscribe => 'Subscribe';
+
+  @override
+  String get restorePurchases => 'Restore purchases';
+
+  @override
+  String get subscriptionsUnavailable =>
+      'Subscriptions are not available right now. Try again later.';
+
+  @override
+  String get paywallMonthly => 'Monthly';
+
+  @override
+  String get paywallYearly => 'Yearly';
+
+  @override
+  String get paywallWeekly => 'Weekly';
+
+  @override
+  String get paywallLifetime => 'Lifetime';
+
+  @override
+  String get proBenefitReminders => 'Unlimited document expiry reminders';
+
+  @override
+  String get proBenefitMaintenance => 'Scheduled maintenance reminders';
+
+  @override
+  String get proBenefitBoats => 'Up to 3 boats';
+
+  @override
+  String get proBenefitGroups => 'Create clubs and events';
+
+  @override
+  String get proBenefitAttachments => 'Unlimited document attachments';
+
+  @override
+  String get planBoatLimitReached => 'You\'ve reached your plan\'s boat limit.';
+
+  @override
+  String get paywallReasonBoatLimit =>
+      'Your Free plan allows 1 boat. Go Pro to manage up to 3.';
+
+  @override
+  String get joinBoat => 'Join a boat';
+
+  @override
+  String get joinedBoat => 'You\'ve joined the boat';
+
+  @override
+  String get invalidCodeOrJoinError => 'Invalid code or error joining';
+
+  @override
+  String get maintenanceAndExpenses => 'Maintenance & expenses';
+
+  @override
+  String get maintenanceAndExpensesSubtitle => 'Boat services and costs';
+
+  @override
+  String get shareBoat => 'Share boat';
+
+  @override
+  String get shareBoatSubtitle => 'Crew and co-owners';
+
+  @override
+  String get leaveSharedBoat => 'Leave shared boat';
+
+  @override
+  String get leaveSharedBoatSubtitle => 'Stop having access';
+
+  @override
+  String get couldNotGetCode => 'Could not get the code';
+
+  @override
+  String get shareBoatExplainer =>
+      'Share this code. Whoever enters it will see the boat. Turn on \"can record trips\" below to grant editor permission.';
+
+  @override
+  String shareBoatMessage(String name, String code) {
+    return 'Join my boat \"$name\" on Navis with the code: $code';
+  }
+
+  @override
+  String get withAccess => 'With access';
+
+  @override
+  String get notSharedYet => 'You haven\'t shared with anyone yet.';
+
+  @override
+  String get leaveBoat => 'Leave boat';
+
+  @override
+  String leaveBoatConfirm(String name) {
+    return 'You will lose access to \"$name\".';
+  }
+
+  @override
+  String get removeAccess => 'Remove access';
+
+  @override
+  String get groupsTitle => 'Groups';
+
+  @override
+  String get publicLabel => 'Public';
+
+  @override
+  String get privateLabel => 'Private';
+
+  @override
+  String membersCount(int count) {
+    return '$count members';
+  }
+
+  @override
+  String get deleteGroup => 'Delete group';
+
+  @override
+  String get deleteGroupConfirm =>
+      'Are you sure you want to delete this group? This cannot be undone.';
+
+  @override
+  String get leaveGroup => 'Leave group';
+
+  @override
+  String get leaveGroupConfirm => 'Do you want to leave this group?';
+
+  @override
+  String get groupDeleted => 'Group deleted';
+
+  @override
+  String get leftGroup => 'You\'ve left the group';
+
+  @override
+  String get couldNotLeave => 'Could not leave';
+
+  @override
+  String get admit => 'Admit';
+
+  @override
+  String get rejectAction => 'Reject';
+
+  @override
+  String get couldNotProcess => 'Could not process';
+
+  @override
+  String get noScheduledRegattas => 'No regattas scheduled.';
+
+  @override
+  String get expelMember => 'Remove';
+
+  @override
+  String get memberExpelled => 'Member removed';
+
+  @override
+  String get couldNotExpel => 'Could not remove';
+
+  @override
+  String get youLabel => 'You';
+
+  @override
+  String userLabel(String id) {
+    return 'User $id';
+  }
+
+  @override
+  String get scheduleAction => 'Schedule';
+
+  @override
+  String get groupCreated => 'Group created';
+
+  @override
+  String get couldNotCreateGroup => 'Could not create the group';
+
+  @override
+  String get createGroup => 'Create group';
+
+  @override
+  String get groupName => 'Group name';
+
+  @override
+  String get descriptionOptional => 'Description (optional)';
+
+  @override
+  String get groupPublicSubtitle => 'Anyone can request to join (you approve).';
+
+  @override
+  String get groupPrivateSubtitle => 'Members join with an invite code only.';
+
+  @override
+  String get paywallReasonGroups =>
+      'Creating clubs and events is a Navis Pro feature.';
+
+  @override
+  String get joinByCode => 'Join by code';
+
+  @override
+  String joinedGroup(String name) {
+    return 'You\'ve joined $name';
+  }
+
+  @override
+  String get requestSent => 'Request sent';
+
+  @override
+  String get couldNotRequest => 'Could not send request';
+
+  @override
+  String get requestAction => 'Request';
+
+  @override
+  String get notInAnyGroup => 'You\'re not in any group yet.';
+
+  @override
+  String get noPublicGroups => 'No public groups to discover.';
+
+  @override
+  String get cancelTrip => 'Cancel trip';
+
+  @override
+  String get cancelTripRegattaWarning =>
+      'The regatta will return to \"scheduled\" and the recording will be discarded.';
+
+  @override
+  String get cancelTripWarning => 'This trip will be discarded without saving.';
+
+  @override
+  String get exitWithoutSaving => 'Exit without saving';
+
+  @override
+  String get exitRegattaWarning =>
+      'The recording will be discarded and the regatta will return to \"scheduled\".';
+
+  @override
+  String get exitTripWarning =>
+      'You will leave the map and the recording will be discarded without saving the trip.';
+
+  @override
+  String get keepGoing => 'Keep going';
+
+  @override
+  String get noMaintenanceRecords => 'No maintenance records';
+
+  @override
+  String get invoiceLabel => 'Invoice';
+
+  @override
+  String get maintenanceTypeHint => 'Type (e.g. oil change)';
+
+  @override
+  String get costOptional => 'Cost € (opt.)';
+
+  @override
+  String get providerOptional => 'Provider (opt.)';
+
+  @override
+  String dateWithValue(String date) {
+    return 'Date: $date';
+  }
+
+  @override
+  String get totalSpent => 'Total spent';
+
+  @override
+  String get noExpensesRecorded => 'No expenses recorded';
+
+  @override
+  String get categoryLabel => 'Category';
+
+  @override
+  String get amountEur => 'Amount €';
+
+  @override
+  String get couldNotUploadInvoice => 'Could not upload the invoice';
+
+  @override
+  String get attachInvoice => 'Attach invoice';
+
+  @override
+  String get expenseCategoryFuel => 'Fuel';
+
+  @override
+  String get expenseCategoryMooring => 'Mooring';
+
+  @override
+  String get expenseCategoryInsurance => 'Insurance';
+
+  @override
+  String get expenseCategoryRepair => 'Repair';
+
+  @override
+  String get expenseCategoryCleaning => 'Cleaning';
+
+  @override
+  String get expenseCategoryOther => 'Other';
+
+  @override
+  String get safetyChecklist => 'Safety checklist';
+
+  @override
+  String get addItem => 'Add item';
+
+  @override
+  String get descriptionLabel => 'Description';
+
+  @override
+  String get couldNotAdd => 'Could not add';
+
+  @override
+  String get couldNotUpdate => 'Could not update';
+
+  @override
+  String get couldNotStart => 'Could not start';
+
+  @override
+  String get checklistSkipHint =>
+      'We recommend checking every safety item, but you may set sail anyway at your own responsibility.';
+
+  @override
+  String get checklistLifejackets => 'Lifejackets for the whole crew';
+
+  @override
+  String get checklistFlares => 'Flares and pyrotechnic signals in date';
+
+  @override
+  String get checklistVhf => 'VHF radio working';
+
+  @override
+  String get checklistFuel => 'Sufficient fuel level';
+
+  @override
+  String get checklistBilgePump => 'Bilge pump working';
+
+  @override
+  String get checklistFirstAid => 'First aid kit';
+
+  @override
+  String get checklistAnchor => 'Anchor and lines in good condition';
+
+  @override
+  String get checklistNavLights => 'Navigation lights working';
+
+  @override
+  String get checklistWeather => 'Weather forecast checked';
+
+  @override
+  String get checklistFloatPlan => 'Passage plan shared ashore';
+
+  @override
+  String get areYouGoing => 'Are you going?';
+
+  @override
+  String get prepareChecklistAndSail => 'Prepare checklist and set sail';
+
+  @override
+  String get cancelRegatta => 'Cancel regatta';
+
+  @override
+  String get regattaInProgress => 'The regatta is under way (recording).';
+
+  @override
+  String get deleteRegatta => 'Delete regatta';
+
+  @override
+  String get deleteRegattaConfirm =>
+      'This regatta will be permanently deleted.';
+
+  @override
+  String get regattaDeleted => 'Regatta deleted';
+
+  @override
+  String get regattaCancelled => 'Regatta cancelled';
+
+  @override
+  String get couldNotCancel => 'Could not cancel';
+
+  @override
+  String get couldNotRespond => 'Could not respond';
+
+  @override
+  String get rsvpGoing => 'Going';
+
+  @override
+  String get rsvpMaybe => 'Maybe';
+
+  @override
+  String get rsvpNotGoing => 'Not going';
+
+  @override
+  String get rsvpGoingCount => 'Going';
+
+  @override
+  String get rsvpNotGoingCount => 'Not going';
+
+  @override
+  String get selectABoat => 'Select a boat';
+
+  @override
+  String get selectDeparturePortFirst => 'Select the departure port';
+
+  @override
+  String get regattaScheduled => 'Regatta scheduled';
+
+  @override
+  String get couldNotSchedule => 'Could not schedule';
+
+  @override
+  String get scheduleRegatta => 'Schedule regatta';
+
+  @override
+  String get regattaTitleHint => 'Title (e.g. Spring regatta)';
+
+  @override
+  String get selectBoatFirst => 'Select a boat first.';
+
+  @override
+  String get addBoatFirst => 'Add a boat first.';
+
+  @override
+  String get addCrewMemberHint => 'Add crew member…';
+
+  @override
+  String get checkEmailTitle => 'Check your email';
+
+  @override
+  String checkEmailBody(String email) {
+    return 'We\'ve sent a confirmation link to $email. Open it to activate your account, then log in.';
+  }
+
+  @override
+  String get resendEmail => 'Resend email';
+
+  @override
+  String get emailResent => 'Email sent';
+
+  @override
+  String get couldNotResend => 'Could not resend the email';
+
+  @override
+  String get backToLogin => 'Back to login';
+
+  @override
+  String get orDivider => 'or';
+
+  @override
+  String get completeAndSail => 'Complete and set sail';
+
+  @override
+  String get sailAnyway => 'Set sail anyway';
+
+  @override
+  String get statusScheduled => 'Scheduled';
+
+  @override
+  String get statusInProgress => 'In progress';
+
+  @override
+  String get statusCompleted => 'Completed';
+
+  @override
+  String get statusCancelled => 'Cancelled';
+
+  @override
+  String get regattaLabel => 'Regatta';
+
+  @override
+  String get memberLabel => 'Member';
+
+  @override
+  String get joinAsGroup => 'Join as a group';
+
+  @override
+  String get selectAGroup => 'Select a group';
+
+  @override
+  String get joinedWithGroup => 'You\'ve joined with your group';
+
+  @override
+  String get couldNotJoin => 'Could not join';
+
+  @override
+  String get groupLabel => 'Group';
+
+  @override
+  String get createGroupFirst => 'Create a group first to join with your team.';
+
+  @override
+  String get joinWithMyGroup => 'Join with my group';
+
+  @override
+  String get sharedWithMe => 'Shared with me';
+
+  @override
+  String get sharedBoatInfo =>
+      'This boat is shared with you. You have the permissions its owner granted.';
+
+  @override
+  String permissionsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count permissions',
+      one: '1 permission',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get permRecordTrips => 'Record trips';
+
+  @override
+  String get permManageExpenses => 'Manage expenses';
+
+  @override
+  String get permManageMaintenance => 'Manage maintenance';
+
+  @override
+  String get permViewDocuments => 'View documents';
+
+  @override
+  String get permManageDocuments => 'Manage documents';
+
+  @override
+  String get maintenanceTab => 'Maintenance';
+
+  @override
+  String get expensesTab => 'Expenses';
+
+  @override
+  String get newMaintenance => 'New maintenance';
+
+  @override
+  String get newExpense => 'New expense';
+
+  @override
+  String get editExpense => 'Edit expense';
+
+  @override
+  String get invoiceAttached => 'Invoice attached';
+
+  @override
+  String get regattasAndOutings => 'Regattas & outings';
+
+  @override
+  String requestsCount(int count) {
+    return 'Requests ($count)';
+  }
+
+  @override
+  String get requestAdmitted => 'Request admitted';
+
+  @override
+  String get requestRejected => 'Request rejected';
+
+  @override
+  String get roleOwner => 'Owner';
+
+  @override
+  String get visibilityLabel => 'Visibility';
+
+  @override
+  String get myGroupsTab => 'My groups';
+
+  @override
+  String get discoverTab => 'Discover';
+
+  @override
+  String get pendingLabel => 'Pending';
+
+  @override
+  String pendingCountShort(int count) {
+    return '$count pending';
+  }
+
+  @override
+  String get followLive => 'Watch live';
+
+  @override
+  String get couldNotOpenLive => 'Could not open the live stream';
 }

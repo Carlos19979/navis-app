@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/network/supabase_client.dart';
+import 'package:navis_mobile/features/auth/presentation/screens/check_email_screen.dart';
 import 'package:navis_mobile/features/auth/presentation/screens/login_screen.dart';
 import 'package:navis_mobile/features/auth/presentation/screens/register_screen.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/boat_dashboard_screen.dart';
@@ -55,7 +56,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       final session = supabaseClient.auth.currentSession;
       final isAuthenticated = session != null;
       final isAuthRoute = state.matchedLocation == '/login' ||
-          state.matchedLocation == '/register';
+          state.matchedLocation == '/register' ||
+          state.matchedLocation == '/check-email';
 
       if (!isAuthenticated && !isAuthRoute) {
         return '/login';
@@ -75,6 +77,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/check-email',
+        builder: (context, state) => const CheckEmailScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {

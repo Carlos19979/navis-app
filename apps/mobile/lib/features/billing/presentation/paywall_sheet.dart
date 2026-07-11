@@ -31,16 +31,13 @@ Future<bool> showPaywall(
   return result ?? false;
 }
 
-const _proBenefits = <(IconData, String)>[
-  (
-    Icons.notifications_active_rounded,
-    'Recordatorios ilimitados de caducidad de documentos'
-  ),
-  (Icons.build_rounded, 'Recordatorios de mantenimiento programado'),
-  (Icons.directions_boat_rounded, 'Hasta 3 barcos'),
-  (Icons.groups_rounded, 'Crea clubes y eventos'),
-  (Icons.attach_file_rounded, 'Adjuntos ilimitados en documentos'),
-];
+List<(IconData, String)> _proBenefits(AppLocalizations l) => [
+      (Icons.notifications_active_rounded, l.proBenefitReminders),
+      (Icons.build_rounded, l.proBenefitMaintenance),
+      (Icons.directions_boat_rounded, l.proBenefitBoats),
+      (Icons.groups_rounded, l.proBenefitGroups),
+      (Icons.attach_file_rounded, l.proBenefitAttachments),
+    ];
 
 class _PaywallSheet extends ConsumerStatefulWidget {
   const _PaywallSheet({this.reason});
@@ -88,7 +85,10 @@ class _PaywallSheetState extends ConsumerState<_PaywallSheet> {
     } catch (_) {
       if (!mounted) return;
       setState(() => _busy = false);
-      NavisSnackbar.error(context, 'No se pudo completar la compra.');
+      NavisSnackbar.error(
+        context,
+        AppLocalizations.of(context)!.purchaseFailed,
+      );
     }
   }
 
@@ -100,7 +100,10 @@ class _PaywallSheetState extends ConsumerState<_PaywallSheet> {
       _onProUnlocked();
     } else {
       setState(() => _busy = false);
-      NavisSnackbar.info(context, 'No hay compras que restaurar.');
+      NavisSnackbar.info(
+        context,
+        AppLocalizations.of(context)!.nothingToRestore,
+      );
     }
   }
 
@@ -108,15 +111,16 @@ class _PaywallSheetState extends ConsumerState<_PaywallSheet> {
     // Unlock instantly; the server catches up via the RevenueCat webhook.
     ref.read(proEntitlementProvider.notifier).state = true;
     ref.invalidate(accountProvider);
-    NavisSnackbar.success(context, '¡Bienvenido a Navis Pro!');
+    NavisSnackbar.success(context, AppLocalizations.of(context)!.welcomeToPro);
     Navigator.of(context).pop(true);
   }
 
-  String _packageLabel(Package p) => switch (p.packageType) {
-        PackageType.annual => 'Anual',
-        PackageType.monthly => 'Mensual',
-        PackageType.weekly => 'Semanal',
-        PackageType.lifetime => 'De por vida',
+  String _packageLabel(Package p, AppLocalizations l) =>
+      switch (p.packageType) {
+        PackageType.annual => l.paywallYearly,
+        PackageType.monthly => l.paywallMonthly,
+        PackageType.weekly => l.paywallWeekly,
+        PackageType.lifetime => l.paywallLifetime,
         _ => p.storeProduct.title,
       };
 
@@ -161,14 +165,12 @@ class _PaywallSheetState extends ConsumerState<_PaywallSheet> {
             ),
             const SizedBox(height: 6),
             Text(
-              widget.reason ??
-                  'Mantén tu barco legal, mantenido y seguro. Por menos que '
-                      'una sola multa por documentación caducada.',
+              widget.reason ?? l.paywallDefaultReason,
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14, color: context.txtSecondary),
             ),
             const SizedBox(height: 20),
-            for (final (icon, label) in _proBenefits)
+            for (final (icon, label) in _proBenefits(l))
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6),
                 child: Row(
@@ -197,8 +199,7 @@ class _PaywallSheetState extends ConsumerState<_PaywallSheet> {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 child: Text(
-                  'Las suscripciones no están disponibles en este momento. '
-                  'Inténtalo de nuevo más tarde.',
+                  l.subscriptionsUnavailable,
                   textAlign: TextAlign.center,
                   style: TextStyle(color: context.txtSecondary),
                 ),
@@ -206,7 +207,7 @@ class _PaywallSheetState extends ConsumerState<_PaywallSheet> {
             else ...[
               for (final package in _packages)
                 _PackageTile(
-                  label: _packageLabel(package),
+                  label: _packageLabel(package, l),
                   price: package.storeProduct.priceString,
                   selected: identical(package, _selected),
                   onTap:
@@ -214,14 +215,14 @@ class _PaywallSheetState extends ConsumerState<_PaywallSheet> {
                 ),
               const SizedBox(height: 16),
               NavisButton(
-                label: 'Suscribirse',
+                label: l.subscribe,
                 isLoading: _busy,
                 onPressed: _subscribe,
               ),
               TextButton(
                 onPressed: _busy ? null : _restore,
                 child: Text(
-                  'Restaurar compras',
+                  l.restorePurchases,
                   style: TextStyle(color: context.txtSecondary),
                 ),
               ),

@@ -12,6 +12,7 @@ import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/maintenance/data/maintenance_models.dart';
 import 'package:navis_mobile/features/maintenance/data/maintenance_repository.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
@@ -26,6 +27,18 @@ String _fmtDate(DateTime d) =>
 String _isoDate(DateTime d) =>
     '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
+/// Maps an expense category API value to its localized display label.
+String _categoryLabel(AppLocalizations l, String category) =>
+    switch (category) {
+      'combustible' => l.expenseCategoryFuel,
+      'amarre' => l.expenseCategoryMooring,
+      'seguro' => l.expenseCategoryInsurance,
+      'reparación' => l.expenseCategoryRepair, // i18n-exempt: API value
+      'limpieza' => l.expenseCategoryCleaning,
+      'otros' => l.expenseCategoryOther,
+      _ => category,
+    };
+
 class MaintenanceScreen extends ConsumerWidget {
   const MaintenanceScreen({super.key, required this.boatId});
 
@@ -33,17 +46,18 @@ class MaintenanceScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: const NavisAppBar(
-          title: 'Mantenimiento y gastos',
+        appBar: NavisAppBar(
+          title: l.maintenanceAndExpenses,
           showBack: true,
           bottom: TabBar(
             tabs: [
-              Tab(text: 'Mantenimiento'),
-              Tab(text: 'Gastos'),
+              Tab(text: l.maintenanceTab),
+              Tab(text: l.expensesTab),
             ],
           ),
         ),
@@ -69,6 +83,7 @@ class _MaintenanceTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final logsAsync = ref.watch(maintenanceLogsProvider(boatId));
     return Stack(
       children: [
@@ -80,9 +95,9 @@ class _MaintenanceTab extends ConsumerWidget {
           ),
           data: (logs) {
             if (logs.isEmpty) {
-              return const NavisEmptyState(
+              return NavisEmptyState(
                 icon: Icons.build_outlined,
-                message: 'Sin registros de mantenimiento',
+                message: l.noMaintenanceRecords,
               );
             }
             return ListView.builder(
@@ -124,14 +139,14 @@ class _MaintenanceTab extends ConsumerWidget {
                             ),
                             if (m.invoiceUrl != null) ...[
                               const SizedBox(height: 4),
-                              const Row(
+                              Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.attach_file,
+                                  const Icon(Icons.attach_file,
                                       size: 14, color: AppColors.cyan),
-                                  SizedBox(width: 2),
-                                  Text('Factura',
-                                      style: TextStyle(
+                                  const SizedBox(width: 2),
+                                  Text(l.invoiceLabel,
+                                      style: const TextStyle(
                                           color: AppColors.cyan, fontSize: 12)),
                                 ],
                               ),
@@ -189,6 +204,7 @@ class _MaintenanceTab extends ConsumerWidget {
 
   Future<void> _editMaintenance(BuildContext context, WidgetRef ref,
       {MaintenanceLog? existing}) async {
+    final l = AppLocalizations.of(context)!;
     final typeCtrl = TextEditingController(text: existing?.type ?? '');
     final hoursCtrl =
         TextEditingController(text: existing?.engineHours?.toString() ?? '');
@@ -215,7 +231,7 @@ class _MaintenanceTab extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(existing == null ? 'Nuevo mantenimiento' : 'Editar',
+                Text(existing == null ? l.newMaintenance : l.edit,
                     style: TextStyle(
                         color: context.txtPrimary,
                         fontSize: 18,
@@ -223,33 +239,29 @@ class _MaintenanceTab extends ConsumerWidget {
                 const SizedBox(height: 12),
                 TextField(
                   controller: typeCtrl,
-                  decoration: const InputDecoration(
-                      labelText: 'Tipo (ej. cambio de aceite)'),
+                  decoration: InputDecoration(labelText: l.maintenanceTypeHint),
                 ),
                 const SizedBox(height: 10),
                 TextField(
                   controller: hoursCtrl,
                   keyboardType: TextInputType.number,
-                  decoration:
-                      const InputDecoration(labelText: 'Horas de motor (opc.)'),
+                  decoration: InputDecoration(labelText: l.engineHoursOptional),
                 ),
                 const SizedBox(height: 10),
                 TextField(
                   controller: costCtrl,
                   keyboardType: TextInputType.number,
-                  decoration:
-                      const InputDecoration(labelText: 'Coste € (opc.)'),
+                  decoration: InputDecoration(labelText: l.costOptional),
                 ),
                 const SizedBox(height: 10),
                 TextField(
                   controller: providerCtrl,
-                  decoration:
-                      const InputDecoration(labelText: 'Proveedor (opc.)'),
+                  decoration: InputDecoration(labelText: l.providerOptional),
                 ),
                 const SizedBox(height: 10),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: Text('Fecha: ${_fmtDate(date)}',
+                  title: Text(l.dateWithValue(_fmtDate(date)),
                       style: TextStyle(color: context.txtPrimary)),
                   trailing: const Icon(Icons.calendar_today, size: 18),
                   onTap: () async {
@@ -271,7 +283,7 @@ class _MaintenanceTab extends ConsumerWidget {
                   style:
                       FilledButton.styleFrom(backgroundColor: AppColors.cyan),
                   onPressed: () => Navigator.of(ctx).pop(true),
-                  child: const Text('Guardar'),
+                  child: Text(l.save),
                 ),
                 if (existing != null)
                   TextButton(
@@ -282,8 +294,8 @@ class _MaintenanceTab extends ConsumerWidget {
                       ref.invalidate(maintenanceLogsProvider(boatId));
                       if (ctx.mounted) Navigator.of(ctx).pop(false);
                     },
-                    child: const Text('Eliminar',
-                        style: TextStyle(color: AppColors.red)),
+                    child: Text(l.delete,
+                        style: const TextStyle(color: AppColors.red)),
                   ),
               ],
             ),
@@ -316,7 +328,7 @@ class _MaintenanceTab extends ConsumerWidget {
       ref.invalidate(maintenanceLogsProvider(boatId));
     } catch (_) {
       if (context.mounted) {
-        NavisSnackbar.error(context, 'No se pudo guardar');
+        NavisSnackbar.error(context, l.couldNotSave);
       }
     }
   }
@@ -328,6 +340,7 @@ class _ExpensesTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final expensesAsync = ref.watch(expensesProvider(boatId));
     final summaryAsync = ref.watch(expenseSummaryProvider(boatId));
 
@@ -351,7 +364,7 @@ class _ExpensesTab extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Total gastado',
+                        Text(l.totalSpent,
                             style: TextStyle(color: context.txtSecondary)),
                         const SizedBox(height: 4),
                         Text('${s.total.toStringAsFixed(0)} €',
@@ -366,7 +379,7 @@ class _ExpensesTab extends ConsumerWidget {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(e.key,
+                                Text(_categoryLabel(l, e.key),
                                     style:
                                         TextStyle(color: context.txtSecondary)),
                                 Text('${e.value.toStringAsFixed(0)} €',
@@ -380,11 +393,11 @@ class _ExpensesTab extends ConsumerWidget {
                   ),
                 const SizedBox(height: 8),
                 if (items.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 40),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 40),
                     child: NavisEmptyState(
                       icon: Icons.receipt_long_outlined,
-                      message: 'Sin gastos registrados',
+                      message: l.noExpensesRecorded,
                     ),
                   ),
                 for (final e in items)
@@ -405,7 +418,7 @@ class _ExpensesTab extends ConsumerWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(e.category,
+                              Text(_categoryLabel(l, e.category),
                                   style: TextStyle(
                                       color: context.txtPrimary,
                                       fontWeight: FontWeight.w600)),
@@ -416,14 +429,14 @@ class _ExpensesTab extends ConsumerWidget {
                                       fontSize: 13)),
                               if (e.invoiceUrl != null) ...[
                                 const SizedBox(height: 4),
-                                const Row(
+                                Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(Icons.attach_file,
+                                    const Icon(Icons.attach_file,
                                         size: 14, color: AppColors.cyan),
-                                    SizedBox(width: 2),
-                                    Text('Factura',
-                                        style: TextStyle(
+                                    const SizedBox(width: 2),
+                                    Text(l.invoiceLabel,
+                                        style: const TextStyle(
                                             color: AppColors.cyan,
                                             fontSize: 12)),
                                   ],
@@ -480,6 +493,7 @@ class _ExpensesTab extends ConsumerWidget {
 
   Future<void> _editExpense(BuildContext context, WidgetRef ref,
       {Expense? existing}) async {
+    final l = AppLocalizations.of(context)!;
     final categoryCtrl = TextEditingController(text: existing?.category ?? '');
     final amountCtrl =
         TextEditingController(text: existing?.amount.toStringAsFixed(0) ?? '');
@@ -489,7 +503,7 @@ class _ExpensesTab extends ConsumerWidget {
       'combustible',
       'amarre',
       'seguro',
-      'reparación',
+      'reparación', // i18n-exempt: API value
       'limpieza',
       'otros'
     ];
@@ -511,7 +525,7 @@ class _ExpensesTab extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(existing == null ? 'Nuevo gasto' : 'Editar gasto',
+                Text(existing == null ? l.newExpense : l.editExpense,
                     style: TextStyle(
                         color: context.txtPrimary,
                         fontSize: 18,
@@ -522,7 +536,7 @@ class _ExpensesTab extends ConsumerWidget {
                   children: [
                     for (final c in categories)
                       ChoiceChip(
-                        label: Text(c),
+                        label: Text(_categoryLabel(l, c)),
                         selected: categoryCtrl.text == c,
                         onSelected: (_) =>
                             setState(() => categoryCtrl.text = c),
@@ -532,18 +546,18 @@ class _ExpensesTab extends ConsumerWidget {
                 const SizedBox(height: 10),
                 TextField(
                   controller: categoryCtrl,
-                  decoration: const InputDecoration(labelText: 'Categoría'),
+                  decoration: InputDecoration(labelText: l.categoryLabel),
                 ),
                 const SizedBox(height: 10),
                 TextField(
                   controller: amountCtrl,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Importe €'),
+                  decoration: InputDecoration(labelText: l.amountEur),
                 ),
                 const SizedBox(height: 10),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: Text('Fecha: ${_fmtDate(date)}',
+                  title: Text(l.dateWithValue(_fmtDate(date)),
                       style: TextStyle(color: context.txtPrimary)),
                   trailing: const Icon(Icons.calendar_today, size: 18),
                   onTap: () async {
@@ -565,7 +579,7 @@ class _ExpensesTab extends ConsumerWidget {
                   style:
                       FilledButton.styleFrom(backgroundColor: AppColors.cyan),
                   onPressed: () => Navigator.of(ctx).pop(true),
-                  child: const Text('Guardar'),
+                  child: Text(l.save),
                 ),
                 if (existing != null)
                   TextButton(
@@ -577,8 +591,8 @@ class _ExpensesTab extends ConsumerWidget {
                       ref.invalidate(expenseSummaryProvider(boatId));
                       if (ctx.mounted) Navigator.of(ctx).pop(false);
                     },
-                    child: const Text('Eliminar',
-                        style: TextStyle(color: AppColors.red)),
+                    child: Text(l.delete,
+                        style: const TextStyle(color: AppColors.red)),
                   ),
               ],
             ),
@@ -609,7 +623,7 @@ class _ExpensesTab extends ConsumerWidget {
       ref.invalidate(expenseSummaryProvider(boatId));
     } catch (_) {
       if (context.mounted) {
-        NavisSnackbar.error(context, 'No se pudo guardar');
+        NavisSnackbar.error(context, l.couldNotSave);
       }
     }
   }
@@ -630,6 +644,7 @@ class _InvoiceFieldState extends ConsumerState<_InvoiceField> {
   bool _uploading = false;
 
   Future<void> _pick() async {
+    final l = AppLocalizations.of(context)!;
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
       backgroundColor: context.dialogSurface,
@@ -639,12 +654,12 @@ class _InvoiceFieldState extends ConsumerState<_InvoiceField> {
           children: [
             ListTile(
               leading: const Icon(Icons.camera_alt_outlined),
-              title: const Text('Hacer foto'),
+              title: Text(l.takePhoto),
               onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
             ),
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
-              title: const Text('Elegir de la galería'),
+              title: Text(l.chooseFromGallery),
               onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
             ),
           ],
@@ -665,7 +680,7 @@ class _InvoiceFieldState extends ConsumerState<_InvoiceField> {
           .uploadInvoice(userId: userId, file: File(picked.path));
       widget.onPicked(url);
     } catch (_) {
-      if (mounted) NavisSnackbar.error(context, 'No se pudo subir la factura');
+      if (mounted) NavisSnackbar.error(context, l.couldNotUploadInvoice);
     } finally {
       if (mounted) setState(() => _uploading = false);
     }
@@ -673,6 +688,7 @@ class _InvoiceFieldState extends ConsumerState<_InvoiceField> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     if (_uploading) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 12),
@@ -685,7 +701,7 @@ class _InvoiceFieldState extends ConsumerState<_InvoiceField> {
         child: TextButton.icon(
           onPressed: _pick,
           icon: const Icon(Icons.attach_file, size: 18),
-          label: const Text('Adjuntar factura'),
+          label: Text(l.attachInvoice),
         ),
       );
     }
@@ -693,17 +709,17 @@ class _InvoiceFieldState extends ConsumerState<_InvoiceField> {
       children: [
         const Icon(Icons.receipt_long, color: AppColors.cyan, size: 18),
         const SizedBox(width: 8),
-        Text('Factura adjunta', style: TextStyle(color: context.txtPrimary)),
+        Text(l.invoiceAttached, style: TextStyle(color: context.txtPrimary)),
         const Spacer(),
         IconButton(
           icon: const Icon(Icons.open_in_new, size: 18),
-          tooltip: 'Ver',
+          tooltip: l.view,
           onPressed: () => launchUrl(Uri.parse(widget.url!),
               mode: LaunchMode.externalApplication),
         ),
         IconButton(
           icon: const Icon(Icons.close, size: 18, color: AppColors.red),
-          tooltip: 'Quitar',
+          tooltip: l.remove,
           onPressed: () => widget.onPicked(null),
         ),
       ],

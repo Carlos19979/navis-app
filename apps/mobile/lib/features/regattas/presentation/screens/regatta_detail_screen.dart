@@ -9,6 +9,7 @@ import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/groups/presentation/providers/group_provider.dart';
 import 'package:navis_mobile/features/regattas/domain/entities/regatta.dart';
 import 'package:navis_mobile/features/regattas/presentation/providers/regatta_provider.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
@@ -17,12 +18,13 @@ import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 
-const _statusLabels = {
-  'planned': 'Programada',
-  'recording': 'En curso',
-  'completed': 'Completada',
-  'cancelled': 'Cancelada',
-};
+String _statusLabel(AppLocalizations l, String status) => switch (status) {
+      'planned' => l.statusScheduled,
+      'recording' => l.statusInProgress,
+      'completed' => l.statusCompleted,
+      'cancelled' => l.statusCancelled,
+      _ => status,
+    };
 
 const _statusColors = {
   'planned': AppColors.cyan,
@@ -46,7 +48,8 @@ class RegattaDetailScreen extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
       appBar: NavisAppBar(
-        title: async.valueOrNull?.displayTitle ?? 'Regata',
+        title: async.valueOrNull?.displayTitle ??
+            AppLocalizations.of(context)!.regattaLabel,
         showBack: true,
       ),
       body: GradientBackground(
@@ -62,7 +65,7 @@ class RegattaDetailScreen extends ConsumerWidget {
               children: [
                 _summary(context, regatta),
                 const SizedBox(height: 16),
-                Text('¿Vas a ir?',
+                Text(AppLocalizations.of(context)!.areYouGoing,
                     style: TextStyle(
                         color: context.txtPrimary,
                         fontWeight: FontWeight.w700)),
@@ -89,6 +92,7 @@ class RegattaDetailScreen extends ConsumerWidget {
   }
 
   Widget _summary(BuildContext context, Regatta r) {
+    final l = AppLocalizations.of(context)!;
     final color = _statusColors[r.status] ?? context.txtSecondary;
     return NavisCard(
       child: Column(
@@ -114,7 +118,7 @@ class RegattaDetailScreen extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  _statusLabels[r.status] ?? r.status,
+                  _statusLabel(l, r.status),
                   style: TextStyle(
                       color: color, fontSize: 12, fontWeight: FontWeight.w600),
                 ),
@@ -145,11 +149,12 @@ class RegattaDetailScreen extends ConsumerWidget {
   }
 
   Widget _ownerControls(BuildContext context, WidgetRef ref, Regatta r) {
+    final l = AppLocalizations.of(context)!;
     if (r.isPlanned) {
       return Column(
         children: [
           NavisButton(
-            label: 'Preparar checklist y zarpar',
+            label: l.prepareChecklistAndSail,
             icon: Icons.checklist,
             onPressed: () => context.push(
               '/trips/${r.id}/checklist?groupId=${r.groupId ?? ''}',
@@ -158,8 +163,8 @@ class RegattaDetailScreen extends ConsumerWidget {
           const SizedBox(height: 8),
           TextButton.icon(
             icon: const Icon(Icons.cancel_outlined, color: AppColors.red),
-            label: const Text('Cancelar regata',
-                style: TextStyle(color: AppColors.red)),
+            label: Text(l.cancelRegatta,
+                style: const TextStyle(color: AppColors.red)),
             onPressed: () => _cancel(context, ref, r),
           ),
         ],
@@ -172,7 +177,7 @@ class RegattaDetailScreen extends ConsumerWidget {
             const Icon(Icons.sailing, color: AppColors.green),
             const SizedBox(width: 12),
             Expanded(
-              child: Text('La regata está en curso (grabando).',
+              child: Text(l.regattaInProgress,
                   style: TextStyle(color: context.txtPrimary)),
             ),
           ],
@@ -182,7 +187,7 @@ class RegattaDetailScreen extends ConsumerWidget {
     // Completed or cancelled: the owner can delete it permanently.
     if (r.status == 'completed' || r.status == 'cancelled') {
       return NavisButton(
-        label: 'Eliminar regata',
+        label: l.deleteRegatta,
         icon: Icons.delete_outline,
         variant: NavisButtonVariant.danger,
         onPressed: () => _delete(context, ref, r),
@@ -192,24 +197,24 @@ class RegattaDetailScreen extends ConsumerWidget {
   }
 
   Future<void> _delete(BuildContext context, WidgetRef ref, Regatta r) async {
+    final l = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: ctx.dialogSurface,
-        title: Text('Eliminar regata', style: TextStyle(color: ctx.txtPrimary)),
+        title: Text(l.deleteRegatta, style: TextStyle(color: ctx.txtPrimary)),
         content: Text(
-          'Se eliminará esta regata de forma permanente.',
+          l.deleteRegattaConfirm,
           style: TextStyle(color: ctx.txtSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancelar'),
+            child: Text(l.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child:
-                const Text('Eliminar', style: TextStyle(color: AppColors.red)),
+            child: Text(l.delete, style: const TextStyle(color: AppColors.red)),
           ),
         ],
       ),
@@ -221,15 +226,16 @@ class RegattaDetailScreen extends ConsumerWidget {
         ref.invalidate(groupRegattasProvider(r.groupId!));
       }
       if (!context.mounted) return;
-      NavisSnackbar.success(context, 'Regata eliminada');
+      NavisSnackbar.success(context, l.regattaDeleted);
       context.pop();
     } catch (_) {
       if (!context.mounted) return;
-      NavisSnackbar.error(context, 'No se pudo eliminar');
+      NavisSnackbar.error(context, l.couldNotDelete);
     }
   }
 
   Future<void> _cancel(BuildContext context, WidgetRef ref, Regatta r) async {
+    final l = AppLocalizations.of(context)!;
     try {
       await ref.read(regattaRepositoryProvider).cancel(r.id);
       ref.invalidate(regattaProvider(regattaId));
@@ -237,10 +243,10 @@ class RegattaDetailScreen extends ConsumerWidget {
         ref.invalidate(groupRegattasProvider(r.groupId!));
       }
       if (!context.mounted) return;
-      NavisSnackbar.success(context, 'Regata cancelada');
+      NavisSnackbar.success(context, l.regattaCancelled);
     } catch (_) {
       if (!context.mounted) return;
-      NavisSnackbar.error(context, 'No se pudo cancelar');
+      NavisSnackbar.error(context, l.couldNotCancel);
     }
   }
 }
@@ -253,6 +259,7 @@ class _RsvpRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final participants = ref.watch(regattaParticipantsProvider(regattaId));
     final mine = participants.valueOrNull
         ?.where((p) => p.userId == currentUserId)
@@ -273,7 +280,7 @@ class _RsvpRow extends ConsumerWidget {
                 ref.invalidate(regattaParticipantsProvider(regattaId));
               } catch (_) {
                 if (!context.mounted) return;
-                NavisSnackbar.error(context, 'No se pudo responder');
+                NavisSnackbar.error(context, l.couldNotRespond);
               }
             },
             child: Container(
@@ -306,9 +313,9 @@ class _RsvpRow extends ConsumerWidget {
 
     return Row(
       children: [
-        pill('going', 'Voy', Icons.check_circle, AppColors.green),
-        pill('maybe', 'Quizá', Icons.help_outline, AppColors.amber),
-        pill('not_going', 'No voy', Icons.cancel, AppColors.red),
+        pill('going', l.rsvpGoing, Icons.check_circle, AppColors.green),
+        pill('maybe', l.rsvpMaybe, Icons.help_outline, AppColors.amber),
+        pill('not_going', l.rsvpNotGoing, Icons.cancel, AppColors.red),
       ],
     );
   }
@@ -321,6 +328,7 @@ class _Participants extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final async = ref.watch(regattaParticipantsProvider(regattaId));
     return async.maybeWhen(
       data: (participants) {
@@ -332,9 +340,9 @@ class _Participants extends ConsumerWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _count(context, 'Van', going, AppColors.green),
-              _count(context, 'Quizá', maybe, AppColors.amber),
-              _count(context, 'No van', notGoing, AppColors.red),
+              _count(context, l.rsvpGoingCount, going, AppColors.green),
+              _count(context, l.rsvpMaybe, maybe, AppColors.amber),
+              _count(context, l.rsvpNotGoingCount, notGoing, AppColors.red),
             ],
           ),
         );
@@ -380,7 +388,7 @@ class _MemberRsvpList extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Miembros',
+              Text(AppLocalizations.of(context)!.membersLabel,
                   style: TextStyle(
                       color: context.txtPrimary, fontWeight: FontWeight.w700)),
               const SizedBox(height: 8),
@@ -391,8 +399,9 @@ class _MemberRsvpList extends ConsumerWidget {
                     color: context.glassBorderColor.withValues(alpha: 0.3),
                   ),
                 _MemberRow(
-                  name:
-                      members[i].name.isNotEmpty ? members[i].name : 'Miembro',
+                  name: members[i].name.isNotEmpty
+                      ? members[i].name
+                      : AppLocalizations.of(context)!.memberLabel,
                   isOwner: members[i].role == 'owner',
                   rsvp: rsvpByUser[members[i].userId],
                 ),

@@ -8,6 +8,7 @@ import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/regattas/presentation/providers/regatta_provider.dart';
 import 'package:navis_mobile/features/regattas/presentation/widgets/departure_port_picker.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
@@ -70,13 +71,14 @@ class _ScheduleRegattaScreenState extends ConsumerState<ScheduleRegattaScreen> {
   }
 
   Future<void> _submit() async {
+    final l = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
     if (_boatId == null) {
-      NavisSnackbar.error(context, 'Selecciona un barco');
+      NavisSnackbar.error(context, l.selectABoat);
       return;
     }
     if (_departurePort == null || _departurePort!.isEmpty) {
-      NavisSnackbar.error(context, 'Selecciona el puerto de salida');
+      NavisSnackbar.error(context, l.selectDeparturePortFirst);
       return;
     }
     setState(() => _saving = true);
@@ -90,17 +92,18 @@ class _ScheduleRegattaScreenState extends ConsumerState<ScheduleRegattaScreen> {
           );
       ref.invalidate(groupRegattasProvider(widget.groupId));
       if (!mounted) return;
-      NavisSnackbar.success(context, 'Regata programada');
+      NavisSnackbar.success(context, l.regattaScheduled);
       context.pop();
     } catch (_) {
       if (!mounted) return;
       setState(() => _saving = false);
-      NavisSnackbar.error(context, 'No se pudo programar');
+      NavisSnackbar.error(context, l.couldNotSchedule);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final boatsAsync = ref.watch(boatsProvider);
     final boats = boatsAsync.valueOrNull ?? const <Boat>[];
     final selectedBoat = _boatById(boats);
@@ -108,7 +111,7 @@ class _ScheduleRegattaScreenState extends ConsumerState<ScheduleRegattaScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
-      appBar: const NavisAppBar(title: 'Programar regata', showBack: true),
+      appBar: NavisAppBar(title: l.scheduleRegatta, showBack: true),
       body: GradientBackground(
         child: SafeArea(
           child: Form(
@@ -116,14 +119,14 @@ class _ScheduleRegattaScreenState extends ConsumerState<ScheduleRegattaScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
               children: [
-                _field(_titleController, 'Título (p. ej. Regata de primavera)'),
+                _field(_titleController, l.regattaTitleHint),
                 const SizedBox(height: 20),
-                const _Label('Barco'),
+                _Label(l.boat),
                 const SizedBox(height: 8),
                 boatsAsync.when(
                   loading: () => const Center(
                       child: CircularProgressIndicator(color: AppColors.cyan)),
-                  error: (e, _) => Text('Error: $e',
+                  error: (e, _) => Text(l.errorWithMessage(e.toString()),
                       style: const TextStyle(color: AppColors.red)),
                   data: (boats) => Column(
                     children: boats
@@ -155,12 +158,12 @@ class _ScheduleRegattaScreenState extends ConsumerState<ScheduleRegattaScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                const _Label('Puerto de salida'),
+                _Label(l.departurePort),
                 const SizedBox(height: 8),
                 if (selectedBoat == null)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Text('Selecciona un barco primero.',
+                    child: Text(l.selectBoatFirst,
                         style: TextStyle(color: context.txtSecondary)),
                   )
                 else
@@ -178,9 +181,11 @@ class _ScheduleRegattaScreenState extends ConsumerState<ScheduleRegattaScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Fecha: ${_scheduledAt.day}/${_scheduledAt.month}/${_scheduledAt.year} '
-                          '${_scheduledAt.hour.toString().padLeft(2, '0')}:'
-                          '${_scheduledAt.minute.toString().padLeft(2, '0')}',
+                          l.dateWithValue(
+                            '${_scheduledAt.day}/${_scheduledAt.month}/${_scheduledAt.year} '
+                            '${_scheduledAt.hour.toString().padLeft(2, '0')}:'
+                            '${_scheduledAt.minute.toString().padLeft(2, '0')}',
+                          ),
                           style: TextStyle(color: context.txtPrimary),
                         ),
                       ),
@@ -190,7 +195,7 @@ class _ScheduleRegattaScreenState extends ConsumerState<ScheduleRegattaScreen> {
                 ),
                 const SizedBox(height: 28),
                 NavisButton(
-                  label: 'Programar regata',
+                  label: l.scheduleRegatta,
                   isLoading: _saving,
                   isDisabled: _saving,
                   onPressed: _submit,

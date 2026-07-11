@@ -19,12 +19,25 @@ final notificationServiceProvider = Provider<NotificationService>((ref) {
 class NotificationService {
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
 
+  /// Requests notification permission. Never throws: on a device without
+  /// Firebase configured (or with Google services unavailable) notifications
+  /// are simply skipped — they must not break login or startup.
   Future<void> requestPermission() async {
-    await _messaging.requestPermission();
+    try {
+      await _messaging.requestPermission();
+    } catch (e) {
+      debugPrint('notifications: requestPermission failed: $e');
+    }
   }
 
+  /// Returns the FCM token, or null when unavailable. Never throws.
   Future<String?> getToken() async {
-    return _messaging.getToken();
+    try {
+      return await _messaging.getToken();
+    } catch (e) {
+      debugPrint('notifications: getToken failed: $e');
+      return null;
+    }
   }
 
   Future<void> registerDevice() async {

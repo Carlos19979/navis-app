@@ -43,7 +43,10 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
     if (uri == null) return;
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!ok && mounted) {
-      NavisSnackbar.error(context, 'No se pudo abrir el directo');
+      NavisSnackbar.error(
+        context,
+        AppLocalizations.of(context)!.couldNotOpenLive,
+      );
     }
   }
 
@@ -237,7 +240,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                       // Follow the regatta live (external YouTube / tracker).
                       if (event.hasLiveCoverage) ...[
                         NavisButton(
-                          label: 'Seguir en directo',
+                          label: l.followLive,
                           icon: Icons.live_tv,
                           onPressed: () => _openLive(event),
                         ),
@@ -247,7 +250,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                       // creates a group regatta (visible in Groups → Regattas).
                       if (event.eventType == 'regatta') ...[
                         NavisButton(
-                          label: 'Unirse como grupo',
+                          label: l.joinAsGroup,
                           icon: Icons.groups,
                           onPressed: () => context.push(
                             '/events/${widget.eventId}/start-regatta',

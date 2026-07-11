@@ -53,6 +53,7 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
   }
 
   Future<void> _onAddBoat() async {
+    final l = AppLocalizations.of(context)!;
     final isPro = ref.read(isProProvider);
     final account = ref.read(accountProvider).valueOrNull;
     final boats = ref.read(boatsProvider).valueOrNull ?? const [];
@@ -62,15 +63,14 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
       if (isPro) {
         NavisSnackbar.info(
           context,
-          'Has alcanzado el máximo de barcos de tu plan.',
+          l.planBoatLimitReached,
         );
         return;
       }
       final purchased = await showPaywall(
         context,
         ref,
-        reason: 'Tu plan Free permite 1 barco. '
-            'Hazte Pro para gestionar hasta 3.',
+        reason: l.paywallReasonBoatLimit,
       );
       if (!purchased || !mounted) return;
     }
@@ -79,29 +79,29 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
   }
 
   Future<void> _joinBoat() async {
+    final l = AppLocalizations.of(context)!;
     final controller = TextEditingController();
     final code = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: ctx.dialogSurface,
-        title:
-            Text('Unirse a un barco', style: TextStyle(color: ctx.txtPrimary)),
+        title: Text(l.joinBoat, style: TextStyle(color: ctx.txtPrimary)),
         content: TextField(
           controller: controller,
           autofocus: true,
           textCapitalization: TextCapitalization.characters,
           style: TextStyle(color: ctx.txtPrimary),
-          decoration: const InputDecoration(hintText: 'Código de invitación'),
+          decoration: InputDecoration(hintText: l.inviteCode),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancelar'),
+            child: Text(l.cancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppColors.cyan),
             onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
-            child: const Text('Unirse'),
+            child: Text(l.join),
           ),
         ],
       ),
@@ -111,11 +111,11 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
       await ref.read(boatShareRepositoryProvider).joinBoat(code);
       ref.invalidate(sharedBoatsProvider);
       if (mounted) {
-        NavisSnackbar.success(context, 'Te has unido al barco');
+        NavisSnackbar.success(context, l.joinedBoat);
       }
     } catch (_) {
       if (mounted) {
-        NavisSnackbar.error(context, 'Código inválido o error al unirse');
+        NavisSnackbar.error(context, l.invalidCodeOrJoinError);
       }
     }
   }
@@ -133,7 +133,7 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.group_add_outlined),
-            tooltip: 'Unirse a un barco',
+            tooltip: l.joinBoat,
             onPressed: _joinBoat,
           ),
         ],
@@ -180,7 +180,7 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
                     return Padding(
                       padding: const EdgeInsets.fromLTRB(4, 8, 4, 12),
                       child: Text(
-                        'Compartidos conmigo',
+                        l.sharedWithMe,
                         style: TextStyle(
                           color: context.txtSecondary,
                           fontWeight: FontWeight.w700,

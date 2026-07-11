@@ -39,7 +39,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final session = authState.session;
       if (session != null) {
         state = AuthState.authenticated(session.user);
-      } else {
+      } else if (state.status != AuthStatus.pendingEmailConfirmation) {
+        // Supabase fires a session-less event right after signUp when email
+        // confirmation is on — don't clobber the "check your email" state.
         state = const AuthState.unauthenticated();
       }
     });
@@ -78,9 +80,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
         email: email,
         password: password,
       );
-      if (response.user != null) {
+      if (response.user != null && response.session != null) {
         _analytics.trackSignup(response.user!.id);
         state = AuthState.authenticated(response.user);
+      } else if (response.user != null) {
+        // Email confirmations are on: user exists but there is no session
+        // until the link in the email is opened.
+        _analytics.trackSignup(response.user!.id);
+        state = AuthState.pendingEmailConfirmation(email);
       } else {
         state = const AuthState.unauthenticated(
           errorMessage: 'Registration failed. Please try again.',
@@ -88,6 +95,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
     } on supa.AuthException catch (e) {
       state = AuthState.unauthenticated(errorMessage: e.message);
+    }
+  }
+
+  /// Resends the signup confirmation email.
+  Future<void> resendConfirmationEmail() async {
+    final email = state.pendingEmail;
+    if (email == null) return;
+    await _repository.resendConfirmation(email);
+  }
+
+  /// Leaves the pending-confirmation state (back to login).
+  void backToLogin() {
+    if (state.status == AuthStatus.pendingEmailConfirmation) {
+      state = const AuthState.unauthenticated();
     }
   }
 

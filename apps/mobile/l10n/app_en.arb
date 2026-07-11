@@ -153,16 +153,20 @@
   "validNumber": "Please enter a valid number",
   "uploading": "Uploading...",
   "noInternetConnection": "No internet connection",
-  "offlineWithPending": "Offline \u2022 {count} pending",
+  "offlineWithPending": "Offline • {count} pending",
   "@offlineWithPending": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
-  "syncingChanges": "Syncing {count} changes\u2026",
+  "syncingChanges": "Syncing {count} changes…",
   "@syncingChanges": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "searchEvents": "Search events...",
@@ -189,14 +193,22 @@
   "deleteAccountSubtitle": "Permanently delete your account and all your data",
   "deleteAccountWarning": "This permanently deletes your account: boats, documents, trips, maintenance history, groups you own and all uploaded files. This cannot be undone.",
   "deleteAccountTypeToConfirm": "Type {word} to confirm",
-  "@deleteAccountTypeToConfirm": {"placeholders": {"word": {"type": "String"}}},
+  "@deleteAccountTypeToConfirm": {
+    "placeholders": {
+      "word": {
+        "type": "String"
+      }
+    }
+  },
   "deleteAccountConfirmWord": "DELETE",
   "deleteAccountFailed": "Could not delete the account. Try again.",
   "deleteBoat": "Delete Boat",
   "deleteBoatConfirm": "Are you sure you want to delete \"{name}\"? This will also remove all associated documents and trips.",
   "@deleteBoatConfirm": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "certificates": "Certificates, insurance, inspections",
@@ -238,7 +250,13 @@
   "termsOfService": "Terms of Service",
   "paywallAutoRenewNotice": "The subscription renews automatically unless you cancel it in your App Store account settings at least 24 hours before the end of the current period.",
   "aboutVersion": "Version {version}",
-  "@aboutVersion": {"placeholders": {"version": {"type": "String"}}},
+  "@aboutVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "aboutDescription": "Your boat's digital logbook: documents, trips, maintenance and weather in one place.",
   "couldNotOpenLink": "Could not open the link",
   "speedAbbr": "SPD",
@@ -253,7 +271,9 @@
   "thisYear": "This Year ({year})",
   "@thisYear": {
     "placeholders": {
-      "year": {"type": "String"}
+      "year": {
+        "type": "String"
+      }
     }
   },
   "locationAccessNeeded": "Location access is needed\nfor weather data.",
@@ -262,7 +282,9 @@
   "memberSince": "Member since {date}",
   "@memberSince": {
     "placeholders": {
-      "date": {"type": "String"}
+      "date": {
+        "type": "String"
+      }
     }
   },
   "deleteTrip": "Delete Trip",
@@ -365,5 +387,285 @@
   "wcRain": "Rain",
   "wcSnow": "Snow",
   "wcThunderstorm": "Thunderstorm",
-  "wcUnknown": "—"
+  "wcUnknown": "—",
+  "inviteCode": "Invite code",
+  "codeCopied": "Code copied",
+  "copy": "Copy",
+  "share": "Share",
+  "join": "Join",
+  "leave": "Leave",
+  "view": "View",
+  "remove": "Remove",
+  "couldNotSave": "Could not save",
+  "couldNotDelete": "Could not delete",
+  "errorWithMessage": "Error: {message}",
+  "@errorWithMessage": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "membersLabel": "Members",
+  "socialLoginFailed": "Could not sign in with that provider",
+  "continueWithApple": "Continue with Apple",
+  "continueWithGoogle": "Continue with Google",
+  "paywallDefaultReason": "Keep your boat legal, maintained and safe. For less than a single fine for expired paperwork.",
+  "purchaseFailed": "Could not complete the purchase.",
+  "nothingToRestore": "No purchases to restore.",
+  "welcomeToPro": "Welcome to Navis Pro!",
+  "subscribe": "Subscribe",
+  "restorePurchases": "Restore purchases",
+  "subscriptionsUnavailable": "Subscriptions are not available right now. Try again later.",
+  "paywallMonthly": "Monthly",
+  "paywallYearly": "Yearly",
+  "paywallWeekly": "Weekly",
+  "paywallLifetime": "Lifetime",
+  "proBenefitReminders": "Unlimited document expiry reminders",
+  "proBenefitMaintenance": "Scheduled maintenance reminders",
+  "proBenefitBoats": "Up to 3 boats",
+  "proBenefitGroups": "Create clubs and events",
+  "proBenefitAttachments": "Unlimited document attachments",
+  "planBoatLimitReached": "You've reached your plan's boat limit.",
+  "paywallReasonBoatLimit": "Your Free plan allows 1 boat. Go Pro to manage up to 3.",
+  "joinBoat": "Join a boat",
+  "joinedBoat": "You've joined the boat",
+  "invalidCodeOrJoinError": "Invalid code or error joining",
+  "maintenanceAndExpenses": "Maintenance & expenses",
+  "maintenanceAndExpensesSubtitle": "Boat services and costs",
+  "shareBoat": "Share boat",
+  "shareBoatSubtitle": "Crew and co-owners",
+  "leaveSharedBoat": "Leave shared boat",
+  "leaveSharedBoatSubtitle": "Stop having access",
+  "couldNotGetCode": "Could not get the code",
+  "shareBoatExplainer": "Share this code. Whoever enters it will see the boat. Turn on \"can record trips\" below to grant editor permission.",
+  "shareBoatMessage": "Join my boat \"{name}\" on Navis with the code: {code}",
+  "@shareBoatMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "withAccess": "With access",
+  "notSharedYet": "You haven't shared with anyone yet.",
+  "leaveBoat": "Leave boat",
+  "leaveBoatConfirm": "You will lose access to \"{name}\".",
+  "@leaveBoatConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "removeAccess": "Remove access",
+  "groupsTitle": "Groups",
+  "publicLabel": "Public",
+  "privateLabel": "Private",
+  "membersCount": "{count} members",
+  "@membersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteGroup": "Delete group",
+  "deleteGroupConfirm": "Are you sure you want to delete this group? This cannot be undone.",
+  "leaveGroup": "Leave group",
+  "leaveGroupConfirm": "Do you want to leave this group?",
+  "groupDeleted": "Group deleted",
+  "leftGroup": "You've left the group",
+  "couldNotLeave": "Could not leave",
+  "admit": "Admit",
+  "rejectAction": "Reject",
+  "couldNotProcess": "Could not process",
+  "noScheduledRegattas": "No regattas scheduled.",
+  "expelMember": "Remove",
+  "memberExpelled": "Member removed",
+  "couldNotExpel": "Could not remove",
+  "youLabel": "You",
+  "userLabel": "User {id}",
+  "@userLabel": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduleAction": "Schedule",
+  "groupCreated": "Group created",
+  "couldNotCreateGroup": "Could not create the group",
+  "createGroup": "Create group",
+  "groupName": "Group name",
+  "descriptionOptional": "Description (optional)",
+  "groupPublicSubtitle": "Anyone can request to join (you approve).",
+  "groupPrivateSubtitle": "Members join with an invite code only.",
+  "paywallReasonGroups": "Creating clubs and events is a Navis Pro feature.",
+  "joinByCode": "Join by code",
+  "joinedGroup": "You've joined {name}",
+  "@joinedGroup": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "requestSent": "Request sent",
+  "couldNotRequest": "Could not send request",
+  "requestAction": "Request",
+  "notInAnyGroup": "You're not in any group yet.",
+  "noPublicGroups": "No public groups to discover.",
+  "cancelTrip": "Cancel trip",
+  "cancelTripRegattaWarning": "The regatta will return to \"scheduled\" and the recording will be discarded.",
+  "cancelTripWarning": "This trip will be discarded without saving.",
+  "exitWithoutSaving": "Exit without saving",
+  "exitRegattaWarning": "The recording will be discarded and the regatta will return to \"scheduled\".",
+  "exitTripWarning": "You will leave the map and the recording will be discarded without saving the trip.",
+  "keepGoing": "Keep going",
+  "noMaintenanceRecords": "No maintenance records",
+  "invoiceLabel": "Invoice",
+  "maintenanceTypeHint": "Type (e.g. oil change)",
+  "costOptional": "Cost € (opt.)",
+  "providerOptional": "Provider (opt.)",
+  "dateWithValue": "Date: {date}",
+  "@dateWithValue": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "totalSpent": "Total spent",
+  "noExpensesRecorded": "No expenses recorded",
+  "categoryLabel": "Category",
+  "amountEur": "Amount €",
+  "couldNotUploadInvoice": "Could not upload the invoice",
+  "attachInvoice": "Attach invoice",
+  "expenseCategoryFuel": "Fuel",
+  "expenseCategoryMooring": "Mooring",
+  "expenseCategoryInsurance": "Insurance",
+  "expenseCategoryRepair": "Repair",
+  "expenseCategoryCleaning": "Cleaning",
+  "expenseCategoryOther": "Other",
+  "safetyChecklist": "Safety checklist",
+  "addItem": "Add item",
+  "descriptionLabel": "Description",
+  "couldNotAdd": "Could not add",
+  "couldNotUpdate": "Could not update",
+  "couldNotStart": "Could not start",
+  "checklistSkipHint": "We recommend checking every safety item, but you may set sail anyway at your own responsibility.",
+  "checklistLifejackets": "Lifejackets for the whole crew",
+  "checklistFlares": "Flares and pyrotechnic signals in date",
+  "checklistVhf": "VHF radio working",
+  "checklistFuel": "Sufficient fuel level",
+  "checklistBilgePump": "Bilge pump working",
+  "checklistFirstAid": "First aid kit",
+  "checklistAnchor": "Anchor and lines in good condition",
+  "checklistNavLights": "Navigation lights working",
+  "checklistWeather": "Weather forecast checked",
+  "checklistFloatPlan": "Passage plan shared ashore",
+  "areYouGoing": "Are you going?",
+  "prepareChecklistAndSail": "Prepare checklist and set sail",
+  "cancelRegatta": "Cancel regatta",
+  "regattaInProgress": "The regatta is under way (recording).",
+  "deleteRegatta": "Delete regatta",
+  "deleteRegattaConfirm": "This regatta will be permanently deleted.",
+  "regattaDeleted": "Regatta deleted",
+  "regattaCancelled": "Regatta cancelled",
+  "couldNotCancel": "Could not cancel",
+  "couldNotRespond": "Could not respond",
+  "rsvpGoing": "Going",
+  "rsvpMaybe": "Maybe",
+  "rsvpNotGoing": "Not going",
+  "rsvpGoingCount": "Going",
+  "rsvpNotGoingCount": "Not going",
+  "selectABoat": "Select a boat",
+  "selectDeparturePortFirst": "Select the departure port",
+  "regattaScheduled": "Regatta scheduled",
+  "couldNotSchedule": "Could not schedule",
+  "scheduleRegatta": "Schedule regatta",
+  "regattaTitleHint": "Title (e.g. Spring regatta)",
+  "selectBoatFirst": "Select a boat first.",
+  "addBoatFirst": "Add a boat first.",
+  "addCrewMemberHint": "Add crew member…",
+  "checkEmailTitle": "Check your email",
+  "checkEmailBody": "We've sent a confirmation link to {email}. Open it to activate your account, then log in.",
+  "resendEmail": "Resend email",
+  "emailResent": "Email sent",
+  "couldNotResend": "Could not resend the email",
+  "backToLogin": "Back to login",
+  "@checkEmailBody": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "orDivider": "or",
+  "completeAndSail": "Complete and set sail",
+  "sailAnyway": "Set sail anyway",
+  "statusScheduled": "Scheduled",
+  "statusInProgress": "In progress",
+  "statusCompleted": "Completed",
+  "statusCancelled": "Cancelled",
+  "regattaLabel": "Regatta",
+  "memberLabel": "Member",
+  "joinAsGroup": "Join as a group",
+  "selectAGroup": "Select a group",
+  "joinedWithGroup": "You've joined with your group",
+  "couldNotJoin": "Could not join",
+  "groupLabel": "Group",
+  "createGroupFirst": "Create a group first to join with your team.",
+  "joinWithMyGroup": "Join with my group",
+  "sharedWithMe": "Shared with me",
+  "sharedBoatInfo": "This boat is shared with you. You have the permissions its owner granted.",
+  "permissionsCount": "{count, plural, =1{1 permission} other{{count} permissions}}",
+  "permRecordTrips": "Record trips",
+  "permManageExpenses": "Manage expenses",
+  "permManageMaintenance": "Manage maintenance",
+  "permViewDocuments": "View documents",
+  "permManageDocuments": "Manage documents",
+  "maintenanceTab": "Maintenance",
+  "expensesTab": "Expenses",
+  "newMaintenance": "New maintenance",
+  "newExpense": "New expense",
+  "editExpense": "Edit expense",
+  "invoiceAttached": "Invoice attached",
+  "@permissionsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "regattasAndOutings": "Regattas & outings",
+  "requestsCount": "Requests ({count})",
+  "requestAdmitted": "Request admitted",
+  "requestRejected": "Request rejected",
+  "roleOwner": "Owner",
+  "visibilityLabel": "Visibility",
+  "myGroupsTab": "My groups",
+  "discoverTab": "Discover",
+  "pendingLabel": "Pending",
+  "pendingCountShort": "{count} pending",
+  "@requestsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@pendingCountShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "followLive": "Watch live",
+  "couldNotOpenLive": "Could not open the live stream"
 }

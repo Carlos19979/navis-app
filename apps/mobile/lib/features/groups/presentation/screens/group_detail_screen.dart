@@ -10,6 +10,7 @@ import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/groups/domain/entities/group.dart';
 import 'package:navis_mobile/features/groups/domain/entities/group_member.dart';
 import 'package:navis_mobile/features/groups/presentation/providers/group_provider.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/regattas/domain/entities/regatta.dart';
 import 'package:navis_mobile/features/regattas/presentation/providers/regatta_provider.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
@@ -28,13 +29,14 @@ class GroupDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final groupAsync = ref.watch(groupProvider(groupId));
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
       appBar: NavisAppBar(
-        title: groupAsync.valueOrNull?.name ?? 'Grupo',
+        title: groupAsync.valueOrNull?.name ?? l.groupLabel,
         showBack: true,
       ),
       body: GradientBackground(
@@ -65,13 +67,12 @@ class GroupDetailScreen extends ConsumerWidget {
                   if (group.isActiveMember) ...[
                     Row(
                       children: [
-                        const Expanded(
-                            child: _SectionTitle('Regatas y salidas')),
+                        Expanded(child: _SectionTitle(l.regattasAndOutings)),
                         TextButton.icon(
                           icon: const Icon(Icons.add,
                               color: AppColors.cyan, size: 18),
-                          label: const Text('Programar',
-                              style: TextStyle(color: AppColors.cyan)),
+                          label: Text(l.scheduleAction,
+                              style: const TextStyle(color: AppColors.cyan)),
                           onPressed: () =>
                               context.push('/groups/$groupId/schedule'),
                         ),
@@ -80,7 +81,7 @@ class GroupDetailScreen extends ConsumerWidget {
                     _RegattasSection(groupId: groupId),
                   ],
                   const SizedBox(height: 8),
-                  const _SectionTitle('Miembros'),
+                  _SectionTitle(l.membersLabel),
                   _MembersSection(
                     groupId: groupId,
                     isOwner: group.isOwner,
@@ -98,6 +99,7 @@ class GroupDetailScreen extends ConsumerWidget {
   }
 
   Widget _header(BuildContext context, Group group) {
+    final l = AppLocalizations.of(context)!;
     return NavisCard(
       margin: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -126,7 +128,7 @@ class GroupDetailScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${group.isPublic ? 'Público' : 'Privado'} · ${group.memberCount} miembros',
+                  '${group.isPublic ? l.publicLabel : l.privateLabel} · ${l.membersCount(group.memberCount)}',
                   style: TextStyle(color: context.txtSecondary, fontSize: 13),
                 ),
                 if (group.description != null &&
@@ -146,6 +148,7 @@ class GroupDetailScreen extends ConsumerWidget {
   }
 
   Widget _inviteCode(BuildContext context, String code) {
+    final l = AppLocalizations.of(context)!;
     return NavisCard(
       margin: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -156,7 +159,7 @@ class GroupDetailScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Código de invitación',
+                Text(l.inviteCode,
                     style:
                         TextStyle(color: context.txtSecondary, fontSize: 12)),
                 const SizedBox(height: 2),
@@ -174,10 +177,10 @@ class GroupDetailScreen extends ConsumerWidget {
           ),
           IconButton(
             icon: Icon(Icons.copy, color: context.txtSecondary),
-            tooltip: 'Copiar',
+            tooltip: l.copy,
             onPressed: () {
               Clipboard.setData(ClipboardData(text: code));
-              NavisSnackbar.info(context, 'Código copiado');
+              NavisSnackbar.info(context, l.codeCopied);
             },
           ),
         ],
@@ -186,19 +189,20 @@ class GroupDetailScreen extends ConsumerWidget {
   }
 
   Widget _actions(BuildContext context, WidgetRef ref, Group group) {
+    final l = AppLocalizations.of(context)!;
     if (group.isOwner) {
       return TextButton.icon(
         icon: const Icon(Icons.delete_outline, color: AppColors.red),
-        label: const Text('Eliminar grupo',
-            style: TextStyle(color: AppColors.red)),
+        label:
+            Text(l.deleteGroup, style: const TextStyle(color: AppColors.red)),
         onPressed: () => _confirmDelete(context, ref),
       );
     }
     if (group.isActiveMember) {
       return TextButton.icon(
         icon: const Icon(Icons.logout, color: AppColors.amber),
-        label: const Text('Salir del grupo',
-            style: TextStyle(color: AppColors.amber)),
+        label:
+            Text(l.leaveGroup, style: const TextStyle(color: AppColors.amber)),
         onPressed: () => _leave(context, ref),
       );
     }
@@ -206,39 +210,40 @@ class GroupDetailScreen extends ConsumerWidget {
   }
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
-    final ok = await _confirm(context, 'Eliminar grupo',
-        '¿Seguro que quieres eliminar este grupo? No se puede deshacer.');
+    final l = AppLocalizations.of(context)!;
+    final ok = await _confirm(context, l.deleteGroup, l.deleteGroupConfirm);
     if (!ok) return;
     try {
       await ref.read(groupRepositoryProvider).deleteGroup(groupId);
       ref.invalidate(myGroupsProvider);
       if (!context.mounted) return;
-      NavisSnackbar.success(context, 'Grupo eliminado');
+      NavisSnackbar.success(context, l.groupDeleted);
       context.pop();
     } catch (_) {
       if (!context.mounted) return;
-      NavisSnackbar.error(context, 'No se pudo eliminar');
+      NavisSnackbar.error(context, l.couldNotDelete);
     }
   }
 
   Future<void> _leave(BuildContext context, WidgetRef ref) async {
-    final ok = await _confirm(
-        context, 'Salir del grupo', '¿Quieres salir de este grupo?');
+    final l = AppLocalizations.of(context)!;
+    final ok = await _confirm(context, l.leaveGroup, l.leaveGroupConfirm);
     if (!ok) return;
     try {
       await ref.read(groupRepositoryProvider).leaveGroup(groupId);
       ref.invalidate(myGroupsProvider);
       if (!context.mounted) return;
-      NavisSnackbar.success(context, 'Has salido del grupo');
+      NavisSnackbar.success(context, l.leftGroup);
       context.pop();
     } catch (_) {
       if (!context.mounted) return;
-      NavisSnackbar.error(context, 'No se pudo salir');
+      NavisSnackbar.error(context, l.couldNotLeave);
     }
   }
 
   Future<bool> _confirm(
       BuildContext context, String title, String message) async {
+    final l = AppLocalizations.of(context)!;
     return await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
@@ -249,12 +254,12 @@ class GroupDetailScreen extends ConsumerWidget {
             actions: [
               TextButton(
                 onPressed: () => context.pop(false),
-                child: const Text('Cancelar'),
+                child: Text(l.cancel),
               ),
               TextButton(
                 onPressed: () => context.pop(true),
-                child: const Text('Confirmar',
-                    style: TextStyle(color: AppColors.red)),
+                child: Text(l.confirm,
+                    style: const TextStyle(color: AppColors.red)),
               ),
             ],
           ),
@@ -296,7 +301,8 @@ class _RequestsSection extends ConsumerWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _SectionTitle('Solicitudes (${requests.length})'),
+            _SectionTitle(
+                AppLocalizations.of(context)!.requestsCount(requests.length)),
             ...requests.map((m) => _requestTile(context, ref, m)),
           ],
         );
@@ -306,6 +312,7 @@ class _RequestsSection extends ConsumerWidget {
   }
 
   Widget _requestTile(BuildContext context, WidgetRef ref, GroupMember m) {
+    final l = AppLocalizations.of(context)!;
     return NavisCard(
       margin: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -314,18 +321,18 @@ class _RequestsSection extends ConsumerWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Usuario ${m.userId.substring(0, 8)}',
+              l.userLabel(m.userId.substring(0, 8)),
               style: TextStyle(color: context.txtPrimary),
             ),
           ),
           IconButton(
             icon: const Icon(Icons.check_circle, color: AppColors.green),
-            tooltip: 'Admitir',
+            tooltip: l.admit,
             onPressed: () => _act(context, ref, m, approve: true),
           ),
           IconButton(
             icon: const Icon(Icons.cancel, color: AppColors.red),
-            tooltip: 'Rechazar',
+            tooltip: l.rejectAction,
             onPressed: () => _act(context, ref, m, approve: false),
           ),
         ],
@@ -335,6 +342,7 @@ class _RequestsSection extends ConsumerWidget {
 
   Future<void> _act(BuildContext context, WidgetRef ref, GroupMember m,
       {required bool approve}) async {
+    final l = AppLocalizations.of(context)!;
     final repo = ref.read(groupRepositoryProvider);
     try {
       if (approve) {
@@ -347,10 +355,10 @@ class _RequestsSection extends ConsumerWidget {
       ref.invalidate(groupProvider(groupId));
       if (!context.mounted) return;
       NavisSnackbar.success(
-          context, approve ? 'Solicitud admitida' : 'Solicitud rechazada');
+          context, approve ? l.requestAdmitted : l.requestRejected);
     } catch (_) {
       if (!context.mounted) return;
-      NavisSnackbar.error(context, 'No se pudo procesar');
+      NavisSnackbar.error(context, l.couldNotProcess);
     }
   }
 }
@@ -359,12 +367,14 @@ class _RegattasSection extends ConsumerWidget {
   const _RegattasSection({required this.groupId});
   final String groupId;
 
-  static const _statusLabels = {
-    'planned': 'Programada',
-    'recording': 'En curso',
-    'completed': 'Completada',
-    'cancelled': 'Cancelada',
-  };
+  static String _statusLabel(AppLocalizations l, String status) =>
+      switch (status) {
+        'planned' => l.statusScheduled,
+        'recording' => l.statusInProgress,
+        'completed' => l.statusCompleted,
+        'cancelled' => l.statusCancelled,
+        _ => status,
+      };
   static const _statusColors = {
     'planned': AppColors.cyan,
     'recording': AppColors.green,
@@ -388,7 +398,7 @@ class _RegattasSection extends ConsumerWidget {
         if (regattas.isEmpty) {
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Text('No hay regatas programadas.',
+            child: Text(AppLocalizations.of(context)!.noScheduledRegattas,
                 style: TextStyle(color: context.txtSecondary)),
           );
         }
@@ -436,7 +446,7 @@ class _RegattasSection extends ConsumerWidget {
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
-              _statusLabels[r.status] ?? r.status,
+              _statusLabel(AppLocalizations.of(context)!, r.status),
               style: TextStyle(
                   color: color, fontSize: 11, fontWeight: FontWeight.w600),
             ),
@@ -477,8 +487,9 @@ class _MembersSection extends ConsumerWidget {
   }
 
   Widget _memberTile(BuildContext context, WidgetRef ref, GroupMember m) {
+    final l = AppLocalizations.of(context)!;
     final isMe = m.userId == currentUserId;
-    final label = m.isOwner ? 'Armador' : 'Miembro';
+    final label = m.isOwner ? l.roleOwner : l.memberLabel;
     return NavisCard(
       margin: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -490,7 +501,7 @@ class _MembersSection extends ConsumerWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              '${isMe ? 'Tú' : 'Usuario ${m.userId.substring(0, 8)}'} · $label',
+              '${isMe ? l.youLabel : l.userLabel(m.userId.substring(0, 8))} · $label',
               style: TextStyle(color: context.txtPrimary),
             ),
           ),
@@ -498,7 +509,7 @@ class _MembersSection extends ConsumerWidget {
             IconButton(
               icon: const Icon(Icons.remove_circle_outline,
                   color: AppColors.red, size: 20),
-              tooltip: 'Expulsar',
+              tooltip: l.expelMember,
               onPressed: () async {
                 try {
                   await ref
@@ -507,10 +518,10 @@ class _MembersSection extends ConsumerWidget {
                   ref.invalidate(groupMembersProvider(groupId));
                   ref.invalidate(groupProvider(groupId));
                   if (!context.mounted) return;
-                  NavisSnackbar.success(context, 'Miembro expulsado');
+                  NavisSnackbar.success(context, l.memberExpelled);
                 } catch (_) {
                   if (!context.mounted) return;
-                  NavisSnackbar.error(context, 'No se pudo expulsar');
+                  NavisSnackbar.error(context, l.couldNotExpel);
                 }
               },
             ),
