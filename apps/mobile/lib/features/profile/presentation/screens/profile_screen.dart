@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import 'package:navis_mobile/core/config/env.dart';
 import 'package:navis_mobile/core/network/notification_service.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
@@ -165,7 +167,10 @@ class ProfileScreen extends ConsumerWidget {
                       _ProfileTile(
                         icon: Icons.help_outline,
                         title: l.helpAndSupport,
-                        onTap: () {},
+                        onTap: () => _launchExternal(
+                          context,
+                          Uri(scheme: 'mailto', path: Env.supportEmail),
+                        ),
                       ),
                       Divider(
                         height: 1,
@@ -175,7 +180,7 @@ class ProfileScreen extends ConsumerWidget {
                       _ProfileTile(
                         icon: Icons.info_outline,
                         title: l.aboutNavis,
-                        onTap: () {},
+                        onTap: () => _showAbout(context),
                       ),
                     ],
                   ),
@@ -244,6 +249,48 @@ class ProfileScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+Future<void> _launchExternal(BuildContext context, Uri uri) async {
+  final l = AppLocalizations.of(context)!;
+  final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+  if (!ok && context.mounted) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(l.couldNotOpenLink)));
+  }
+}
+
+void _showAbout(BuildContext context) {
+  final l = AppLocalizations.of(context)!;
+  showDialog<void>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(l.aboutNavis),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l.aboutVersion(Env.appVersion)),
+          const SizedBox(height: 8),
+          Text(l.aboutDescription),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => _launchExternal(ctx, Uri.parse(Env.privacyUrl)),
+          child: Text(l.privacyPolicy),
+        ),
+        TextButton(
+          onPressed: () => _launchExternal(ctx, Uri.parse(Env.termsUrl)),
+          child: Text(l.termsOfService),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(),
+          child: Text(l.close),
+        ),
+      ],
+    ),
+  );
 }
 
 class _ProfileTile extends StatelessWidget {

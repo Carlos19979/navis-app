@@ -28,6 +28,19 @@ class Env {
 
   static const sentryDsn = String.fromEnvironment('SENTRY_DSN');
 
+  /// App version shown in About; injected by the release build (Makefile).
+  static const appVersion = String.fromEnvironment(
+    'APP_VERSION',
+    defaultValue: '0.1.0-dev',
+  );
+
+  /// Legal pages served by the API (also registered in App Store Connect).
+  static const privacyUrl = '$apiUrl/legal/privacy';
+  static const termsUrl = '$apiUrl/legal/terms';
+
+  /// Support contact used by Help & Support and the legal pages.
+  static const supportEmail = 'soporte@aerolume.app';
+
   // RevenueCat public SDK keys (per platform). Empty disables in-app purchases
   // (billing degrades gracefully). Pass via --dart-define.
   static const revenueCatIosKey = String.fromEnvironment('REVENUECAT_IOS_KEY');

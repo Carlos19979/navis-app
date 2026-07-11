@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import 'package:navis_mobile/core/config/env.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/features/profile/data/account_provider.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 
@@ -119,6 +122,7 @@ class _PaywallSheetState extends ConsumerState<_PaywallSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         color: context.dialogSurface,
@@ -222,6 +226,49 @@ class _PaywallSheetState extends ConsumerState<_PaywallSheet> {
                 ),
               ),
             ],
+            // App Store 3.1.2: auto-renewal disclosure + legal links must be
+            // visible on the purchase surface.
+            const SizedBox(height: 8),
+            Text(
+              l.paywallAutoRenewNotice,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 11,
+                color: context.txtSecondary.withValues(alpha: 0.8),
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextButton(
+                  onPressed: () => launchUrl(
+                    Uri.parse(Env.privacyUrl),
+                    mode: LaunchMode.externalApplication,
+                  ),
+                  child: Text(
+                    l.privacyPolicy,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: context.txtSecondary,
+                    ),
+                  ),
+                ),
+                Text('·', style: TextStyle(color: context.txtSecondary)),
+                TextButton(
+                  onPressed: () => launchUrl(
+                    Uri.parse(Env.termsUrl),
+                    mode: LaunchMode.externalApplication,
+                  ),
+                  child: Text(
+                    l.termsOfService,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: context.txtSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
