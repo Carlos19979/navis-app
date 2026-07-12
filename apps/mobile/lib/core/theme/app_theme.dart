@@ -2,7 +2,7 @@
 // (3.44) but is re-exported from material.dart on the CI-pinned SDK (3.41.7),
 // where this import is therefore unused. Keep it (no `show`) so both toolchains
 // resolve the symbol; the ignore covers the CI-only unused-import warning.
-// ignore: unused_import
+// ignore: unnecessary_import, unused_import
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
