@@ -18,6 +18,7 @@ import 'package:navis_mobile/features/boat/presentation/widgets/boat_header.dart
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/trip_recording_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
+import 'package:navis_mobile/features/boat/presentation/boat_type_label.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
@@ -196,6 +197,23 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
             );
           }
 
+          // Single-boat owner: the home IS that boat's overview, not a
+          // one-item list to tap through.
+          if (boats.length == 1 && shared.isEmpty) {
+            return RefreshIndicator(
+              color: AppColors.cyan,
+              onRefresh: () async {
+                ref.invalidate(boatsProvider);
+                ref.invalidate(sharedBoatsProvider);
+              },
+              child: ListView(
+                controller: _scrollController,
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 112),
+                children: [_BoatCard(boat: boats.first, index: 0, focus: true)],
+              ),
+            );
+          }
+
           final hasShared = shared.isNotEmpty;
           final headerCount = hasShared ? 1 : 0;
           final total = boats.length + headerCount + shared.length + 1;
@@ -274,19 +292,20 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
   }
 }
 
-String _localizedBoatType(AppLocalizations l, String type) => switch (type) {
-      'sailboat' => l.sailboat,
-      'motorboat' => l.motorboat,
-      'catamaran' => l.catamaran,
-      'other' => l.other,
-      _ => type[0].toUpperCase() + type.substring(1),
-    };
-
 class _BoatCard extends ConsumerWidget {
-  const _BoatCard({required this.boat, required this.index});
+  const _BoatCard({
+    required this.boat,
+    required this.index,
+    this.focus = false,
+  });
 
   final Boat boat;
   final int index;
+
+  /// Single-boat home: render as the boat's overview (adds a Maintenance
+  /// quick action + a "manage boat" link, and drops the whole-card tap since
+  /// the actions are all inline).
+  final bool focus;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -297,7 +316,7 @@ class _BoatCard extends ConsumerWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: NavisCard(
         padding: EdgeInsets.zero,
-        onTap: () => context.push('/boats/${boat.id}'),
+        onTap: focus ? null : () => context.push('/boats/${boat.id}'),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -315,7 +334,7 @@ class _BoatCard extends ConsumerWidget {
                   ),
                   _InfoChip(
                     icon: Icons.category_outlined,
-                    label: _localizedBoatType(l, boat.type),
+                    label: localizedBoatType(l, boat.type),
                   ),
                   if (boat.homePort != null)
                     _InfoChip(
@@ -389,6 +408,28 @@ class _BoatCard extends ConsumerWidget {
                 ],
               ),
             ),
+            // Single-boat overview: surface Maintenance + a manage link.
+            if (focus) ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                child: NavisButton(
+                  label: l.maintenanceTab,
+                  icon: Icons.build_outlined,
+                  variant: NavisButtonVariant.secondary,
+                  compact: true,
+                  onPressed: () =>
+                      context.push('/boats/${boat.id}/maintenance'),
+                ),
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: () => context.push('/boats/${boat.id}'),
+                  icon: const Icon(Icons.tune, size: 18),
+                  label: Text(l.manageBoat),
+                ),
+              ),
+            ],
           ],
         ),
       ),

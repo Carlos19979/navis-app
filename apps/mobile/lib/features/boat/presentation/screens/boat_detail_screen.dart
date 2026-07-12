@@ -13,20 +13,13 @@ import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
+import 'package:navis_mobile/features/boat/presentation/boat_type_label.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
-
-String _localizedBoatType(AppLocalizations l, String type) => switch (type) {
-      'sailboat' => l.sailboat,
-      'motorboat' => l.motorboat,
-      'catamaran' => l.catamaran,
-      'other' => l.other,
-      _ => type[0].toUpperCase() + type.substring(1),
-    };
 
 class BoatDetailScreen extends ConsumerWidget {
   const BoatDetailScreen({super.key, required this.boatId});
@@ -493,7 +486,7 @@ class _InfoSection extends StatelessWidget {
           _DetailRow(
             icon: Icons.category_outlined,
             label: AppLocalizations.of(context)!.type,
-            value: _localizedBoatType(AppLocalizations.of(context)!, boat.type),
+            value: localizedBoatType(AppLocalizations.of(context)!, boat.type),
           ),
           _glassDivider(context),
           _DetailRow(

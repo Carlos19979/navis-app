@@ -121,13 +121,17 @@ class _NavisButtonState extends State<NavisButton> {
           Icon(widget.icon, size: 20, color: _textColor),
           const SizedBox(width: 8),
         ],
-        Text(
-          widget.label,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: _textColor,
-            letterSpacing: 0.3,
+        Flexible(
+          child: Text(
+            widget.label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: _textColor,
+              letterSpacing: 0.3,
+            ),
           ),
         ),
       ],

@@ -190,7 +190,7 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
         child: Container(
           constraints: const BoxConstraints(maxWidth: 420),
           decoration: BoxDecoration(
-            gradient: AppColors.surfaceGradient,
+            gradient: context.surfaceGradient,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: context.glassBorderColor,

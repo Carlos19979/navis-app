@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:navis_mobile/features/boat/presentation/widgets/document_card.dart';
 import 'package:navis_mobile/features/documents/domain/entities/document.dart';
 import 'package:navis_mobile/features/documents/domain/repositories/document_repository.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -156,12 +157,12 @@ void main() {
       expect(find.text('License'), findsOneWidget);
     });
 
-    testWidgets('shows expiry dates on each card', (tester) async {
+    testWidgets('renders a card per document', (tester) async {
       await setPhoneSize(tester);
       await tester.pumpWidget(buildSubject(docs: testDocs));
       await pumpScreen(tester);
 
-      expect(find.textContaining('Expires:'), findsNWidgets(4));
+      expect(find.byType(DocumentCard), findsNWidgets(4));
     });
 
     testWidgets('shows status badges on document cards', (tester) async {
@@ -183,7 +184,7 @@ void main() {
       await pumpScreen(tester);
 
       // Verify all 4 cards are rendered (sorted by expiry)
-      expect(find.textContaining('Expires:'), findsNWidgets(4));
+      expect(find.byType(DocumentCard), findsNWidgets(4));
     });
 
     testWidgets('shows FAB with add tooltip', (tester) async {
@@ -344,7 +345,7 @@ void main() {
 
       expect(find.text('Insurance'), findsOneWidget);
       expect(find.text('Valid'), findsOneWidget);
-      expect(find.textContaining('Expires:'), findsOneWidget);
+      expect(find.byType(DocumentCard), findsOneWidget);
     });
 
     testWidgets('handles underscore types with proper formatting',

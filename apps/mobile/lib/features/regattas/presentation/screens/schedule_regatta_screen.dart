@@ -9,11 +9,12 @@ import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.
 import 'package:navis_mobile/features/regattas/presentation/providers/regatta_provider.dart';
 import 'package:navis_mobile/features/regattas/presentation/widgets/departure_port_picker.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
-import 'package:navis_mobile/shared/widgets/gradient_background.dart';
-import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
+import 'package:navis_mobile/shared/widgets/navis_scaffold.dart';
+import 'package:navis_mobile/shared/widgets/navis_selectable_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
+import 'package:navis_mobile/shared/widgets/navis_text_field.dart';
 
 class ScheduleRegattaScreen extends ConsumerStatefulWidget {
   const ScheduleRegattaScreen({required this.groupId, super.key});
@@ -108,127 +109,100 @@ class _ScheduleRegattaScreenState extends ConsumerState<ScheduleRegattaScreen> {
     final boats = boatsAsync.valueOrNull ?? const <Boat>[];
     final selectedBoat = _boatById(boats);
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
-      appBar: NavisAppBar(title: l.scheduleRegatta, showBack: true),
-      body: GradientBackground(
-        child: SafeArea(
-          child: Form(
-            key: _formKey,
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-              children: [
-                _field(_titleController, l.regattaTitleHint),
-                const SizedBox(height: 20),
-                _Label(l.boat),
-                const SizedBox(height: 8),
-                boatsAsync.when(
-                  loading: () => const Center(
-                      child: CircularProgressIndicator(color: AppColors.cyan)),
-                  error: (e, _) => Text(l.errorWithMessage(e.toString()),
-                      style: const TextStyle(color: AppColors.red)),
-                  data: (boats) => Column(
-                    children: boats
-                        .map((b) => NavisCard(
-                              margin: const EdgeInsets.only(bottom: 8),
-                              borderColor:
-                                  _boatId == b.id ? AppColors.cyan : null,
-                              onTap: () => setState(() {
-                                _boatId = b.id;
-                                _departurePort = null;
-                              }),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.sailing,
-                                      color: AppColors.cyan),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(b.name,
-                                        style: TextStyle(
-                                            color: context.txtPrimary)),
-                                  ),
-                                  if (_boatId == b.id)
-                                    const Icon(Icons.check_circle,
-                                        color: AppColors.cyan, size: 20),
-                                ],
-                              ),
-                            ))
-                        .toList(),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                _Label(l.departurePort),
-                const SizedBox(height: 8),
-                if (selectedBoat == null)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Text(l.selectBoatFirst,
-                        style: TextStyle(color: context.txtSecondary)),
-                  )
-                else
-                  DeparturePortPicker(
-                    key: ValueKey(selectedBoat.id),
-                    boat: selectedBoat,
-                    onChanged: (name) => setState(() => _departurePort = name),
-                  ),
-                const SizedBox(height: 20),
-                NavisCard(
-                  onTap: _pickDate,
-                  child: Row(
-                    children: [
-                      const Icon(Icons.event, color: AppColors.cyan),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          l.dateWithValue(
-                            '${_scheduledAt.day}/${_scheduledAt.month}/${_scheduledAt.year} '
-                            '${_scheduledAt.hour.toString().padLeft(2, '0')}:'
-                            '${_scheduledAt.minute.toString().padLeft(2, '0')}',
-                          ),
-                          style: TextStyle(color: context.txtPrimary),
-                        ),
-                      ),
-                      Icon(Icons.edit, color: context.txtSecondary, size: 18),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 28),
-                NavisButton(
-                  label: l.scheduleRegatta,
-                  isLoading: _saving,
-                  isDisabled: _saving,
-                  onPressed: _submit,
-                ),
-              ],
+    return NavisScaffold(
+      title: l.scheduleRegatta,
+      showBack: true,
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+          children: [
+            NavisTextField(
+              controller: _titleController,
+              label: l.regattaTitleHint,
             ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _field(
-    TextEditingController controller,
-    String label, {
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      validator: validator,
-      style: TextStyle(color: context.txtPrimary),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(color: context.txtSecondary),
-        filled: true,
-        fillColor: context.glassBg,
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: context.glassBorderColor, width: 0.5),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.cyan),
+            const SizedBox(height: 20),
+            _Label(l.boat),
+            const SizedBox(height: 8),
+            boatsAsync.when(
+              loading: () => const Center(
+                  child: CircularProgressIndicator(color: AppColors.cyan)),
+              error: (e, _) => Text(l.errorWithMessage(e.toString()),
+                  style: const TextStyle(color: AppColors.red)),
+              data: (boats) => boats.isEmpty
+                  ? NavisCard(
+                      child: Column(
+                        children: [
+                          Text(l.addBoatFirst,
+                              style: TextStyle(color: context.txtSecondary)),
+                          const SizedBox(height: 12),
+                          NavisButton(
+                            label: l.addBoat,
+                            variant: NavisButtonVariant.secondary,
+                            compact: true,
+                            onPressed: () => context.push('/boats/new'),
+                          ),
+                        ],
+                      ),
+                    )
+                  : Column(
+                      children: boats
+                          .map((b) => NavisSelectableCard(
+                                title: b.name,
+                                icon: Icons.sailing,
+                                selected: _boatId == b.id,
+                                onTap: () => setState(() {
+                                  _boatId = b.id;
+                                  _departurePort = null;
+                                }),
+                              ))
+                          .toList(),
+                    ),
+            ),
+            const SizedBox(height: 20),
+            _Label(l.departurePort),
+            const SizedBox(height: 8),
+            if (selectedBoat == null)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(l.selectBoatFirst,
+                    style: TextStyle(color: context.txtSecondary)),
+              )
+            else
+              DeparturePortPicker(
+                key: ValueKey(selectedBoat.id),
+                boat: selectedBoat,
+                onChanged: (name) => setState(() => _departurePort = name),
+              ),
+            const SizedBox(height: 20),
+            NavisCard(
+              onTap: _pickDate,
+              child: Row(
+                children: [
+                  const Icon(Icons.event, color: AppColors.cyan),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      l.dateWithValue(
+                        '${_scheduledAt.day}/${_scheduledAt.month}/${_scheduledAt.year} '
+                        '${_scheduledAt.hour.toString().padLeft(2, '0')}:'
+                        '${_scheduledAt.minute.toString().padLeft(2, '0')}',
+                      ),
+                      style: TextStyle(color: context.txtPrimary),
+                    ),
+                  ),
+                  Icon(Icons.edit, color: context.txtSecondary, size: 18),
+                ],
+              ),
+            ),
+            const SizedBox(height: 28),
+            NavisButton(
+              label: l.scheduleRegatta,
+              isLoading: _saving,
+              isDisabled: _saving,
+              onPressed: _submit,
+            ),
+          ],
         ),
       ),
     );

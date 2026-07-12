@@ -29,6 +29,7 @@
   "noBoats": "No boats yet. Add your first boat!",
   "noDocuments": "No documents yet. Add your first document!",
   "noTrips": "No trips recorded yet. Start your first trip!",
+  "statsEmptyDescription": "Record trips to see distance, hours at sea and monthly activity here.",
   "noEvents": "No upcoming events.",
   "expired": "Expired",
   "warning": "Warning",
@@ -542,6 +543,8 @@
   "totalSpent": "Total spent",
   "noExpensesRecorded": "No expenses recorded",
   "categoryLabel": "Category",
+  "customCategory": "Custom category",
+  "customCategoryHint": "Or type your own",
   "amountEur": "Amount €",
   "couldNotUploadInvoice": "Could not upload the invoice",
   "attachInvoice": "Attach invoice",
@@ -673,5 +676,37 @@
   "resumeRecordingBody": "A trip recording was interrupted. Do you want to resume it?",
   "resumeAction": "Resume",
   "discardRecording": "Discard",
-  "noBoatsValueProp": "Add your boat to track document expiry, get reminders before fines, and keep your maintenance log in one place."
+  "noBoatsValueProp": "Add your boat to track document expiry, get reminders before fines, and keep your maintenance log in one place.",
+  "home": "Home",
+  "community": "Community",
+  "communityRegattas": "Regattas",
+  "communityClubs": "Clubs",
+  "sailConditionsGood": "Good conditions to sail",
+  "sailConditionsModerate": "Moderate conditions",
+  "sailConditionsAdverse": "Adverse conditions",
+  "windWavesSummary": "Wind {wind} kt · Waves {wave} m",
+  "@windWavesSummary": {
+    "placeholders": {
+      "wind": {
+        "type": "String"
+      },
+      "wave": {
+        "type": "String"
+      }
+    }
+  },
+  "tides": "Tides",
+  "tideRange": "Range {range} m",
+  "@tideRange": {
+    "placeholders": {
+      "range": {
+        "type": "String"
+      }
+    }
+  },
+  "tideHigh": "High tide",
+  "tideLow": "Low tide",
+  "manageBoat": "Manage boat",
+  "openSettings": "Open settings",
+  "locationUnavailable": "Location unavailable"
 }

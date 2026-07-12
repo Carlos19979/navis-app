@@ -14,6 +14,8 @@ class NavigationHud extends StatelessWidget {
     required this.distanceNm,
     required this.startTime,
     this.gpsAccuracy,
+    this.onClose,
+    this.closeSemanticLabel,
   });
 
   final double speedKnots;
@@ -24,6 +26,11 @@ class NavigationHud extends StatelessWidget {
   /// map is not rebuilt every second.
   final DateTime? startTime;
   final double? gpsAccuracy;
+
+  /// Optional leading close/exit action rendered inside the bar. Keeping it
+  /// inside the HUD avoids a floating button overlapping the top-left stat.
+  final VoidCallback? onClose;
+  final String? closeSemanticLabel;
 
   String get _headingLabel {
     if (heading == null) return '---';
@@ -66,6 +73,13 @@ class NavigationHud extends StatelessWidget {
               children: [
                 Row(
                   children: [
+                    if (onClose != null) ...[
+                      _HudCloseButton(
+                        onTap: onClose!,
+                        semanticLabel: closeSemanticLabel,
+                      ),
+                      _divider(),
+                    ],
                     Expanded(
                       child: _HudStat(
                         label: l.speedAbbr,
@@ -135,6 +149,38 @@ class NavigationHud extends StatelessWidget {
       width: 0.5,
       height: 32,
       color: AppColors.glassBorder,
+    );
+  }
+}
+
+/// Leading exit control that lives inside the HUD bar (see [NavigationHud.onClose]).
+class _HudCloseButton extends StatelessWidget {
+  const _HudCloseButton({required this.onTap, this.semanticLabel});
+
+  final VoidCallback onTap;
+  final String? semanticLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: semanticLabel,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: const Padding(
+          padding: EdgeInsets.only(right: 12),
+          child: SizedBox(
+            width: 32,
+            height: 40,
+            child: Icon(
+              Icons.close,
+              size: 22,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -218,27 +264,35 @@ class _HudStat extends StatelessWidget {
               ),
         ),
         const SizedBox(height: 2),
-        RichText(
-          textAlign: TextAlign.center,
-          text: TextSpan(
-            children: [
-              TextSpan(
-                text: value,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: valueColor,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                    ),
-              ),
-              if (unit.isNotEmpty)
+        // Keep the value on a single line and scale it down if the column is
+        // narrow, so ticking digits (the elapsed clock) never wrap and make
+        // the whole bar grow/shrink every second.
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: RichText(
+            maxLines: 1,
+            softWrap: false,
+            textAlign: TextAlign.center,
+            text: TextSpan(
+              children: [
                 TextSpan(
-                  text: ' $unit',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: AppColors.textSecondary,
-                        fontSize: 10,
+                  text: value,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: valueColor,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
                       ),
                 ),
-            ],
+                if (unit.isNotEmpty)
+                  TextSpan(
+                    text: ' $unit',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: AppColors.textSecondary,
+                          fontSize: 10,
+                        ),
+                  ),
+              ],
+            ),
           ),
         ),
       ],

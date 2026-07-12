@@ -4,6 +4,12 @@ import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/logbook/domain/entities/trip.dart';
 
+/// Control labels sit directly over the map, so a soft dark shadow keeps white
+/// text legible on both light and dark tiles.
+const _labelShadows = [
+  Shadow(color: Colors.black54, blurRadius: 4, offset: Offset(0, 1)),
+];
+
 class RecordingControls extends StatelessWidget {
   const RecordingControls({
     super.key,
@@ -50,6 +56,7 @@ class RecordingControls extends StatelessWidget {
               ),
             ],
           ),
+          l,
         );
       case TripStatus.paused:
         return _controlsColumn(
@@ -73,11 +80,12 @@ class RecordingControls extends StatelessWidget {
               ),
             ],
           ),
+          l,
         );
     }
   }
 
-  Widget _controlsColumn(Widget mainRow) {
+  Widget _controlsColumn(Widget mainRow, AppLocalizations l) {
     if (onCancel == null) return mainRow;
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -86,11 +94,15 @@ class RecordingControls extends StatelessWidget {
         const SizedBox(height: 6),
         TextButton.icon(
           onPressed: onCancel,
-          icon:
-              const Icon(Icons.close, size: 16, color: AppColors.textSecondary),
-          label: const Text(
-            'Cancelar viaje',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+          icon: const Icon(Icons.close, size: 16, color: Colors.white),
+          label: Text(
+            l.cancelTrip,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              shadows: _labelShadows,
+            ),
           ),
         ),
       ],
@@ -239,7 +251,9 @@ class _GradientControlButtonState extends State<_GradientControlButton> {
         Text(
           widget.label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                shadows: _labelShadows,
               ),
         ),
       ],

@@ -98,6 +98,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Aun no has registrado viajes. Comienza tu primer viaje!';
 
   @override
+  String get statsEmptyDescription =>
+      'Registra viajes para ver aquí distancia, horas en el mar y actividad mensual.';
+
+  @override
   String get noEvents => 'No hay eventos proximos.';
 
   @override
@@ -1359,6 +1363,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get categoryLabel => 'Categoría';
 
   @override
+  String get customCategory => 'Categoría personalizada';
+
+  @override
+  String get customCategoryHint => 'O escribe la tuya';
+
+  @override
   String get amountEur => 'Importe €';
 
   @override
@@ -1691,4 +1701,53 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get noBoatsValueProp =>
       'Añade tu barco para controlar la caducidad de documentos, recibir avisos antes de las multas y llevar el mantenimiento en un solo sitio.';
+
+  @override
+  String get home => 'Inicio';
+
+  @override
+  String get community => 'Comunidad';
+
+  @override
+  String get communityRegattas => 'Regatas';
+
+  @override
+  String get communityClubs => 'Clubes';
+
+  @override
+  String get sailConditionsGood => 'Buenas condiciones para navegar';
+
+  @override
+  String get sailConditionsModerate => 'Condiciones moderadas';
+
+  @override
+  String get sailConditionsAdverse => 'Condiciones adversas';
+
+  @override
+  String windWavesSummary(String wind, String wave) {
+    return 'Viento $wind kt · Olas $wave m';
+  }
+
+  @override
+  String get tides => 'Mareas';
+
+  @override
+  String tideRange(String range) {
+    return 'Carrera $range m';
+  }
+
+  @override
+  String get tideHigh => 'Pleamar';
+
+  @override
+  String get tideLow => 'Bajamar';
+
+  @override
+  String get manageBoat => 'Gestionar barco';
+
+  @override
+  String get openSettings => 'Abrir ajustes';
+
+  @override
+  String get locationUnavailable => 'Ubicación no disponible';
 }

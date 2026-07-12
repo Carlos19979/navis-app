@@ -10,10 +10,10 @@ import 'package:navis_mobile/features/events/presentation/providers/event_provid
 import 'package:navis_mobile/features/groups/presentation/providers/group_provider.dart';
 import 'package:navis_mobile/features/regattas/presentation/providers/regatta_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
-import 'package:navis_mobile/shared/widgets/gradient_background.dart';
-import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
+import 'package:navis_mobile/shared/widgets/navis_scaffold.dart';
+import 'package:navis_mobile/shared/widgets/navis_selectable_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 
 /// Joins an event as one of the owner's groups: pick a group and a boat, which
@@ -88,134 +88,117 @@ class _StartEventRegattaScreenState
     final eventName =
         ref.watch(eventProvider(widget.eventId)).valueOrNull?.name;
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
-      appBar: NavisAppBar(title: l.joinAsGroup, showBack: true),
-      body: GradientBackground(
-        child: SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-            children: [
-              if (eventName != null) ...[
-                NavisCard(
-                  child: Row(
+    return NavisScaffold(
+      title: l.joinAsGroup,
+      showBack: true,
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+        children: [
+          if (eventName != null) ...[
+            NavisCard(
+              child: Row(
+                children: [
+                  const Icon(Icons.emoji_events, color: AppColors.cyan),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      eventName,
+                      style: TextStyle(
+                        color: context.txtPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
+          _Label(l.groupLabel),
+          const SizedBox(height: 8),
+          groupsAsync.when(
+            loading: () => const Center(
+                child: CircularProgressIndicator(color: AppColors.cyan)),
+            error: (e, _) => Text(l.errorWithMessage(e.toString()),
+                style: const TextStyle(color: AppColors.red)),
+            data: (groups) {
+              final owned =
+                  groups.where((g) => g.isOwner).toList(growable: false);
+              if (owned.isEmpty) {
+                return NavisCard(
+                  child: Column(
                     children: [
-                      const Icon(Icons.emoji_events, color: AppColors.cyan),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          eventName,
-                          style: TextStyle(
-                            color: context.txtPrimary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                      Text(l.createGroupFirst,
+                          style: TextStyle(color: context.txtSecondary)),
+                      const SizedBox(height: 12),
+                      NavisButton(
+                        label: l.createGroup,
+                        variant: NavisButtonVariant.secondary,
+                        compact: true,
+                        onPressed: () => context.push('/groups/new'),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 20),
-              ],
-              _Label(l.groupLabel),
-              const SizedBox(height: 8),
-              groupsAsync.when(
-                loading: () => const Center(
-                    child: CircularProgressIndicator(color: AppColors.cyan)),
-                error: (e, _) => Text(l.errorWithMessage(e.toString()),
-                    style: const TextStyle(color: AppColors.red)),
-                data: (groups) {
-                  final owned =
-                      groups.where((g) => g.isOwner).toList(growable: false);
-                  if (owned.isEmpty) {
-                    return Text(
-                      l.createGroupFirst,
-                      style: TextStyle(color: context.txtSecondary),
-                    );
-                  }
-                  return Column(
-                    children: owned
-                        .map((g) => _SelectableCard(
-                              icon: Icons.groups,
-                              label: g.name,
-                              selected: _groupId == g.id,
-                              onTap: () => setState(() => _groupId = g.id),
-                            ))
-                        .toList(),
-                  );
-                },
-              ),
-              const SizedBox(height: 20),
-              _Label(l.boat),
-              const SizedBox(height: 8),
-              boatsAsync.when(
-                loading: () => const Center(
-                    child: CircularProgressIndicator(color: AppColors.cyan)),
-                error: (e, _) => Text(l.errorWithMessage(e.toString()),
-                    style: const TextStyle(color: AppColors.red)),
-                data: (boats) {
-                  if (boats.isEmpty) {
-                    return Text(
-                      l.addBoatFirst,
-                      style: TextStyle(color: context.txtSecondary),
-                    );
-                  }
-                  return Column(
-                    children: boats
-                        .map((b) => _SelectableCard(
-                              icon: Icons.sailing,
-                              label: b.name,
-                              selected: _boatId == b.id,
-                              onTap: () => setState(() => _boatId = b.id),
-                            ))
-                        .toList(),
-                  );
-                },
-              ),
-              const SizedBox(height: 28),
-              NavisButton(
-                label: l.joinWithMyGroup,
-                icon: Icons.flag,
-                isLoading: _saving,
-                isDisabled: _saving,
-                onPressed: () => _join(boats),
-              ),
-            ],
+                );
+              }
+              return Column(
+                children: owned
+                    .map((g) => NavisSelectableCard(
+                          icon: Icons.groups,
+                          title: g.name,
+                          selected: _groupId == g.id,
+                          onTap: () => setState(() => _groupId = g.id),
+                        ))
+                    .toList(),
+              );
+            },
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SelectableCard extends StatelessWidget {
-  const _SelectableCard({
-    required this.icon,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return NavisCard(
-      margin: const EdgeInsets.only(bottom: 8),
-      borderColor: selected ? AppColors.cyan : null,
-      onTap: onTap,
-      child: Row(
-        children: [
-          Icon(icon, color: AppColors.cyan),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(label, style: TextStyle(color: context.txtPrimary)),
+          const SizedBox(height: 20),
+          _Label(l.boat),
+          const SizedBox(height: 8),
+          boatsAsync.when(
+            loading: () => const Center(
+                child: CircularProgressIndicator(color: AppColors.cyan)),
+            error: (e, _) => Text(l.errorWithMessage(e.toString()),
+                style: const TextStyle(color: AppColors.red)),
+            data: (boats) {
+              if (boats.isEmpty) {
+                return NavisCard(
+                  child: Column(
+                    children: [
+                      Text(l.addBoatFirst,
+                          style: TextStyle(color: context.txtSecondary)),
+                      const SizedBox(height: 12),
+                      NavisButton(
+                        label: l.addBoat,
+                        variant: NavisButtonVariant.secondary,
+                        compact: true,
+                        onPressed: () => context.push('/boats/new'),
+                      ),
+                    ],
+                  ),
+                );
+              }
+              return Column(
+                children: boats
+                    .map((b) => NavisSelectableCard(
+                          icon: Icons.sailing,
+                          title: b.name,
+                          selected: _boatId == b.id,
+                          onTap: () => setState(() => _boatId = b.id),
+                        ))
+                    .toList(),
+              );
+            },
           ),
-          if (selected)
-            const Icon(Icons.check_circle, color: AppColors.cyan, size: 20),
+          const SizedBox(height: 28),
+          NavisButton(
+            label: l.joinWithMyGroup,
+            icon: Icons.flag,
+            isLoading: _saving,
+            isDisabled: _saving,
+            onPressed: () => _join(boats),
+          ),
         ],
       ),
     );

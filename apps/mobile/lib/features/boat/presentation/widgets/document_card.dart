@@ -10,9 +10,13 @@ import 'package:navis_mobile/features/documents/presentation/widgets/document_st
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
 
 class DocumentCard extends StatelessWidget {
-  const DocumentCard({super.key, required this.document});
+  const DocumentCard({super.key, required this.document, this.onTap});
 
   final Document document;
+
+  /// Tap handler. Defaults to `context.go` to the document detail; the
+  /// documents list passes `context.push` so back returns to the list.
+  final VoidCallback? onTap;
 
   Color get _statusColor {
     final daysLeft = NavisDateUtils.daysUntil(document.expiryDate);
@@ -22,12 +26,21 @@ class DocumentCard extends StatelessWidget {
     return AppColors.green;
   }
 
+  /// Prettifies a stored document type for display: snake_case → Title Case
+  /// (e.g. `safety_certificate` → `Safety Certificate`). Already-nice values
+  /// (e.g. `Insurance`) pass through unchanged.
+  static String _prettyType(String type) => type
+      .split(RegExp(r'[_\s]+'))
+      .where((w) => w.isNotEmpty)
+      .map((w) => w[0].toUpperCase() + w.substring(1))
+      .join(' ');
+
   @override
   Widget build(BuildContext context) {
     return NavisCard(
       margin: const EdgeInsets.only(bottom: 10),
       padding: EdgeInsets.zero,
-      onTap: () => context.go('/documents/${document.id}'),
+      onTap: onTap ?? () => context.go('/documents/${document.id}'),
       child: IntrinsicHeight(
         child: Row(
           children: [
@@ -64,7 +77,7 @@ class DocumentCard extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            document.type,
+                            _prettyType(document.type),
                             style: Theme.of(context)
                                 .textTheme
                                 .titleSmall

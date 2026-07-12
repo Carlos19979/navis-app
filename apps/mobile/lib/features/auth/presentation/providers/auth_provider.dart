@@ -29,7 +29,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   void _init() {
     final session = _repository.currentSession;
-    if (session != null) {
+    if (session != null && !session.isExpired) {
       state = AuthState.authenticated(session.user);
     } else {
       state = const AuthState.unauthenticated();

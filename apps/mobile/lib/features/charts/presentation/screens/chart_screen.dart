@@ -7,6 +7,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/charts/data/tile_provider.dart';
@@ -29,6 +31,7 @@ class ChartScreen extends ConsumerStatefulWidget {
 class _ChartScreenState extends ConsumerState<ChartScreen> {
   final MapController _mapController = MapController();
   LatLng? _currentPosition;
+  bool _locationDenied = false;
 
   @override
   void initState() {
@@ -38,19 +41,28 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
 
   Future<void> _getCurrentPosition() async {
     try {
-      final permission = await Geolocator.checkPermission();
+      var permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
-        await Geolocator.requestPermission();
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        if (mounted) setState(() => _locationDenied = true);
+        return;
       }
 
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
+      if (!mounted) return;
       setState(() {
         _currentPosition = LatLng(position.latitude, position.longitude);
+        _locationDenied = false;
       });
     } on Exception {
-      // Location not available; use default center
+      // GPS unavailable (services off / timeout): surface a banner instead of
+      // silently centering on the default position.
+      if (mounted) setState(() => _locationDenied = true);
     }
   }
 
@@ -107,6 +119,56 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
               ],
             ),
           ),
+
+          // GPS unavailable: a glass banner with an open-settings action,
+          // instead of silently sitting on the default center.
+          if (_locationDenied && _currentPosition == null)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 8,
+              left: 16,
+              right: 16,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.amber.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.amber.withValues(alpha: 0.4),
+                        width: 0.5,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.location_off,
+                            size: 16, color: AppColors.amber),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            AppLocalizations.of(context)!.locationUnavailable,
+                            style: TextStyle(
+                                color: context.txtPrimary, fontSize: 13),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: Geolocator.openLocationSettings,
+                          child: Text(
+                            AppLocalizations.of(context)!.openSettings,
+                            style: const TextStyle(color: AppColors.cyan),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
 
           // Glass GPS status overlay at top
           if (_currentPosition != null)

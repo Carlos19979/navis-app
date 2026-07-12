@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
+import 'package:navis_mobile/shared/widgets/navis_empty_state.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
 
@@ -18,14 +21,14 @@ class TripStatsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     final tripsAsync = ref.watch(boatTripsProvider(boatId));
 
     return GradientBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: NavisAppBar(
-          title: l10n?.tripStatistics ?? 'Trip Statistics',
+          title: l.tripStatistics,
           showBack: true,
         ),
         body: tripsAsync.when(
@@ -35,6 +38,13 @@ class TripStatsScreen extends ConsumerWidget {
             onRetry: () => ref.invalidate(boatTripsProvider(boatId)),
           ),
           data: (trips) {
+            if (trips.isEmpty) {
+              return NavisEmptyState(
+                icon: Icons.insights_outlined,
+                message: l.noTrips,
+                description: l.statsEmptyDescription,
+              );
+            }
             final stats = ref.watch(tripStatsProvider(trips));
 
             final ports = <String>{};
@@ -65,32 +75,32 @@ class TripStatsScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(16),
               children: [
                 _SectionTitle(
-                  label: l10n?.allTime ?? 'All Time',
+                  label: l.allTime,
                 ),
                 const SizedBox(height: 8),
                 _StatsGrid(children: [
                   _StatCard(
                     icon: Icons.route,
                     value: stats.totalTrips.toString(),
-                    label: l10n?.totalTrips ?? 'Trips',
+                    label: l.totalTrips,
                     color: AppColors.cyan,
                   ),
                   _StatCard(
                     icon: Icons.straighten,
                     value: stats.totalDistanceNm.toStringAsFixed(1),
-                    label: l10n?.totalDistanceNm ?? 'NM sailed',
+                    label: l.totalDistanceNm,
                     color: AppColors.green,
                   ),
                   _StatCard(
                     icon: Icons.schedule,
                     value: stats.totalHours.toStringAsFixed(1),
-                    label: l10n?.totalHoursAtSea ?? 'Hours at sea',
+                    label: l.totalHoursAtSea,
                     color: AppColors.amber,
                   ),
                   _StatCard(
                     icon: Icons.anchor,
                     value: ports.length.toString(),
-                    label: l10n?.portsVisited ?? 'Ports visited',
+                    label: l.portsVisited,
                     color: AppColors.cyan,
                   ),
                   _StatCard(
@@ -98,7 +108,7 @@ class TripStatsScreen extends ConsumerWidget {
                     value: maxSpeed > 0
                         ? '${maxSpeed.toStringAsFixed(1)} kn'
                         : '-',
-                    label: l10n?.topSpeed ?? 'Top speed',
+                    label: l.topSpeed,
                     color: AppColors.red,
                   ),
                   _StatCard(
@@ -106,7 +116,7 @@ class TripStatsScreen extends ConsumerWidget {
                     value: totalFuel > 0
                         ? '${totalFuel.toStringAsFixed(0)} L'
                         : '-',
-                    label: l10n?.fuelConsumed ?? 'Fuel consumed',
+                    label: l.fuelConsumed,
                     color: AppColors.amber,
                   ),
                 ]),
@@ -114,7 +124,7 @@ class TripStatsScreen extends ConsumerWidget {
                 if (totalEngine > 0) ...[
                   _StatRow(
                     icon: Icons.engineering,
-                    label: l10n?.totalEngineHours ?? 'Total engine hours',
+                    label: l.totalEngineHours,
                     value: '${totalEngine.toStringAsFixed(1)} h',
                   ),
                   const SizedBox(height: 8),
@@ -122,7 +132,7 @@ class TripStatsScreen extends ConsumerWidget {
                 if (stats.totalDistanceNm > 0 && stats.totalHours > 0) ...[
                   _StatRow(
                     icon: Icons.speed,
-                    label: l10n?.averageSpeed ?? 'Average speed',
+                    label: l.averageSpeed,
                     value:
                         '${(stats.totalDistanceNm / stats.totalHours).toStringAsFixed(1)} kn',
                   ),
@@ -130,33 +140,32 @@ class TripStatsScreen extends ConsumerWidget {
                 ],
                 const SizedBox(height: 16),
                 _SectionTitle(
-                  label: l10n?.thisYear(thisYear.toString()) ??
-                      'This Year ($thisYear)',
+                  label: l.thisYear(thisYear.toString()),
                 ),
                 const SizedBox(height: 8),
                 _StatsGrid(children: [
                   _StatCard(
                     icon: Icons.route,
                     value: yearStats.totalTrips.toString(),
-                    label: l10n?.totalTrips ?? 'Trips',
+                    label: l.totalTrips,
                     color: AppColors.cyan,
                   ),
                   _StatCard(
                     icon: Icons.straighten,
                     value: yearStats.totalDistanceNm.toStringAsFixed(1),
-                    label: l10n?.totalDistanceNm ?? 'NM sailed',
+                    label: l.totalDistanceNm,
                     color: AppColors.green,
                   ),
                   _StatCard(
                     icon: Icons.schedule,
                     value: yearStats.totalHours.toStringAsFixed(1),
-                    label: l10n?.totalHoursAtSea ?? 'Hours at sea',
+                    label: l.totalHoursAtSea,
                     color: AppColors.amber,
                   ),
                 ]),
                 const SizedBox(height: 16),
                 _MonthlyChart(trips: tripsThisYear),
-                const SizedBox(height: 100),
+                const SizedBox(height: Dimens.spaceXxl),
               ],
             );
           },
@@ -246,16 +255,20 @@ class _StatCard extends StatelessWidget {
             ),
             child: Icon(icon, size: 16, color: color),
           ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  color: AppColors.cyan,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 18,
-                ),
-            textAlign: TextAlign.center,
-            overflow: TextOverflow.ellipsis,
+          const SizedBox(height: Dimens.spaceSm),
+          // Scale the value down to fit the card at large text sizes instead
+          // of overriding the type scale with a fixed fontSize.
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              maxLines: 1,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w700,
+                  ),
+              textAlign: TextAlign.center,
+            ),
           ),
           const SizedBox(height: 2),
           Text(
@@ -330,6 +343,7 @@ class _MonthlyChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final monthCounts = List.filled(12, 0);
     for (final trip in trips) {
       final month = trip.departureTime.month - 1;
@@ -337,19 +351,13 @@ class _MonthlyChart extends StatelessWidget {
     }
 
     final maxCount = monthCounts.reduce((a, b) => a > b ? a : b).clamp(1, 999);
+    // Unambiguous 3-letter month abbreviations (Jan/Feb… vs the old J/F/M/A/M/J
+    // that repeated letters). No explicit locale — matches NavisDateUtils and
+    // avoids needing initializeDateFormatting. FittedBox keeps each inside its
+    // narrow bar slot.
+    final monthFormat = DateFormat.MMM();
     final months = [
-      'J',
-      'F',
-      'M',
-      'A',
-      'M',
-      'J',
-      'J',
-      'A',
-      'S',
-      'O',
-      'N',
-      'D',
+      for (var m = 1; m <= 12; m++) monthFormat.format(DateTime(2020, m)),
     ];
 
     return NavisCard(
@@ -357,7 +365,7 @@ class _MonthlyChart extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            AppLocalizations.of(context)?.monthlyActivity ?? 'Monthly Activity',
+            l.monthlyActivity,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -400,11 +408,15 @@ class _MonthlyChart extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          months[i],
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: context.txtSecondary,
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            months[i],
+                            maxLines: 1,
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: context.txtSecondary,
+                            ),
                           ),
                         ),
                       ],

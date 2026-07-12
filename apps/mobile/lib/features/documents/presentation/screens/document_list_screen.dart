@@ -4,15 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
-import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/documents/domain/entities/document.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
-import 'package:navis_mobile/features/documents/presentation/widgets/document_status_badge.dart';
+import 'package:navis_mobile/features/boat/presentation/widgets/document_card.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
-import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_empty_state.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_gradient_fab.dart';
@@ -63,7 +61,10 @@ class DocumentListScreen extends ConsumerWidget {
                   itemCount: sorted.length,
                   itemBuilder: (context, index) {
                     final doc = sorted[index];
-                    return _DocumentCard(doc: doc)
+                    return DocumentCard(
+                      document: doc,
+                      onTap: () => context.push('/documents/${doc.id}'),
+                    )
                         .animate()
                         .fadeIn(
                           duration: 400.ms,
@@ -96,103 +97,5 @@ class DocumentListScreen extends ConsumerWidget {
             )
           : null,
     );
-  }
-}
-
-class _DocumentCard extends StatelessWidget {
-  const _DocumentCard({required this.doc});
-
-  final Document doc;
-
-  @override
-  Widget build(BuildContext context) {
-    final now = DateTime.now();
-    final daysUntilExpiry = doc.expiryDate.difference(now).inDays;
-    final (statusColor, _) = switch (daysUntilExpiry) {
-      < 0 => (AppColors.red, 'Expired'),
-      <= 30 => (AppColors.red, 'Critical'),
-      <= 90 => (AppColors.amber, 'Warning'),
-      _ => (AppColors.green, 'OK'),
-    };
-
-    return NavisCard(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: EdgeInsets.zero,
-      onTap: () => context.push('/documents/${doc.id}'),
-      child: IntrinsicHeight(
-        child: Row(
-          children: [
-            Container(
-              width: 3,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    statusColor,
-                    statusColor.withValues(alpha: 0.4),
-                  ],
-                ),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  bottomLeft: Radius.circular(16),
-                ),
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 14,
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            _formatType(doc.type),
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleSmall
-                                ?.copyWith(fontWeight: FontWeight.w600),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Expires: ${_formatDate(doc.expiryDate)}',
-                            style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: context.txtSecondary,
-                                    ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    DocumentStatusBadge(expiryDate: doc.expiryDate),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _formatType(String type) {
-    return type
-        .replaceAll('_', ' ')
-        .split(' ')
-        .map((w) => w.isEmpty ? w : w[0].toUpperCase() + w.substring(1))
-        .join(' ');
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}/'
-        '${date.month.toString().padLeft(2, '0')}/'
-        '${date.year}';
   }
 }

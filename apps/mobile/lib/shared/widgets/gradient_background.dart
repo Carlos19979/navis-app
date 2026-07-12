@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 
 class GradientBackground extends StatelessWidget {
   const GradientBackground({
@@ -52,6 +53,11 @@ class GlassContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Theme-aware glass tint: a white veil reads as "glass" on the dark
+    // nautical background, but on light backgrounds a white fill is invisible —
+    // there it needs a navy veil instead.
+    final tintBase = context.isDarkMode ? Colors.white : AppColors.navy;
+
     Widget content = ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
       child: BackdropFilter(
@@ -59,10 +65,10 @@ class GlassContainer extends StatelessWidget {
         child: Container(
           padding: padding,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: opacity),
+            color: tintBase.withValues(alpha: opacity),
             borderRadius: BorderRadius.circular(borderRadius),
             border: Border.all(
-              color: borderColor ?? AppColors.glassBorder,
+              color: borderColor ?? context.glassBorderColor,
             ),
           ),
           child: child,

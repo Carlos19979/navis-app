@@ -17,6 +17,7 @@ import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/map_picker_screen.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
+import 'package:navis_mobile/features/boat/presentation/boat_type_label.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
@@ -24,14 +25,6 @@ import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
-
-String _localizedBoatType(AppLocalizations l, String type) => switch (type) {
-      'sailboat' => l.sailboat,
-      'motorboat' => l.motorboat,
-      'catamaran' => l.catamaran,
-      'other' => l.other,
-      _ => type[0].toUpperCase() + type.substring(1),
-    };
 
 class BoatFormScreen extends ConsumerStatefulWidget {
   const BoatFormScreen({super.key, required this.boatId});
@@ -399,7 +392,7 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                         items: _boatTypes.map((type) {
                           return DropdownMenuItem(
                             value: type,
-                            child: Text(_localizedBoatType(l, type)),
+                            child: Text(localizedBoatType(l, type)),
                           );
                         }).toList(),
                         onChanged: (value) {

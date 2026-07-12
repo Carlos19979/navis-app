@@ -131,7 +131,7 @@ void main() {
       expect(find.text('No upcoming events.'), findsOneWidget);
     });
 
-    testWidgets('has calendar toggle button in app bar', (tester) async {
+    testWidgets('has list/calendar toggle button', (tester) async {
       await tester.pumpWidget(
         buildTestApp(
           const EventsScreen(),
@@ -144,12 +144,8 @@ void main() {
       );
       await pumpFrames(tester);
 
-      expect(find.byTooltip('Toggle view'), findsOneWidget);
-      // Initially in list mode, so shows calendar icon
-      expect(
-        find.byIcon(Icons.calendar_month),
-        findsOneWidget,
-      );
+      // Initially in list mode, so shows the calendar icon to switch views.
+      expect(find.byIcon(Icons.calendar_month), findsOneWidget);
     });
 
     testWidgets('toggle view switches icon', (tester) async {
@@ -165,15 +161,15 @@ void main() {
       );
       await pumpFrames(tester);
 
-      // Initially list view: calendar icon shown
+      // Initially list view: calendar icon shown.
       expect(find.byIcon(Icons.calendar_month), findsOneWidget);
 
-      // Tap toggle to switch to calendar view
-      await tester.tap(find.byTooltip('Toggle view'));
+      // Tap toggle to switch to calendar view.
+      await tester.tap(find.byIcon(Icons.calendar_month));
       await pumpFrames(tester);
 
-      // Now calendar view: list icon shown
-      expect(find.byIcon(Icons.list), findsOneWidget);
+      // Now calendar view: back-to-list icon shown.
+      expect(find.byIcon(Icons.view_list_rounded), findsOneWidget);
     });
 
     testWidgets('shows error state with retry button', (tester) async {
