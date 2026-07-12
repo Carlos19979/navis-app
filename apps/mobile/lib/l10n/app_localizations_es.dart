@@ -360,6 +360,33 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get readinessMaintNoPlan => 'configura un plan de mantenimiento';
+
+  @override
+  String get readinessMaintOverdue => 'vencida';
+
+  @override
+  String get maintenanceScheduleTitle => 'Plan de mantenimiento';
+
+  @override
+  String get maintenanceScheduleHint =>
+      'Opcional. Te avisamos cuando toque la próxima revisión — por tiempo y/o horas de motor (lo que llegue antes).';
+
+  @override
+  String get engineHoursCurrent => 'Horas de motor actuales';
+
+  @override
+  String get intervalMonths => 'Revisión cada (meses)';
+
+  @override
+  String get intervalHours => 'Revisión cada (horas de motor)';
+
+  @override
+  String readinessMaintInHours(int hours) {
+    return 'a $hours h';
+  }
+
+  @override
   String get nauticalMiles => 'MN';
 
   @override

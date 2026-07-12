@@ -746,6 +746,54 @@ abstract class AppLocalizations {
   /// **'Used {pct}% more fuel per mile than usual'**
   String anomalyFuelHigh(int pct);
 
+  /// No description provided for @readinessMaintNoPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'set a maintenance schedule'**
+  String get readinessMaintNoPlan;
+
+  /// No description provided for @readinessMaintOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'overdue'**
+  String get readinessMaintOverdue;
+
+  /// No description provided for @maintenanceScheduleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance schedule'**
+  String get maintenanceScheduleTitle;
+
+  /// No description provided for @maintenanceScheduleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional. Get flagged when the next service is due — by time and/or engine hours (whichever comes first).'**
+  String get maintenanceScheduleHint;
+
+  /// No description provided for @engineHoursCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current engine hours'**
+  String get engineHoursCurrent;
+
+  /// No description provided for @intervalMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'Service every (months)'**
+  String get intervalMonths;
+
+  /// No description provided for @intervalHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Service every (engine hours)'**
+  String get intervalHours;
+
+  /// No description provided for @readinessMaintInHours.
+  ///
+  /// In en, this message translates to:
+  /// **'in {hours} h'**
+  String readinessMaintInHours(int hours);
+
   /// No description provided for @nauticalMiles.
   ///
   /// In en, this message translates to:

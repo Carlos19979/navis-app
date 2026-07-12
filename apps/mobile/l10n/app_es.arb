@@ -143,6 +143,17 @@
   "@anomalyFuelHigh": {
     "placeholders": { "pct": { "type": "int" } }
   },
+  "readinessMaintNoPlan": "configura un plan de mantenimiento",
+  "readinessMaintOverdue": "vencida",
+  "maintenanceScheduleTitle": "Plan de mantenimiento",
+  "maintenanceScheduleHint": "Opcional. Te avisamos cuando toque la próxima revisión — por tiempo y/o horas de motor (lo que llegue antes).",
+  "engineHoursCurrent": "Horas de motor actuales",
+  "intervalMonths": "Revisión cada (meses)",
+  "intervalHours": "Revisión cada (horas de motor)",
+  "readinessMaintInHours": "a {hours} h",
+  "@readinessMaintInHours": {
+    "placeholders": { "hours": { "type": "int" } }
+  },
   "nauticalMiles": "MN",
   "knots": "nudos",
   "kilometers": "km",

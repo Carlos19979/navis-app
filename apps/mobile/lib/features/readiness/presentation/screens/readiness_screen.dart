@@ -221,7 +221,20 @@ String _refLabel(AppLocalizations l, String ref) => switch (ref) {
 
 /// Human string for an item's timing.
 String _daysLabel(AppLocalizations l, ReadinessItem item) {
-  if (item.ref == 'engine_service') return l.readinessServiceOverdue;
+  if (item.ref == 'engine_service') {
+    switch (item.reason) {
+      case 'no_plan':
+        return l.readinessMaintNoPlan;
+      case 'overdue':
+        return l.readinessMaintOverdue;
+      default:
+        // due_soon: prefer the nearer of date/hours.
+        if (item.hours != null && (item.days <= 0 || item.hours! < item.days)) {
+          return l.readinessMaintInHours(item.hours!.round());
+        }
+        return l.readinessExpiresInDays(item.days);
+    }
+  }
   if (item.days < 0) return l.readinessExpired;
   return l.readinessExpiresInDays(item.days);
 }

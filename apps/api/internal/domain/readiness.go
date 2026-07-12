@@ -37,6 +37,10 @@ type ReadinessItem struct {
 	Label    string
 	Status   ReadinessStatus
 	Days     int
+	// Maintenance-only: why it's flagged ("no_plan" | "due_soon" | "overdue")
+	// and engine hours until the hours-based service is due (nil = not applicable).
+	Reason string
+	Hours  *float64
 }
 
 // Readiness is a boat's overall "ready to sail" summary.

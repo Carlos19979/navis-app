@@ -56,6 +56,8 @@ class ReadinessItem {
     required this.status,
     required this.days,
     this.label = '',
+    this.reason = '',
+    this.hours,
   });
 
   factory ReadinessItem.fromJson(Map<String, dynamic> j) => ReadinessItem(
@@ -64,6 +66,8 @@ class ReadinessItem {
         label: j['label'] as String? ?? '',
         status: ReadinessStatus.fromApi(j['status'] as String?),
         days: (j['days'] as num?)?.toInt() ?? 0,
+        reason: j['reason'] as String? ?? '',
+        hours: (j['hours'] as num?)?.toDouble(),
       );
 
   final String category;
@@ -71,6 +75,8 @@ class ReadinessItem {
   final String label; // the document's own name, when it has one
   final ReadinessStatus status;
   final int days; // days until due; negative = overdue
+  final String reason; // maintenance: "no_plan" | "due_soon" | "overdue"
+  final double? hours; // maintenance: engine hours until due (nil = n/a)
 }
 
 /// A boat's "ready to sail" summary.
