@@ -279,6 +279,35 @@ class AppLocalizationsEs extends AppLocalizations {
       'Exporta el pasaporte de tu barco con Navis Pro';
 
   @override
+  String get bookingsTitle => 'Reservas';
+
+  @override
+  String get bookingsSubtitle => 'Calendario compartido de tu barco';
+
+  @override
+  String get bookingAdd => 'Reservar un día';
+
+  @override
+  String get bookingsEmpty => 'Aún no hay reservas';
+
+  @override
+  String get bookingsEmptyDescription =>
+      'Reserva días del barco para que copropietarios y tripulación sepan quién lo tiene y cuándo.';
+
+  @override
+  String get bookingPurposeHint => 'Motivo (opcional)';
+
+  @override
+  String get bookingDelete => 'Eliminar reserva';
+
+  @override
+  String get bookingDeleteConfirm => 'Se eliminará esta reserva.';
+
+  @override
+  String get paywallReasonShared =>
+      'Coordina un barco compartido con Navis Pro';
+
+  @override
   String get nauticalMiles => 'MN';
 
   @override

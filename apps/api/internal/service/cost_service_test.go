@@ -28,6 +28,9 @@ func (m *mockExpenseRepo) ListByBoat(_ context.Context, _ string) ([]domain.Expe
 func (m *mockExpenseRepo) TotalsByCategory(_ context.Context, _ string) (map[string]float64, error) {
 	return nil, nil
 }
+func (m *mockExpenseRepo) GetByID(_ context.Context, _, _ string) (*domain.Expense, error) {
+	return &domain.Expense{}, nil
+}
 
 func f64(v float64) *float64 { return &v }
 

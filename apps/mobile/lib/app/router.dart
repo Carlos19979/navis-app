@@ -16,6 +16,7 @@ import 'package:navis_mobile/features/documents/presentation/screens/document_li
 import 'package:navis_mobile/features/maintenance/presentation/screens/maintenance_screen.dart';
 import 'package:navis_mobile/features/cost/presentation/screens/cost_analytics_screen.dart';
 import 'package:navis_mobile/features/readiness/presentation/screens/readiness_screen.dart';
+import 'package:navis_mobile/features/shared/presentation/screens/bookings_screen.dart';
 import 'package:navis_mobile/features/community/presentation/screens/community_screen.dart';
 import 'package:navis_mobile/features/events/presentation/screens/event_detail_screen.dart';
 import 'package:navis_mobile/features/groups/presentation/screens/group_detail_screen.dart';
@@ -224,6 +225,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final boatId = state.pathParameters['id']!;
           return CostAnalyticsScreen(boatId: boatId);
+        },
+      ),
+      GoRoute(
+        path: '/boats/:id/bookings',
+        builder: (context, state) {
+          final boatId = state.pathParameters['id']!;
+          return BookingsScreen(boatId: boatId);
         },
       ),
       GoRoute(

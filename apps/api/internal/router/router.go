@@ -28,6 +28,7 @@ func New(
 	maintenanceH *handler.MaintenanceHandler,
 	readinessH *handler.ReadinessHandler,
 	costH *handler.CostHandler,
+	sharedH *handler.SharedHandler,
 	webhookH *handler.WebhookHandler,
 	legalH *handler.LegalHandler,
 	jwtSecret string,
@@ -146,6 +147,15 @@ func New(
 					r.Get("/summary", maintenanceH.ExpenseSummary)
 					r.Put("/{expenseId}", maintenanceH.UpdateExpense)
 					r.Delete("/{expenseId}", maintenanceH.DeleteExpense)
+					r.Get("/{expenseId}/splits", sharedH.ListSplits)
+					r.Put("/{expenseId}/splits", sharedH.SetSplits)
+					r.Put("/{expenseId}/splits/{splitId}/settle", sharedH.SettleSplit)
+				})
+
+				r.Route("/bookings", func(r chi.Router) {
+					r.Get("/", sharedH.ListBookings)
+					r.Post("/", sharedH.CreateBooking)
+					r.Delete("/{bookingId}", sharedH.DeleteBooking)
 				})
 			})
 		})

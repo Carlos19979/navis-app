@@ -100,6 +100,8 @@ func main() {
 	profileRepo := postgres.NewProfileRepo(pool)
 	maintenanceRepo := postgres.NewMaintenanceRepo(pool)
 	expenseRepo := postgres.NewExpenseRepo(pool)
+	bookingRepo := postgres.NewBookingRepo(pool)
+	expenseSplitRepo := postgres.NewExpenseSplitRepo(pool)
 
 	// Create adapters.
 	weatherProvider := openmeteo.New()
@@ -119,6 +121,7 @@ func main() {
 	profileSvc := service.NewProfileService(profileRepo, boatRepo)
 	readinessSvc := service.NewReadinessService(docRepo, maintenanceRepo, boatRepo, profileRepo)
 	costSvc := service.NewCostService(expenseRepo, maintenanceRepo, tripRepo, boatRepo, profileRepo)
+	sharedSvc := service.NewSharedService(bookingRepo, expenseSplitRepo, expenseRepo, boatRepo, profileRepo)
 	maintenanceSvc := service.NewMaintenanceService(maintenanceRepo, expenseRepo, boatRepo)
 	regattaSvc := service.NewRegattaService(tripRepo, participantRepo, checklistRepo, groupMemberRepo, notifySvc)
 	portSvc := service.NewPortService(portRepo)
@@ -154,6 +157,7 @@ func main() {
 	maintenanceH := handler.NewMaintenanceHandler(maintenanceSvc)
 	readinessH := handler.NewReadinessHandler(readinessSvc)
 	costH := handler.NewCostHandler(costSvc)
+	sharedH := handler.NewSharedHandler(sharedSvc)
 	webhookH := handler.NewWebhookHandler(profileSvc, cfg.RevenueCatWebhookSecret, logger)
 	legalH := handler.NewLegalHandler()
 
@@ -165,6 +169,7 @@ func main() {
 		boatH, docH, tripH, eventH, groupH, regattaH, portH, weatherH, deviceH, userH, profileH, maintenanceH,
 		readinessH,
 		costH,
+		sharedH,
 		webhookH,
 		legalH,
 		cfg.SupabaseJWTSecret,
