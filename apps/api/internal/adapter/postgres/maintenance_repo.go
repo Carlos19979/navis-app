@@ -173,6 +173,19 @@ func (r *ExpenseRepo) ListByBoat(ctx context.Context, boatID string) ([]domain.E
 }
 
 // Delete removes an expense owned by the user.
+func (r *ExpenseRepo) GetByID(ctx context.Context, boatID, id string) (*domain.Expense, error) {
+	out, err := scanExpense(r.pool.QueryRow(ctx,
+		`SELECT `+expenseColumns+` FROM expenses WHERE boat_id = $1 AND id = $2`,
+		boatID, id))
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrNotFound
+		}
+		return nil, fmt.Errorf("getting expense %s: %w", id, err)
+	}
+	return out, nil
+}
+
 func (r *ExpenseRepo) Delete(ctx context.Context, boatID, id string) error {
 	ct, err := r.pool.Exec(ctx,
 		`DELETE FROM expenses WHERE boat_id = $1 AND id = $2`, boatID, id)

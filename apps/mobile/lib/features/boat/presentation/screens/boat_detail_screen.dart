@@ -4,10 +4,14 @@ import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:async';
+
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
+import 'package:navis_mobile/features/billing/billing.dart';
+import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
 import 'package:navis_mobile/features/boat/data/boat_share_repository.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/passport/presentation/passport_export.dart';
@@ -104,6 +108,14 @@ class _BoatDetailView extends ConsumerWidget {
                     ),
                     const SizedBox(height: 10),
                     _ActionTile(
+                      icon: Icons.calendar_month_outlined,
+                      title: l.bookingsTitle,
+                      subtitle: l.bookingsSubtitle,
+                      color: AppColors.cyan,
+                      onTap: () => _openBookings(context, ref, boat),
+                    ),
+                    const SizedBox(height: 10),
+                    _ActionTile(
                       icon: Icons.workspace_premium_outlined,
                       title: l.passportExport,
                       subtitle: l.passportTitle,
@@ -195,6 +207,19 @@ class _BoatDetailView extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _openBookings(
+    BuildContext context,
+    WidgetRef ref,
+    Boat boat,
+  ) async {
+    final l = AppLocalizations.of(context)!;
+    if (!ref.read(isProProvider)) {
+      final ok = await showPaywall(context, ref, reason: l.paywallReasonShared);
+      if (!ok || !context.mounted) return;
+    }
+    if (context.mounted) unawaited(context.push('/boats/${boat.id}/bookings'));
   }
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {

@@ -602,6 +602,60 @@ abstract class AppLocalizations {
   /// **'Export your boat passport with Navis Pro'**
   String get paywallReasonPassport;
 
+  /// No description provided for @bookingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bookings'**
+  String get bookingsTitle;
+
+  /// No description provided for @bookingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared calendar for your boat'**
+  String get bookingsSubtitle;
+
+  /// No description provided for @bookingAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Book a day'**
+  String get bookingAdd;
+
+  /// No description provided for @bookingsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No bookings yet'**
+  String get bookingsEmpty;
+
+  /// No description provided for @bookingsEmptyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Reserve boat days so co-owners and crew know who has it when.'**
+  String get bookingsEmptyDescription;
+
+  /// No description provided for @bookingPurposeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Purpose (optional)'**
+  String get bookingPurposeHint;
+
+  /// No description provided for @bookingDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete booking'**
+  String get bookingDelete;
+
+  /// No description provided for @bookingDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'This booking will be removed.'**
+  String get bookingDeleteConfirm;
+
+  /// No description provided for @paywallReasonShared.
+  ///
+  /// In en, this message translates to:
+  /// **'Coordinate a shared boat with Navis Pro'**
+  String get paywallReasonShared;
+
   /// No description provided for @nauticalMiles.
   ///
   /// In en, this message translates to:

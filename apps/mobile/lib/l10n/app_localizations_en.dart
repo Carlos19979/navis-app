@@ -277,6 +277,34 @@ class AppLocalizationsEn extends AppLocalizations {
       'Export your boat passport with Navis Pro';
 
   @override
+  String get bookingsTitle => 'Bookings';
+
+  @override
+  String get bookingsSubtitle => 'Shared calendar for your boat';
+
+  @override
+  String get bookingAdd => 'Book a day';
+
+  @override
+  String get bookingsEmpty => 'No bookings yet';
+
+  @override
+  String get bookingsEmptyDescription =>
+      'Reserve boat days so co-owners and crew know who has it when.';
+
+  @override
+  String get bookingPurposeHint => 'Purpose (optional)';
+
+  @override
+  String get bookingDelete => 'Delete booking';
+
+  @override
+  String get bookingDeleteConfirm => 'This booking will be removed.';
+
+  @override
+  String get paywallReasonShared => 'Coordinate a shared boat with Navis Pro';
+
+  @override
   String get nauticalMiles => 'NM';
 
   @override

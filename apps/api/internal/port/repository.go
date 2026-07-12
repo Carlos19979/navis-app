@@ -55,6 +55,22 @@ type ExpenseRepository interface {
 	Delete(ctx context.Context, boatID, id string) error
 	// TotalsByCategory returns summed amounts per category for a boat.
 	TotalsByCategory(ctx context.Context, boatID string) (map[string]float64, error)
+	// GetByID returns a single expense on a boat (caller enforces access).
+	GetByID(ctx context.Context, boatID, id string) (*domain.Expense, error)
+}
+
+// BookingRepository persists boat-time reservations.
+type BookingRepository interface {
+	Create(ctx context.Context, b *domain.Booking) (*domain.Booking, error)
+	ListByBoat(ctx context.Context, boatID string) ([]domain.Booking, error)
+	Delete(ctx context.Context, boatID, id string) error
+}
+
+// ExpenseSplitRepository persists per-person shares of an expense.
+type ExpenseSplitRepository interface {
+	ReplaceForExpense(ctx context.Context, expenseID string, splits []domain.ExpenseSplit) error
+	ListByExpense(ctx context.Context, expenseID string) ([]domain.ExpenseSplit, error)
+	SetSettled(ctx context.Context, splitID string, settled bool) error
 }
 
 // DocumentRepository defines persistence operations for documents.
