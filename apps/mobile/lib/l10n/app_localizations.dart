@@ -419,7 +419,7 @@ abstract class AppLocalizations {
   /// No description provided for @readinessServiceOverdue.
   ///
   /// In en, this message translates to:
-  /// **'service due'**
+  /// **'no recent service'**
   String get readinessServiceOverdue;
 
   /// No description provided for @readinessRefItb.
@@ -479,7 +479,7 @@ abstract class AppLocalizations {
   /// No description provided for @readinessRefEngineService.
   ///
   /// In en, this message translates to:
-  /// **'Engine service'**
+  /// **'Maintenance'**
   String get readinessRefEngineService;
 
   /// No description provided for @readinessRefDocument.

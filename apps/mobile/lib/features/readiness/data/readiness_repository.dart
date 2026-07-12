@@ -55,17 +55,20 @@ class ReadinessItem {
     required this.ref,
     required this.status,
     required this.days,
+    this.label = '',
   });
 
   factory ReadinessItem.fromJson(Map<String, dynamic> j) => ReadinessItem(
         category: j['category'] as String? ?? '',
         ref: j['ref'] as String? ?? '',
+        label: j['label'] as String? ?? '',
         status: ReadinessStatus.fromApi(j['status'] as String?),
         days: (j['days'] as num?)?.toInt() ?? 0,
       );
 
   final String category;
   final String ref; // API document type, or "engine_service"
+  final String label; // the document's own name, when it has one
   final ReadinessStatus status;
   final int days; // days until due; negative = overdue
 }

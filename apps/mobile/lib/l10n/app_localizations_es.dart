@@ -184,7 +184,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get readinessServiceOverdue => 'revisión pendiente';
+  String get readinessServiceOverdue => 'sin revisión reciente';
 
   @override
   String get readinessRefItb => 'Inspección técnica (ITB)';
@@ -214,7 +214,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get readinessRefNavLicense => 'Licencia de navegación';
 
   @override
-  String get readinessRefEngineService => 'Revisión de motor';
+  String get readinessRefEngineService => 'Mantenimiento';
 
   @override
   String get readinessRefDocument => 'Documento';

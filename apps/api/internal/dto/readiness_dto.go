@@ -17,6 +17,7 @@ type ReadinessCategoryResponse struct {
 type ReadinessItemResponse struct {
 	Category string `json:"category"`
 	Ref      string `json:"ref"`
+	Label    string `json:"label"`
 	Status   string `json:"status"`
 	Days     int    `json:"days"`
 }
@@ -49,6 +50,7 @@ func ReadinessResponseFromDomain(r *domain.Readiness) ReadinessResponse {
 		items[i] = ReadinessItemResponse{
 			Category: it.Category,
 			Ref:      it.Ref,
+			Label:    it.Label,
 			Status:   string(it.Status),
 			Days:     it.Days,
 		}

@@ -79,7 +79,7 @@
   "@readinessExpiresInDays": {
     "placeholders": { "days": { "type": "int" } }
   },
-  "readinessServiceOverdue": "service due",
+  "readinessServiceOverdue": "no recent service",
   "readinessRefItb": "Technical inspection (ITB)",
   "readinessRefInsurance": "Insurance",
   "readinessRefLifeRaft": "Life raft",
@@ -89,7 +89,7 @@
   "readinessRefMedicalCert": "Medical certificate",
   "readinessRefRadioCert": "Radio certificate",
   "readinessRefNavLicense": "Navigation license",
-  "readinessRefEngineService": "Engine service",
+  "readinessRefEngineService": "Maintenance",
   "readinessRefDocument": "Document",
   "costTitle": "Cost intelligence",
   "costTotalSpend": "Total spend",
