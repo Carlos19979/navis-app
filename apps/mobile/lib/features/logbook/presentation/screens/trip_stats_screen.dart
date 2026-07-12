@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
+import 'package:navis_mobile/shared/widgets/navis_empty_state.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
 
@@ -35,6 +38,13 @@ class TripStatsScreen extends ConsumerWidget {
             onRetry: () => ref.invalidate(boatTripsProvider(boatId)),
           ),
           data: (trips) {
+            if (trips.isEmpty) {
+              return NavisEmptyState(
+                icon: Icons.insights_outlined,
+                message: l.noTrips,
+                description: l.statsEmptyDescription,
+              );
+            }
             final stats = ref.watch(tripStatsProvider(trips));
 
             final ports = <String>{};
@@ -155,7 +165,7 @@ class TripStatsScreen extends ConsumerWidget {
                 ]),
                 const SizedBox(height: 16),
                 _MonthlyChart(trips: tripsThisYear),
-                const SizedBox(height: 100),
+                const SizedBox(height: Dimens.spaceXxl),
               ],
             );
           },
@@ -245,16 +255,20 @@ class _StatCard extends StatelessWidget {
             ),
             child: Icon(icon, size: 16, color: color),
           ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  color: AppColors.cyan,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 18,
-                ),
-            textAlign: TextAlign.center,
-            overflow: TextOverflow.ellipsis,
+          const SizedBox(height: Dimens.spaceSm),
+          // Scale the value down to fit the card at large text sizes instead
+          // of overriding the type scale with a fixed fontSize.
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              maxLines: 1,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w700,
+                  ),
+              textAlign: TextAlign.center,
+            ),
           ),
           const SizedBox(height: 2),
           Text(
@@ -337,19 +351,13 @@ class _MonthlyChart extends StatelessWidget {
     }
 
     final maxCount = monthCounts.reduce((a, b) => a > b ? a : b).clamp(1, 999);
+    // Unambiguous 3-letter month abbreviations (Jan/Feb… vs the old J/F/M/A/M/J
+    // that repeated letters). No explicit locale — matches NavisDateUtils and
+    // avoids needing initializeDateFormatting. FittedBox keeps each inside its
+    // narrow bar slot.
+    final monthFormat = DateFormat.MMM();
     final months = [
-      'J',
-      'F',
-      'M',
-      'A',
-      'M',
-      'J',
-      'J',
-      'A',
-      'S',
-      'O',
-      'N',
-      'D',
+      for (var m = 1; m <= 12; m++) monthFormat.format(DateTime(2020, m)),
     ];
 
     return NavisCard(
@@ -400,11 +408,15 @@ class _MonthlyChart extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          months[i],
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: context.txtSecondary,
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            months[i],
+                            maxLines: 1,
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: context.txtSecondary,
+                            ),
                           ),
                         ),
                       ],

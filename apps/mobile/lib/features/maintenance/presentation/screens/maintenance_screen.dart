@@ -489,6 +489,11 @@ class _ExpensesTab extends ConsumerWidget {
       'limpieza',
       'otros'
     ];
+    // Seed the free-text field only when the saved category is a custom one
+    // (not one of the quick-pick chips).
+    final customCtrl = TextEditingController(
+      text: categories.contains(category) ? '' : category,
+    );
 
     final saved = await showModalBottomSheet<bool>(
       context: context,
@@ -528,9 +533,19 @@ class _ExpensesTab extends ConsumerWidget {
                       ChoiceChip(
                         label: Text(_categoryLabel(l, c)),
                         selected: category == c,
-                        onSelected: (_) => setState(() => category = c),
+                        onSelected: (_) => setState(() {
+                          category = c;
+                          customCtrl.clear();
+                        }),
                       ),
                   ],
+                ),
+                const SizedBox(height: 10),
+                NavisTextField(
+                  controller: customCtrl,
+                  label: l.customCategory,
+                  hint: l.customCategoryHint,
+                  onChanged: (v) => setState(() => category = v.trim()),
                 ),
                 const SizedBox(height: 10),
                 NavisTextField(

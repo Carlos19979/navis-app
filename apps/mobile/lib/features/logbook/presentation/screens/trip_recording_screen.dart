@@ -448,19 +448,22 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
                     distanceNm: recording.totalDistanceNm,
                     startTime: recording.startTime,
                     gpsAccuracy: recording.gpsAccuracy,
+                    onClose: _exitWithoutSaving,
+                    closeSemanticLabel:
+                        AppLocalizations.of(context)!.exitWithoutSaving,
                   ),
-                Positioned(
-                  top: MediaQuery.of(context).padding.top + 8,
-                  left: 12,
-                  child: _GlassIconButton(
-                    icon: isActive ? Icons.close : Icons.arrow_back,
-                    onPressed:
-                        isActive ? _exitWithoutSaving : () => context.pop(),
-                    semanticLabel: isActive
-                        ? AppLocalizations.of(context)!.exitWithoutSaving
-                        : AppLocalizations.of(context)!.goBack,
+                // When recording the exit lives inside the HUD bar; only show
+                // the standalone back button when the HUD is not present.
+                if (!isActive)
+                  Positioned(
+                    top: MediaQuery.of(context).padding.top + 8,
+                    left: 12,
+                    child: _GlassIconButton(
+                      icon: Icons.arrow_back,
+                      onPressed: () => context.pop(),
+                      semanticLabel: AppLocalizations.of(context)!.goBack,
+                    ),
                   ),
-                ),
                 MapControls(
                   onZoomIn: () => _mapController.move(
                     _mapController.camera.center,

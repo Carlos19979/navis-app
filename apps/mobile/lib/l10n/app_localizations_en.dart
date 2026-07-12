@@ -96,6 +96,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noTrips => 'No trips recorded yet. Start your first trip!';
 
   @override
+  String get statsEmptyDescription =>
+      'Record trips to see distance, hours at sea and monthly activity here.';
+
+  @override
   String get noEvents => 'No upcoming events.';
 
   @override
@@ -1343,6 +1347,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get categoryLabel => 'Category';
+
+  @override
+  String get customCategory => 'Custom category';
+
+  @override
+  String get customCategoryHint => 'Or type your own';
 
   @override
   String get amountEur => 'Amount €';

@@ -272,6 +272,12 @@ abstract class AppLocalizations {
   /// **'No trips recorded yet. Start your first trip!'**
   String get noTrips;
 
+  /// No description provided for @statsEmptyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Record trips to see distance, hours at sea and monthly activity here.'**
+  String get statsEmptyDescription;
+
   /// No description provided for @noEvents.
   ///
   /// In en, this message translates to:
@@ -2659,6 +2665,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Category'**
   String get categoryLabel;
+
+  /// No description provided for @customCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom category'**
+  String get customCategory;
+
+  /// No description provided for @customCategoryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Or type your own'**
+  String get customCategoryHint;
 
   /// No description provided for @amountEur.
   ///

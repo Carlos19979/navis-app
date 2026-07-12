@@ -98,6 +98,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Aun no has registrado viajes. Comienza tu primer viaje!';
 
   @override
+  String get statsEmptyDescription =>
+      'Registra viajes para ver aquí distancia, horas en el mar y actividad mensual.';
+
+  @override
   String get noEvents => 'No hay eventos proximos.';
 
   @override
@@ -1357,6 +1361,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get categoryLabel => 'Categoría';
+
+  @override
+  String get customCategory => 'Categoría personalizada';
+
+  @override
+  String get customCategoryHint => 'O escribe la tuya';
 
   @override
   String get amountEur => 'Importe €';
