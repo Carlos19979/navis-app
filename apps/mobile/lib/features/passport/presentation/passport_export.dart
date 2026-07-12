@@ -37,6 +37,13 @@ Future<void> exportBoatPassport(
     barrierDismissible: false,
     builder: (_) => const Center(child: CircularProgressIndicator()),
   ));
+  var spinnerOpen = true;
+  void closeSpinner() {
+    if (spinnerOpen && context.mounted) {
+      Navigator.of(context).pop();
+      spinnerOpen = false;
+    }
+  }
 
   try {
     // Each source is best-effort: a single failing fetch shouldn't abort the
@@ -93,15 +100,20 @@ Future<void> exportBoatPassport(
     final file = File('${dir.path}/navis_passport_$safeName.pdf');
     await file.writeAsBytes(bytes);
 
-    if (context.mounted) Navigator.of(context).pop(); // close spinner
+    closeSpinner(); // dismiss before showing the system share sheet
 
+    // iOS presents the share sheet as a popover and requires a non-zero
+    // sharePositionOrigin (required on iPad; also enforced on iOS 26 iPhone).
+    final origin =
+        context.mounted ? (Offset.zero & MediaQuery.of(context).size) : null;
     await Share.shareXFiles(
       [XFile(file.path, mimeType: 'application/pdf')],
       subject: '${l.passportTitle} — ${boat.name}',
+      sharePositionOrigin: origin,
     );
-  } catch (e) {
+  } catch (_) {
+    closeSpinner();
     if (context.mounted) {
-      Navigator.of(context).pop();
       NavisSnackbar.error(context, l.passportExportFailed);
     }
   }
