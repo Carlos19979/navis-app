@@ -100,7 +100,7 @@ func (s *ReadinessService) Get(ctx context.Context, userID, boatID string) (*dom
 				cat.Warning++
 				score -= 4
 			}
-		default:
+		case domain.ReadinessReady:
 			cat.OK++
 		}
 	}
