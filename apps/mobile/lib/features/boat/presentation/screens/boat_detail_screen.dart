@@ -10,6 +10,7 @@ import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/data/boat_share_repository.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
+import 'package:navis_mobile/features/passport/presentation/passport_export.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -100,6 +101,14 @@ class _BoatDetailView extends ConsumerWidget {
                       color: AppColors.amber,
                       onTap: () =>
                           context.push('/boats/${boat.id}/maintenance'),
+                    ),
+                    const SizedBox(height: 10),
+                    _ActionTile(
+                      icon: Icons.workspace_premium_outlined,
+                      title: l.passportExport,
+                      subtitle: l.passportTitle,
+                      color: AppColors.green,
+                      onTap: () => exportBoatPassport(context, ref, boat),
                     ),
                     const SizedBox(height: 10),
                     _ActionTile(
