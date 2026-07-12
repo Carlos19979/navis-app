@@ -122,6 +122,7 @@ func main() {
 	readinessSvc := service.NewReadinessService(docRepo, maintenanceRepo, boatRepo, profileRepo)
 	costSvc := service.NewCostService(expenseRepo, maintenanceRepo, tripRepo, boatRepo, profileRepo)
 	sharedSvc := service.NewSharedService(bookingRepo, expenseSplitRepo, expenseRepo, boatRepo, profileRepo)
+	anomalySvc := service.NewAnomalyService(tripRepo, boatRepo, profileRepo)
 	maintenanceSvc := service.NewMaintenanceService(maintenanceRepo, expenseRepo, boatRepo)
 	regattaSvc := service.NewRegattaService(tripRepo, participantRepo, checklistRepo, groupMemberRepo, notifySvc)
 	portSvc := service.NewPortService(portRepo)
@@ -158,6 +159,7 @@ func main() {
 	readinessH := handler.NewReadinessHandler(readinessSvc)
 	costH := handler.NewCostHandler(costSvc)
 	sharedH := handler.NewSharedHandler(sharedSvc)
+	anomalyH := handler.NewAnomalyHandler(anomalySvc)
 	webhookH := handler.NewWebhookHandler(profileSvc, cfg.RevenueCatWebhookSecret, logger)
 	legalH := handler.NewLegalHandler()
 
@@ -170,6 +172,7 @@ func main() {
 		readinessH,
 		costH,
 		sharedH,
+		anomalyH,
 		webhookH,
 		legalH,
 		cfg.SupabaseJWTSecret,

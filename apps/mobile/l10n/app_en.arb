@@ -119,6 +119,11 @@
   "bookingDelete": "Delete booking",
   "bookingDeleteConfirm": "This booking will be removed.",
   "paywallReasonShared": "Coordinate a shared boat with Navis Pro",
+  "anomaliesTitle": "Anomalies",
+  "anomalyFuelHigh": "Used {pct}% more fuel per mile than usual",
+  "@anomalyFuelHigh": {
+    "placeholders": { "pct": { "type": "int" } }
+  },
   "nauticalMiles": "NM",
   "knots": "kt",
   "kilometers": "km",

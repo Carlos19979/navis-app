@@ -305,6 +305,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paywallReasonShared => 'Coordinate a shared boat with Navis Pro';
 
   @override
+  String get anomaliesTitle => 'Anomalies';
+
+  @override
+  String anomalyFuelHigh(int pct) {
+    return 'Used $pct% more fuel per mile than usual';
+  }
+
+  @override
   String get nauticalMiles => 'NM';
 
   @override

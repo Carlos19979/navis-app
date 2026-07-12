@@ -29,6 +29,7 @@ func New(
 	readinessH *handler.ReadinessHandler,
 	costH *handler.CostHandler,
 	sharedH *handler.SharedHandler,
+	anomalyH *handler.AnomalyHandler,
 	webhookH *handler.WebhookHandler,
 	legalH *handler.LegalHandler,
 	jwtSecret string,
@@ -133,6 +134,7 @@ func New(
 
 				r.Get("/readiness", readinessH.Get)
 				r.Get("/cost-analytics", costH.Get)
+				r.Get("/anomalies", anomalyH.List)
 
 				r.Route("/maintenance", func(r chi.Router) {
 					r.Get("/", maintenanceH.ListLogs)

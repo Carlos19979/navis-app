@@ -308,6 +308,14 @@ class AppLocalizationsEs extends AppLocalizations {
       'Coordina un barco compartido con Navis Pro';
 
   @override
+  String get anomaliesTitle => 'Anomalías';
+
+  @override
+  String anomalyFuelHigh(int pct) {
+    return 'Consumió un $pct% más de combustible por milla de lo habitual';
+  }
+
+  @override
   String get nauticalMiles => 'MN';
 
   @override

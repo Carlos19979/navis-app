@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
+import 'package:navis_mobile/core/utils/navis_date_utils.dart';
+import 'package:navis_mobile/features/anomaly/data/anomaly_repository.dart';
 import 'package:navis_mobile/features/cost/data/cost_repository.dart';
 import 'package:navis_mobile/features/cost/presentation/providers/cost_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -34,6 +36,7 @@ class CostAnalyticsScreen extends ConsumerWidget {
         data: (c) => ListView(
           padding: const EdgeInsets.all(Dimens.spaceLg),
           children: [
+            _AnomaliesSection(boatId: boatId),
             Row(
               children: [
                 _Kpi(
@@ -85,6 +88,65 @@ class CostAnalyticsScreen extends ConsumerWidget {
 }
 
 String _money(double v) => '${v.toStringAsFixed(0)} €';
+
+/// Fuel-efficiency anomalies, shown only when there are any (Pro insight).
+class _AnomaliesSection extends ConsumerWidget {
+  const _AnomaliesSection({required this.boatId});
+
+  final String boatId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
+    final async = ref.watch(boatAnomaliesProvider(boatId));
+    final anomalies = async.valueOrNull ?? const <Anomaly>[];
+    if (anomalies.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionTitle(l.anomaliesTitle),
+        const SizedBox(height: Dimens.spaceSm),
+        for (final a in anomalies)
+          Padding(
+            padding: const EdgeInsets.only(bottom: Dimens.spaceSm),
+            child: NavisCard(
+              borderColor: AppColors.amber.withValues(alpha: 0.4),
+              child: Row(
+                children: [
+                  const Icon(Icons.local_gas_station_rounded,
+                      color: AppColors.amber, size: 22),
+                  const SizedBox(width: Dimens.spaceMd),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l.anomalyFuelHigh(a.deviationPct.round()),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: context.txtPrimary,
+                          ),
+                        ),
+                        Text(
+                          NavisDateUtils.formatDate(a.date),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: context.txtSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        const SizedBox(height: Dimens.spaceLg),
+      ],
+    );
+  }
+}
 
 String _categoryLabel(AppLocalizations l, String key) => switch (key) {
       'combustible' => l.expenseCategoryFuel,
