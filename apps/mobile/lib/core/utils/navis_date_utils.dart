@@ -1,7 +1,26 @@
 import 'package:intl/intl.dart';
 
+/// Expiry status buckets, aligned with the server's computed
+/// `documents.status` column.
+enum DocExpiryStatus { expired, critical, warning, ok }
+
 class NavisDateUtils {
   NavisDateUtils._();
+
+  /// Canonical expiry thresholds — the single source of truth, aligned with the
+  /// server's `documents.status` trigger (critical < 30 days, warning < 90 days)
+  /// and the cron `alert_days`. Use these everywhere instead of ad-hoc numbers.
+  static const int expiryCriticalDays = 30;
+  static const int expiryWarningDays = 90;
+
+  /// Classifies an expiry date into the canonical status bucket.
+  static DocExpiryStatus statusFor(DateTime date) {
+    final days = daysUntil(date);
+    if (days < 0) return DocExpiryStatus.expired;
+    if (days <= expiryCriticalDays) return DocExpiryStatus.critical;
+    if (days <= expiryWarningDays) return DocExpiryStatus.warning;
+    return DocExpiryStatus.ok;
+  }
 
   static int daysUntil(DateTime date) {
     final now = DateTime.now();
@@ -40,18 +59,20 @@ class NavisDateUtils {
     return daysUntil(date) < 0;
   }
 
-  static bool isCritical(DateTime date, {int criticalDays = 7}) {
+  static bool isCritical(DateTime date,
+      {int criticalDays = expiryCriticalDays}) {
     final days = daysUntil(date);
     return days >= 0 && days <= criticalDays;
   }
 
   static bool isWarning(DateTime date,
-      {int warningDays = 30, int criticalDays = 7}) {
+      {int warningDays = expiryWarningDays,
+      int criticalDays = expiryCriticalDays}) {
     final days = daysUntil(date);
     return days > criticalDays && days <= warningDays;
   }
 
-  static bool isOk(DateTime date, {int warningDays = 30}) {
+  static bool isOk(DateTime date, {int warningDays = expiryWarningDays}) {
     return daysUntil(date) > warningDays;
   }
 

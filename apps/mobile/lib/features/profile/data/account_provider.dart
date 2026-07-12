@@ -12,27 +12,45 @@ class Account {
     required this.canCreateGroups,
     required this.reminderDocLimit,
     required this.maintenanceSchedules,
+    required this.fullReadiness,
+    required this.costAnalytics,
+    required this.exportPassport,
+    required this.floatPlan,
+    required this.sharedCoordination,
+    required this.anomalyAlerts,
+    required this.autoTripDetection,
   });
 
   factory Account.fromJson(Map<String, dynamic> json) {
     // Prefer the nested `entitlements` object; fall back to the legacy
     // top-level mirrors for older API builds.
     final ent = json['entitlements'] as Map<String, dynamic>?;
+    final isPro = json['is_pro'] as bool? ?? (json['plan'] == 'pro');
     int entInt(String key, String legacyKey, int fallback) =>
         (ent?[key] as num?)?.toInt() ??
         (json[legacyKey] as num?)?.toInt() ??
         fallback;
     bool entBool(String key, String legacyKey) =>
         (ent?[key] as bool?) ?? (json[legacyKey] as bool?) ?? false;
+    // Pro-only capabilities: if an older API omits them, fall back to isPro so
+    // gating stays correct.
+    bool proCap(String key) => (ent?[key] as bool?) ?? isPro;
 
     return Account(
       plan: json['plan'] as String? ?? 'free',
-      isPro: json['is_pro'] as bool? ?? (json['plan'] == 'pro'),
+      isPro: isPro,
       maxBoats: entInt('max_boats', 'max_boats', 1),
       boatCount: entInt('boat_count', 'boat_count', 0),
       canCreateGroups: entBool('can_create_groups', 'can_create_groups'),
       reminderDocLimit: entInt('reminder_doc_limit', 'reminder_doc_limit', 1),
       maintenanceSchedules: (ent?['maintenance_schedules'] as bool?) ?? false,
+      fullReadiness: proCap('full_readiness'),
+      costAnalytics: proCap('cost_analytics'),
+      exportPassport: proCap('export_passport'),
+      floatPlan: proCap('float_plan'),
+      sharedCoordination: proCap('shared_coordination'),
+      anomalyAlerts: proCap('anomaly_alerts'),
+      autoTripDetection: proCap('auto_trip_detection'),
     );
   }
 
@@ -47,6 +65,27 @@ class Account {
 
   /// Whether scheduled maintenance reminders are unlocked.
   final bool maintenanceSchedules;
+
+  /// Full boat-readiness breakdown (docs + gear + maintenance). Free sees docs only.
+  final bool fullReadiness;
+
+  /// Advanced cost intelligence (cost/NM, cost/trip, efficiency, seasonal).
+  final bool costAnalytics;
+
+  /// Boat passport (PDF dossier) export.
+  final bool exportPassport;
+
+  /// Float plans with check-in and overdue email/SMS alerts.
+  final bool floatPlan;
+
+  /// Shared-boat coordination (bookings + expense splitting).
+  final bool sharedCoordination;
+
+  /// Anomaly alerts (e.g. fuel-per-mile outliers).
+  final bool anomalyAlerts;
+
+  /// Automatic trip recording via home-port geofence.
+  final bool autoTripDetection;
 
   /// Display label for the plan.
   String get planLabel => isPro ? 'Pro' : 'Free';

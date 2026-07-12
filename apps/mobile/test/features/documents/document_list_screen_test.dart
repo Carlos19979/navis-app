@@ -53,7 +53,8 @@ void main() {
     id: 'doc-warning',
     type: 'Registration',
     status: 'warning',
-    daysUntilExpiry: 20,
+    // Warning band is 31–90 days (aligned with the server's documents.status).
+    daysUntilExpiry: 60,
   );
 
   final criticalDoc = makeDocument(

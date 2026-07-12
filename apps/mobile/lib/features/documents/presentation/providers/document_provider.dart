@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:navis_mobile/core/database/mutation_queue.dart';
+import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/core/database/offline_repository.dart';
 import 'package:navis_mobile/features/documents/data/repositories/document_repository.dart';
 import 'package:navis_mobile/features/documents/domain/entities/document.dart';
@@ -61,22 +62,21 @@ class DocumentSummary {
 final boatDocumentSummaryProvider =
     FutureProvider.family<DocumentSummary, String>((ref, boatId) async {
   final docs = await ref.watch(boatDocumentsProvider(boatId).future);
-  final now = DateTime.now();
   var expired = 0;
   var critical = 0;
   var warning = 0;
   var ok = 0;
 
   for (final doc in docs) {
-    final daysLeft = doc.expiryDate.difference(now).inDays;
-    if (daysLeft < 0) {
-      expired++;
-    } else if (daysLeft <= 30) {
-      critical++;
-    } else if (daysLeft <= 90) {
-      warning++;
-    } else {
-      ok++;
+    switch (NavisDateUtils.statusFor(doc.expiryDate)) {
+      case DocExpiryStatus.expired:
+        expired++;
+      case DocExpiryStatus.critical:
+        critical++;
+      case DocExpiryStatus.warning:
+        warning++;
+      case DocExpiryStatus.ok:
+        ok++;
     }
   }
 

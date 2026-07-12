@@ -1102,6 +1102,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paywallLifetime => 'Lifetime';
 
   @override
+  String get proBenefitReadiness =>
+      'Full boat readiness: documents, safety gear and maintenance';
+
+  @override
+  String get proBenefitFloatPlan =>
+      'Float plans with check-in and shore-contact alerts';
+
+  @override
+  String get proBenefitPassport =>
+      'Boat passport: an exportable service & document dossier';
+
+  @override
+  String get proBenefitCostAnalytics =>
+      'Cost intelligence: cost per mile, per trip and per season';
+
+  @override
   String get proBenefitReminders => 'Unlimited document expiry reminders';
 
   @override

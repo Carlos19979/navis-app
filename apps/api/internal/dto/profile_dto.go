@@ -11,6 +11,13 @@ type Entitlements struct {
 	ReminderDocLimit     int  `json:"reminder_doc_limit"` // -1 = unlimited
 	MaintenanceSchedules bool `json:"maintenance_schedules"`
 	AttachmentLimit      int  `json:"attachment_limit"` // -1 = unlimited
+	FullReadiness        bool `json:"full_readiness"`
+	CostAnalytics        bool `json:"cost_analytics"`
+	ExportPassport       bool `json:"export_passport"`
+	FloatPlan            bool `json:"float_plan"`
+	SharedCoordination   bool `json:"shared_coordination"`
+	AnomalyAlerts        bool `json:"anomaly_alerts"`
+	AutoTripDetection    bool `json:"auto_trip_detection"`
 }
 
 // MeResponse describes the current user's plan and derived entitlements.
@@ -35,6 +42,13 @@ func MeResponseFromDomain(p *domain.Profile, boatCount int) MeResponse {
 		ReminderDocLimit:     p.Plan.ReminderDocLimit(),
 		MaintenanceSchedules: p.Plan.CanUseMaintenanceSchedules(),
 		AttachmentLimit:      p.Plan.AttachmentLimit(),
+		FullReadiness:        p.Plan.CanUseFullReadiness(),
+		CostAnalytics:        p.Plan.CanUseCostAnalytics(),
+		ExportPassport:       p.Plan.CanExportPassport(),
+		FloatPlan:            p.Plan.CanUseFloatPlan(),
+		SharedCoordination:   p.Plan.CanUseSharedCoordination(),
+		AnomalyAlerts:        p.Plan.CanUseAnomalyAlerts(),
+		AutoTripDetection:    p.Plan.CanUseAutoTripDetection(),
 	}
 	return MeResponse{
 		Plan:            string(p.Plan),
