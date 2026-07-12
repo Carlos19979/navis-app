@@ -69,7 +69,8 @@ void main() {
         const ReadinessScreen(boatId: 'boat-1'),
         brightness: brightness,
         overrides: [
-          boatReadinessProvider('boat-1').overrideWith((ref) async => _sample()),
+          boatReadinessProvider('boat-1')
+              .overrideWith((ref) async => _sample()),
         ],
       );
       await expectLater(
