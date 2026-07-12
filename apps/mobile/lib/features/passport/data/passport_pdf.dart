@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
@@ -67,8 +68,12 @@ Future<Uint8List> buildPassportPdf({
   required ExpenseSummary? expenses,
   required PassportLabels labels,
   required String generatedOnValue,
-}) {
-  final doc = pw.Document();
+}) async {
+  // The pdf package's built-in Helvetica has no Unicode: it can't draw "€" or
+  // accents. Use the bundled Inter font (full glyph coverage) for the whole doc.
+  final inter = pw.Font.ttf(await rootBundle.load('assets/fonts/Inter.ttf'));
+  final theme = pw.ThemeData.withFont(base: inter, bold: inter);
+  final doc = pw.Document(theme: theme);
 
   String statusLabel(DateTime expiry) =>
       switch (NavisDateUtils.statusFor(expiry)) {

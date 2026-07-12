@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
+import 'package:navis_mobile/features/documents/domain/entities/document.dart';
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
 import 'package:navis_mobile/features/maintenance/data/maintenance_models.dart';
 import 'package:navis_mobile/features/maintenance/data/maintenance_repository.dart';
@@ -38,13 +39,21 @@ Future<void> exportBoatPassport(
   ));
 
   try {
-    final docs = await ref.read(boatDocumentsProvider(boat.id).future);
-    final logs = await ref.read(maintenanceLogsProvider(boat.id).future);
+    // Each source is best-effort: a single failing fetch shouldn't abort the
+    // whole export — the passport just includes what it could gather.
+    List<Document> docs = const [];
+    try {
+      docs = await ref.read(boatDocumentsProvider(boat.id).future);
+    } catch (_) {}
+    List<MaintenanceLog> logs = const [];
+    try {
+      logs = await ref.read(maintenanceLogsProvider(boat.id).future);
+    } catch (_) {}
     ExpenseSummary? expenses;
     try {
       expenses = await ref.read(expenseSummaryProvider(boat.id).future);
     } catch (_) {
-      expenses = null; // summary is best-effort
+      expenses = null;
     }
 
     final labels = PassportLabels(
