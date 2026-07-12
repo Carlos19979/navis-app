@@ -172,7 +172,7 @@ func (r *ExpenseRepo) ListByBoat(ctx context.Context, boatID string) ([]domain.E
 	return out, rows.Err()
 }
 
-// Delete removes an expense owned by the user.
+// GetByID returns a single expense on a boat (caller enforces access).
 func (r *ExpenseRepo) GetByID(ctx context.Context, boatID, id string) (*domain.Expense, error) {
 	out, err := scanExpense(r.pool.QueryRow(ctx,
 		`SELECT `+expenseColumns+` FROM expenses WHERE boat_id = $1 AND id = $2`,
@@ -186,6 +186,7 @@ func (r *ExpenseRepo) GetByID(ctx context.Context, boatID, id string) (*domain.E
 	return out, nil
 }
 
+// Delete removes an expense on a boat.
 func (r *ExpenseRepo) Delete(ctx context.Context, boatID, id string) error {
 	ct, err := r.pool.Exec(ctx,
 		`DELETE FROM expenses WHERE boat_id = $1 AND id = $2`, boatID, id)
