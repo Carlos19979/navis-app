@@ -118,6 +118,7 @@ func main() {
 	groupSvc := service.NewGroupService(groupRepo, groupMemberRepo, profileRepo, notifySvc, postgres.NewTxManager(pool))
 	profileSvc := service.NewProfileService(profileRepo, boatRepo)
 	readinessSvc := service.NewReadinessService(docRepo, maintenanceRepo, boatRepo, profileRepo)
+	costSvc := service.NewCostService(expenseRepo, maintenanceRepo, tripRepo, boatRepo, profileRepo)
 	maintenanceSvc := service.NewMaintenanceService(maintenanceRepo, expenseRepo, boatRepo)
 	regattaSvc := service.NewRegattaService(tripRepo, participantRepo, checklistRepo, groupMemberRepo, notifySvc)
 	portSvc := service.NewPortService(portRepo)
@@ -152,6 +153,7 @@ func main() {
 	profileH := handler.NewProfileHandler(profileSvc)
 	maintenanceH := handler.NewMaintenanceHandler(maintenanceSvc)
 	readinessH := handler.NewReadinessHandler(readinessSvc)
+	costH := handler.NewCostHandler(costSvc)
 	webhookH := handler.NewWebhookHandler(profileSvc, cfg.RevenueCatWebhookSecret, logger)
 	legalH := handler.NewLegalHandler()
 
@@ -162,6 +164,7 @@ func main() {
 	r := router.New(
 		boatH, docH, tripH, eventH, groupH, regattaH, portH, weatherH, deviceH, userH, profileH, maintenanceH,
 		readinessH,
+		costH,
 		webhookH,
 		legalH,
 		cfg.SupabaseJWTSecret,
