@@ -71,6 +71,28 @@ type ExpenseSplitResponse struct {
 	Settled     bool    `json:"settled"`
 }
 
+// ExpenseSplitSummaryResponse mirrors a domain.ExpenseSplitSummary.
+type ExpenseSplitSummaryResponse struct {
+	ExpenseID string   `json:"expense_id"`
+	Count     int      `json:"count"`
+	MyShare   *float64 `json:"my_share"`
+	MySettled bool     `json:"my_settled"`
+}
+
+// ExpenseSplitSummaryListFromDomain converts a slice of summaries.
+func ExpenseSplitSummaryListFromDomain(ss []domain.ExpenseSplitSummary) []ExpenseSplitSummaryResponse {
+	out := make([]ExpenseSplitSummaryResponse, len(ss))
+	for i, s := range ss {
+		out[i] = ExpenseSplitSummaryResponse{
+			ExpenseID: s.ExpenseID,
+			Count:     s.Count,
+			MyShare:   s.MyShare,
+			MySettled: s.MySettled,
+		}
+	}
+	return out
+}
+
 // ExpenseSplitListFromDomain converts a slice of splits.
 func ExpenseSplitListFromDomain(ss []domain.ExpenseSplit) []ExpenseSplitResponse {
 	out := make([]ExpenseSplitResponse, len(ss))

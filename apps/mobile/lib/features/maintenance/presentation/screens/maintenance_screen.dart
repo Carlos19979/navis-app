@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:navis_mobile/core/network/storage_service.dart';
 import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
+import 'package:navis_mobile/features/shared/data/shared_repository.dart';
 import 'package:navis_mobile/features/shared/presentation/widgets/split_sheet.dart';
 import 'package:navis_mobile/core/network/supabase_client.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
@@ -360,6 +361,8 @@ class _ExpensesTab extends ConsumerWidget {
     final l = AppLocalizations.of(context)!;
     final expensesAsync = ref.watch(expensesProvider(boatId));
     final summaryAsync = ref.watch(expenseSummaryProvider(boatId));
+    final splits =
+        ref.watch(boatSplitSummaryProvider(boatId)).valueOrNull ?? const {};
 
     return Stack(
       children: [
@@ -444,6 +447,34 @@ class _ExpensesTab extends ConsumerWidget {
                                   style: TextStyle(
                                       color: context.txtSecondary,
                                       fontSize: 13)),
+                              if (splits[e.id] case final s?) ...[
+                                const SizedBox(height: 4),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.groups,
+                                        size: 14,
+                                        color: s.mySettled
+                                            ? AppColors.green
+                                            : AppColors.cyan),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      s.mySettled
+                                          ? l.splitSettled
+                                          : (s.myShare != null
+                                              ? l.splitYouOwe(
+                                                  s.myShare!.round())
+                                              : l.splitSharedAmong(s.count)),
+                                      style: TextStyle(
+                                          color: s.mySettled
+                                              ? AppColors.green
+                                              : AppColors.cyan,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600),
+                                    ),
+                                  ],
+                                ),
+                              ],
                               if (e.invoiceUrl != null) ...[
                                 const SizedBox(height: 4),
                                 Row(

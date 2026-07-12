@@ -16,6 +16,7 @@ type SharedService struct {
 	expenses port.ExpenseRepository
 	boats    port.BoatRepository
 	profiles port.ProfileRepository
+	notifier *Notifier
 }
 
 // NewSharedService creates a new SharedService.
@@ -25,8 +26,9 @@ func NewSharedService(
 	expenses port.ExpenseRepository,
 	boats port.BoatRepository,
 	profiles port.ProfileRepository,
+	notifier *Notifier,
 ) *SharedService {
-	return &SharedService{bookings: bookings, splits: splits, expenses: expenses, boats: boats, profiles: profiles}
+	return &SharedService{bookings: bookings, splits: splits, expenses: expenses, boats: boats, profiles: profiles, notifier: notifier}
 }
 
 // assertPro verifies the user's plan unlocks shared coordination.
@@ -112,7 +114,32 @@ func (s *SharedService) SetSplits(ctx context.Context, userID, boatID, expenseID
 	if err := s.splits.ReplaceForExpense(ctx, expenseID, splits); err != nil {
 		return nil, fmt.Errorf("set splits: %w", err)
 	}
+	// Notify each assigned member (except the person doing the split) that they
+	// owe a share. Best-effort; members are Navis users with device tokens.
+	if s.notifier != nil {
+		for _, sp := range splits {
+			if sp.UserID == userID || sp.ShareAmount <= 0 {
+				continue
+			}
+			s.notifier.Send(ctx, sp.UserID, WorkflowExpenseSplit,
+				"Gasto compartido",
+				fmt.Sprintf("Te toca %.0f € de un gasto en tu barco", sp.ShareAmount),
+				"boat", boatID)
+		}
+	}
 	return s.splits.ListByExpense(ctx, expenseID)
+}
+
+// ListSplitSummary returns per-expense split rollups for a boat from the
+// caller's perspective (their share + settled). Any member; Pro.
+func (s *SharedService) ListSplitSummary(ctx context.Context, userID, boatID string) ([]domain.ExpenseSplitSummary, error) {
+	if err := s.assertPro(ctx, userID); err != nil {
+		return nil, fmt.Errorf("split summary: %w", err)
+	}
+	if err := s.assertAccess(ctx, userID, boatID); err != nil {
+		return nil, fmt.Errorf("split summary: %w", err)
+	}
+	return s.splits.SummaryByBoat(ctx, boatID, userID)
 }
 
 // ListSplits returns the splits for an expense (any member; Pro).

@@ -338,6 +338,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get splitSettled => 'Saldado';
 
   @override
+  String splitYouOwe(int amount) {
+    return 'Te tocan $amount €';
+  }
+
+  @override
+  String splitSharedAmong(int count) {
+    return 'Repartido entre $count';
+  }
+
+  @override
   String get paywallReasonShared =>
       'Coordina un barco compartido con Navis Pro';
 
