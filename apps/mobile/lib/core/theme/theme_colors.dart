@@ -32,4 +32,15 @@ extension ThemeColorsX on BuildContext {
   /// Background for elevated modal surfaces (menus, elevated sheets).
   Color get dialogSurfaceElevated =>
       isDarkMode ? AppColors.darkSurfaceElevated : AppColors.lightCard;
+
+  /// Gradient for glass modal surfaces. Navy on dark; a soft light gradient on
+  /// light so theme-aware text stays readable (the dark-only
+  /// [AppColors.surfaceGradient] made dark light-mode text invisible).
+  LinearGradient get surfaceGradient => isDarkMode
+      ? AppColors.surfaceGradient
+      : const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFFFFFFF), Color(0xFFF2F5F9)],
+        );
 }
