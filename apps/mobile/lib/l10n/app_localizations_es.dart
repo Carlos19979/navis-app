@@ -245,6 +245,40 @@ class AppLocalizationsEs extends AppLocalizations {
       'Desbloquea la inteligencia de costes con Navis Pro';
 
   @override
+  String get status => 'Estado';
+
+  @override
+  String get total => 'Total';
+
+  @override
+  String get passportTitle => 'Pasaporte del barco';
+
+  @override
+  String get passportGeneratedOn => 'Generado el';
+
+  @override
+  String get passportBoatDetails => 'Datos del barco';
+
+  @override
+  String get passportMaintenanceHistory => 'Historial de mantenimiento';
+
+  @override
+  String get passportExpensesSummary => 'Resumen de gastos';
+
+  @override
+  String get passportNone => 'Nada registrado';
+
+  @override
+  String get passportExportFailed => 'No se pudo generar el pasaporte';
+
+  @override
+  String get passportExport => 'Exportar pasaporte';
+
+  @override
+  String get paywallReasonPassport =>
+      'Exporta el pasaporte de tu barco con Navis Pro';
+
+  @override
   String get nauticalMiles => 'MN';
 
   @override

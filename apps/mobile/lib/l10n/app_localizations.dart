@@ -536,6 +536,72 @@ abstract class AppLocalizations {
   /// **'Unlock cost intelligence with Navis Pro'**
   String get paywallReasonCostAnalytics;
 
+  /// No description provided for @status.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get status;
+
+  /// No description provided for @total.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get total;
+
+  /// No description provided for @passportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Boat passport'**
+  String get passportTitle;
+
+  /// No description provided for @passportGeneratedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Generated on'**
+  String get passportGeneratedOn;
+
+  /// No description provided for @passportBoatDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Boat details'**
+  String get passportBoatDetails;
+
+  /// No description provided for @passportMaintenanceHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance history'**
+  String get passportMaintenanceHistory;
+
+  /// No description provided for @passportExpensesSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses summary'**
+  String get passportExpensesSummary;
+
+  /// No description provided for @passportNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None recorded'**
+  String get passportNone;
+
+  /// No description provided for @passportExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not generate the passport'**
+  String get passportExportFailed;
+
+  /// No description provided for @passportExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export passport'**
+  String get passportExport;
+
+  /// No description provided for @paywallReasonPassport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export your boat passport with Navis Pro'**
+  String get paywallReasonPassport;
+
   /// No description provided for @nauticalMiles.
   ///
   /// In en, this message translates to:
