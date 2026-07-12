@@ -15,6 +15,7 @@ import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
 import 'package:navis_mobile/features/boat/data/boat_share_repository.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/passport/presentation/passport_export.dart';
+import 'package:navis_mobile/features/readiness/presentation/widgets/readiness_card.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -80,6 +81,8 @@ class _BoatDetailView extends ConsumerWidget {
                       .animate()
                       .fadeIn(duration: 400.ms)
                       .slideY(begin: 0.05, end: 0, duration: 400.ms),
+                  const SizedBox(height: 16),
+                  ReadinessCard(boatId: boat.id),
                   const SizedBox(height: 16),
                   if (boat.isOwner) ...[
                     _ActionTile(
