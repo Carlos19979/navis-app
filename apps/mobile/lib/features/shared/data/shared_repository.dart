@@ -118,7 +118,28 @@ class SharedRepository {
         .map((e) => ExpenseSplit.fromJson(e as Map<String, dynamic>))
         .toList();
   }
+
+  Future<void> settleSplit(
+    String boatId,
+    String expenseId,
+    String splitId,
+    bool settled,
+  ) async {
+    await _apiClient.put<Map<String, dynamic>>(
+      '/api/v1/boats/$boatId/expenses/$expenseId/splits/$splitId/settle',
+      data: {'settled': settled},
+    );
+  }
 }
+
+/// Splits for a given expense. Family key = "boatId|expenseId".
+final expenseSplitsProvider = FutureProvider.autoDispose
+    .family<List<ExpenseSplit>, ({String boatId, String expenseId})>(
+        (ref, key) {
+  return ref
+      .watch(sharedRepositoryProvider)
+      .listSplits(key.boatId, key.expenseId);
+});
 
 final sharedRepositoryProvider =
     Provider<SharedRepository>((ref) => SharedRepository());

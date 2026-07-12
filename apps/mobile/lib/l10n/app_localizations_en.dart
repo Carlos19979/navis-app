@@ -302,6 +302,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bookingDeleteConfirm => 'This booking will be removed.';
 
   @override
+  String get bookingYou => 'You';
+
+  @override
+  String get bookingCrew => 'Crew';
+
+  @override
+  String get splitTitle => 'Split expense';
+
+  @override
+  String get splitEqually => 'Split equally';
+
+  @override
+  String get splitAssigned => 'Assigned';
+
+  @override
+  String get splitSettled => 'Settled';
+
+  @override
   String get paywallReasonShared => 'Coordinate a shared boat with Navis Pro';
 
   @override

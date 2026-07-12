@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:navis_mobile/core/network/storage_service.dart';
 import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
+import 'package:navis_mobile/features/shared/presentation/widgets/split_sheet.dart';
 import 'package:navis_mobile/core/network/supabase_client.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
@@ -467,6 +468,28 @@ class _ExpensesTab extends ConsumerWidget {
                                 color: AppColors.cyan,
                                 fontSize: 22,
                                 fontWeight: FontWeight.w800)),
+                        IconButton(
+                          icon: Icon(Icons.groups_outlined,
+                              size: 20, color: context.txtSecondary),
+                          tooltip: l.splitTitle,
+                          onPressed: () async {
+                            if (!ref.read(isProProvider)) {
+                              final ok = await showPaywall(context, ref,
+                                  reason: l.paywallReasonShared);
+                              if (!ok || !context.mounted) return;
+                            }
+                            if (context.mounted) {
+                              await showSplitSheet(
+                                context,
+                                ref,
+                                boatId: boatId,
+                                expenseId: e.id,
+                                amount: e.amount,
+                                title: _categoryLabel(l, e.category),
+                              );
+                            }
+                          },
+                        ),
                       ],
                     ),
                   ),
