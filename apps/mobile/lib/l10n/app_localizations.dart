@@ -2558,11 +2558,11 @@ abstract class AppLocalizations {
   /// **'Full boat readiness: documents, safety gear and maintenance'**
   String get proBenefitReadiness;
 
-  /// No description provided for @proBenefitFloatPlan.
+  /// No description provided for @proBenefitShared.
   ///
   /// In en, this message translates to:
-  /// **'Float plans with check-in and shore-contact alerts'**
-  String get proBenefitFloatPlan;
+  /// **'Shared boat: bookings calendar and expense splitting'**
+  String get proBenefitShared;
 
   /// No description provided for @proBenefitPassport.
   ///

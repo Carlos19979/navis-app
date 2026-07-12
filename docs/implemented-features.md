@@ -41,9 +41,41 @@ tier; a B2B "fleet" tier is future work). Migration `00027_plan_free_pro.sql` re
 - Verified E2E (local API + DB): free `/me` → 402 on 2nd boat & group; webhook grant → pro
   (max_boats 3, groups, unlimited reminders); pro creates boat+group; webhook expiration → free;
   bad webhook secret → 401.
-- **Pending external config (not code):** RevenueCat products (`navis_pro_monthly` 3,99 € /
-  `navis_pro_yearly` 29,99 €) + entitlement `pro` + webhook secret + App Store/Play subscriptions;
-  Novu `document-expiry` workflow with an **Email (Resend)** step; `--dart-define` RC keys.
+- **Pending external config (not code):** RevenueCat products (`navis_pro_monthly` **5,99 €** /
+  `navis_pro_yearly` **39,99 €**, 7-day trial) + entitlement `pro` + webhook secret + App
+  Store/Play subscriptions; Novu `document-expiry` workflow with an **Email (Resend)** step;
+  `--dart-define` RC keys.
+
+## Differentiating features batch (2026-07-12)
+
+Six Pro-gated features built on the plan-gating pattern (`domain/profile.go` capability →
+`Entitlements` DTO → mobile `Account` → `showPaywall`). Each shipped as its own PR, CI-green.
+
+- **Boat readiness score** (`GET /boats/{id}/readiness`, `features/readiness/`): synthesizes
+  document + safety-gear + maintenance status into a 0-100 score and go/no-go signal
+  (`ready`/`attention`/`not_ready`) + attention list. **Free = documents-only**; Pro adds gear +
+  maintenance (`CanUseFullReadiness`). Glanceable card on the single-boat home + detail screen.
+- **Cost intelligence** (`GET /boats/{id}/cost-analytics`, `features/cost/`, Pro
+  `CanUseCostAnalytics`): total/category spend, last-12-months, cost/NM, cost/trip, fuel L/NM.
+  Entry = insights action in the maintenance app bar (paywall for Free).
+- **Boat passport (PDF)** (`features/passport/`, dep `pdf`, Pro `CanExportPassport`): exportable
+  dossier (boat, documents+expiry, maintenance history, expenses) shared via `share_plus`.
+- **Shared-boat coordination** (migration `00030_shared_boat`, `features/shared/`, Pro
+  `CanUseSharedCoordination`): `bookings` (calendar, live) + `expense_splits` (backend + client
+  repo; splits UI is a follow-up). Access via `can_access_boat` helper + boat permissions.
+- **Anomaly alerts** (`GET /boats/{id}/anomalies`, `features/anomaly/`, Pro
+  `CanUseAnomalyAlerts`): flags completed trips with fuel/NM >30% over the boat's baseline
+  (min 3-trip sample). Surfaced on the cost analytics screen.
+- **Expiry-threshold single source**: `NavisDateUtils.expiryCriticalDays=30 / expiryWarningDays=90`
+  (aligned with the `documents.status` trigger) + `statusFor()`; badge + summary consume it.
+
+**Monetization update:** Pro price set to **€39.99/yr + €5.99/mo, 7-day trial** (RevenueCat
+product config pending; webhook already maps `pro`). New entitlements in `/me`:
+`full_readiness, cost_analytics, export_passport, shared_coordination, anomaly_alerts`.
+
+**Scrapped (2026-07-12):** float plan (Phase 4) and auto trip detection (Phase 7) were dropped
+entirely — float plan's shore-contact alert needs external email/SMS infra (Resend/Novu/Twilio)
+that wasn't worth the payoff; auto-detection's background geofencing wasn't a priority.
 
 ## Boat sharing — security model (important)
 - Table `boat_members(boat_id, user_id, role, can_record_trips, can_manage_expenses, can_manage_maintenance, can_view_documents, can_manage_documents)` + `boats.share_code`. A new member joins **view-only** (only `can_view_documents` true). The `role` column is legacy/unused; enforcement is on the flags.
@@ -66,7 +98,8 @@ tier; a B2B "fleet" tier is future work). Migration `00027_plan_free_pro.sql` re
 `maintenance_logs`+`expenses`, `trip float_plan`, `boat_members`+`boats.share_code`,
 `invoice_url`, `boat_member_permissions`, **`00027 plan free/pro`**,
 **`00028 security hardening`** (RLS on `sent_notifications`, private `documents`
-bucket + signed-URL policy), **`00029 pagination indexes`**.
+bucket + signed-URL policy), **`00029 pagination indexes`**,
+**`00030 shared_boat`** (`bookings` + `expense_splits` + `can_access_boat` helper).
 
 ## Launch hardening (2026-07-11, plan `docs/launch-hardening-plan.md`)
 Five merged phases getting the app from "feature-complete" to launchable:

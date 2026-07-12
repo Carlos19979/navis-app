@@ -33,9 +33,9 @@ Future<bool> showPaywall(
 
 List<(IconData, String)> _proBenefits(AppLocalizations l) => [
       (Icons.health_and_safety_rounded, l.proBenefitReadiness),
-      (Icons.sos_rounded, l.proBenefitFloatPlan),
       (Icons.workspace_premium_rounded, l.proBenefitPassport),
       (Icons.insights_rounded, l.proBenefitCostAnalytics),
+      (Icons.calendar_month_rounded, l.proBenefitShared),
       (Icons.notifications_active_rounded, l.proBenefitReminders),
       (Icons.directions_boat_rounded, l.proBenefitBoats),
       (Icons.groups_rounded, l.proBenefitGroups),

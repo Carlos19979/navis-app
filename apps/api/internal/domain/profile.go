@@ -84,12 +84,6 @@ func (p Plan) CanExportPassport() bool {
 	return p == PlanPro
 }
 
-// CanUseFloatPlan reports whether the plan unlocks float plans (filed trip plan,
-// check-ins, and overdue email/SMS alerts to shore contacts).
-func (p Plan) CanUseFloatPlan() bool {
-	return p == PlanPro
-}
-
 // CanUseSharedCoordination reports whether the plan unlocks shared-boat
 // coordination (bookings calendar and expense splitting among co-owners).
 func (p Plan) CanUseSharedCoordination() bool {
@@ -99,12 +93,6 @@ func (p Plan) CanUseSharedCoordination() bool {
 // CanUseAnomalyAlerts reports whether the plan unlocks anomaly alerts (e.g. a
 // trip whose fuel-per-mile deviates sharply from the boat's history).
 func (p Plan) CanUseAnomalyAlerts() bool {
-	return p == PlanPro
-}
-
-// CanUseAutoTripDetection reports whether the plan unlocks automatic trip
-// recording via a home-port geofence.
-func (p Plan) CanUseAutoTripDetection() bool {
 	return p == PlanPro
 }
 

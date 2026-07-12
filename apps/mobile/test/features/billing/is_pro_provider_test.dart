@@ -15,10 +15,8 @@ Account account({required bool isPro}) => Account(
       fullReadiness: isPro,
       costAnalytics: isPro,
       exportPassport: isPro,
-      floatPlan: isPro,
       sharedCoordination: isPro,
       anomalyAlerts: isPro,
-      autoTripDetection: isPro,
     );
 
 void main() {

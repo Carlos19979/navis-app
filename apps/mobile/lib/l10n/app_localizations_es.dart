@@ -1301,8 +1301,8 @@ class AppLocalizationsEs extends AppLocalizations {
       'Estado de a bordo completo: documentos, equipo de seguridad y mantenimiento';
 
   @override
-  String get proBenefitFloatPlan =>
-      'Planes de navegación con check-in y avisos a contactos en tierra';
+  String get proBenefitShared =>
+      'Barco compartido: calendario de reservas y reparto de gastos';
 
   @override
   String get proBenefitPassport =>

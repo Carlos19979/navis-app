@@ -1291,8 +1291,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Full boat readiness: documents, safety gear and maintenance';
 
   @override
-  String get proBenefitFloatPlan =>
-      'Float plans with check-in and shore-contact alerts';
+  String get proBenefitShared =>
+      'Shared boat: bookings calendar and expense splitting';
 
   @override
   String get proBenefitPassport =>

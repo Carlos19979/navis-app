@@ -15,10 +15,8 @@ class Account {
     required this.fullReadiness,
     required this.costAnalytics,
     required this.exportPassport,
-    required this.floatPlan,
     required this.sharedCoordination,
     required this.anomalyAlerts,
-    required this.autoTripDetection,
   });
 
   factory Account.fromJson(Map<String, dynamic> json) {
@@ -47,10 +45,8 @@ class Account {
       fullReadiness: proCap('full_readiness'),
       costAnalytics: proCap('cost_analytics'),
       exportPassport: proCap('export_passport'),
-      floatPlan: proCap('float_plan'),
       sharedCoordination: proCap('shared_coordination'),
       anomalyAlerts: proCap('anomaly_alerts'),
-      autoTripDetection: proCap('auto_trip_detection'),
     );
   }
 
@@ -75,17 +71,11 @@ class Account {
   /// Boat passport (PDF dossier) export.
   final bool exportPassport;
 
-  /// Float plans with check-in and overdue email/SMS alerts.
-  final bool floatPlan;
-
   /// Shared-boat coordination (bookings + expense splitting).
   final bool sharedCoordination;
 
   /// Anomaly alerts (e.g. fuel-per-mile outliers).
   final bool anomalyAlerts;
-
-  /// Automatic trip recording via home-port geofence.
-  final bool autoTripDetection;
 
   /// Display label for the plan.
   String get planLabel => isPro ? 'Pro' : 'Free';
