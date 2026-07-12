@@ -12,6 +12,13 @@ Account account({required bool isPro}) => Account(
       canCreateGroups: isPro,
       reminderDocLimit: isPro ? -1 : 1,
       maintenanceSchedules: isPro,
+      fullReadiness: isPro,
+      costAnalytics: isPro,
+      exportPassport: isPro,
+      floatPlan: isPro,
+      sharedCoordination: isPro,
+      anomalyAlerts: isPro,
+      autoTripDetection: isPro,
     );
 
 void main() {

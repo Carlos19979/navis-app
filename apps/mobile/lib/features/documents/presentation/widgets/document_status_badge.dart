@@ -15,25 +15,16 @@ class DocumentStatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final Color color;
-    final String label;
+    final status = NavisDateUtils.statusFor(expiryDate);
+    final (Color color, String label) = switch (status) {
+      DocExpiryStatus.expired => (AppColors.red, l.expired),
+      DocExpiryStatus.critical => (AppColors.red, l.critical),
+      DocExpiryStatus.warning => (AppColors.amber, l.warning),
+      DocExpiryStatus.ok => (AppColors.green, l.valid),
+    };
 
-    if (NavisDateUtils.isExpired(expiryDate)) {
-      color = AppColors.red;
-      label = l.expired;
-    } else if (NavisDateUtils.isCritical(expiryDate)) {
-      color = AppColors.red;
-      label = l.critical;
-    } else if (NavisDateUtils.isWarning(expiryDate)) {
-      color = AppColors.amber;
-      label = l.warning;
-    } else {
-      color = AppColors.green;
-      label = l.valid;
-    }
-
-    final shouldGlow = NavisDateUtils.isExpired(expiryDate) ||
-        NavisDateUtils.isCritical(expiryDate);
+    final shouldGlow =
+        status == DocExpiryStatus.expired || status == DocExpiryStatus.critical;
 
     Widget badge = ClipRRect(
       borderRadius: BorderRadius.circular(20),

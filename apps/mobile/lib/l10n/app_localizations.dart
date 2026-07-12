@@ -2210,6 +2210,30 @@ abstract class AppLocalizations {
   /// **'Lifetime'**
   String get paywallLifetime;
 
+  /// No description provided for @proBenefitReadiness.
+  ///
+  /// In en, this message translates to:
+  /// **'Full boat readiness: documents, safety gear and maintenance'**
+  String get proBenefitReadiness;
+
+  /// No description provided for @proBenefitFloatPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Float plans with check-in and shore-contact alerts'**
+  String get proBenefitFloatPlan;
+
+  /// No description provided for @proBenefitPassport.
+  ///
+  /// In en, this message translates to:
+  /// **'Boat passport: an exportable service & document dossier'**
+  String get proBenefitPassport;
+
+  /// No description provided for @proBenefitCostAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost intelligence: cost per mile, per trip and per season'**
+  String get proBenefitCostAnalytics;
+
   /// No description provided for @proBenefitReminders.
   ///
   /// In en, this message translates to:

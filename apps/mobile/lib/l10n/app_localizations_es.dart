@@ -1111,6 +1111,22 @@ class AppLocalizationsEs extends AppLocalizations {
   String get paywallLifetime => 'De por vida';
 
   @override
+  String get proBenefitReadiness =>
+      'Estado de a bordo completo: documentos, equipo de seguridad y mantenimiento';
+
+  @override
+  String get proBenefitFloatPlan =>
+      'Planes de navegación con check-in y avisos a contactos en tierra';
+
+  @override
+  String get proBenefitPassport =>
+      'Pasaporte del barco: dossier exportable de servicio y documentos';
+
+  @override
+  String get proBenefitCostAnalytics =>
+      'Inteligencia de costes: coste por milla, por viaje y por temporada';
+
+  @override
   String get proBenefitReminders =>
       'Recordatorios ilimitados de caducidad de documentos';
 
