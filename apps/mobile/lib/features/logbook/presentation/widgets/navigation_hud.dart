@@ -264,27 +264,35 @@ class _HudStat extends StatelessWidget {
               ),
         ),
         const SizedBox(height: 2),
-        RichText(
-          textAlign: TextAlign.center,
-          text: TextSpan(
-            children: [
-              TextSpan(
-                text: value,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: valueColor,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                    ),
-              ),
-              if (unit.isNotEmpty)
+        // Keep the value on a single line and scale it down if the column is
+        // narrow, so ticking digits (the elapsed clock) never wrap and make
+        // the whole bar grow/shrink every second.
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: RichText(
+            maxLines: 1,
+            softWrap: false,
+            textAlign: TextAlign.center,
+            text: TextSpan(
+              children: [
                 TextSpan(
-                  text: ' $unit',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: AppColors.textSecondary,
-                        fontSize: 10,
+                  text: value,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: valueColor,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
                       ),
                 ),
-            ],
+                if (unit.isNotEmpty)
+                  TextSpan(
+                    text: ' $unit',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: AppColors.textSecondary,
+                          fontSize: 10,
+                        ),
+                  ),
+              ],
+            ),
           ),
         ),
       ],
