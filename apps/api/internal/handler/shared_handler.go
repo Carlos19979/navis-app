@@ -19,6 +19,7 @@ type sharedService interface {
 	ListSplits(ctx context.Context, userID, boatID, expenseID string) ([]domain.ExpenseSplit, error)
 	SetSplits(ctx context.Context, userID, boatID, expenseID string, splits []domain.ExpenseSplit) ([]domain.ExpenseSplit, error)
 	SettleSplit(ctx context.Context, userID, boatID, splitID string, settled bool) error
+	ListSplitSummary(ctx context.Context, userID, boatID string) ([]domain.ExpenseSplitSummary, error)
 }
 
 // SharedHandler handles bookings and expense-splitting endpoints.
@@ -130,6 +131,20 @@ func (h *SharedHandler) SetSplits(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	JSON(w, http.StatusOK, dto.ExpenseSplitListFromDomain(out))
+}
+
+// ListSplitSummary handles GET /boats/{id}/expense-splits-summary.
+func (h *SharedHandler) ListSplitSummary(w http.ResponseWriter, r *http.Request) {
+	userID, ok := requireUserID(w, r)
+	if !ok {
+		return
+	}
+	summary, err := h.svc.ListSplitSummary(r.Context(), userID, chi.URLParam(r, "id"))
+	if err != nil {
+		MapDomainError(w, err)
+		return
+	}
+	JSON(w, http.StatusOK, dto.ExpenseSplitSummaryListFromDomain(summary))
 }
 
 // SettleSplit handles PUT /boats/{id}/expenses/{expenseId}/splits/{splitId}/settle.

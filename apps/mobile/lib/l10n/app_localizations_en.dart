@@ -336,6 +336,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get splitSettled => 'Settled';
 
   @override
+  String splitYouOwe(int amount) {
+    return 'You owe $amount €';
+  }
+
+  @override
+  String splitSharedAmong(int count) {
+    return 'Split among $count';
+  }
+
+  @override
   String get paywallReasonShared => 'Coordinate a shared boat with Navis Pro';
 
   @override

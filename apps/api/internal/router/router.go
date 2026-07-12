@@ -135,6 +135,7 @@ func New(
 				r.Get("/readiness", readinessH.Get)
 				r.Get("/cost-analytics", costH.Get)
 				r.Get("/anomalies", anomalyH.List)
+				r.Get("/expense-splits-summary", sharedH.ListSplitSummary)
 
 				r.Route("/maintenance", func(r chi.Router) {
 					r.Get("/", maintenanceH.ListLogs)

@@ -129,6 +129,14 @@
   "splitEqually": "A partes iguales",
   "splitAssigned": "Asignado",
   "splitSettled": "Saldado",
+  "splitYouOwe": "Te tocan {amount} €",
+  "@splitYouOwe": {
+    "placeholders": { "amount": { "type": "int" } }
+  },
+  "splitSharedAmong": "Repartido entre {count}",
+  "@splitSharedAmong": {
+    "placeholders": { "count": { "type": "int" } }
+  },
   "paywallReasonShared": "Coordina un barco compartido con Navis Pro",
   "anomaliesTitle": "Anomalías",
   "anomalyFuelHigh": "Consumió un {pct}% más de combustible por milla de lo habitual",

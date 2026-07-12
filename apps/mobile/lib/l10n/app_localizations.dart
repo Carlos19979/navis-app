@@ -716,6 +716,18 @@ abstract class AppLocalizations {
   /// **'Settled'**
   String get splitSettled;
 
+  /// No description provided for @splitYouOwe.
+  ///
+  /// In en, this message translates to:
+  /// **'You owe {amount} €'**
+  String splitYouOwe(int amount);
+
+  /// No description provided for @splitSharedAmong.
+  ///
+  /// In en, this message translates to:
+  /// **'Split among {count}'**
+  String splitSharedAmong(int count);
+
   /// No description provided for @paywallReasonShared.
   ///
   /// In en, this message translates to:

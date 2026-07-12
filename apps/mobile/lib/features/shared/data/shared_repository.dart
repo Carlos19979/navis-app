@@ -55,6 +55,26 @@ class ExpenseSplit {
   final bool settled;
 }
 
+/// Per-expense split rollup for the current user (their share + settled).
+class ExpenseSplitSummary {
+  const ExpenseSplitSummary({
+    required this.count,
+    required this.myShare,
+    required this.mySettled,
+  });
+
+  factory ExpenseSplitSummary.fromJson(Map<String, dynamic> j) =>
+      ExpenseSplitSummary(
+        count: (j['count'] as num?)?.toInt() ?? 0,
+        myShare: (j['my_share'] as num?)?.toDouble(),
+        mySettled: j['my_settled'] as bool? ?? false,
+      );
+
+  final int count;
+  final double? myShare;
+  final bool mySettled;
+}
+
 class SharedRepository {
   SharedRepository({ApiClient? apiClient})
       : _apiClient = apiClient ?? ApiClient.instance;
@@ -130,6 +150,19 @@ class SharedRepository {
       data: {'settled': settled},
     );
   }
+
+  /// Map of expenseId -> split summary for the current user (only expenses
+  /// that have splits are present).
+  Future<Map<String, ExpenseSplitSummary>> splitSummary(String boatId) async {
+    final res = await _apiClient.get<Map<String, dynamic>>(
+        '/api/v1/boats/$boatId/expense-splits-summary');
+    final data = (res.data!['data'] as List?) ?? [];
+    return {
+      for (final e in data)
+        (e as Map<String, dynamic>)['expense_id'] as String:
+            ExpenseSplitSummary.fromJson(e),
+    };
+  }
 }
 
 /// Splits for a given expense. Family key = "boatId|expenseId".
@@ -147,4 +180,14 @@ final sharedRepositoryProvider =
 final boatBookingsProvider =
     FutureProvider.autoDispose.family<List<Booking>, String>((ref, boatId) {
   return ref.watch(sharedRepositoryProvider).listBookings(boatId);
+});
+
+/// expenseId -> split summary for the current user. Empty on error (e.g. Free).
+final boatSplitSummaryProvider = FutureProvider.autoDispose
+    .family<Map<String, ExpenseSplitSummary>, String>((ref, boatId) async {
+  try {
+    return await ref.watch(sharedRepositoryProvider).splitSummary(boatId);
+  } catch (_) {
+    return const {};
+  }
 });

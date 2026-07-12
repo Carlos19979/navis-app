@@ -140,6 +140,7 @@ class _SplitSheetState extends ConsumerState<_SplitSheet> {
           .setSplits(widget.boatId, widget.expenseId, shares);
       ref.invalidate(expenseSplitsProvider(
           (boatId: widget.boatId, expenseId: widget.expenseId)));
+      ref.invalidate(boatSplitSummaryProvider(widget.boatId));
       if (mounted) Navigator.of(context).pop();
     } catch (_) {
       if (mounted) {
@@ -247,6 +248,7 @@ class _SplitSheetState extends ConsumerState<_SplitSheet> {
                 try {
                   await ref.read(sharedRepositoryProvider).settleSplit(
                       widget.boatId, widget.expenseId, p.splitId!, next);
+                  ref.invalidate(boatSplitSummaryProvider(widget.boatId));
                 } catch (_) {
                   if (mounted) setState(() => p.settled = !next);
                 }

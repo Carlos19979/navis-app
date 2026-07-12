@@ -74,6 +74,34 @@ func (r *ExpenseSplitRepo) ListByExpense(ctx context.Context, expenseID string) 
 	return out, rows.Err()
 }
 
+// SummaryByBoat rolls up splits per expense for a boat, including the viewer's
+// own share and settled state. Only expenses that have splits are returned.
+func (r *ExpenseSplitRepo) SummaryByBoat(ctx context.Context, boatID, viewerID string) ([]domain.ExpenseSplitSummary, error) {
+	rows, err := r.pool.Query(ctx, `
+		SELECT s.expense_id,
+		       COUNT(*) AS cnt,
+		       SUM(s.share_amount) FILTER (WHERE s.user_id = $2) AS my_share,
+		       COALESCE(bool_or(s.settled_at IS NOT NULL) FILTER (WHERE s.user_id = $2), false) AS my_settled
+		FROM expense_splits s
+		JOIN expenses e ON e.id = s.expense_id
+		WHERE e.boat_id = $1
+		GROUP BY s.expense_id`, boatID, viewerID)
+	if err != nil {
+		return nil, fmt.Errorf("split summary: %w", err)
+	}
+	defer rows.Close()
+
+	var out []domain.ExpenseSplitSummary
+	for rows.Next() {
+		var s domain.ExpenseSplitSummary
+		if err := rows.Scan(&s.ExpenseID, &s.Count, &s.MyShare, &s.MySettled); err != nil {
+			return nil, fmt.Errorf("scanning split summary: %w", err)
+		}
+		out = append(out, s)
+	}
+	return out, rows.Err()
+}
+
 // SetSettled marks a split settled (or not).
 func (r *ExpenseSplitRepo) SetSettled(ctx context.Context, splitID string, settled bool) error {
 	var expr string

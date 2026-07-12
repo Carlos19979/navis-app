@@ -34,3 +34,12 @@ type ExpenseSplit struct {
 	SettledAt   *time.Time
 	CreatedAt   time.Time
 }
+
+// ExpenseSplitSummary is the per-expense split rollup for one viewer: how many
+// people it's split between, and the viewer's own share/settled state.
+type ExpenseSplitSummary struct {
+	ExpenseID string
+	Count     int
+	MyShare   *float64
+	MySettled bool
+}

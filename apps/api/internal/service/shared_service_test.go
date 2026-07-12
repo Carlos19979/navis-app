@@ -33,11 +33,14 @@ func (m *mockSplitRepo) ListByExpense(_ context.Context, _ string) ([]domain.Exp
 	return nil, nil
 }
 func (m *mockSplitRepo) SetSettled(_ context.Context, _ string, _ bool) error { return nil }
+func (m *mockSplitRepo) SummaryByBoat(_ context.Context, _, _ string) ([]domain.ExpenseSplitSummary, error) {
+	return nil, nil
+}
 
 func TestSharedService_CreateBooking_ForbiddenOnFree(t *testing.T) {
 	t.Parallel()
 	svc := NewSharedService(&mockBookingRepo{}, &mockSplitRepo{}, &mockExpenseRepo{},
-		&mockBoatRepo{}, &testutil.FakeProfileRepo{Plan: domain.PlanFree})
+		&mockBoatRepo{}, &testutil.FakeProfileRepo{Plan: domain.PlanFree}, nil)
 
 	_, err := svc.CreateBooking(context.Background(), &domain.Booking{
 		BoatID: "boat-1", UserID: "user-1",
@@ -52,7 +55,7 @@ func TestSharedService_CreateBooking_Pro(t *testing.T) {
 	t.Parallel()
 	repo := &mockBookingRepo{}
 	svc := NewSharedService(repo, &mockSplitRepo{}, &mockExpenseRepo{},
-		&mockBoatRepo{}, &testutil.FakeProfileRepo{Plan: domain.PlanPro})
+		&mockBoatRepo{}, &testutil.FakeProfileRepo{Plan: domain.PlanPro}, nil)
 
 	out, err := svc.CreateBooking(context.Background(), &domain.Booking{
 		BoatID: "boat-1", UserID: "user-1",
@@ -69,7 +72,7 @@ func TestSharedService_CreateBooking_Pro(t *testing.T) {
 func TestSharedService_CreateBooking_RejectsBadTimes(t *testing.T) {
 	t.Parallel()
 	svc := NewSharedService(&mockBookingRepo{}, &mockSplitRepo{}, &mockExpenseRepo{},
-		&mockBoatRepo{}, &testutil.FakeProfileRepo{Plan: domain.PlanPro})
+		&mockBoatRepo{}, &testutil.FakeProfileRepo{Plan: domain.PlanPro}, nil)
 
 	_, err := svc.CreateBooking(context.Background(), &domain.Booking{
 		BoatID: "boat-1", UserID: "user-1",
@@ -89,7 +92,7 @@ func TestSharedService_SetSplits_RequiresManageExpenses(t *testing.T) {
 		},
 	}
 	svc := NewSharedService(&mockBookingRepo{}, &mockSplitRepo{}, &mockExpenseRepo{},
-		boats, &testutil.FakeProfileRepo{Plan: domain.PlanPro})
+		boats, &testutil.FakeProfileRepo{Plan: domain.PlanPro}, nil)
 
 	_, err := svc.SetSplits(context.Background(), "user-1", "boat-1", "exp-1", nil)
 	if !errors.Is(err, domain.ErrForbidden) {
