@@ -103,119 +103,443 @@ class MaintenanceScreen extends ConsumerWidget {
   }
 }
 
+/// A suggested maintenance task template (name + default interval).
+typedef _TaskTemplate = ({String name, int? months, double? hours});
+
+List<_TaskTemplate> _taskTemplates(AppLocalizations l) => [
+      (name: l.taskEngineOil, months: null, hours: 100),
+      (name: l.taskFilters, months: null, hours: 100),
+      (name: l.taskAnodes, months: 12, hours: null),
+      (name: l.taskAntifouling, months: 12, hours: null),
+      (name: l.taskImpeller, months: 24, hours: 200),
+      (name: l.taskCoolant, months: 24, hours: null),
+    ];
+
+(Color, IconData) _taskVisuals(BuildContext context, MaintenanceStatus s) =>
+    switch (s) {
+      MaintenanceStatus.overdue => (AppColors.red, Icons.error_rounded),
+      MaintenanceStatus.dueSoon => (AppColors.amber, Icons.schedule_rounded),
+      MaintenanceStatus.pending => (
+          AppColors.amber,
+          Icons.help_outline_rounded
+        ),
+      MaintenanceStatus.ok => (AppColors.green, Icons.check_circle_rounded),
+      MaintenanceStatus.none => (context.txtSecondary, Icons.history_rounded),
+    };
+
+/// "in X d" / "in Y h" for whichever limit is nearer.
+String? _dueLabel(AppLocalizations l, MaintenanceTask t) {
+  final days = t.nextDueDays;
+  final hrs = t.hoursUntilDue;
+  if (hrs != null && (days == null || hrs < days)) {
+    return l.readinessMaintInHours(hrs.round());
+  }
+  if (days != null) return l.maintenanceInDays(days);
+  return null;
+}
+
+String _taskStatusLabel(AppLocalizations l, MaintenanceTask t) =>
+    switch (t.status) {
+      MaintenanceStatus.overdue => l.readinessMaintOverdue,
+      MaintenanceStatus.dueSoon => _dueLabel(l, t) ?? l.maintenanceDueSoonLabel,
+      MaintenanceStatus.pending => l.readinessMaintPending,
+      MaintenanceStatus.ok => _dueLabel(l, t) ?? '',
+      MaintenanceStatus.none => l.maintenanceNoInterval,
+    };
+
+/// The interval + last-done summary shown under a task.
+String _taskSubtitle(AppLocalizations l, MaintenanceTask t) {
+  final parts = <String>[];
+  if (t.intervalMonths != null) {
+    parts.add(l.maintenanceEveryMonths(t.intervalMonths!));
+  }
+  if (t.intervalHours != null) {
+    parts.add(l.maintenanceEveryHours(t.intervalHours!.round()));
+  }
+  if (t.lastPerformedAt != null) {
+    parts.add(l.maintenanceLastDone(_fmtDate(t.lastPerformedAt!)));
+  }
+  return parts.join(' · ');
+}
+
 class _MaintenanceTab extends ConsumerWidget {
   const _MaintenanceTab({required this.boatId});
   final String boatId;
 
+  bool _canEdit(WidgetRef ref) =>
+      ref
+          .watch(boatProvider(boatId))
+          .valueOrNull
+          ?.permissions
+          .canManageMaintenance ??
+      true;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
-    final logsAsync = ref.watch(maintenanceLogsProvider(boatId));
+    final tasksAsync = ref.watch(maintenanceTasksProvider(boatId));
+    final canEdit = _canEdit(ref);
+
     return Stack(
       children: [
-        logsAsync.when(
+        tasksAsync.when(
           loading: () => const NavisShimmer(itemCount: 4, itemHeight: 84),
           error: (e, _) => NavisErrorWidget(
             message: e.toString(),
-            onRetry: () => ref.invalidate(maintenanceLogsProvider(boatId)),
+            onRetry: () => ref.invalidate(maintenanceTasksProvider(boatId)),
           ),
-          data: (logs) {
-            if (logs.isEmpty) {
-              return NavisEmptyState(
-                icon: Icons.build_outlined,
-                message: l.noMaintenanceRecords,
-              );
-            }
-            return ListView.builder(
+          data: (tasks) {
+            final logs =
+                ref.watch(maintenanceLogsProvider(boatId)).valueOrNull ??
+                    const <MaintenanceLog>[];
+            final orphans = logs.where((x) => x.taskId == null).toList();
+            return ListView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-              itemCount: logs.length,
-              itemBuilder: (context, i) {
-                final m = logs[i];
-                final canEdit = ref
-                        .watch(boatProvider(boatId))
-                        .valueOrNull
-                        ?.permissions
-                        .canManageMaintenance ??
-                    true;
-                return NavisCard(
-                  onTap: canEdit
-                      ? () => _editMaintenance(context, ref, existing: m)
-                      : null,
-                  child: Row(
-                    children: [
-                      const Icon(Icons.build, color: AppColors.cyan),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(m.type,
-                                style: TextStyle(
-                                    color: context.txtPrimary,
-                                    fontWeight: FontWeight.w600)),
-                            const SizedBox(height: 2),
-                            Text(
-                              [
-                                _fmtDate(m.performedAt),
-                                if (m.engineHours != null) '${m.engineHours} h',
-                                if (m.provider != null) m.provider!,
-                              ].join(' · '),
-                              style: TextStyle(
-                                  color: context.txtSecondary, fontSize: 13),
-                            ),
-                            if (m.invoiceUrl != null) ...[
-                              const SizedBox(height: 4),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.attach_file,
-                                      size: 14, color: AppColors.cyan),
-                                  const SizedBox(width: 2),
-                                  Text(l.invoiceLabel,
-                                      style: const TextStyle(
-                                          color: AppColors.cyan, fontSize: 12)),
-                                ],
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                      if (m.cost != null) ...[
-                        const SizedBox(width: 8),
-                        Text('${m.cost!.toStringAsFixed(0)} €',
-                            style: const TextStyle(
-                                color: AppColors.cyan,
-                                fontSize: 22,
-                                fontWeight: FontWeight.w800)),
-                      ],
-                    ],
+              children: [
+                _sectionHeader(context, l.maintenancePlanTitle),
+                if (canEdit) _SuggestedChips(boatId: boatId, tasks: tasks),
+                if (tasks.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    child: Text(l.noMaintenanceTasks,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: context.txtSecondary)),
                   ),
-                );
-              },
+                for (final t in tasks) _taskCard(context, ref, t, canEdit),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                        child: _sectionHeaderText(
+                            context, l.maintenanceOtherTitle)),
+                    if (canEdit)
+                      IconButton(
+                        icon: const Icon(Icons.add, size: 20),
+                        tooltip: l.recordService,
+                        onPressed: () =>
+                            _editMaintenance(context, ref, tasks: tasks),
+                      ),
+                  ],
+                ),
+                if (orphans.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Text(l.maintenanceHistoryEmpty,
+                        style: TextStyle(
+                            color: context.txtSecondary, fontSize: 13)),
+                  )
+                else
+                  for (final m in orphans)
+                    _logCard(context, ref, m, canEdit, tasks),
+              ],
             );
           },
         ),
-        if (ref
-                .watch(boatProvider(boatId))
-                .valueOrNull
-                ?.permissions
-                .canManageMaintenance ??
-            true)
+        if (canEdit)
           Positioned(
             right: 16,
             bottom: 16,
             child: NavisGradientFab(
               icon: Icons.add,
-              tooltip: l.newMaintenance,
-              onPressed: () => _editMaintenance(context, ref),
+              tooltip: l.addTask,
+              onPressed: () => _editTask(context, ref),
             ),
           ),
       ],
     );
   }
 
+  Widget _sectionHeader(BuildContext context, String text) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: _sectionHeaderText(context, text),
+      );
+
+  Widget _sectionHeaderText(BuildContext context, String text) => Text(
+        text,
+        style: TextStyle(
+            color: context.txtPrimary,
+            fontSize: 16,
+            fontWeight: FontWeight.w700),
+      );
+
+  Widget _taskCard(
+      BuildContext context, WidgetRef ref, MaintenanceTask t, bool canEdit) {
+    final l = AppLocalizations.of(context)!;
+    final (color, _) = _taskVisuals(context, t.status);
+    final subtitle = _taskSubtitle(l, t);
+    return NavisCard(
+      onTap: () => _taskDetail(context, ref, t, canEdit),
+      child: Row(
+        children: [
+          Icon(Icons.circle, size: 10, color: color),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(t.name,
+                    style: TextStyle(
+                        color: context.txtPrimary,
+                        fontWeight: FontWeight.w600)),
+                if (subtitle.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(subtitle,
+                      style:
+                          TextStyle(color: context.txtSecondary, fontSize: 13)),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(_taskStatusLabel(l, t),
+              style: TextStyle(
+                  color: color, fontSize: 13, fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+
+  Widget _logCard(BuildContext context, WidgetRef ref, MaintenanceLog m,
+      bool canEdit, List<MaintenanceTask> tasks) {
+    final l = AppLocalizations.of(context)!;
+    return NavisCard(
+      onTap: canEdit
+          ? () => _editMaintenance(context, ref, existing: m, tasks: tasks)
+          : null,
+      child: Row(
+        children: [
+          const Icon(Icons.build, color: AppColors.cyan),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(m.type,
+                    style: TextStyle(
+                        color: context.txtPrimary,
+                        fontWeight: FontWeight.w600)),
+                const SizedBox(height: 2),
+                Text(
+                  [
+                    _fmtDate(m.performedAt),
+                    if (m.engineHours != null) '${m.engineHours} h',
+                    if (m.provider != null) m.provider!,
+                  ].join(' · '),
+                  style: TextStyle(color: context.txtSecondary, fontSize: 13),
+                ),
+                if (m.invoiceUrl != null) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.attach_file,
+                          size: 14, color: AppColors.cyan),
+                      const SizedBox(width: 2),
+                      Text(l.invoiceLabel,
+                          style: const TextStyle(
+                              color: AppColors.cyan, fontSize: 12)),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+          if (m.cost != null) ...[
+            const SizedBox(width: 8),
+            Text('${m.cost!.toStringAsFixed(0)} €',
+                style: const TextStyle(
+                    color: AppColors.cyan,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800)),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _taskDetail(
+      BuildContext context, WidgetRef ref, MaintenanceTask t, bool canEdit) {
+    final l = AppLocalizations.of(context)!;
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: context.dialogSurface,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 16,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
+        ),
+        child: Consumer(
+          builder: (ctx, r, _) {
+            final history =
+                (r.watch(maintenanceLogsProvider(boatId)).valueOrNull ??
+                        const <MaintenanceLog>[])
+                    .where((x) => x.taskId == t.id)
+                    .toList();
+            return SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(t.name,
+                            style: TextStyle(
+                                color: context.txtPrimary,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700)),
+                      ),
+                      if (canEdit)
+                        IconButton(
+                          icon: const Icon(Icons.edit, size: 20),
+                          onPressed: () {
+                            Navigator.of(ctx).pop();
+                            _editTask(context, ref, existing: t);
+                          },
+                        ),
+                    ],
+                  ),
+                  if (_taskSubtitle(l, t).isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(_taskSubtitle(l, t),
+                        style: TextStyle(
+                            color: context.txtSecondary, fontSize: 13)),
+                  ],
+                  const SizedBox(height: 12),
+                  if (history.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Text(l.maintenanceHistoryEmpty,
+                          style: TextStyle(color: context.txtSecondary)),
+                    )
+                  else
+                    for (final m in history)
+                      _logCard(context, ref, m, canEdit, [t]),
+                  const SizedBox(height: 12),
+                  if (canEdit)
+                    NavisButton(
+                      label: l.recordService,
+                      onPressed: () {
+                        Navigator.of(ctx).pop();
+                        _editMaintenance(context, ref,
+                            presetTaskId: t.id, tasks: [t]);
+                      },
+                    ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Future<void> _editTask(BuildContext context, WidgetRef ref,
+      {MaintenanceTask? existing}) async {
+    final l = AppLocalizations.of(context)!;
+    final nameCtrl = TextEditingController(text: existing?.name ?? '');
+    final monthsCtrl =
+        TextEditingController(text: existing?.intervalMonths?.toString() ?? '');
+    final hoursCtrl = TextEditingController(
+        text: existing?.intervalHours?.toStringAsFixed(0) ?? '');
+
+    final saved = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: context.dialogSurface,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 16,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(existing == null ? l.addTask : l.editTask,
+                  style: TextStyle(
+                      color: context.txtPrimary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700)),
+              const SizedBox(height: 12),
+              NavisTextField(controller: nameCtrl, label: l.taskName),
+              const SizedBox(height: 10),
+              NavisTextField(
+                controller: monthsCtrl,
+                keyboardType: TextInputType.number,
+                label: l.taskIntervalMonthsLabel,
+              ),
+              const SizedBox(height: 10),
+              NavisTextField(
+                controller: hoursCtrl,
+                keyboardType: TextInputType.number,
+                label: l.taskIntervalHoursLabel,
+              ),
+              const SizedBox(height: 12),
+              NavisButton(
+                label: l.save,
+                onPressed: () => Navigator.of(ctx).pop(true),
+              ),
+              if (existing != null)
+                TextButton(
+                  onPressed: () async {
+                    final ok = await NavisConfirmDialog.show(
+                      ctx,
+                      title: l.delete,
+                      message: l.deleteConfirm,
+                      confirmLabel: l.delete,
+                      destructive: true,
+                    );
+                    if (!ok) return;
+                    await ref
+                        .read(maintenanceRepositoryProvider)
+                        .deleteTask(boatId, existing.id);
+                    ref.invalidate(maintenanceTasksProvider(boatId));
+                    ref.invalidate(maintenanceLogsProvider(boatId));
+                    if (ctx.mounted) Navigator.of(ctx).pop(false);
+                  },
+                  child: Text(l.delete,
+                      style: const TextStyle(color: AppColors.red)),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (saved != true || nameCtrl.text.trim().isEmpty) return;
+    final body = <String, dynamic>{
+      'name': nameCtrl.text.trim(),
+      'interval_months': monthsCtrl.text.trim().isEmpty
+          ? null
+          : int.tryParse(monthsCtrl.text.trim()),
+      'interval_hours': hoursCtrl.text.trim().isEmpty
+          ? null
+          : double.tryParse(hoursCtrl.text.trim()),
+    };
+    try {
+      final repo = ref.read(maintenanceRepositoryProvider);
+      if (existing == null) {
+        await repo.addTask(boatId, body);
+      } else {
+        await repo.updateTask(boatId, existing.id, body);
+      }
+      ref.invalidate(maintenanceTasksProvider(boatId));
+    } catch (_) {
+      if (context.mounted) NavisSnackbar.error(context, l.couldNotSave);
+    }
+  }
+
   Future<void> _editMaintenance(BuildContext context, WidgetRef ref,
-      {MaintenanceLog? existing}) async {
+      {MaintenanceLog? existing,
+      String? presetTaskId,
+      List<MaintenanceTask> tasks = const []}) async {
     final l = AppLocalizations.of(context)!;
     final typeCtrl = TextEditingController(text: existing?.type ?? '');
     final hoursCtrl =
@@ -225,6 +549,12 @@ class _MaintenanceTab extends ConsumerWidget {
     final providerCtrl = TextEditingController(text: existing?.provider ?? '');
     var date = existing?.performedAt ?? DateTime.now();
     String? invoiceUrl = existing?.invoiceUrl;
+    // Only keep a selected task id that still exists in the list.
+    final taskIds = tasks.map((t) => t.id).toSet();
+    var selectedTaskId = existing?.taskId ?? presetTaskId;
+    if (selectedTaskId != null && !taskIds.contains(selectedTaskId)) {
+      selectedTaskId = null;
+    }
 
     final saved = await showModalBottomSheet<bool>(
       context: context,
@@ -243,12 +573,33 @@ class _MaintenanceTab extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(existing == null ? l.newMaintenance : l.edit,
+                Text(existing == null ? l.recordService : l.edit,
                     style: TextStyle(
                         color: context.txtPrimary,
                         fontSize: 18,
                         fontWeight: FontWeight.w700)),
                 const SizedBox(height: 12),
+                if (tasks.isNotEmpty) ...[
+                  Text(l.taskField,
+                      style:
+                          TextStyle(color: context.txtSecondary, fontSize: 12)),
+                  DropdownButton<String?>(
+                    value: selectedTaskId,
+                    isExpanded: true,
+                    items: [
+                      DropdownMenuItem<String?>(
+                        child: Text(l.noTaskOption),
+                      ),
+                      for (final t in tasks)
+                        DropdownMenuItem<String?>(
+                          value: t.id,
+                          child: Text(t.name),
+                        ),
+                    ],
+                    onChanged: (v) => setState(() => selectedTaskId = v),
+                  ),
+                  const SizedBox(height: 10),
+                ],
                 NavisTextField(
                   controller: typeCtrl,
                   label: l.maintenanceTypeHint,
@@ -310,6 +661,7 @@ class _MaintenanceTab extends ConsumerWidget {
                           .read(maintenanceRepositoryProvider)
                           .deleteLog(boatId, existing.id);
                       ref.invalidate(maintenanceLogsProvider(boatId));
+                      ref.invalidate(maintenanceTasksProvider(boatId));
                       if (ctx.mounted) Navigator.of(ctx).pop(false);
                     },
                     child: Text(l.delete,
@@ -324,6 +676,7 @@ class _MaintenanceTab extends ConsumerWidget {
 
     if (saved != true || typeCtrl.text.trim().isEmpty) return;
     final body = <String, dynamic>{
+      'task_id': selectedTaskId,
       'type': typeCtrl.text.trim(),
       'performed_at': _isoDate(date),
       'engine_hours': hoursCtrl.text.trim().isEmpty
@@ -344,10 +697,68 @@ class _MaintenanceTab extends ConsumerWidget {
         await repo.updateLog(boatId, existing.id, body);
       }
       ref.invalidate(maintenanceLogsProvider(boatId));
+      ref.invalidate(maintenanceTasksProvider(boatId));
     } catch (_) {
       if (context.mounted) {
         NavisSnackbar.error(context, l.couldNotSave);
       }
+    }
+  }
+}
+
+/// A row of tappable chips that quick-add common maintenance tasks not yet on
+/// the boat's plan.
+class _SuggestedChips extends ConsumerWidget {
+  const _SuggestedChips({required this.boatId, required this.tasks});
+
+  final String boatId;
+  final List<MaintenanceTask> tasks;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
+    final existing = tasks.map((t) => t.name.toLowerCase()).toSet();
+    final available = _taskTemplates(l)
+        .where((t) => !existing.contains(t.name.toLowerCase()))
+        .toList();
+    if (available.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l.suggestedTasksLabel,
+              style: TextStyle(color: context.txtSecondary, fontSize: 12)),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final t in available)
+                ActionChip(
+                  avatar: const Icon(Icons.add, size: 16),
+                  label: Text(t.name),
+                  onPressed: () => _add(context, ref, t),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _add(
+      BuildContext context, WidgetRef ref, _TaskTemplate t) async {
+    final l = AppLocalizations.of(context)!;
+    try {
+      await ref.read(maintenanceRepositoryProvider).addTask(boatId, {
+        'name': t.name,
+        'interval_months': t.months,
+        'interval_hours': t.hours,
+      });
+      ref.invalidate(maintenanceTasksProvider(boatId));
+    } catch (_) {
+      if (context.mounted) NavisSnackbar.error(context, l.couldNotSave);
     }
   }
 }

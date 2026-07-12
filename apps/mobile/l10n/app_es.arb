@@ -145,15 +145,55 @@
   },
   "readinessMaintNoPlan": "configura un plan de mantenimiento",
   "readinessMaintOverdue": "vencida",
-  "maintenanceScheduleTitle": "Plan de mantenimiento",
-  "maintenanceScheduleHint": "Opcional. Te avisamos cuando toque la próxima revisión — por tiempo y/o horas de motor (lo que llegue antes).",
+  "readinessMaintPending": "sin registrar",
   "engineHoursCurrent": "Horas de motor actuales",
-  "intervalMonths": "Revisión cada (meses)",
-  "intervalHours": "Revisión cada (horas de motor)",
+  "engineSectionTitle": "Motor",
+  "engineSectionHint": "Horas de motor actuales. Configura las tareas de servicio en la pestaña Mantenimiento.",
   "readinessMaintInHours": "a {hours} h",
   "@readinessMaintInHours": {
     "placeholders": { "hours": { "type": "int" } }
   },
+  "maintenancePlanTitle": "Plan de mantenimiento",
+  "maintenanceOtherTitle": "Otros registros",
+  "noMaintenanceTasks": "Aún no hay tareas de mantenimiento",
+  "suggestedTasksLabel": "Sugeridas",
+  "addTask": "Añadir tarea",
+  "editTask": "Editar tarea",
+  "taskName": "Nombre de la tarea",
+  "taskIntervalMonthsLabel": "Cada (meses)",
+  "taskIntervalHoursLabel": "Cada (horas de motor)",
+  "recordService": "Registrar servicio",
+  "maintenanceDueSoonLabel": "pronto",
+  "maintenanceNoInterval": "sin intervalo",
+  "maintenanceHistoryEmpty": "Aún no hay servicios registrados",
+  "noTaskOption": "Sin tarea (puntual)",
+  "taskField": "Tarea",
+  "maintenanceEveryMonths": "cada {months} meses",
+  "@maintenanceEveryMonths": {
+    "placeholders": { "months": { "type": "int" } }
+  },
+  "maintenanceEveryHours": "cada {hours} h",
+  "@maintenanceEveryHours": {
+    "placeholders": { "hours": { "type": "int" } }
+  },
+  "maintenanceInDays": "en {days} d",
+  "@maintenanceInDays": {
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "maintenanceNextDue": "próxima {date}",
+  "@maintenanceNextDue": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "maintenanceLastDone": "última {date}",
+  "@maintenanceLastDone": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "taskEngineOil": "Aceite de motor",
+  "taskFilters": "Filtros",
+  "taskAnodes": "Ánodos",
+  "taskAntifouling": "Antifouling",
+  "taskImpeller": "Rodete (impeller)",
+  "taskCoolant": "Refrigerante",
   "nauticalMiles": "MN",
   "knots": "nudos",
   "kilometers": "km",

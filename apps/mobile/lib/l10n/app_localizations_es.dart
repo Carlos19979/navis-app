@@ -366,25 +366,110 @@ class AppLocalizationsEs extends AppLocalizations {
   String get readinessMaintOverdue => 'vencida';
 
   @override
-  String get maintenanceScheduleTitle => 'Plan de mantenimiento';
-
-  @override
-  String get maintenanceScheduleHint =>
-      'Opcional. Te avisamos cuando toque la próxima revisión — por tiempo y/o horas de motor (lo que llegue antes).';
+  String get readinessMaintPending => 'sin registrar';
 
   @override
   String get engineHoursCurrent => 'Horas de motor actuales';
 
   @override
-  String get intervalMonths => 'Revisión cada (meses)';
+  String get engineSectionTitle => 'Motor';
 
   @override
-  String get intervalHours => 'Revisión cada (horas de motor)';
+  String get engineSectionHint =>
+      'Horas de motor actuales. Configura las tareas de servicio en la pestaña Mantenimiento.';
 
   @override
   String readinessMaintInHours(int hours) {
     return 'a $hours h';
   }
+
+  @override
+  String get maintenancePlanTitle => 'Plan de mantenimiento';
+
+  @override
+  String get maintenanceOtherTitle => 'Otros registros';
+
+  @override
+  String get noMaintenanceTasks => 'Aún no hay tareas de mantenimiento';
+
+  @override
+  String get suggestedTasksLabel => 'Sugeridas';
+
+  @override
+  String get addTask => 'Añadir tarea';
+
+  @override
+  String get editTask => 'Editar tarea';
+
+  @override
+  String get taskName => 'Nombre de la tarea';
+
+  @override
+  String get taskIntervalMonthsLabel => 'Cada (meses)';
+
+  @override
+  String get taskIntervalHoursLabel => 'Cada (horas de motor)';
+
+  @override
+  String get recordService => 'Registrar servicio';
+
+  @override
+  String get maintenanceDueSoonLabel => 'pronto';
+
+  @override
+  String get maintenanceNoInterval => 'sin intervalo';
+
+  @override
+  String get maintenanceHistoryEmpty => 'Aún no hay servicios registrados';
+
+  @override
+  String get noTaskOption => 'Sin tarea (puntual)';
+
+  @override
+  String get taskField => 'Tarea';
+
+  @override
+  String maintenanceEveryMonths(int months) {
+    return 'cada $months meses';
+  }
+
+  @override
+  String maintenanceEveryHours(int hours) {
+    return 'cada $hours h';
+  }
+
+  @override
+  String maintenanceInDays(int days) {
+    return 'en $days d';
+  }
+
+  @override
+  String maintenanceNextDue(String date) {
+    return 'próxima $date';
+  }
+
+  @override
+  String maintenanceLastDone(String date) {
+    return 'última $date';
+  }
+
+  @override
+  String get taskEngineOil => 'Aceite de motor';
+
+  @override
+  String get taskFilters => 'Filtros';
+
+  @override
+  String get taskAnodes => 'Ánodos';
+
+  @override
+  String get taskAntifouling => 'Antifouling';
+
+  @override
+  String get taskImpeller => 'Rodete (impeller)';
+
+  @override
+  String get taskCoolant => 'Refrigerante';
 
   @override
   String get nauticalMiles => 'MN';

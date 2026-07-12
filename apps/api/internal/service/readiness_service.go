@@ -24,6 +24,7 @@ const (
 type ReadinessService struct {
 	docs     port.DocumentRepository
 	maint    port.MaintenanceRepository
+	tasks    port.MaintenanceTaskRepository
 	boats    port.BoatRepository
 	profiles port.ProfileRepository
 	now      func() time.Time
@@ -33,12 +34,14 @@ type ReadinessService struct {
 func NewReadinessService(
 	docs port.DocumentRepository,
 	maint port.MaintenanceRepository,
+	tasks port.MaintenanceTaskRepository,
 	boats port.BoatRepository,
 	profiles port.ProfileRepository,
 ) *ReadinessService {
 	return &ReadinessService{
 		docs:     docs,
 		maint:    maint,
+		tasks:    tasks,
 		boats:    boats,
 		profiles: profiles,
 		now:      time.Now,
@@ -119,12 +122,10 @@ func (s *ReadinessService) Get(ctx context.Context, userID, boatID string) (*dom
 	categories := []domain.ReadinessCategory{*paperwork, *gear}
 
 	if full {
-		maintCat, maintItem, penalty := s.maintenanceCategory(ctx, boat)
+		maintCat, maintItems, penalty := s.maintenanceCategory(ctx, boat)
 		score -= penalty
 		categories = append(categories, maintCat)
-		if maintItem != nil {
-			attention = append(attention, *maintItem)
-		}
+		attention = append(attention, maintItems...)
 	}
 
 	if score < 0 {
@@ -140,84 +141,119 @@ func (s *ReadinessService) Get(ctx context.Context, userID, boatID string) (*dom
 	}, nil
 }
 
-// maintenanceCategory evaluates the boat's service schedule (by date and/or
-// engine hours). No schedule or no service logged => pending nudge. Otherwise
-// the next service is due_soon (amber) or overdue (red), whichever limit — date
-// or hours — comes first.
-func (s *ReadinessService) maintenanceCategory(ctx context.Context, boat *domain.Boat) (domain.ReadinessCategory, *domain.ReadinessItem, int) {
-	cat := domain.ReadinessCategory{Key: domain.ReadinessCatMaintenance, Total: 1}
-	hasSchedule := boat.MaintenanceIntervalMonths != nil || boat.MaintenanceIntervalHours != nil
+// maxMaintenancePenalty caps the total score hit from maintenance so a long
+// neglected plan (many due tasks) can't sink the whole readiness score.
+const maxMaintenancePenalty = 40
+
+// maintenanceCategory evaluates the boat's per-component maintenance plan. Each
+// task with an interval flags due_soon (amber) / overdue (red) / pending (never
+// logged), whichever limit — date or hours — comes first. Tasks with no interval
+// are history-only and ignored. A boat with no tasks gets a single "set a plan"
+// nudge. Returns the category, the attention items, and the score penalty.
+func (s *ReadinessService) maintenanceCategory(ctx context.Context, boat *domain.Boat) (domain.ReadinessCategory, []domain.ReadinessItem, int) {
+	cat := domain.ReadinessCategory{Key: domain.ReadinessCatMaintenance}
+	tasks, _ := s.tasks.ListByBoat(ctx, boat.ID)
 	logs, _ := s.maint.ListByBoat(ctx, boat.ID)
 
-	// Latest service: most recent performed_at + the engine hours logged with it.
-	var last time.Time
-	var lastHours *float64
-	for i := range logs {
-		if logs[i].PerformedAt.After(last) {
-			last = logs[i].PerformedAt
-			lastHours = logs[i].EngineHours
-		}
-	}
-
-	if !hasSchedule || last.IsZero() {
-		cat.Status = domain.ReadinessAttention
+	// No plan at all: a single nudge to set one up.
+	if len(tasks) == 0 {
+		cat.Total = 1
 		cat.Critical = 1
-		return cat, &domain.ReadinessItem{
+		cat.Status = domain.ReadinessAttention
+		return cat, []domain.ReadinessItem{{
 			Category: domain.ReadinessCatMaintenance, Ref: "engine_service",
 			Reason: "no_plan", Status: domain.ReadinessAttention,
-		}, 10
+		}}, 10
 	}
 
-	overdue, soon := false, false
-	var dueDays int
-	var dueHours *float64
-	if boat.MaintenanceIntervalMonths != nil {
-		dueDays = s.daysUntil(last.AddDate(0, *boat.MaintenanceIntervalMonths, 0))
-		if dueDays < 0 {
-			overdue = true
-		} else if dueDays <= maintenanceDueSoonDays {
-			soon = true
-		}
-	}
-	if boat.MaintenanceIntervalHours != nil && lastHours != nil {
-		h := (*lastHours + *boat.MaintenanceIntervalHours) - boat.EngineHours
-		dueHours = &h
-		if h <= 0 {
-			overdue = true
-		} else if h <= maintenanceDueSoonHours {
-			soon = true
+	now := s.now()
+	var items []domain.ReadinessItem
+	penalty := 0
+	for _, t := range tasks {
+		ev := evaluateTask(t, logsForTask(logs, t.ID), boat.EngineHours, now)
+		switch ev.Status {
+		case domain.MaintenanceNoPlan:
+			continue // history-only task: not part of the signal
+		case domain.MaintenanceOverdue:
+			cat.Total++
+			cat.Expired++
+			penalty += 15
+			items = append(items, maintenanceItem(t, ev, domain.ReadinessNotReady))
+		case domain.MaintenanceDueSoon:
+			cat.Total++
+			cat.Critical++
+			penalty += 8
+			items = append(items, maintenanceItem(t, ev, domain.ReadinessAttention))
+		case domain.MaintenancePending:
+			cat.Total++
+			cat.Critical++
+			penalty += 8
+			items = append(items, maintenanceItem(t, ev, domain.ReadinessAttention))
+		case domain.MaintenanceOK:
+			cat.Total++
+			cat.OK++
 		}
 	}
 
-	switch {
-	case overdue:
-		cat.Status = domain.ReadinessNotReady
-		cat.Expired = 1
-		return cat, &domain.ReadinessItem{
-			Category: domain.ReadinessCatMaintenance, Ref: "engine_service",
-			Reason: "overdue", Status: domain.ReadinessNotReady, Days: dueDays, Hours: dueHours,
-		}, 15
-	case soon:
-		cat.Status = domain.ReadinessAttention
-		cat.Critical = 1
-		return cat, &domain.ReadinessItem{
-			Category: domain.ReadinessCatMaintenance, Ref: "engine_service",
-			Reason: "due_soon", Status: domain.ReadinessAttention, Days: dueDays, Hours: dueHours,
-		}, 8
-	default:
-		cat.Status = domain.ReadinessReady
+	// Only history-only tasks existed: nothing to flag.
+	if cat.Total == 0 {
+		cat.Total = 1
 		cat.OK = 1
+		cat.Status = domain.ReadinessReady
 		return cat, nil, 0
+	}
+
+	if penalty > maxMaintenancePenalty {
+		penalty = maxMaintenancePenalty
+	}
+	cat.Status = categoryStatus(&cat)
+	return cat, items, penalty
+}
+
+// logsForTask returns the subset of logs linked to a given task id.
+func logsForTask(logs []domain.MaintenanceLog, taskID string) []domain.MaintenanceLog {
+	out := make([]domain.MaintenanceLog, 0)
+	for i := range logs {
+		if logs[i].TaskID != nil && *logs[i].TaskID == taskID {
+			out = append(out, logs[i])
+		}
+	}
+	return out
+}
+
+// maintenanceItem builds a readiness attention item for a flagged task. Label is
+// the task name; Ref stays "engine_service" so the client keeps the icon.
+func maintenanceItem(t domain.MaintenanceTask, ev taskEval, st domain.ReadinessStatus) domain.ReadinessItem {
+	return domain.ReadinessItem{
+		Category: domain.ReadinessCatMaintenance,
+		Ref:      "engine_service",
+		Label:    t.Name,
+		Status:   st,
+		Days:     ev.DueDays,
+		Reason:   maintenanceReason(ev.Status),
+		Hours:    ev.HoursUntilDue,
 	}
 }
 
-// daysUntil returns whole days from today (date-only) until the target date,
-// matching the CURRENT_DATE-based DB trigger.
+// maintenanceReason maps a task status to the client-facing reason string.
+func maintenanceReason(st domain.MaintenanceTaskStatus) string {
+	switch st {
+	case domain.MaintenanceOverdue:
+		return "overdue"
+	case domain.MaintenanceDueSoon:
+		return "due_soon"
+	case domain.MaintenancePending:
+		return "pending"
+	case domain.MaintenanceOK, domain.MaintenanceNoPlan:
+		return ""
+	default:
+		return ""
+	}
+}
+
+// daysUntil returns whole days from today (date-only) until the target date.
 func (s *ReadinessService) daysUntil(t time.Time) int {
-	now := s.now()
-	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
-	target := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.UTC)
-	return int(target.Sub(today).Hours() / 24)
+	return daysBetween(s.now(), t)
 }
 
 func statusFromDays(days int) domain.ReadinessStatus {

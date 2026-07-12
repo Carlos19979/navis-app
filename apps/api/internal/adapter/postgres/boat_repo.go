@@ -16,7 +16,7 @@ import (
 const boatColumns = `id, user_id, name, registration, type, length_m, home_port,
 	ST_Y(home_port_location::geometry) AS home_port_lat,
 	ST_X(home_port_location::geometry) AS home_port_lon,
-	photo_url, engine_hours, maintenance_interval_months, maintenance_interval_hours,
+	photo_url, engine_hours,
 	created_at, updated_at`
 
 // BoatRepo implements port.BoatRepository using PostgreSQL.
@@ -32,13 +32,13 @@ func NewBoatRepo(pool *pgxpool.Pool) *BoatRepo {
 // Create inserts a new boat and returns the created record.
 func (r *BoatRepo) Create(ctx context.Context, boat *domain.Boat) (*domain.Boat, error) {
 	query := `
-		INSERT INTO boats (user_id, name, registration, type, length_m, home_port, home_port_location, photo_url, engine_hours, maintenance_interval_months, maintenance_interval_hours)
+		INSERT INTO boats (user_id, name, registration, type, length_m, home_port, home_port_location, photo_url, engine_hours)
 		VALUES ($1, $2, $3, $4, $5, $6,
 			CASE WHEN $7::float8 IS NOT NULL AND $8::float8 IS NOT NULL
 				THEN ST_MakePoint($8, $7)
 				ELSE NULL
 			END,
-			$9, $10, $11, $12)
+			$9, $10)
 		RETURNING ` + boatColumns
 
 	b := &domain.Boat{}
@@ -46,11 +46,10 @@ func (r *BoatRepo) Create(ctx context.Context, boat *domain.Boat) (*domain.Boat,
 		boat.UserID, boat.Name, boat.Registration, boat.Type, boat.LengthM,
 		boat.HomePort, boat.HomePortLat, boat.HomePortLon,
 		boat.PhotoURL, boat.EngineHours,
-		boat.MaintenanceIntervalMonths, boat.MaintenanceIntervalHours,
 	).Scan(
 		&b.ID, &b.UserID, &b.Name, &b.Registration, &b.Type, &b.LengthM,
 		&b.HomePort, &b.HomePortLat, &b.HomePortLon,
-		&b.PhotoURL, &b.EngineHours, &b.MaintenanceIntervalMonths, &b.MaintenanceIntervalHours, &b.CreatedAt, &b.UpdatedAt,
+		&b.PhotoURL, &b.EngineHours, &b.CreatedAt, &b.UpdatedAt,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("inserting boat: %w", err)
@@ -67,7 +66,7 @@ func (r *BoatRepo) GetByID(ctx context.Context, userID, id string) (*domain.Boat
 	err := r.pool.QueryRow(ctx, query, userID, id).Scan(
 		&b.ID, &b.UserID, &b.Name, &b.Registration, &b.Type, &b.LengthM,
 		&b.HomePort, &b.HomePortLat, &b.HomePortLon,
-		&b.PhotoURL, &b.EngineHours, &b.MaintenanceIntervalMonths, &b.MaintenanceIntervalHours, &b.CreatedAt, &b.UpdatedAt,
+		&b.PhotoURL, &b.EngineHours, &b.CreatedAt, &b.UpdatedAt,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -112,7 +111,7 @@ func (r *BoatRepo) List(ctx context.Context, userID, cursor string, limit int) (
 		if err := rows.Scan(
 			&b.ID, &b.UserID, &b.Name, &b.Registration, &b.Type, &b.LengthM,
 			&b.HomePort, &b.HomePortLat, &b.HomePortLon,
-			&b.PhotoURL, &b.EngineHours, &b.MaintenanceIntervalMonths, &b.MaintenanceIntervalHours, &b.CreatedAt, &b.UpdatedAt,
+			&b.PhotoURL, &b.EngineHours, &b.CreatedAt, &b.UpdatedAt,
 		); err != nil {
 			return nil, "", fmt.Errorf("scanning boat row: %w", err)
 		}
@@ -142,7 +141,6 @@ func (r *BoatRepo) Update(ctx context.Context, userID string, boat *domain.Boat)
 				ELSE NULL
 			END,
 			photo_url = $10, engine_hours = $11,
-			maintenance_interval_months = $12, maintenance_interval_hours = $13,
 			updated_at = now()
 		WHERE user_id = $1 AND id = $2
 		RETURNING ` + boatColumns
@@ -152,11 +150,10 @@ func (r *BoatRepo) Update(ctx context.Context, userID string, boat *domain.Boat)
 		userID, boat.ID, boat.Name, boat.Registration, boat.Type, boat.LengthM,
 		boat.HomePort, boat.HomePortLat, boat.HomePortLon,
 		boat.PhotoURL, boat.EngineHours,
-		boat.MaintenanceIntervalMonths, boat.MaintenanceIntervalHours,
 	).Scan(
 		&b.ID, &b.UserID, &b.Name, &b.Registration, &b.Type, &b.LengthM,
 		&b.HomePort, &b.HomePortLat, &b.HomePortLon,
-		&b.PhotoURL, &b.EngineHours, &b.MaintenanceIntervalMonths, &b.MaintenanceIntervalHours, &b.CreatedAt, &b.UpdatedAt,
+		&b.PhotoURL, &b.EngineHours, &b.CreatedAt, &b.UpdatedAt,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -196,7 +193,7 @@ func scanBoatRow(row interface{ Scan(...any) error }) (*domain.Boat, error) {
 	b := &domain.Boat{}
 	err := row.Scan(&b.ID, &b.UserID, &b.Name, &b.Registration, &b.Type, &b.LengthM,
 		&b.HomePort, &b.HomePortLat, &b.HomePortLon,
-		&b.PhotoURL, &b.EngineHours, &b.MaintenanceIntervalMonths, &b.MaintenanceIntervalHours, &b.CreatedAt, &b.UpdatedAt)
+		&b.PhotoURL, &b.EngineHours, &b.CreatedAt, &b.UpdatedAt)
 	return b, err
 }
 
