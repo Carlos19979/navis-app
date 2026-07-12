@@ -14,8 +14,9 @@ import (
 const (
 	readinessCriticalDays = 30
 	readinessWarningDays  = 90
-	// A boat with no service logged in this window (or none at all) is flagged.
-	maintenanceStaleDays = 365
+	// The next service flags amber this close to its date/hours limit.
+	maintenanceDueSoonDays  = 30
+	maintenanceDueSoonHours = 10
 )
 
 // ReadinessService synthesizes a boat's "ready to sail" score from documents,
@@ -47,7 +48,8 @@ func NewReadinessService(
 // Get computes the readiness summary for a boat the user can access. Free users
 // get a documents-only view; Pro adds safety-gear and maintenance analysis.
 func (s *ReadinessService) Get(ctx context.Context, userID, boatID string) (*domain.Readiness, error) {
-	if _, err := s.boats.GetByIDAccessible(ctx, userID, boatID); err != nil {
+	boat, err := s.boats.GetByIDAccessible(ctx, userID, boatID)
+	if err != nil {
 		return nil, fmt.Errorf("readiness: %w", err)
 	}
 
@@ -117,7 +119,7 @@ func (s *ReadinessService) Get(ctx context.Context, userID, boatID string) (*dom
 	categories := []domain.ReadinessCategory{*paperwork, *gear}
 
 	if full {
-		maintCat, maintItem, penalty := s.maintenanceCategory(ctx, boatID)
+		maintCat, maintItem, penalty := s.maintenanceCategory(ctx, boat)
 		score -= penalty
 		categories = append(categories, maintCat)
 		if maintItem != nil {
@@ -138,42 +140,75 @@ func (s *ReadinessService) Get(ctx context.Context, userID, boatID string) (*dom
 	}, nil
 }
 
-// maintenanceCategory returns the maintenance category, an optional attention
-// item, and the score penalty. Overdue = no service in maintenanceStaleDays.
-func (s *ReadinessService) maintenanceCategory(ctx context.Context, boatID string) (domain.ReadinessCategory, *domain.ReadinessItem, int) {
+// maintenanceCategory evaluates the boat's service schedule (by date and/or
+// engine hours). No schedule or no service logged => pending nudge. Otherwise
+// the next service is due_soon (amber) or overdue (red), whichever limit — date
+// or hours — comes first.
+func (s *ReadinessService) maintenanceCategory(ctx context.Context, boat *domain.Boat) (domain.ReadinessCategory, *domain.ReadinessItem, int) {
 	cat := domain.ReadinessCategory{Key: domain.ReadinessCatMaintenance, Total: 1}
-	logs, err := s.maint.ListByBoat(ctx, boatID)
-	if err != nil || len(logs) == 0 {
+	hasSchedule := boat.MaintenanceIntervalMonths != nil || boat.MaintenanceIntervalHours != nil
+	logs, _ := s.maint.ListByBoat(ctx, boat.ID)
+
+	// Latest service: most recent performed_at + the engine hours logged with it.
+	var last time.Time
+	var lastHours *float64
+	for i := range logs {
+		if logs[i].PerformedAt.After(last) {
+			last = logs[i].PerformedAt
+			lastHours = logs[i].EngineHours
+		}
+	}
+
+	if !hasSchedule || last.IsZero() {
 		cat.Status = domain.ReadinessAttention
 		cat.Critical = 1
 		return cat, &domain.ReadinessItem{
-			Category: domain.ReadinessCatMaintenance,
-			Ref:      "engine_service",
-			Status:   domain.ReadinessAttention,
-			Days:     0,
+			Category: domain.ReadinessCatMaintenance, Ref: "engine_service",
+			Reason: "no_plan", Status: domain.ReadinessAttention,
 		}, 10
 	}
 
-	var last time.Time
-	for _, l := range logs {
-		if l.PerformedAt.After(last) {
-			last = l.PerformedAt
+	overdue, soon := false, false
+	var dueDays int
+	var dueHours *float64
+	if boat.MaintenanceIntervalMonths != nil {
+		dueDays = s.daysUntil(last.AddDate(0, *boat.MaintenanceIntervalMonths, 0))
+		if dueDays < 0 {
+			overdue = true
+		} else if dueDays <= maintenanceDueSoonDays {
+			soon = true
 		}
 	}
-	daysSince := int(s.now().Sub(last).Hours() / 24)
-	if daysSince > maintenanceStaleDays {
+	if boat.MaintenanceIntervalHours != nil && lastHours != nil {
+		h := (*lastHours + *boat.MaintenanceIntervalHours) - boat.EngineHours
+		dueHours = &h
+		if h <= 0 {
+			overdue = true
+		} else if h <= maintenanceDueSoonHours {
+			soon = true
+		}
+	}
+
+	switch {
+	case overdue:
+		cat.Status = domain.ReadinessNotReady
+		cat.Expired = 1
+		return cat, &domain.ReadinessItem{
+			Category: domain.ReadinessCatMaintenance, Ref: "engine_service",
+			Reason: "overdue", Status: domain.ReadinessNotReady, Days: dueDays, Hours: dueHours,
+		}, 15
+	case soon:
 		cat.Status = domain.ReadinessAttention
 		cat.Critical = 1
 		return cat, &domain.ReadinessItem{
-			Category: domain.ReadinessCatMaintenance,
-			Ref:      "engine_service",
-			Status:   domain.ReadinessAttention,
-			Days:     maintenanceStaleDays - daysSince, // negative = overdue
-		}, 10
+			Category: domain.ReadinessCatMaintenance, Ref: "engine_service",
+			Reason: "due_soon", Status: domain.ReadinessAttention, Days: dueDays, Hours: dueHours,
+		}, 8
+	default:
+		cat.Status = domain.ReadinessReady
+		cat.OK = 1
+		return cat, nil, 0
 	}
-	cat.Status = domain.ReadinessReady
-	cat.OK = 1
-	return cat, nil, 0
 }
 
 // daysUntil returns whole days from today (date-only) until the target date,

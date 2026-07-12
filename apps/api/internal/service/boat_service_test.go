@@ -20,6 +20,7 @@ type mockBoatRepo struct {
 	deleteFn         func(ctx context.Context, userID, id string) error
 	getPermissionsFn func(ctx context.Context, userID, boatID string) (domain.BoatPermissions, bool, error)
 	countFn          func(ctx context.Context, userID string) (int, error)
+	getAccessibleFn  func(ctx context.Context, userID, id string) (*domain.Boat, error)
 }
 
 func (m *mockBoatRepo) Create(ctx context.Context, boat *domain.Boat) (*domain.Boat, error) {
@@ -508,7 +509,10 @@ func (m *mockBoatRepo) Count(ctx context.Context, userID string) (int, error) {
 	return 0, nil
 }
 
-func (m *mockBoatRepo) GetByIDAccessible(_ context.Context, userID, id string) (*domain.Boat, error) {
+func (m *mockBoatRepo) GetByIDAccessible(ctx context.Context, userID, id string) (*domain.Boat, error) {
+	if m.getAccessibleFn != nil {
+		return m.getAccessibleFn(ctx, userID, id)
+	}
 	return &domain.Boat{ID: id, UserID: userID}, nil
 }
 func (m *mockBoatRepo) HasAccess(_ context.Context, _, _ string) (bool, error) {

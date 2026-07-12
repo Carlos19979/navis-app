@@ -41,6 +41,17 @@ func readinessDocs(docs ...domain.Document) *mockDocumentRepo {
 	}
 }
 
+// scheduledBoats returns a boat repo whose boat has a 12-month service interval,
+// so a recent maintenance log keeps the maintenance category green.
+func scheduledBoats() *mockBoatRepo {
+	return &mockBoatRepo{
+		getAccessibleFn: func(_ context.Context, userID, id string) (*domain.Boat, error) {
+			months := 12
+			return &domain.Boat{ID: id, UserID: userID, MaintenanceIntervalMonths: &months}, nil
+		},
+	}
+}
+
 func TestReadinessService_Get_ReadyWhenAllValid(t *testing.T) {
 	t.Parallel()
 	docs := readinessDocs(
@@ -48,7 +59,7 @@ func TestReadinessService_Get_ReadyWhenAllValid(t *testing.T) {
 		domain.Document{Type: domain.DocumentTypeFlares, ExpiryDate: daysFromNow(200)},
 	)
 	maint := &mockMaintenanceRepo{logs: []domain.MaintenanceLog{{PerformedAt: daysFromNow(-30)}}}
-	svc := NewReadinessService(docs, maint, &mockBoatRepo{}, &testutil.FakeProfileRepo{Plan: domain.PlanPro})
+	svc := NewReadinessService(docs, maint, scheduledBoats(), &testutil.FakeProfileRepo{Plan: domain.PlanPro})
 
 	r, err := svc.Get(context.Background(), "user-1", "boat-1")
 	if err != nil {
@@ -68,13 +79,52 @@ func TestReadinessService_Get_ReadyWhenAllValid(t *testing.T) {
 	}
 }
 
+func TestReadinessService_Get_MaintenanceOverdueByHours(t *testing.T) {
+	t.Parallel()
+	docs := readinessDocs(
+		domain.Document{Type: domain.DocumentTypeITB, ExpiryDate: daysFromNow(200)},
+	)
+	lastHours := 120.0
+	maint := &mockMaintenanceRepo{logs: []domain.MaintenanceLog{
+		{PerformedAt: daysFromNow(-30), EngineHours: &lastHours},
+	}}
+	boats := &mockBoatRepo{
+		getAccessibleFn: func(_ context.Context, userID, id string) (*domain.Boat, error) {
+			hours := 100.0
+			return &domain.Boat{
+				ID: id, UserID: userID,
+				EngineHours:              230, // 230 > 120 + 100 = 220 → overdue
+				MaintenanceIntervalHours: &hours,
+			}, nil
+		},
+	}
+	svc := NewReadinessService(docs, maint, boats, &testutil.FakeProfileRepo{Plan: domain.PlanPro})
+
+	r, err := svc.Get(context.Background(), "user-1", "boat-1")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if r.Status != domain.ReadinessNotReady {
+		t.Errorf("status = %q, want not_ready (maintenance overdue by hours)", r.Status)
+	}
+	var found bool
+	for _, it := range r.Attention {
+		if it.Ref == "engine_service" && it.Reason == "overdue" {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("attention = %+v, want an overdue engine_service item", r.Attention)
+	}
+}
+
 func TestReadinessService_Get_NotReadyWhenGearExpired(t *testing.T) {
 	t.Parallel()
 	docs := readinessDocs(
 		domain.Document{Type: domain.DocumentTypeExtinguisher, ExpiryDate: daysFromNow(-5)},
 	)
 	maint := &mockMaintenanceRepo{logs: []domain.MaintenanceLog{{PerformedAt: daysFromNow(-30)}}}
-	svc := NewReadinessService(docs, maint, &mockBoatRepo{}, &testutil.FakeProfileRepo{Plan: domain.PlanPro})
+	svc := NewReadinessService(docs, maint, scheduledBoats(), &testutil.FakeProfileRepo{Plan: domain.PlanPro})
 
 	r, err := svc.Get(context.Background(), "user-1", "boat-1")
 	if err != nil {

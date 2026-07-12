@@ -143,6 +143,17 @@
   "@anomalyFuelHigh": {
     "placeholders": { "pct": { "type": "int" } }
   },
+  "readinessMaintNoPlan": "set a maintenance schedule",
+  "readinessMaintOverdue": "overdue",
+  "maintenanceScheduleTitle": "Maintenance schedule",
+  "maintenanceScheduleHint": "Optional. Get flagged when the next service is due — by time and/or engine hours (whichever comes first).",
+  "engineHoursCurrent": "Current engine hours",
+  "intervalMonths": "Service every (months)",
+  "intervalHours": "Service every (engine hours)",
+  "readinessMaintInHours": "in {hours} h",
+  "@readinessMaintInHours": {
+    "placeholders": { "hours": { "type": "int" } }
+  },
   "nauticalMiles": "NM",
   "knots": "kt",
   "kilometers": "km",

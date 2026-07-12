@@ -15,11 +15,13 @@ type ReadinessCategoryResponse struct {
 
 // ReadinessItemResponse mirrors a domain.ReadinessItem.
 type ReadinessItemResponse struct {
-	Category string `json:"category"`
-	Ref      string `json:"ref"`
-	Label    string `json:"label"`
-	Status   string `json:"status"`
-	Days     int    `json:"days"`
+	Category string   `json:"category"`
+	Ref      string   `json:"ref"`
+	Label    string   `json:"label"`
+	Status   string   `json:"status"`
+	Days     int      `json:"days"`
+	Reason   string   `json:"reason"`
+	Hours    *float64 `json:"hours"`
 }
 
 // ReadinessResponse is the boat-readiness payload.
@@ -53,6 +55,8 @@ func ReadinessResponseFromDomain(r *domain.Readiness) ReadinessResponse {
 			Label:    it.Label,
 			Status:   string(it.Status),
 			Days:     it.Days,
+			Reason:   it.Reason,
+			Hours:    it.Hours,
 		}
 	}
 	return ReadinessResponse{

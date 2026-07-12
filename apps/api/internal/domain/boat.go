@@ -28,8 +28,12 @@ type Boat struct {
 	HomePortLon  *float64
 	PhotoURL     *string
 	EngineHours  float64
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	// Maintenance schedule: service interval by months and/or engine hours
+	// (either optional). Used by readiness to flag the next service.
+	MaintenanceIntervalMonths *int
+	MaintenanceIntervalHours  *float64
+	CreatedAt                 time.Time
+	UpdatedAt                 time.Time
 }
 
 // BoatPermissions is the granular permission set for a shared boat member.

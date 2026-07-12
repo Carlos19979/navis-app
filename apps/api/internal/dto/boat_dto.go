@@ -17,21 +17,26 @@ type CreateBoatRequest struct {
 	HomePortLon  *float64        `json:"home_port_lon" validate:"omitempty,longitude"`
 	PhotoURL     *string         `json:"photo_url"    validate:"omitempty,url"`
 	EngineHours  float64         `json:"engine_hours" validate:"gte=0"`
+
+	MaintenanceIntervalMonths *int     `json:"maintenance_interval_months" validate:"omitempty,gt=0"`
+	MaintenanceIntervalHours  *float64 `json:"maintenance_interval_hours" validate:"omitempty,gt=0"`
 }
 
 // ToDomain converts the request DTO to a domain Boat.
 func (r *CreateBoatRequest) ToDomain(userID string) *domain.Boat {
 	return &domain.Boat{
-		UserID:       userID,
-		Name:         r.Name,
-		Registration: r.Registration,
-		Type:         r.Type,
-		LengthM:      r.LengthM,
-		HomePort:     r.HomePort,
-		HomePortLat:  r.HomePortLat,
-		HomePortLon:  r.HomePortLon,
-		PhotoURL:     r.PhotoURL,
-		EngineHours:  r.EngineHours,
+		UserID:                    userID,
+		Name:                      r.Name,
+		Registration:              r.Registration,
+		Type:                      r.Type,
+		LengthM:                   r.LengthM,
+		HomePort:                  r.HomePort,
+		HomePortLat:               r.HomePortLat,
+		HomePortLon:               r.HomePortLon,
+		PhotoURL:                  r.PhotoURL,
+		EngineHours:               r.EngineHours,
+		MaintenanceIntervalMonths: r.MaintenanceIntervalMonths,
+		MaintenanceIntervalHours:  r.MaintenanceIntervalHours,
 	}
 }
 
@@ -46,6 +51,9 @@ type UpdateBoatRequest struct {
 	HomePortLon  *float64         `json:"home_port_lon" validate:"omitempty,longitude"`
 	PhotoURL     *string          `json:"photo_url"    validate:"omitempty,url"`
 	EngineHours  *float64         `json:"engine_hours" validate:"omitempty,gte=0"`
+
+	MaintenanceIntervalMonths *int     `json:"maintenance_interval_months" validate:"omitempty,gte=0"`
+	MaintenanceIntervalHours  *float64 `json:"maintenance_interval_hours" validate:"omitempty,gte=0"`
 }
 
 // ApplyTo merges non-nil fields from the request into the given domain Boat.
@@ -77,6 +85,21 @@ func (r *UpdateBoatRequest) ApplyTo(boat *domain.Boat) {
 	if r.EngineHours != nil {
 		boat.EngineHours = *r.EngineHours
 	}
+	// A value of 0 clears the interval (no schedule); >0 sets it.
+	if r.MaintenanceIntervalMonths != nil {
+		if *r.MaintenanceIntervalMonths == 0 {
+			boat.MaintenanceIntervalMonths = nil
+		} else {
+			boat.MaintenanceIntervalMonths = r.MaintenanceIntervalMonths
+		}
+	}
+	if r.MaintenanceIntervalHours != nil {
+		if *r.MaintenanceIntervalHours == 0 {
+			boat.MaintenanceIntervalHours = nil
+		} else {
+			boat.MaintenanceIntervalHours = r.MaintenanceIntervalHours
+		}
+	}
 }
 
 // BoatResponse is the API response for a boat.
@@ -91,7 +114,11 @@ type BoatResponse struct {
 	HomePortLon  *float64                `json:"home_port_lon,omitempty"`
 	PhotoURL     *string                 `json:"photo_url,omitempty"`
 	EngineHours  float64                 `json:"engine_hours"`
-	IsOwner      bool                    `json:"is_owner"`
+
+	MaintenanceIntervalMonths *int     `json:"maintenance_interval_months,omitempty"`
+	MaintenanceIntervalHours  *float64 `json:"maintenance_interval_hours,omitempty"`
+
+	IsOwner     bool                    `json:"is_owner"`
 	Permissions  BoatPermissionsResponse `json:"permissions"`
 	CreatedAt    time.Time               `json:"created_at"`
 	UpdatedAt    time.Time               `json:"updated_at"`
@@ -131,6 +158,8 @@ func BoatResponseFromDomain(b *domain.Boat) *BoatResponse {
 		HomePortLon:  b.HomePortLon,
 		PhotoURL:     b.PhotoURL,
 		EngineHours:  b.EngineHours,
+		MaintenanceIntervalMonths: b.MaintenanceIntervalMonths,
+		MaintenanceIntervalHours:  b.MaintenanceIntervalHours,
 		CreatedAt:    b.CreatedAt,
 		UpdatedAt:    b.UpdatedAt,
 	}

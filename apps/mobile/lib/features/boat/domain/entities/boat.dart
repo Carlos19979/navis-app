@@ -11,6 +11,9 @@ class Boat {
     this.homePortLat,
     this.homePortLon,
     this.photoUrl,
+    this.engineHours = 0,
+    this.maintenanceIntervalMonths,
+    this.maintenanceIntervalHours,
     this.ownerId,
     this.isOwner = true,
     this.permissions = const BoatPermissions(),
@@ -27,6 +30,11 @@ class Boat {
   final double? homePortLat;
   final double? homePortLon;
   final String? photoUrl;
+  final double engineHours;
+
+  /// Service interval by months / engine hours (either optional; null = unset).
+  final int? maintenanceIntervalMonths;
+  final double? maintenanceIntervalHours;
   final String? ownerId;
   final bool isOwner;
   final BoatPermissions permissions;
@@ -43,6 +51,9 @@ class Boat {
     double? homePortLat,
     double? homePortLon,
     String? photoUrl,
+    double? engineHours,
+    int? maintenanceIntervalMonths,
+    double? maintenanceIntervalHours,
     String? ownerId,
     bool? isOwner,
     BoatPermissions? permissions,
@@ -59,6 +70,11 @@ class Boat {
       homePortLat: homePortLat ?? this.homePortLat,
       homePortLon: homePortLon ?? this.homePortLon,
       photoUrl: photoUrl ?? this.photoUrl,
+      engineHours: engineHours ?? this.engineHours,
+      maintenanceIntervalMonths:
+          maintenanceIntervalMonths ?? this.maintenanceIntervalMonths,
+      maintenanceIntervalHours:
+          maintenanceIntervalHours ?? this.maintenanceIntervalHours,
       ownerId: ownerId ?? this.ownerId,
       isOwner: isOwner ?? this.isOwner,
       permissions: permissions ?? this.permissions,

@@ -357,6 +357,33 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get readinessMaintNoPlan => 'set a maintenance schedule';
+
+  @override
+  String get readinessMaintOverdue => 'overdue';
+
+  @override
+  String get maintenanceScheduleTitle => 'Maintenance schedule';
+
+  @override
+  String get maintenanceScheduleHint =>
+      'Optional. Get flagged when the next service is due — by time and/or engine hours (whichever comes first).';
+
+  @override
+  String get engineHoursCurrent => 'Current engine hours';
+
+  @override
+  String get intervalMonths => 'Service every (months)';
+
+  @override
+  String get intervalHours => 'Service every (engine hours)';
+
+  @override
+  String readinessMaintInHours(int hours) {
+    return 'in $hours h';
+  }
+
+  @override
   String get nauticalMiles => 'NM';
 
   @override

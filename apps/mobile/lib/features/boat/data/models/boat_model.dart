@@ -12,6 +12,9 @@ class BoatModel {
     this.homePortLat,
     this.homePortLon,
     this.photoUrl,
+    this.engineHours = 0,
+    this.maintenanceIntervalMonths,
+    this.maintenanceIntervalHours,
     this.ownerId,
     this.isOwner = true,
     this.permissions = const BoatPermissions(),
@@ -30,6 +33,11 @@ class BoatModel {
       homePortLat: (json['home_port_lat'] as num?)?.toDouble(),
       homePortLon: (json['home_port_lon'] as num?)?.toDouble(),
       photoUrl: json['photo_url'] as String?,
+      engineHours: (json['engine_hours'] as num?)?.toDouble() ?? 0,
+      maintenanceIntervalMonths:
+          (json['maintenance_interval_months'] as num?)?.toInt(),
+      maintenanceIntervalHours:
+          (json['maintenance_interval_hours'] as num?)?.toDouble(),
       ownerId: json['owner_id'] as String?,
       isOwner: json['is_owner'] as bool? ?? true,
       permissions: json['permissions'] is Map<String, dynamic>
@@ -56,6 +64,9 @@ class BoatModel {
       homePortLat: boat.homePortLat,
       homePortLon: boat.homePortLon,
       photoUrl: boat.photoUrl,
+      engineHours: boat.engineHours,
+      maintenanceIntervalMonths: boat.maintenanceIntervalMonths,
+      maintenanceIntervalHours: boat.maintenanceIntervalHours,
       ownerId: boat.ownerId,
       createdAt: boat.createdAt,
       updatedAt: boat.updatedAt,
@@ -71,6 +82,9 @@ class BoatModel {
   final double? homePortLat;
   final double? homePortLon;
   final String? photoUrl;
+  final double engineHours;
+  final int? maintenanceIntervalMonths;
+  final double? maintenanceIntervalHours;
   final String? ownerId;
   final bool isOwner;
   final BoatPermissions permissions;
@@ -88,6 +102,11 @@ class BoatModel {
       if (homePortLat != null) 'home_port_lat': homePortLat,
       if (homePortLon != null) 'home_port_lon': homePortLon,
       'photo_url': photoUrl,
+      'engine_hours': engineHours,
+      if (maintenanceIntervalMonths != null)
+        'maintenance_interval_months': maintenanceIntervalMonths,
+      if (maintenanceIntervalHours != null)
+        'maintenance_interval_hours': maintenanceIntervalHours,
       'owner_id': ownerId,
       if (createdAt != null) 'created_at': createdAt!.toIso8601String(),
       if (updatedAt != null) 'updated_at': updatedAt!.toIso8601String(),
@@ -105,6 +124,9 @@ class BoatModel {
       homePortLat: homePortLat,
       homePortLon: homePortLon,
       photoUrl: photoUrl,
+      engineHours: engineHours,
+      maintenanceIntervalMonths: maintenanceIntervalMonths,
+      maintenanceIntervalHours: maintenanceIntervalHours,
       ownerId: ownerId,
       isOwner: isOwner,
       permissions: permissions,
