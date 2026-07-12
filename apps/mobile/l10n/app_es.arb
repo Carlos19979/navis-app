@@ -52,6 +52,45 @@
       }
     }
   },
+  "readinessTitle": "Estado de a bordo",
+  "readinessReady": "Listo para navegar",
+  "readinessAttention": "Requiere atención",
+  "readinessNotReady": "No está listo",
+  "readinessAllGood": "Todo en regla",
+  "readinessItemsNeedAttention": "{count} cosas requieren atención",
+  "@readinessItemsNeedAttention": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "readinessScoreOf": "Puntuación {score} / 100",
+  "@readinessScoreOf": {
+    "placeholders": { "score": { "type": "int" } }
+  },
+  "readinessNeedsAttention": "Requiere atención",
+  "readinessCatDocuments": "Documentos",
+  "readinessCatSafetyGear": "Equipo de seguridad",
+  "readinessCatMaintenance": "Mantenimiento",
+  "readinessOkOfTotal": "{ok}/{total} al día",
+  "@readinessOkOfTotal": {
+    "placeholders": { "ok": { "type": "int" }, "total": { "type": "int" } }
+  },
+  "readinessUpgradeForFull": "Desbloquea el estado completo (equipo de seguridad + mantenimiento) con Pro",
+  "readinessExpired": "caducado",
+  "readinessExpiresInDays": "en {days} días",
+  "@readinessExpiresInDays": {
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "readinessServiceOverdue": "revisión pendiente",
+  "readinessRefItb": "Inspección técnica (ITB)",
+  "readinessRefInsurance": "Seguro",
+  "readinessRefLifeRaft": "Balsa salvavidas",
+  "readinessRefExtinguisher": "Extintor",
+  "readinessRefFlares": "Bengalas",
+  "readinessRefFirstAid": "Botiquín",
+  "readinessRefMedicalCert": "Certificado médico",
+  "readinessRefRadioCert": "Certificado de radio",
+  "readinessRefNavLicense": "Licencia de navegación",
+  "readinessRefEngineService": "Revisión de motor",
+  "readinessRefDocument": "Documento",
   "nauticalMiles": "MN",
   "knots": "nudos",
   "kilometers": "km",

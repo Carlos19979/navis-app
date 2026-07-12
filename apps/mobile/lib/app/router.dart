@@ -14,6 +14,7 @@ import 'package:navis_mobile/features/charts/presentation/screens/chart_screen.d
 import 'package:navis_mobile/features/documents/presentation/screens/document_form_screen.dart';
 import 'package:navis_mobile/features/documents/presentation/screens/document_list_screen.dart';
 import 'package:navis_mobile/features/maintenance/presentation/screens/maintenance_screen.dart';
+import 'package:navis_mobile/features/readiness/presentation/screens/readiness_screen.dart';
 import 'package:navis_mobile/features/community/presentation/screens/community_screen.dart';
 import 'package:navis_mobile/features/events/presentation/screens/event_detail_screen.dart';
 import 'package:navis_mobile/features/groups/presentation/screens/group_detail_screen.dart';
@@ -208,6 +209,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final boatId = state.pathParameters['id']!;
           return MaintenanceScreen(boatId: boatId);
+        },
+      ),
+      GoRoute(
+        path: '/boats/:id/readiness',
+        builder: (context, state) {
+          final boatId = state.pathParameters['id']!;
+          return ReadinessScreen(boatId: boatId);
         },
       ),
       GoRoute(

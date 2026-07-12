@@ -130,6 +130,96 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get readinessTitle => 'Estado de a bordo';
+
+  @override
+  String get readinessReady => 'Listo para navegar';
+
+  @override
+  String get readinessAttention => 'Requiere atención';
+
+  @override
+  String get readinessNotReady => 'No está listo';
+
+  @override
+  String get readinessAllGood => 'Todo en regla';
+
+  @override
+  String readinessItemsNeedAttention(int count) {
+    return '$count cosas requieren atención';
+  }
+
+  @override
+  String readinessScoreOf(int score) {
+    return 'Puntuación $score / 100';
+  }
+
+  @override
+  String get readinessNeedsAttention => 'Requiere atención';
+
+  @override
+  String get readinessCatDocuments => 'Documentos';
+
+  @override
+  String get readinessCatSafetyGear => 'Equipo de seguridad';
+
+  @override
+  String get readinessCatMaintenance => 'Mantenimiento';
+
+  @override
+  String readinessOkOfTotal(int ok, int total) {
+    return '$ok/$total al día';
+  }
+
+  @override
+  String get readinessUpgradeForFull =>
+      'Desbloquea el estado completo (equipo de seguridad + mantenimiento) con Pro';
+
+  @override
+  String get readinessExpired => 'caducado';
+
+  @override
+  String readinessExpiresInDays(int days) {
+    return 'en $days días';
+  }
+
+  @override
+  String get readinessServiceOverdue => 'revisión pendiente';
+
+  @override
+  String get readinessRefItb => 'Inspección técnica (ITB)';
+
+  @override
+  String get readinessRefInsurance => 'Seguro';
+
+  @override
+  String get readinessRefLifeRaft => 'Balsa salvavidas';
+
+  @override
+  String get readinessRefExtinguisher => 'Extintor';
+
+  @override
+  String get readinessRefFlares => 'Bengalas';
+
+  @override
+  String get readinessRefFirstAid => 'Botiquín';
+
+  @override
+  String get readinessRefMedicalCert => 'Certificado médico';
+
+  @override
+  String get readinessRefRadioCert => 'Certificado de radio';
+
+  @override
+  String get readinessRefNavLicense => 'Licencia de navegación';
+
+  @override
+  String get readinessRefEngineService => 'Revisión de motor';
+
+  @override
+  String get readinessRefDocument => 'Documento';
+
+  @override
   String get nauticalMiles => 'MN';
 
   @override
