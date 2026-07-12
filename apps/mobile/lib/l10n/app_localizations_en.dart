@@ -308,6 +308,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bookingCrew => 'Crew';
 
   @override
+  String get bookingStartTime => 'Start time';
+
+  @override
+  String get bookingEndTime => 'End time';
+
+  @override
+  String get bookingOverlapTitle => 'Overlaps another booking';
+
+  @override
+  String get bookingOverlapMessage =>
+      'This time overlaps an existing booking for this boat. Book anyway?';
+
+  @override
+  String get bookingBookAnyway => 'Book anyway';
+
+  @override
   String get splitTitle => 'Split expense';
 
   @override

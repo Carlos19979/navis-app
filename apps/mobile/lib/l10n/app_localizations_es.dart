@@ -310,6 +310,22 @@ class AppLocalizationsEs extends AppLocalizations {
   String get bookingCrew => 'Tripulación';
 
   @override
+  String get bookingStartTime => 'Hora de inicio';
+
+  @override
+  String get bookingEndTime => 'Hora de fin';
+
+  @override
+  String get bookingOverlapTitle => 'Se solapa con otra reserva';
+
+  @override
+  String get bookingOverlapMessage =>
+      'Esta franja se solapa con una reserva existente de este barco. ¿Reservar igualmente?';
+
+  @override
+  String get bookingBookAnyway => 'Reservar igualmente';
+
+  @override
   String get splitTitle => 'Repartir gasto';
 
   @override
