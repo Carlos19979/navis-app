@@ -53,7 +53,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     refreshListenable: _authNotifier,
     redirect: (context, state) {
       final session = supabaseClient.auth.currentSession;
-      final isAuthenticated = session != null;
+      final isAuthenticated = session != null && !session.isExpired;
       final isAuthRoute = state.matchedLocation == '/login' ||
           state.matchedLocation == '/register' ||
           state.matchedLocation == '/check-email';

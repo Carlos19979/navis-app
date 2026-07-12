@@ -14,7 +14,7 @@
 		</dict>
 	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<false/>
+	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

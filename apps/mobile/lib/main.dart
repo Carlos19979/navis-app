@@ -78,6 +78,22 @@ Future<void> main() async {
     anonKey: Env.supabaseAnonKey,
   );
 
+  // Validate any session restored from storage before the router runs. On
+  // relaunch a persisted session can carry an expired access token with an
+  // already-invalid refresh token ("Refresh Token Not Found"). If we let the
+  // app enter authenticated routes with it, every request 401s and triggers a
+  // failing refresh loop that leaves the user unable to get back in. Refresh
+  // proactively; if that fails, purge the dead session so we start clean at
+  // the login screen.
+  final restored = Supabase.instance.client.auth.currentSession;
+  if (restored != null && restored.isExpired) {
+    try {
+      await Supabase.instance.client.auth.refreshSession();
+    } catch (_) {
+      await Supabase.instance.client.auth.signOut();
+    }
+  }
+
   // Configure in-app purchases (no-op if no RevenueCat key is provided).
   await BillingService.instance.configure();
 
