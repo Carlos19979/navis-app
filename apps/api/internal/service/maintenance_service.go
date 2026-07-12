@@ -3,21 +3,24 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 	"github.com/Carlos19979/navis-app/apps/api/internal/port"
 )
 
-// MaintenanceService handles boat maintenance logs and expenses.
+// MaintenanceService handles boat maintenance logs, tasks and expenses.
 type MaintenanceService struct {
 	maint port.MaintenanceRepository
+	tasks port.MaintenanceTaskRepository
 	exp   port.ExpenseRepository
 	boats port.BoatRepository
+	now   func() time.Time
 }
 
 // NewMaintenanceService creates a new MaintenanceService.
-func NewMaintenanceService(maint port.MaintenanceRepository, exp port.ExpenseRepository, boats port.BoatRepository) *MaintenanceService {
-	return &MaintenanceService{maint: maint, exp: exp, boats: boats}
+func NewMaintenanceService(maint port.MaintenanceRepository, tasks port.MaintenanceTaskRepository, exp port.ExpenseRepository, boats port.BoatRepository) *MaintenanceService {
+	return &MaintenanceService{maint: maint, tasks: tasks, exp: exp, boats: boats, now: time.Now}
 }
 
 // assertMaintenance verifies the user may manage maintenance on the boat.
@@ -88,6 +91,68 @@ func (s *MaintenanceService) DeleteLog(ctx context.Context, userID, boatID, id s
 		return fmt.Errorf("delete maintenance: %w", err)
 	}
 	return s.maint.Delete(ctx, boatID, id)
+}
+
+// AddTask creates a recurring maintenance task (owner or editor member).
+func (s *MaintenanceService) AddTask(ctx context.Context, t *domain.MaintenanceTask) (*domain.MaintenanceTask, error) {
+	if t.Name == "" {
+		return nil, &domain.ValidationError{Field: "name", Message: "name is required"}
+	}
+	if err := s.assertMaintenance(ctx, t.UserID, t.BoatID); err != nil {
+		return nil, fmt.Errorf("add maintenance task: %w", err)
+	}
+	return s.tasks.Create(ctx, t)
+}
+
+// ListTasks returns a boat's maintenance tasks with derived due-state (owner or
+// any member).
+func (s *MaintenanceService) ListTasks(ctx context.Context, userID, boatID string) ([]domain.MaintenanceTaskView, error) {
+	boat, err := s.boats.GetByIDAccessible(ctx, userID, boatID)
+	if err != nil {
+		return nil, fmt.Errorf("list maintenance tasks: %w", err)
+	}
+	tasks, err := s.tasks.ListByBoat(ctx, boatID)
+	if err != nil {
+		return nil, fmt.Errorf("list maintenance tasks: %w", err)
+	}
+	logs, err := s.maint.ListByBoat(ctx, boatID)
+	if err != nil {
+		return nil, fmt.Errorf("list maintenance tasks: %w", err)
+	}
+	now := s.now()
+	views := make([]domain.MaintenanceTaskView, len(tasks))
+	for i := range tasks {
+		ev := evaluateTask(tasks[i], logsForTask(logs, tasks[i].ID), boat.EngineHours, now)
+		views[i] = domain.MaintenanceTaskView{
+			Task:            tasks[i],
+			Status:          ev.Status,
+			LastPerformedAt: ev.LastPerformedAt,
+			LastEngineHours: ev.LastEngineHours,
+			NextDueDate:     ev.NextDueDate,
+			DueDays:         ev.DueDays,
+			HoursUntilDue:   ev.HoursUntilDue,
+		}
+	}
+	return views, nil
+}
+
+// UpdateTask edits a maintenance task (owner or editor member).
+func (s *MaintenanceService) UpdateTask(ctx context.Context, userID string, t *domain.MaintenanceTask) (*domain.MaintenanceTask, error) {
+	if t.Name == "" {
+		return nil, &domain.ValidationError{Field: "name", Message: "name is required"}
+	}
+	if err := s.assertMaintenance(ctx, userID, t.BoatID); err != nil {
+		return nil, fmt.Errorf("update maintenance task: %w", err)
+	}
+	return s.tasks.Update(ctx, t)
+}
+
+// DeleteTask removes a maintenance task; its history survives (owner or editor).
+func (s *MaintenanceService) DeleteTask(ctx context.Context, userID, boatID, id string) error {
+	if err := s.assertMaintenance(ctx, userID, boatID); err != nil {
+		return fmt.Errorf("delete maintenance task: %w", err)
+	}
+	return s.tasks.Delete(ctx, boatID, id)
 }
 
 // AddExpense records an expense (owner or editor member).

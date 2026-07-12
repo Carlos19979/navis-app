@@ -143,17 +143,57 @@
   "@anomalyFuelHigh": {
     "placeholders": { "pct": { "type": "int" } }
   },
-  "readinessMaintNoPlan": "set a maintenance schedule",
+  "readinessMaintNoPlan": "set up a maintenance plan",
   "readinessMaintOverdue": "overdue",
-  "maintenanceScheduleTitle": "Maintenance schedule",
-  "maintenanceScheduleHint": "Optional. Get flagged when the next service is due — by time and/or engine hours (whichever comes first).",
+  "readinessMaintPending": "not logged yet",
   "engineHoursCurrent": "Current engine hours",
-  "intervalMonths": "Service every (months)",
-  "intervalHours": "Service every (engine hours)",
+  "engineSectionTitle": "Engine",
+  "engineSectionHint": "Current engine hours. Set up service tasks in the Maintenance tab.",
   "readinessMaintInHours": "in {hours} h",
   "@readinessMaintInHours": {
     "placeholders": { "hours": { "type": "int" } }
   },
+  "maintenancePlanTitle": "Maintenance plan",
+  "maintenanceOtherTitle": "Other records",
+  "noMaintenanceTasks": "No maintenance tasks yet",
+  "suggestedTasksLabel": "Suggested",
+  "addTask": "Add task",
+  "editTask": "Edit task",
+  "taskName": "Task name",
+  "taskIntervalMonthsLabel": "Every (months)",
+  "taskIntervalHoursLabel": "Every (engine hours)",
+  "recordService": "Record service",
+  "maintenanceDueSoonLabel": "due soon",
+  "maintenanceNoInterval": "no schedule",
+  "maintenanceHistoryEmpty": "No services recorded yet",
+  "noTaskOption": "No task (one-off)",
+  "taskField": "Task",
+  "maintenanceEveryMonths": "every {months} mo",
+  "@maintenanceEveryMonths": {
+    "placeholders": { "months": { "type": "int" } }
+  },
+  "maintenanceEveryHours": "every {hours} h",
+  "@maintenanceEveryHours": {
+    "placeholders": { "hours": { "type": "int" } }
+  },
+  "maintenanceInDays": "in {days} d",
+  "@maintenanceInDays": {
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "maintenanceNextDue": "next {date}",
+  "@maintenanceNextDue": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "maintenanceLastDone": "last {date}",
+  "@maintenanceLastDone": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "taskEngineOil": "Engine oil",
+  "taskFilters": "Filters",
+  "taskAnodes": "Anodes",
+  "taskAntifouling": "Antifouling",
+  "taskImpeller": "Impeller",
+  "taskCoolant": "Coolant",
   "nauticalMiles": "NM",
   "knots": "kt",
   "kilometers": "km",

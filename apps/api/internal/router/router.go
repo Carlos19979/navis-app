@@ -140,6 +140,13 @@ func New(
 				r.Route("/maintenance", func(r chi.Router) {
 					r.Get("/", maintenanceH.ListLogs)
 					r.Post("/", maintenanceH.CreateLog)
+					// Static /tasks resolves before the /{logId} param in chi.
+					r.Route("/tasks", func(r chi.Router) {
+						r.Get("/", maintenanceH.ListTasks)
+						r.Post("/", maintenanceH.CreateTask)
+						r.Put("/{taskId}", maintenanceH.UpdateTask)
+						r.Delete("/{taskId}", maintenanceH.DeleteTask)
+					})
 					r.Put("/{logId}", maintenanceH.UpdateLog)
 					r.Delete("/{logId}", maintenanceH.DeleteLog)
 				})

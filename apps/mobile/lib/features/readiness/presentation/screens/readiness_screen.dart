@@ -227,6 +227,8 @@ String _daysLabel(AppLocalizations l, ReadinessItem item) {
         return l.readinessMaintNoPlan;
       case 'overdue':
         return l.readinessMaintOverdue;
+      case 'pending':
+        return l.readinessMaintPending;
       default:
         // due_soon: prefer the nearer of date/hours.
         if (item.hours != null && (item.days <= 0 || item.hours! < item.days)) {

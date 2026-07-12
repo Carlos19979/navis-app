@@ -46,8 +46,6 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
   final _lengthController = TextEditingController();
   final _homePortController = TextEditingController();
   final _engineHoursController = TextEditingController();
-  final _intervalMonthsController = TextEditingController();
-  final _intervalHoursController = TextEditingController();
   String _selectedType = 'sailboat';
   bool _isLoading = false;
   bool _isEdit = false;
@@ -76,13 +74,6 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
     if (boat.engineHours > 0) {
       _engineHoursController.text = boat.engineHours.toStringAsFixed(0);
     }
-    if (boat.maintenanceIntervalMonths != null) {
-      _intervalMonthsController.text = '${boat.maintenanceIntervalMonths}';
-    }
-    if (boat.maintenanceIntervalHours != null) {
-      _intervalHoursController.text =
-          boat.maintenanceIntervalHours!.toStringAsFixed(0);
-    }
     setState(() {
       _selectedType = boat.type;
       _existingPhotoUrl = boat.photoUrl;
@@ -98,8 +89,6 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
     _lengthController.dispose();
     _homePortController.dispose();
     _engineHoursController.dispose();
-    _intervalMonthsController.dispose();
-    _intervalHoursController.dispose();
     super.dispose();
   }
 
@@ -141,10 +130,6 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
         homePortLon: _homePortLon,
         photoUrl: photoUrl,
         engineHours: double.tryParse(_engineHoursController.text.trim()) ?? 0,
-        maintenanceIntervalMonths:
-            int.tryParse(_intervalMonthsController.text.trim()),
-        maintenanceIntervalHours:
-            double.tryParse(_intervalHoursController.text.trim()),
       );
 
       if (_isEdit) {
@@ -510,14 +495,14 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                     ),
                 const SizedBox(height: 24),
                 Text(
-                  l.maintenanceScheduleTitle,
+                  l.engineSectionTitle,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  l.maintenanceScheduleHint,
+                  l.engineSectionHint,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: context.txtSecondary,
                       ),
@@ -529,25 +514,6 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                   decoration: InputDecoration(
                     labelText: l.engineHoursCurrent,
                     prefixIcon: const Icon(Icons.speed),
-                    suffixText: 'h',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _intervalMonthsController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: l.intervalMonths,
-                    prefixIcon: const Icon(Icons.event_repeat),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _intervalHoursController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: l.intervalHours,
-                    prefixIcon: const Icon(Icons.build),
                     suffixText: 'h',
                   ),
                 ),

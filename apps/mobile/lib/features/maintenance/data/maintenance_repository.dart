@@ -35,6 +35,33 @@ class MaintenanceRepository {
     await _apiClient.delete<void>('/api/v1/boats/$boatId/maintenance/$id');
   }
 
+  Future<List<MaintenanceTask>> listTasks(String boatId) async {
+    final res = await _apiClient
+        .get<Map<String, dynamic>>('/api/v1/boats/$boatId/maintenance/tasks');
+    final data = (res.data!['data'] as List).cast<Map<String, dynamic>>();
+    return data.map(MaintenanceTask.fromJson).toList();
+  }
+
+  Future<void> addTask(String boatId, Map<String, dynamic> body) async {
+    await _apiClient.post<Map<String, dynamic>>(
+      '/api/v1/boats/$boatId/maintenance/tasks',
+      data: body,
+    );
+  }
+
+  Future<void> updateTask(
+      String boatId, String id, Map<String, dynamic> body) async {
+    await _apiClient.put<Map<String, dynamic>>(
+      '/api/v1/boats/$boatId/maintenance/tasks/$id',
+      data: body,
+    );
+  }
+
+  Future<void> deleteTask(String boatId, String id) async {
+    await _apiClient
+        .delete<void>('/api/v1/boats/$boatId/maintenance/tasks/$id');
+  }
+
   Future<List<Expense>> listExpenses(String boatId) async {
     final res = await _apiClient
         .get<Map<String, dynamic>>('/api/v1/boats/$boatId/expenses');
@@ -75,6 +102,11 @@ final maintenanceRepositoryProvider = Provider<MaintenanceRepository>(
 final maintenanceLogsProvider =
     FutureProvider.family<List<MaintenanceLog>, String>((ref, boatId) {
   return ref.read(maintenanceRepositoryProvider).listLogs(boatId);
+});
+
+final maintenanceTasksProvider =
+    FutureProvider.family<List<MaintenanceTask>, String>((ref, boatId) {
+  return ref.read(maintenanceRepositoryProvider).listTasks(boatId);
 });
 
 final expensesProvider =

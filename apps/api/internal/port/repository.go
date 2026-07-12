@@ -46,6 +46,17 @@ type MaintenanceRepository interface {
 	Delete(ctx context.Context, boatID, id string) error
 }
 
+// MaintenanceTaskRepository persists a boat's recurring maintenance plan.
+type MaintenanceTaskRepository interface {
+	Create(ctx context.Context, t *domain.MaintenanceTask) (*domain.MaintenanceTask, error)
+	Update(ctx context.Context, t *domain.MaintenanceTask) (*domain.MaintenanceTask, error)
+	// ListByBoat returns all tasks on a boat (caller enforces access).
+	ListByBoat(ctx context.Context, boatID string) ([]domain.MaintenanceTask, error)
+	// GetByID returns a single task on a boat (caller enforces access).
+	GetByID(ctx context.Context, boatID, id string) (*domain.MaintenanceTask, error)
+	Delete(ctx context.Context, boatID, id string) error
+}
+
 // ExpenseRepository persists boat expenses.
 type ExpenseRepository interface {
 	Create(ctx context.Context, e *domain.Expense) (*domain.Expense, error)

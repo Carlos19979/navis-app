@@ -21,14 +21,14 @@ func NewMaintenanceRepo(pool *pgxpool.Pool) *MaintenanceRepo {
 	return &MaintenanceRepo{pool: pool}
 }
 
-const maintenanceColumns = `id, boat_id, user_id, type, performed_at, engine_hours,
+const maintenanceColumns = `id, boat_id, user_id, task_id, type, performed_at, engine_hours,
 	cost, provider, notes, invoice_url, created_at, updated_at`
 
 func scanMaintenance(row interface {
 	Scan(...any) error
 }) (*domain.MaintenanceLog, error) {
 	m := &domain.MaintenanceLog{}
-	err := row.Scan(&m.ID, &m.BoatID, &m.UserID, &m.Type, &m.PerformedAt,
+	err := row.Scan(&m.ID, &m.BoatID, &m.UserID, &m.TaskID, &m.Type, &m.PerformedAt,
 		&m.EngineHours, &m.Cost, &m.Provider, &m.Notes, &m.InvoiceURL,
 		&m.CreatedAt, &m.UpdatedAt)
 	return m, err
@@ -37,11 +37,11 @@ func scanMaintenance(row interface {
 // Create inserts a maintenance log.
 func (r *MaintenanceRepo) Create(ctx context.Context, m *domain.MaintenanceLog) (*domain.MaintenanceLog, error) {
 	query := `INSERT INTO maintenance_logs
-		(boat_id, user_id, type, performed_at, engine_hours, cost, provider, notes, invoice_url)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+		(boat_id, user_id, task_id, type, performed_at, engine_hours, cost, provider, notes, invoice_url)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
 		RETURNING ` + maintenanceColumns
 	out, err := scanMaintenance(r.pool.QueryRow(ctx, query,
-		m.BoatID, m.UserID, m.Type, m.PerformedAt, m.EngineHours, m.Cost, m.Provider, m.Notes, m.InvoiceURL))
+		m.BoatID, m.UserID, m.TaskID, m.Type, m.PerformedAt, m.EngineHours, m.Cost, m.Provider, m.Notes, m.InvoiceURL))
 	if err != nil {
 		return nil, fmt.Errorf("inserting maintenance log: %w", err)
 	}
@@ -51,12 +51,12 @@ func (r *MaintenanceRepo) Create(ctx context.Context, m *domain.MaintenanceLog) 
 // Update modifies a maintenance log scoped to its boat.
 func (r *MaintenanceRepo) Update(ctx context.Context, m *domain.MaintenanceLog) (*domain.MaintenanceLog, error) {
 	query := `UPDATE maintenance_logs
-		SET type=$1, performed_at=$2, engine_hours=$3, cost=$4, provider=$5,
-			notes=$6, invoice_url=$7, updated_at=now()
-		WHERE id=$8 AND boat_id=$9
+		SET task_id=$1, type=$2, performed_at=$3, engine_hours=$4, cost=$5, provider=$6,
+			notes=$7, invoice_url=$8, updated_at=now()
+		WHERE id=$9 AND boat_id=$10
 		RETURNING ` + maintenanceColumns
 	out, err := scanMaintenance(r.pool.QueryRow(ctx, query,
-		m.Type, m.PerformedAt, m.EngineHours, m.Cost, m.Provider, m.Notes, m.InvoiceURL,
+		m.TaskID, m.Type, m.PerformedAt, m.EngineHours, m.Cost, m.Provider, m.Notes, m.InvoiceURL,
 		m.ID, m.BoatID))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

@@ -357,31 +357,116 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get readinessMaintNoPlan => 'set a maintenance schedule';
+  String get readinessMaintNoPlan => 'set up a maintenance plan';
 
   @override
   String get readinessMaintOverdue => 'overdue';
 
   @override
-  String get maintenanceScheduleTitle => 'Maintenance schedule';
-
-  @override
-  String get maintenanceScheduleHint =>
-      'Optional. Get flagged when the next service is due — by time and/or engine hours (whichever comes first).';
+  String get readinessMaintPending => 'not logged yet';
 
   @override
   String get engineHoursCurrent => 'Current engine hours';
 
   @override
-  String get intervalMonths => 'Service every (months)';
+  String get engineSectionTitle => 'Engine';
 
   @override
-  String get intervalHours => 'Service every (engine hours)';
+  String get engineSectionHint =>
+      'Current engine hours. Set up service tasks in the Maintenance tab.';
 
   @override
   String readinessMaintInHours(int hours) {
     return 'in $hours h';
   }
+
+  @override
+  String get maintenancePlanTitle => 'Maintenance plan';
+
+  @override
+  String get maintenanceOtherTitle => 'Other records';
+
+  @override
+  String get noMaintenanceTasks => 'No maintenance tasks yet';
+
+  @override
+  String get suggestedTasksLabel => 'Suggested';
+
+  @override
+  String get addTask => 'Add task';
+
+  @override
+  String get editTask => 'Edit task';
+
+  @override
+  String get taskName => 'Task name';
+
+  @override
+  String get taskIntervalMonthsLabel => 'Every (months)';
+
+  @override
+  String get taskIntervalHoursLabel => 'Every (engine hours)';
+
+  @override
+  String get recordService => 'Record service';
+
+  @override
+  String get maintenanceDueSoonLabel => 'due soon';
+
+  @override
+  String get maintenanceNoInterval => 'no schedule';
+
+  @override
+  String get maintenanceHistoryEmpty => 'No services recorded yet';
+
+  @override
+  String get noTaskOption => 'No task (one-off)';
+
+  @override
+  String get taskField => 'Task';
+
+  @override
+  String maintenanceEveryMonths(int months) {
+    return 'every $months mo';
+  }
+
+  @override
+  String maintenanceEveryHours(int hours) {
+    return 'every $hours h';
+  }
+
+  @override
+  String maintenanceInDays(int days) {
+    return 'in $days d';
+  }
+
+  @override
+  String maintenanceNextDue(String date) {
+    return 'next $date';
+  }
+
+  @override
+  String maintenanceLastDone(String date) {
+    return 'last $date';
+  }
+
+  @override
+  String get taskEngineOil => 'Engine oil';
+
+  @override
+  String get taskFilters => 'Filters';
+
+  @override
+  String get taskAnodes => 'Anodes';
+
+  @override
+  String get taskAntifouling => 'Antifouling';
+
+  @override
+  String get taskImpeller => 'Impeller';
+
+  @override
+  String get taskCoolant => 'Coolant';
 
   @override
   String get nauticalMiles => 'NM';

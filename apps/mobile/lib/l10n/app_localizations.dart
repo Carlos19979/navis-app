@@ -749,7 +749,7 @@ abstract class AppLocalizations {
   /// No description provided for @readinessMaintNoPlan.
   ///
   /// In en, this message translates to:
-  /// **'set a maintenance schedule'**
+  /// **'set up a maintenance plan'**
   String get readinessMaintNoPlan;
 
   /// No description provided for @readinessMaintOverdue.
@@ -758,17 +758,11 @@ abstract class AppLocalizations {
   /// **'overdue'**
   String get readinessMaintOverdue;
 
-  /// No description provided for @maintenanceScheduleTitle.
+  /// No description provided for @readinessMaintPending.
   ///
   /// In en, this message translates to:
-  /// **'Maintenance schedule'**
-  String get maintenanceScheduleTitle;
-
-  /// No description provided for @maintenanceScheduleHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Optional. Get flagged when the next service is due — by time and/or engine hours (whichever comes first).'**
-  String get maintenanceScheduleHint;
+  /// **'not logged yet'**
+  String get readinessMaintPending;
 
   /// No description provided for @engineHoursCurrent.
   ///
@@ -776,23 +770,179 @@ abstract class AppLocalizations {
   /// **'Current engine hours'**
   String get engineHoursCurrent;
 
-  /// No description provided for @intervalMonths.
+  /// No description provided for @engineSectionTitle.
   ///
   /// In en, this message translates to:
-  /// **'Service every (months)'**
-  String get intervalMonths;
+  /// **'Engine'**
+  String get engineSectionTitle;
 
-  /// No description provided for @intervalHours.
+  /// No description provided for @engineSectionHint.
   ///
   /// In en, this message translates to:
-  /// **'Service every (engine hours)'**
-  String get intervalHours;
+  /// **'Current engine hours. Set up service tasks in the Maintenance tab.'**
+  String get engineSectionHint;
 
   /// No description provided for @readinessMaintInHours.
   ///
   /// In en, this message translates to:
   /// **'in {hours} h'**
   String readinessMaintInHours(int hours);
+
+  /// No description provided for @maintenancePlanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance plan'**
+  String get maintenancePlanTitle;
+
+  /// No description provided for @maintenanceOtherTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Other records'**
+  String get maintenanceOtherTitle;
+
+  /// No description provided for @noMaintenanceTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'No maintenance tasks yet'**
+  String get noMaintenanceTasks;
+
+  /// No description provided for @suggestedTasksLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested'**
+  String get suggestedTasksLabel;
+
+  /// No description provided for @addTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Add task'**
+  String get addTask;
+
+  /// No description provided for @editTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit task'**
+  String get editTask;
+
+  /// No description provided for @taskName.
+  ///
+  /// In en, this message translates to:
+  /// **'Task name'**
+  String get taskName;
+
+  /// No description provided for @taskIntervalMonthsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Every (months)'**
+  String get taskIntervalMonthsLabel;
+
+  /// No description provided for @taskIntervalHoursLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Every (engine hours)'**
+  String get taskIntervalHoursLabel;
+
+  /// No description provided for @recordService.
+  ///
+  /// In en, this message translates to:
+  /// **'Record service'**
+  String get recordService;
+
+  /// No description provided for @maintenanceDueSoonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'due soon'**
+  String get maintenanceDueSoonLabel;
+
+  /// No description provided for @maintenanceNoInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'no schedule'**
+  String get maintenanceNoInterval;
+
+  /// No description provided for @maintenanceHistoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No services recorded yet'**
+  String get maintenanceHistoryEmpty;
+
+  /// No description provided for @noTaskOption.
+  ///
+  /// In en, this message translates to:
+  /// **'No task (one-off)'**
+  String get noTaskOption;
+
+  /// No description provided for @taskField.
+  ///
+  /// In en, this message translates to:
+  /// **'Task'**
+  String get taskField;
+
+  /// No description provided for @maintenanceEveryMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'every {months} mo'**
+  String maintenanceEveryMonths(int months);
+
+  /// No description provided for @maintenanceEveryHours.
+  ///
+  /// In en, this message translates to:
+  /// **'every {hours} h'**
+  String maintenanceEveryHours(int hours);
+
+  /// No description provided for @maintenanceInDays.
+  ///
+  /// In en, this message translates to:
+  /// **'in {days} d'**
+  String maintenanceInDays(int days);
+
+  /// No description provided for @maintenanceNextDue.
+  ///
+  /// In en, this message translates to:
+  /// **'next {date}'**
+  String maintenanceNextDue(String date);
+
+  /// No description provided for @maintenanceLastDone.
+  ///
+  /// In en, this message translates to:
+  /// **'last {date}'**
+  String maintenanceLastDone(String date);
+
+  /// No description provided for @taskEngineOil.
+  ///
+  /// In en, this message translates to:
+  /// **'Engine oil'**
+  String get taskEngineOil;
+
+  /// No description provided for @taskFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get taskFilters;
+
+  /// No description provided for @taskAnodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Anodes'**
+  String get taskAnodes;
+
+  /// No description provided for @taskAntifouling.
+  ///
+  /// In en, this message translates to:
+  /// **'Antifouling'**
+  String get taskAntifouling;
+
+  /// No description provided for @taskImpeller.
+  ///
+  /// In en, this message translates to:
+  /// **'Impeller'**
+  String get taskImpeller;
+
+  /// No description provided for @taskCoolant.
+  ///
+  /// In en, this message translates to:
+  /// **'Coolant'**
+  String get taskCoolant;
 
   /// No description provided for @nauticalMiles.
   ///

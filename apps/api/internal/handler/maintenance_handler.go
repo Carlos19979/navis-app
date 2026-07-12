@@ -16,6 +16,10 @@ type maintenanceService interface {
 	ListLogs(ctx context.Context, userID, boatID string) ([]domain.MaintenanceLog, error)
 	UpdateLog(ctx context.Context, userID string, log *domain.MaintenanceLog) (*domain.MaintenanceLog, error)
 	DeleteLog(ctx context.Context, userID, boatID, id string) error
+	AddTask(ctx context.Context, t *domain.MaintenanceTask) (*domain.MaintenanceTask, error)
+	ListTasks(ctx context.Context, userID, boatID string) ([]domain.MaintenanceTaskView, error)
+	UpdateTask(ctx context.Context, userID string, t *domain.MaintenanceTask) (*domain.MaintenanceTask, error)
+	DeleteTask(ctx context.Context, userID, boatID, id string) error
 	AddExpense(ctx context.Context, e *domain.Expense) (*domain.Expense, error)
 	ListExpenses(ctx context.Context, userID, boatID string) ([]domain.Expense, error)
 	UpdateExpense(ctx context.Context, userID string, e *domain.Expense) (*domain.Expense, error)
@@ -69,6 +73,7 @@ func (h *MaintenanceHandler) CreateLog(w http.ResponseWriter, r *http.Request) {
 	log := &domain.MaintenanceLog{
 		BoatID:      boatID,
 		UserID:      userID,
+		TaskID:      req.TaskID,
 		Type:        req.Type,
 		PerformedAt: performedAt,
 		EngineHours: req.EngineHours,
@@ -104,6 +109,7 @@ func (h *MaintenanceHandler) UpdateLog(w http.ResponseWriter, r *http.Request) {
 		ID:          chi.URLParam(r, "logId"),
 		BoatID:      chi.URLParam(r, "id"),
 		UserID:      userID,
+		TaskID:      req.TaskID,
 		Type:        req.Type,
 		PerformedAt: performedAt,
 		EngineHours: req.EngineHours,
@@ -128,6 +134,97 @@ func (h *MaintenanceHandler) DeleteLog(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := h.svc.DeleteLog(r.Context(), userID,
 		chi.URLParam(r, "id"), chi.URLParam(r, "logId")); err != nil {
+		MapDomainError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// ListTasks handles GET /boats/{boatId}/maintenance/tasks.
+func (h *MaintenanceHandler) ListTasks(w http.ResponseWriter, r *http.Request) {
+	userID, ok := requireUserID(w, r)
+	if !ok {
+		return
+	}
+	views, err := h.svc.ListTasks(r.Context(), userID, chi.URLParam(r, "id"))
+	if err != nil {
+		MapDomainError(w, err)
+		return
+	}
+	JSON(w, http.StatusOK, dto.MaintenanceTaskListFromDomain(views))
+}
+
+// CreateTask handles POST /boats/{boatId}/maintenance/tasks.
+func (h *MaintenanceHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
+	userID, ok := requireUserID(w, r)
+	if !ok {
+		return
+	}
+	req, ok := decodeAndValidate[dto.CreateMaintenanceTaskRequest](w, r)
+	if !ok {
+		return
+	}
+	task := &domain.MaintenanceTask{
+		BoatID:         chi.URLParam(r, "id"),
+		UserID:         userID,
+		Name:           req.Name,
+		IntervalMonths: req.IntervalMonths,
+		IntervalHours:  req.IntervalHours,
+	}
+	created, err := h.svc.AddTask(r.Context(), task)
+	if err != nil {
+		MapDomainError(w, err)
+		return
+	}
+	status := domain.MaintenancePending // new task with an interval, never logged
+	if created.IntervalMonths == nil && created.IntervalHours == nil {
+		status = domain.MaintenanceNoPlan
+	}
+	JSON(w, http.StatusCreated, dto.MaintenanceTaskResponseFromDomain(
+		&domain.MaintenanceTaskView{Task: *created, Status: status}))
+}
+
+// UpdateTask handles PUT /boats/{boatId}/maintenance/tasks/{taskId}.
+func (h *MaintenanceHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
+	userID, ok := requireUserID(w, r)
+	if !ok {
+		return
+	}
+	req, ok := decodeAndValidate[dto.CreateMaintenanceTaskRequest](w, r)
+	if !ok {
+		return
+	}
+	task := &domain.MaintenanceTask{
+		ID:             chi.URLParam(r, "taskId"),
+		BoatID:         chi.URLParam(r, "id"),
+		UserID:         userID,
+		Name:           req.Name,
+		IntervalMonths: req.IntervalMonths,
+		IntervalHours:  req.IntervalHours,
+	}
+	updated, err := h.svc.UpdateTask(r.Context(), userID, task)
+	if err != nil {
+		MapDomainError(w, err)
+		return
+	}
+	// The client refetches the list (with full derived state) after mutating; a
+	// coarse status here just avoids an empty field.
+	status := domain.MaintenancePending
+	if updated.IntervalMonths == nil && updated.IntervalHours == nil {
+		status = domain.MaintenanceNoPlan
+	}
+	JSON(w, http.StatusOK, dto.MaintenanceTaskResponseFromDomain(
+		&domain.MaintenanceTaskView{Task: *updated, Status: status}))
+}
+
+// DeleteTask handles DELETE /boats/{boatId}/maintenance/tasks/{taskId}.
+func (h *MaintenanceHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
+	userID, ok := requireUserID(w, r)
+	if !ok {
+		return
+	}
+	if err := h.svc.DeleteTask(r.Context(), userID,
+		chi.URLParam(r, "id"), chi.URLParam(r, "taskId")); err != nil {
 		MapDomainError(w, err)
 		return
 	}
