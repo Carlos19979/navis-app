@@ -79,7 +79,7 @@
   "@readinessExpiresInDays": {
     "placeholders": { "days": { "type": "int" } }
   },
-  "readinessServiceOverdue": "revisión pendiente",
+  "readinessServiceOverdue": "sin revisión reciente",
   "readinessRefItb": "Inspección técnica (ITB)",
   "readinessRefInsurance": "Seguro",
   "readinessRefLifeRaft": "Balsa salvavidas",
@@ -89,7 +89,7 @@
   "readinessRefMedicalCert": "Certificado médico",
   "readinessRefRadioCert": "Certificado de radio",
   "readinessRefNavLicense": "Licencia de navegación",
-  "readinessRefEngineService": "Revisión de motor",
+  "readinessRefEngineService": "Mantenimiento",
   "readinessRefDocument": "Documento",
   "costTitle": "Inteligencia de costes",
   "costTotalSpend": "Gasto total",

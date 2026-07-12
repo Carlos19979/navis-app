@@ -28,13 +28,15 @@ type ReadinessCategory struct {
 	OK       int
 }
 
-// ReadinessItem is a single thing needing attention. The client localizes it
-// from Ref (a document type or "engine_service") + Days.
+// ReadinessItem is a single thing needing attention. The client shows Label
+// when present (e.g. a document's custom name), otherwise localizes from Ref
+// (a document type or "engine_service"). Days = days until due (negative = overdue).
 type ReadinessItem struct {
 	Category string
 	Ref      string
+	Label    string
 	Status   ReadinessStatus
-	Days     int // days until due; negative = overdue
+	Days     int
 }
 
 // Readiness is a boat's overall "ready to sail" summary.

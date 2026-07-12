@@ -81,12 +81,18 @@ func (s *ReadinessService) Get(ctx context.Context, userID, boatID string) (*dom
 			catKey = domain.ReadinessCatSafetyGear
 		}
 		cat.Total++
+		// Prefer the document's own name over the bare type in the UI.
+		label := ""
+		if doc.CustomName != nil {
+			label = *doc.CustomName
+		}
 		switch st {
 		case domain.ReadinessNotReady:
 			cat.Expired++
 			score -= 25
 			attention = append(attention, domain.ReadinessItem{
-				Category: catKey, Ref: string(doc.Type), Status: domain.ReadinessNotReady, Days: days,
+				Category: catKey, Ref: string(doc.Type), Label: label,
+				Status: domain.ReadinessNotReady, Days: days,
 			})
 		case domain.ReadinessAttention:
 			// Attention bucket splits into critical (<=30d) vs warning (<=90d).
@@ -94,7 +100,8 @@ func (s *ReadinessService) Get(ctx context.Context, userID, boatID string) (*dom
 				cat.Critical++
 				score -= 12
 				attention = append(attention, domain.ReadinessItem{
-					Category: catKey, Ref: string(doc.Type), Status: domain.ReadinessAttention, Days: days,
+					Category: catKey, Ref: string(doc.Type), Label: label,
+					Status: domain.ReadinessAttention, Days: days,
 				})
 			} else {
 				cat.Warning++

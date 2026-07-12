@@ -159,7 +159,7 @@ class _AttentionRow extends StatelessWidget {
           const SizedBox(width: Dimens.spaceMd),
           Expanded(
             child: Text(
-              _refLabel(l, item.ref),
+              item.label.isNotEmpty ? item.label : _refLabel(l, item.ref),
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
