@@ -662,6 +662,36 @@ abstract class AppLocalizations {
   /// **'Crew'**
   String get bookingCrew;
 
+  /// No description provided for @bookingStartTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Start time'**
+  String get bookingStartTime;
+
+  /// No description provided for @bookingEndTime.
+  ///
+  /// In en, this message translates to:
+  /// **'End time'**
+  String get bookingEndTime;
+
+  /// No description provided for @bookingOverlapTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Overlaps another booking'**
+  String get bookingOverlapTitle;
+
+  /// No description provided for @bookingOverlapMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This time overlaps an existing booking for this boat. Book anyway?'**
+  String get bookingOverlapMessage;
+
+  /// No description provided for @bookingBookAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Book anyway'**
+  String get bookingBookAnyway;
+
   /// No description provided for @splitTitle.
   ///
   /// In en, this message translates to:

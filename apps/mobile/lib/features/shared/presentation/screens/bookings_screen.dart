@@ -91,6 +91,44 @@ class BookingsScreen extends ConsumerWidget {
     );
     if (day == null || !context.mounted) return;
 
+    // Time slot: start and end time.
+    final startT = await showTimePicker(
+      context: context,
+      initialTime: const TimeOfDay(hour: 8, minute: 0),
+      helpText: l.bookingStartTime,
+    );
+    if (startT == null || !context.mounted) return;
+    final endT = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: (startT.hour + 4).clamp(0, 23), minute: 0),
+      helpText: l.bookingEndTime,
+    );
+    if (endT == null || !context.mounted) return;
+
+    final start =
+        DateTime(day.year, day.month, day.day, startT.hour, startT.minute);
+    var end = DateTime(day.year, day.month, day.day, endT.hour, endT.minute);
+    if (!end.isAfter(start)) {
+      // End not after start → treat as next-day end so the range is valid.
+      end = end.add(const Duration(days: 1));
+    }
+
+    // Overlap warning against existing bookings (non-blocking).
+    final existing = ref.read(boatBookingsProvider(boatId)).valueOrNull ?? [];
+    final clash = existing.any((b) =>
+        b.status != 'cancelled' &&
+        start.isBefore(b.endsAt) &&
+        end.isAfter(b.startsAt));
+    if (clash) {
+      final proceed = await NavisConfirmDialog.show(
+        context,
+        title: l.bookingOverlapTitle,
+        message: l.bookingOverlapMessage,
+        confirmLabel: l.bookingBookAnyway,
+      );
+      if (!proceed || !context.mounted) return;
+    }
+
     final purpose = await NavisInputDialog.show(
       context,
       title: l.bookingAdd,
@@ -100,9 +138,6 @@ class BookingsScreen extends ConsumerWidget {
     if (purpose == null || !context.mounted) return;
 
     try {
-      // A day booking: whole day from the picked date.
-      final start = DateTime(day.year, day.month, day.day, 8);
-      final end = DateTime(day.year, day.month, day.day, 20);
       await ref.read(sharedRepositoryProvider).createBooking(
             boatId,
             startsAt: start,
@@ -148,7 +183,9 @@ class _BookingCard extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  NavisDateUtils.formatDate(booking.startsAt),
+                  '${NavisDateUtils.formatDate(booking.startsAt)}  '
+                  '${NavisDateUtils.formatTime(booking.startsAt)}–'
+                  '${NavisDateUtils.formatTime(booking.endsAt)}',
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     color: context.txtPrimary,
