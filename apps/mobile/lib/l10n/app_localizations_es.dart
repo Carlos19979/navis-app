@@ -220,6 +220,31 @@ class AppLocalizationsEs extends AppLocalizations {
   String get readinessRefDocument => 'Documento';
 
   @override
+  String get costTitle => 'Inteligencia de costes';
+
+  @override
+  String get costTotalSpend => 'Gasto total';
+
+  @override
+  String get costPerNmLabel => 'Coste / MN';
+
+  @override
+  String get costPerTripLabel => 'Coste / viaje';
+
+  @override
+  String get costFuelEfficiency => 'Combustible / MN';
+
+  @override
+  String get costByCategory => 'Por categoría';
+
+  @override
+  String get costMonthlySpend => 'Gasto mensual';
+
+  @override
+  String get paywallReasonCostAnalytics =>
+      'Desbloquea la inteligencia de costes con Navis Pro';
+
+  @override
   String get nauticalMiles => 'MN';
 
   @override

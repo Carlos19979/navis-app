@@ -1,11 +1,15 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:navis_mobile/core/network/storage_service.dart';
+import 'package:navis_mobile/features/billing/billing.dart';
+import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
 import 'package:navis_mobile/core/network/supabase_client.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
@@ -58,6 +62,22 @@ class MaintenanceScreen extends ConsumerWidget {
         appBar: NavisAppBar(
           title: l.maintenanceAndExpenses,
           showBack: true,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.insights_rounded),
+              tooltip: l.costTitle,
+              onPressed: () async {
+                if (!ref.read(isProProvider)) {
+                  final ok = await showPaywall(context, ref,
+                      reason: l.paywallReasonCostAnalytics);
+                  if (!ok || !context.mounted) return;
+                }
+                if (context.mounted) {
+                  unawaited(context.push('/boats/$boatId/costs'));
+                }
+              },
+            ),
+          ],
           bottom: TabBar(
             tabs: [
               Tab(text: l.maintenanceTab),

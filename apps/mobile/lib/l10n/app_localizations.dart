@@ -488,6 +488,54 @@ abstract class AppLocalizations {
   /// **'Document'**
   String get readinessRefDocument;
 
+  /// No description provided for @costTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost intelligence'**
+  String get costTitle;
+
+  /// No description provided for @costTotalSpend.
+  ///
+  /// In en, this message translates to:
+  /// **'Total spend'**
+  String get costTotalSpend;
+
+  /// No description provided for @costPerNmLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost / NM'**
+  String get costPerNmLabel;
+
+  /// No description provided for @costPerTripLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost / trip'**
+  String get costPerTripLabel;
+
+  /// No description provided for @costFuelEfficiency.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel / NM'**
+  String get costFuelEfficiency;
+
+  /// No description provided for @costByCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'By category'**
+  String get costByCategory;
+
+  /// No description provided for @costMonthlySpend.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly spend'**
+  String get costMonthlySpend;
+
+  /// No description provided for @paywallReasonCostAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock cost intelligence with Navis Pro'**
+  String get paywallReasonCostAnalytics;
+
   /// No description provided for @nauticalMiles.
   ///
   /// In en, this message translates to:
