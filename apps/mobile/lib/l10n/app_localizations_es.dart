@@ -304,6 +304,24 @@ class AppLocalizationsEs extends AppLocalizations {
   String get bookingDeleteConfirm => 'Se eliminará esta reserva.';
 
   @override
+  String get bookingYou => 'Tú';
+
+  @override
+  String get bookingCrew => 'Tripulación';
+
+  @override
+  String get splitTitle => 'Repartir gasto';
+
+  @override
+  String get splitEqually => 'A partes iguales';
+
+  @override
+  String get splitAssigned => 'Asignado';
+
+  @override
+  String get splitSettled => 'Saldado';
+
+  @override
   String get paywallReasonShared =>
       'Coordina un barco compartido con Navis Pro';
 

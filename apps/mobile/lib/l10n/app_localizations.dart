@@ -650,6 +650,42 @@ abstract class AppLocalizations {
   /// **'This booking will be removed.'**
   String get bookingDeleteConfirm;
 
+  /// No description provided for @bookingYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get bookingYou;
+
+  /// No description provided for @bookingCrew.
+  ///
+  /// In en, this message translates to:
+  /// **'Crew'**
+  String get bookingCrew;
+
+  /// No description provided for @splitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Split expense'**
+  String get splitTitle;
+
+  /// No description provided for @splitEqually.
+  ///
+  /// In en, this message translates to:
+  /// **'Split equally'**
+  String get splitEqually;
+
+  /// No description provided for @splitAssigned.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned'**
+  String get splitAssigned;
+
+  /// No description provided for @splitSettled.
+  ///
+  /// In en, this message translates to:
+  /// **'Settled'**
+  String get splitSettled;
+
   /// No description provided for @paywallReasonShared.
   ///
   /// In en, this message translates to:

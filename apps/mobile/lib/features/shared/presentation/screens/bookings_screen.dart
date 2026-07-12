@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:navis_mobile/core/network/supabase_client.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
+import 'package:navis_mobile/features/boat/data/boat_share_repository.dart';
 import 'package:navis_mobile/features/shared/data/shared_repository.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
@@ -51,12 +53,27 @@ class BookingsScreen extends ConsumerWidget {
               onAction: () => _addBooking(context, ref),
             );
           }
+          // Resolve who booked: current user -> "You", else member name.
+          final members = ref.watch(boatMembersProvider(boatId)).valueOrNull ??
+              const <BoatMember>[];
+          final myId = supabaseClient.auth.currentUser?.id;
+          String bookerName(String userId) {
+            if (userId == myId) return l.bookingYou;
+            for (final m in members) {
+              if (m.userId == userId && m.name.isNotEmpty) return m.name;
+            }
+            return l.bookingCrew;
+          }
+
           return ListView.separated(
             padding: const EdgeInsets.all(Dimens.spaceLg),
             itemCount: bookings.length,
             separatorBuilder: (_, __) => const SizedBox(height: Dimens.spaceSm),
-            itemBuilder: (context, i) =>
-                _BookingCard(boatId: boatId, booking: bookings[i]),
+            itemBuilder: (context, i) => _BookingCard(
+              boatId: boatId,
+              booking: bookings[i],
+              bookerName: bookerName(bookings[i].userId),
+            ),
           );
         },
       ),
@@ -100,10 +117,15 @@ class BookingsScreen extends ConsumerWidget {
 }
 
 class _BookingCard extends ConsumerWidget {
-  const _BookingCard({required this.boatId, required this.booking});
+  const _BookingCard({
+    required this.boatId,
+    required this.booking,
+    required this.bookerName,
+  });
 
   final String boatId;
   final Booking booking;
+  final String bookerName;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -132,11 +154,12 @@ class _BookingCard extends ConsumerWidget {
                     color: context.txtPrimary,
                   ),
                 ),
-                if (booking.purpose != null && booking.purpose!.isNotEmpty)
-                  Text(
-                    booking.purpose!,
-                    style: TextStyle(fontSize: 13, color: context.txtSecondary),
-                  ),
+                Text(
+                  booking.purpose != null && booking.purpose!.isNotEmpty
+                      ? '$bookerName · ${booking.purpose!}'
+                      : bookerName,
+                  style: TextStyle(fontSize: 13, color: context.txtSecondary),
+                ),
               ],
             ),
           ),
