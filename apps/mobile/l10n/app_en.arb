@@ -52,6 +52,45 @@
       }
     }
   },
+  "readinessTitle": "Readiness",
+  "readinessReady": "Ready to sail",
+  "readinessAttention": "Needs attention",
+  "readinessNotReady": "Not ready",
+  "readinessAllGood": "Everything is in order",
+  "readinessItemsNeedAttention": "{count} items need attention",
+  "@readinessItemsNeedAttention": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "readinessScoreOf": "Score {score} / 100",
+  "@readinessScoreOf": {
+    "placeholders": { "score": { "type": "int" } }
+  },
+  "readinessNeedsAttention": "Needs attention",
+  "readinessCatDocuments": "Documents",
+  "readinessCatSafetyGear": "Safety gear",
+  "readinessCatMaintenance": "Maintenance",
+  "readinessOkOfTotal": "{ok}/{total} OK",
+  "@readinessOkOfTotal": {
+    "placeholders": { "ok": { "type": "int" }, "total": { "type": "int" } }
+  },
+  "readinessUpgradeForFull": "Unlock the full readiness check (safety gear + maintenance) with Pro",
+  "readinessExpired": "expired",
+  "readinessExpiresInDays": "in {days} days",
+  "@readinessExpiresInDays": {
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "readinessServiceOverdue": "service due",
+  "readinessRefItb": "Technical inspection (ITB)",
+  "readinessRefInsurance": "Insurance",
+  "readinessRefLifeRaft": "Life raft",
+  "readinessRefExtinguisher": "Fire extinguisher",
+  "readinessRefFlares": "Flares",
+  "readinessRefFirstAid": "First-aid kit",
+  "readinessRefMedicalCert": "Medical certificate",
+  "readinessRefRadioCert": "Radio certificate",
+  "readinessRefNavLicense": "Navigation license",
+  "readinessRefEngineService": "Engine service",
+  "readinessRefDocument": "Document",
   "nauticalMiles": "NM",
   "knots": "kt",
   "kilometers": "km",

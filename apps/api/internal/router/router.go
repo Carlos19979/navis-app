@@ -26,6 +26,7 @@ func New(
 	userH *handler.UserHandler,
 	profileH *handler.ProfileHandler,
 	maintenanceH *handler.MaintenanceHandler,
+	readinessH *handler.ReadinessHandler,
 	webhookH *handler.WebhookHandler,
 	legalH *handler.LegalHandler,
 	jwtSecret string,
@@ -127,6 +128,8 @@ func New(
 					r.Post("/", tripH.Create)
 					r.Get("/", tripH.List)
 				})
+
+				r.Get("/readiness", readinessH.Get)
 
 				r.Route("/maintenance", func(r chi.Router) {
 					r.Get("/", maintenanceH.ListLogs)

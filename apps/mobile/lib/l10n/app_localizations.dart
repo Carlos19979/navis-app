@@ -326,6 +326,168 @@ abstract class AppLocalizations {
   /// **'{count} days overdue'**
   String daysOverdue(int count);
 
+  /// No description provided for @readinessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Readiness'**
+  String get readinessTitle;
+
+  /// No description provided for @readinessReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to sail'**
+  String get readinessReady;
+
+  /// No description provided for @readinessAttention.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs attention'**
+  String get readinessAttention;
+
+  /// No description provided for @readinessNotReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Not ready'**
+  String get readinessNotReady;
+
+  /// No description provided for @readinessAllGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything is in order'**
+  String get readinessAllGood;
+
+  /// No description provided for @readinessItemsNeedAttention.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} items need attention'**
+  String readinessItemsNeedAttention(int count);
+
+  /// No description provided for @readinessScoreOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Score {score} / 100'**
+  String readinessScoreOf(int score);
+
+  /// No description provided for @readinessNeedsAttention.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs attention'**
+  String get readinessNeedsAttention;
+
+  /// No description provided for @readinessCatDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents'**
+  String get readinessCatDocuments;
+
+  /// No description provided for @readinessCatSafetyGear.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety gear'**
+  String get readinessCatSafetyGear;
+
+  /// No description provided for @readinessCatMaintenance.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance'**
+  String get readinessCatMaintenance;
+
+  /// No description provided for @readinessOkOfTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'{ok}/{total} OK'**
+  String readinessOkOfTotal(int ok, int total);
+
+  /// No description provided for @readinessUpgradeForFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock the full readiness check (safety gear + maintenance) with Pro'**
+  String get readinessUpgradeForFull;
+
+  /// No description provided for @readinessExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'expired'**
+  String get readinessExpired;
+
+  /// No description provided for @readinessExpiresInDays.
+  ///
+  /// In en, this message translates to:
+  /// **'in {days} days'**
+  String readinessExpiresInDays(int days);
+
+  /// No description provided for @readinessServiceOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'service due'**
+  String get readinessServiceOverdue;
+
+  /// No description provided for @readinessRefItb.
+  ///
+  /// In en, this message translates to:
+  /// **'Technical inspection (ITB)'**
+  String get readinessRefItb;
+
+  /// No description provided for @readinessRefInsurance.
+  ///
+  /// In en, this message translates to:
+  /// **'Insurance'**
+  String get readinessRefInsurance;
+
+  /// No description provided for @readinessRefLifeRaft.
+  ///
+  /// In en, this message translates to:
+  /// **'Life raft'**
+  String get readinessRefLifeRaft;
+
+  /// No description provided for @readinessRefExtinguisher.
+  ///
+  /// In en, this message translates to:
+  /// **'Fire extinguisher'**
+  String get readinessRefExtinguisher;
+
+  /// No description provided for @readinessRefFlares.
+  ///
+  /// In en, this message translates to:
+  /// **'Flares'**
+  String get readinessRefFlares;
+
+  /// No description provided for @readinessRefFirstAid.
+  ///
+  /// In en, this message translates to:
+  /// **'First-aid kit'**
+  String get readinessRefFirstAid;
+
+  /// No description provided for @readinessRefMedicalCert.
+  ///
+  /// In en, this message translates to:
+  /// **'Medical certificate'**
+  String get readinessRefMedicalCert;
+
+  /// No description provided for @readinessRefRadioCert.
+  ///
+  /// In en, this message translates to:
+  /// **'Radio certificate'**
+  String get readinessRefRadioCert;
+
+  /// No description provided for @readinessRefNavLicense.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigation license'**
+  String get readinessRefNavLicense;
+
+  /// No description provided for @readinessRefEngineService.
+  ///
+  /// In en, this message translates to:
+  /// **'Engine service'**
+  String get readinessRefEngineService;
+
+  /// No description provided for @readinessRefDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Document'**
+  String get readinessRefDocument;
+
   /// No description provided for @nauticalMiles.
   ///
   /// In en, this message translates to:

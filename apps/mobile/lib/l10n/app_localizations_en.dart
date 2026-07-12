@@ -128,6 +128,96 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get readinessTitle => 'Readiness';
+
+  @override
+  String get readinessReady => 'Ready to sail';
+
+  @override
+  String get readinessAttention => 'Needs attention';
+
+  @override
+  String get readinessNotReady => 'Not ready';
+
+  @override
+  String get readinessAllGood => 'Everything is in order';
+
+  @override
+  String readinessItemsNeedAttention(int count) {
+    return '$count items need attention';
+  }
+
+  @override
+  String readinessScoreOf(int score) {
+    return 'Score $score / 100';
+  }
+
+  @override
+  String get readinessNeedsAttention => 'Needs attention';
+
+  @override
+  String get readinessCatDocuments => 'Documents';
+
+  @override
+  String get readinessCatSafetyGear => 'Safety gear';
+
+  @override
+  String get readinessCatMaintenance => 'Maintenance';
+
+  @override
+  String readinessOkOfTotal(int ok, int total) {
+    return '$ok/$total OK';
+  }
+
+  @override
+  String get readinessUpgradeForFull =>
+      'Unlock the full readiness check (safety gear + maintenance) with Pro';
+
+  @override
+  String get readinessExpired => 'expired';
+
+  @override
+  String readinessExpiresInDays(int days) {
+    return 'in $days days';
+  }
+
+  @override
+  String get readinessServiceOverdue => 'service due';
+
+  @override
+  String get readinessRefItb => 'Technical inspection (ITB)';
+
+  @override
+  String get readinessRefInsurance => 'Insurance';
+
+  @override
+  String get readinessRefLifeRaft => 'Life raft';
+
+  @override
+  String get readinessRefExtinguisher => 'Fire extinguisher';
+
+  @override
+  String get readinessRefFlares => 'Flares';
+
+  @override
+  String get readinessRefFirstAid => 'First-aid kit';
+
+  @override
+  String get readinessRefMedicalCert => 'Medical certificate';
+
+  @override
+  String get readinessRefRadioCert => 'Radio certificate';
+
+  @override
+  String get readinessRefNavLicense => 'Navigation license';
+
+  @override
+  String get readinessRefEngineService => 'Engine service';
+
+  @override
+  String get readinessRefDocument => 'Document';
+
+  @override
   String get nauticalMiles => 'NM';
 
   @override
