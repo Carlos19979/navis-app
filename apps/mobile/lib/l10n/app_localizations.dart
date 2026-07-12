@@ -656,6 +656,18 @@ abstract class AppLocalizations {
   /// **'Coordinate a shared boat with Navis Pro'**
   String get paywallReasonShared;
 
+  /// No description provided for @anomaliesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Anomalies'**
+  String get anomaliesTitle;
+
+  /// No description provided for @anomalyFuelHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Used {pct}% more fuel per mile than usual'**
+  String anomalyFuelHigh(int pct);
+
   /// No description provided for @nauticalMiles.
   ///
   /// In en, this message translates to:
