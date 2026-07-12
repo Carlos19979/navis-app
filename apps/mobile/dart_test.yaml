@@ -1,0 +1,9 @@
+# Golden (screenshot) tests are a local visual-review tool: they render each
+# screen to a PNG that we inspect by eye. They are excluded from CI (pixel
+# output differs across machines/OSes and would be flaky) via
+# `--exclude-tags golden` in the workflow.
+#   Generate/update:  flutter test --tags golden --update-goldens
+#   View/run:         flutter test --tags golden
+#   Everything else:  flutter test --exclude-tags golden
+tags:
+  golden:

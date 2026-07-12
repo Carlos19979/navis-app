@@ -83,7 +83,9 @@ jobs:
         run: flutter analyze --fatal-infos
 
       - name: Run tests
-        run: flutter test --coverage
+        # Golden (screenshot) tests are a local visual-review tool; excluded
+        # from CI because pixel output is machine/OS-dependent and flaky.
+        run: flutter test --coverage --exclude-tags golden
 
       - name: Upload coverage
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
