@@ -1259,6 +1259,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tapPortForDetails => 'Tap a port marker for details';
 
   @override
+  String get docTypeItb => 'Technical Inspection (ITB)';
+
+  @override
+  String get docTypeInsuranceRc => 'Third-Party Insurance';
+
+  @override
+  String get docTypeInsuranceFull => 'Full Insurance';
+
+  @override
+  String get docTypeNavigationLicense => 'Navigation License';
+
+  @override
   String get docTypeRegistration => 'Registration';
 
   @override
