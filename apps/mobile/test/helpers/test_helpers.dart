@@ -254,11 +254,13 @@ WeatherOverview makeOverview({
   Weather? current,
   List<HourlyWeather>? hourly,
   List<DailyWeather>? daily,
+  List<TideExtreme> tideExtremes = const [],
 }) {
   return WeatherOverview(
     current: current ?? makeWeather(),
     hourly: hourly ?? [makeHourly(DateTime(2026, 5, 1, 12))],
     daily: daily ?? [makeDaily(DateTime(2026, 5))],
+    tideExtremes: tideExtremes,
   );
 }
 
