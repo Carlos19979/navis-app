@@ -14,6 +14,7 @@ import 'package:navis_mobile/features/weather/presentation/widgets/day_detail_sh
 import 'package:navis_mobile/features/weather/presentation/widgets/hourly_forecast_strip.dart';
 import 'package:navis_mobile/features/weather/presentation/widgets/wind_indicator.dart';
 
+import '../../helpers/geo.dart';
 import '../../helpers/test_helpers.dart';
 
 void main() {
@@ -318,6 +319,113 @@ void main() {
         ]);
 
         expect(find.text('-3°'), findsOneWidget);
+      });
+    });
+
+    group('navigation window badge', () {
+      testWidgets('wind <= 12 kn and waves <= 0.5 m show good conditions',
+          (tester) async {
+        await pumpScreen(tester, overrides: [
+          weatherOverviewProvider.overrideWith(
+            // makeWeather()'s default windSpeed is already the 12 kn boundary.
+            (ref) async => makeOverview(
+              current: makeWeather(waveHeight: 0.5),
+            ),
+          ),
+        ]);
+
+        expect(find.text('Good conditions to sail'), findsOneWidget);
+      });
+
+      testWidgets('wind <= 20 kn and waves <= 1.2 m show moderate conditions',
+          (tester) async {
+        await pumpScreen(tester, overrides: [
+          weatherOverviewProvider.overrideWith(
+            (ref) async => makeOverview(
+              current: makeWeather(windSpeed: 20, waveHeight: 1.2),
+            ),
+          ),
+        ]);
+
+        expect(find.text('Moderate conditions'), findsOneWidget);
+      });
+
+      testWidgets('stronger wind or higher waves show adverse conditions',
+          (tester) async {
+        await pumpScreen(tester, overrides: [
+          weatherOverviewProvider.overrideWith(
+            (ref) async => makeOverview(
+              current: makeWeather(windSpeed: 21, waveHeight: 1.5),
+            ),
+          ),
+        ]);
+
+        expect(find.text('Adverse conditions'), findsOneWidget);
+      });
+    });
+
+    group('tides card', () {
+      testWidgets('shows high and low tide rows when extremes exist',
+          (tester) async {
+        await pumpScreen(tester, overrides: [
+          weatherOverviewProvider.overrideWith(
+            (ref) async => makeOverview(tideExtremes: [
+              TideExtreme(
+                time: DateTime(2026, 5, 1, 4, 30),
+                height: 0.9,
+                isHigh: true,
+              ),
+              TideExtreme(
+                time: DateTime(2026, 5, 1, 10, 45),
+                height: -0.2,
+                isHigh: false,
+              ),
+            ]),
+          ),
+        ]);
+
+        expect(find.text('Tides'), findsOneWidget);
+        expect(find.text('High tide'), findsOneWidget);
+        expect(find.text('Low tide'), findsOneWidget);
+        expect(find.text('04:30'), findsOneWidget);
+        expect(find.text('10:45'), findsOneWidget);
+      });
+
+      testWidgets('is absent when there are no tide extremes', (tester) async {
+        await pumpScreen(tester, overrides: [
+          weatherOverviewProvider.overrideWith((ref) async => makeOverview()),
+        ]);
+
+        expect(find.text('Tides'), findsNothing);
+      });
+    });
+
+    group('daily forecast fallback', () {
+      testWidgets('shows the not-available message when daily is empty',
+          (tester) async {
+        await pumpScreen(tester, overrides: [
+          weatherOverviewProvider.overrideWith(
+            (ref) async => makeOverview(daily: const []),
+          ),
+        ]);
+
+        expect(find.text('Forecast data not available.'), findsOneWidget);
+        expect(find.byType(DailyForecastList), findsNothing);
+      });
+    });
+
+    group('location denied CTA', () {
+      testWidgets('Open settings opens the platform location settings',
+          (tester) async {
+        final fakeGeo = installFakeGeo();
+        await pumpScreen(tester, overrides: [
+          weatherOverviewProvider.overrideWith((ref) async => null),
+        ]);
+
+        await tester.tap(find.text('Open settings'));
+        await tester.pump();
+
+        expect(fakeGeo.openSettingsCalled, isTrue);
       });
     });
   });

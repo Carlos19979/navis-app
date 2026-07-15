@@ -4,6 +4,7 @@ library;
 export 'async_states.dart';
 export 'billing.dart';
 export 'geo.dart';
+export 'map_noise.dart';
 export 'plan.dart';
 export 'pumping.dart';
 export 'router.dart';
