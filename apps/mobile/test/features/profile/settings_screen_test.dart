@@ -13,11 +13,16 @@ import 'package:navis_mobile/core/database/local_database.dart';
 import 'package:navis_mobile/features/auth/data/auth_repository.dart';
 import 'package:navis_mobile/features/auth/domain/auth_state.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
+import 'package:navis_mobile/features/profile/data/account_provider.dart';
 import 'package:navis_mobile/features/profile/presentation/screens/settings_screen.dart';
+
+import '../../helpers/plan.dart';
 
 // --- Mocks ---
 
 class MockAuthRepository extends Mock implements AuthRepository {}
+
+class MockAccountRepository extends Mock implements AccountRepository {}
 
 class MockAnalyticsService extends Mock implements AnalyticsService {}
 
@@ -39,6 +44,7 @@ void main() {
   late MockAuthRepository mockAuthRepository;
   late MockAnalyticsService mockAnalyticsService;
   late MockLocalDatabase mockLocalDatabase;
+  late MockAccountRepository mockAccountRepository;
 
   setUpAll(() {
     registerFallbackValue(FakeRoute());
@@ -49,6 +55,9 @@ void main() {
     mockAuthRepository = MockAuthRepository();
     mockAnalyticsService = MockAnalyticsService();
     mockLocalDatabase = MockLocalDatabase();
+    mockAccountRepository = MockAccountRepository();
+    when(() => mockAccountRepository.getMe())
+        .thenAnswer((_) async => makeAccount());
   });
 
   void setPhoneSize(WidgetTester tester) {
@@ -80,6 +89,9 @@ void main() {
             analyticsProvider.overrideWithValue(mockAnalyticsService),
             localDatabaseProvider.overrideWithValue(mockLocalDatabase),
             sharedPreferencesProvider.overrideWithValue(snapshot.data!),
+            accountRepositoryProvider.overrideWithValue(
+              mockAccountRepository,
+            ),
           ],
           child: MaterialApp.router(
             routerConfig: GoRouter(
@@ -413,6 +425,135 @@ void main() {
         await tester.pumpAndSettle();
 
         verify(() => mockAuthNotifier.logout()).called(1);
+      });
+    });
+
+    group('language picker', () {
+      testWidgets('opens a dialog with the three language options',
+          (tester) async {
+        setPhoneSize(tester);
+        await tester.pumpWidget(buildSettingsScreenWithPrefs());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Language'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Select Language'), findsOneWidget);
+        // Subtitle + dialog option both read "System default".
+        expect(find.text('System default'), findsNWidgets(2));
+        expect(find.text('English'), findsOneWidget);
+        expect(find.text('Español'), findsOneWidget);
+      });
+
+      testWidgets('selecting Español updates the locale and persists it',
+          (tester) async {
+        setPhoneSize(tester);
+        await tester.pumpWidget(buildSettingsScreenWithPrefs());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Language'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Español'));
+        await tester.pumpAndSettle();
+
+        // Dialog closed; the subtitle now shows the selected language.
+        expect(find.text('Select Language'), findsNothing);
+        expect(find.text('Español'), findsOneWidget);
+
+        final prefs = await SharedPreferences.getInstance();
+        expect(prefs.getString('settings_locale'), 'es');
+      });
+    });
+
+    group('notification toggles persistence', () {
+      testWidgets('turning off expiry alerts persists to SharedPreferences',
+          (tester) async {
+        setPhoneSize(tester);
+        await tester.pumpWidget(buildSettingsScreenWithPrefs());
+        await tester.pumpAndSettle();
+
+        final expirySwitch = find.ancestor(
+          of: find.text('Document Expiry Alerts'),
+          matching: find.byType(SwitchListTile),
+        );
+        await tester.tap(expirySwitch);
+        await tester.pumpAndSettle();
+
+        final prefs = await SharedPreferences.getInstance();
+        expect(prefs.getBool('settings_expiry_alerts'), isFalse);
+      });
+    });
+
+    group('delete account', () {
+      Future<void> openDeleteFlow(WidgetTester tester) async {
+        await tester.pumpWidget(buildSettingsScreenWithPrefs());
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Delete account'));
+        await tester.pumpAndSettle();
+      }
+
+      testWidgets('step 1 explains the deletion and cancel aborts',
+          (tester) async {
+        setPhoneSize(tester);
+        await openDeleteFlow(tester);
+
+        expect(
+          find.textContaining('permanently deletes your account'),
+          findsOneWidget,
+        );
+
+        await tester.tap(find.text('Cancel'));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.textContaining('permanently deletes your account'),
+          findsNothing,
+        );
+        verifyNever(() => mockAccountRepository.deleteAccount());
+      });
+
+      testWidgets('step 2 requires typing the confirm word, cancel aborts',
+          (tester) async {
+        setPhoneSize(tester);
+        await openDeleteFlow(tester);
+
+        await tester.tap(find.text('Delete'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Type DELETE to confirm'), findsOneWidget);
+
+        // Without the confirm word the delete button stays disabled.
+        final deleteButton = tester.widget<TextButton>(
+          find.widgetWithText(TextButton, 'Delete'),
+        );
+        expect(deleteButton.onPressed, isNull);
+
+        await tester.tap(find.text('Cancel'));
+        await tester.pumpAndSettle();
+
+        verifyNever(() => mockAccountRepository.deleteAccount());
+      });
+
+      testWidgets('a failed deletion shows an error snackbar', (tester) async {
+        when(() => mockAccountRepository.deleteAccount())
+            .thenThrow(Exception('boom'));
+
+        setPhoneSize(tester);
+        await openDeleteFlow(tester);
+
+        await tester.tap(find.text('Delete'));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(find.byType(TextField), 'DELETE');
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(TextButton, 'Delete'));
+        await tester.pumpAndSettle();
+
+        verify(() => mockAccountRepository.deleteAccount()).called(1);
+        expect(
+          find.text('Could not delete the account. Try again.'),
+          findsOneWidget,
+        );
       });
     });
 

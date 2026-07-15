@@ -12,6 +12,7 @@ import 'package:navis_mobile/features/events/presentation/screens/event_detail_s
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
 
+import '../../helpers/router.dart';
 import '../../helpers/test_helpers.dart';
 
 class MockEventRepository extends Mock implements EventRepository {}
@@ -404,6 +405,120 @@ void main() {
         find.byIcon(Icons.sailing_outlined),
         findsOneWidget,
       );
+    });
+  });
+
+  group('EventDetailScreen optional sections', () {
+    /// An event without description, boat classes or coordinates.
+    Event makeBareEvent() {
+      return Event(
+        id: eventId,
+        name: 'Copa del Rey',
+        organizer: 'RCNP',
+        eventType: 'regatta',
+        locationName: 'Palma de Mallorca',
+        startDate: DateTime(2026, 7, 31),
+      );
+    }
+
+    testWidgets('hides the description block when absent', (tester) async {
+      await tester.pumpWidget(
+        buildScreen(
+          extraOverrides: [
+            eventProvider.overrideWith((ref, id) async => makeBareEvent()),
+          ],
+        ),
+      );
+      await pumpFrames(tester);
+
+      expect(find.text('Major regatta event'), findsNothing);
+    });
+
+    testWidgets('hides the boat-classes row when empty', (tester) async {
+      await tester.pumpWidget(
+        buildScreen(
+          extraOverrides: [
+            eventProvider.overrideWith((ref, id) async => makeBareEvent()),
+          ],
+        ),
+      );
+      await pumpFrames(tester);
+
+      expect(find.byIcon(Icons.sailing_outlined), findsNothing);
+      expect(find.text('TP52, J80'), findsNothing);
+    });
+  });
+
+  group('EventDetailScreen live coverage and regatta actions', () {
+    testWidgets('shows Watch live when the event has a stream url',
+        (tester) async {
+      await tester.pumpWidget(
+        buildScreen(
+          extraOverrides: [
+            eventProvider.overrideWith(
+              (ref, id) async => makeEvent().copyWith(
+                streamUrl: 'https://youtube.com/live/regatta',
+              ),
+            ),
+          ],
+        ),
+      );
+      await pumpFrames(tester);
+
+      expect(find.text('Watch live'), findsOneWidget);
+    });
+
+    testWidgets('hides Watch live without stream or tracking urls',
+        (tester) async {
+      await tester.pumpWidget(
+        buildScreen(
+          extraOverrides: [
+            eventProvider.overrideWith((ref, id) async => makeEvent()),
+          ],
+        ),
+      );
+      await pumpFrames(tester);
+
+      expect(find.text('Watch live'), findsNothing);
+    });
+
+    testWidgets('Join as a group navigates to the start-regatta screen',
+        (tester) async {
+      final spy = RouteSpy();
+      await tester.pumpWidget(
+        buildRoutedTestApp(
+          const EventDetailScreen(eventId: eventId),
+          spy: spy,
+          overrides: [
+            eventRepositoryProvider.overrideWithValue(mockRepo),
+            eventProvider.overrideWith((ref, id) async => makeEvent()),
+          ],
+        ),
+      );
+      await pumpFrames(tester);
+
+      await tester.scrollUntilVisible(find.text('Join as a group'), 200);
+      await tester.pump();
+      await tester.tap(find.text('Join as a group'));
+      await pumpFrames(tester);
+
+      expect(spy.last, '/events/$eventId/start-regatta');
+    });
+
+    testWidgets('non-regatta events do not offer Join as a group',
+        (tester) async {
+      await tester.pumpWidget(
+        buildScreen(
+          extraOverrides: [
+            eventProvider.overrideWith(
+              (ref, id) async => makeEvent(eventType: 'meetup'),
+            ),
+          ],
+        ),
+      );
+      await pumpFrames(tester);
+
+      expect(find.text('Join as a group'), findsNothing);
     });
   });
 }

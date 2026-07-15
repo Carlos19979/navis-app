@@ -1,9 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+
+import 'package:navis_mobile/features/profile/data/account_provider.dart';
+
+import '../../helpers/plan.dart';
 
 import 'package:navis_mobile/core/analytics/analytics_service.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -81,9 +87,13 @@ void main() {
     );
   }
 
-  Widget buildProfileScreen({UserProfile? profile}) {
+  Widget buildProfileScreen({
+    UserProfile? profile,
+    List<Override> overrides = const [],
+  }) {
     return ProviderScope(
       overrides: [
+        ...overrides,
         profileProvider.overrideWithValue(profile ?? testProfile()),
         authProvider.overrideWith((_) => mockAuthNotifier),
         authRepositoryProvider.overrideWithValue(mockAuthRepository),
@@ -363,6 +373,46 @@ void main() {
 
         expect(find.text('Settings'), findsNothing);
         expect(find.text('Log Out'), findsNothing);
+      });
+    });
+
+    group('plan badge', () {
+      testWidgets('shows Plan Pro when the account is on the pro plan',
+          (tester) async {
+        await tester.pumpWidget(buildProfileScreen(
+          overrides: [
+            accountProvider.overrideWith(
+              (ref) async => makeAccount(plan: 'pro'),
+            ),
+          ],
+        ));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Plan Pro'), findsOneWidget);
+      });
+
+      testWidgets('shows Plan Free for the free plan', (tester) async {
+        await tester.pumpWidget(buildProfileScreen(
+          overrides: [
+            accountProvider.overrideWith((ref) async => makeAccount()),
+          ],
+        ));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Plan Free'), findsOneWidget);
+      });
+
+      testWidgets('hides the badge while the account is not loaded',
+          (tester) async {
+        final completer = Completer<Account>();
+        await tester.pumpWidget(buildProfileScreen(
+          overrides: [
+            accountProvider.overrideWith((ref) => completer.future),
+          ],
+        ));
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('Plan '), findsNothing);
       });
     });
 
