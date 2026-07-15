@@ -6,6 +6,9 @@ import 'journeys/j02_boats.dart';
 import 'journeys/j03_documents.dart';
 import 'journeys/j04_maintenance.dart';
 import 'journeys/j05_logbook.dart';
+import 'journeys/j06_charts_weather.dart';
+import 'journeys/j07_community.dart';
+import 'journeys/j08_profile_teardown.dart';
 
 /// Full E2E journey sweep against the real local stack. Journeys are
 /// order-dependent by design: J01 registers the per-run user, later journeys
@@ -19,4 +22,7 @@ void main() {
   j03Documents();
   j04Maintenance();
   j05Logbook();
+  j06ChartsWeather();
+  j07Community();
+  j08ProfileTeardown();
 }
