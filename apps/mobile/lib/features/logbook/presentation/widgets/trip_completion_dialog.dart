@@ -527,7 +527,11 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
   }
 
   Widget _buildSummaryPills() {
-    return Row(
+    // Wrap, not Row: three pills with long values (double-digit distance +
+    // speed) exceed the dialog's width on narrow screens and overflow.
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
       children: [
         if (widget.distanceNm != null)
           _SummaryPill(
@@ -662,35 +666,33 @@ class _SummaryPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 10,
-          vertical: 6,
+    // Spacing between pills comes from the parent Wrap.
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 6,
+      ),
+      decoration: BoxDecoration(
+        color: context.glassBg,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: context.glassBorderColor,
+          width: 0.5,
         ),
-        decoration: BoxDecoration(
-          color: context.glassBg,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: context.glassBorderColor,
-            width: 0.5,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: AppColors.cyan),
+          const SizedBox(width: 4),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: context.txtPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
           ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 14, color: AppColors.cyan),
-            const SizedBox(width: 4),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: context.txtPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }
