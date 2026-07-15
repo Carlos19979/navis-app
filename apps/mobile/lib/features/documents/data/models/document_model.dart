@@ -84,12 +84,12 @@ class DocumentModel {
       'id': id,
       'boat_id': boatId,
       'type': type,
-      'expiry_date': expiryDate.toIso8601String(),
+      'expiry_date': expiryDate.toUtc().toIso8601String(),
       if (photoUrl != null) 'photo_url': photoUrl,
       if (notes != null) 'notes': notes,
       if (alertDaysBefore != null) 'alert_days': [alertDaysBefore],
       if (lastRenewalDate != null)
-        'last_renewal_date': lastRenewalDate!.toIso8601String(),
+        'last_renewal_date': lastRenewalDate!.toUtc().toIso8601String(),
       if (lastRenewalCost != null) 'last_renewal_cost': lastRenewalCost,
       if (lastRenewalProvider != null)
         'last_renewal_provider': lastRenewalProvider,
