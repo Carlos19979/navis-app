@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
+import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/logbook/domain/entities/trip.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
 import 'package:navis_mobile/features/logbook/presentation/screens/logbook_screen.dart';
@@ -13,7 +15,7 @@ import 'package:navis_mobile/shared/widgets/navis_empty_state.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
 
-import '../../helpers/test_helpers.dart';
+import '../../helpers/helpers.dart';
 
 class FakeRoute extends Fake implements Route<dynamic> {}
 
@@ -276,6 +278,103 @@ void main() {
 
       // TripCard renders departure port text
       expect(find.text('Palma de Mallorca'), findsOneWidget);
+    });
+
+    testWidgets('FAB is hidden when the member cannot record trips',
+        (tester) async {
+      await tester.pumpWidget(
+        buildTestApp(
+          const LogbookScreen(boatId: boatId),
+          overrides: [
+            boatTripsProvider.overrideWith(
+              (ref, boatId) async => [makeTrip()],
+            ),
+            tripStatsProvider.overrideWith(
+              (ref, trips) => makeTripStats(),
+            ),
+            boatProvider.overrideWith(
+              (ref, id) async => makeBoat(id: id).copyWith(
+                isOwner: false,
+                permissions: const BoatPermissions(canRecordTrips: false),
+              ),
+            ),
+          ],
+        ),
+      );
+      await pumpFrames(tester);
+
+      expect(find.byType(FloatingActionButton), findsNothing);
+    });
+
+    testWidgets('TripCard tap navigates to the trip detail', (tester) async {
+      final spy = RouteSpy();
+      await tester.pumpWidget(
+        buildRoutedTestApp(
+          const LogbookScreen(boatId: boatId),
+          spy: spy,
+          overrides: [
+            boatTripsProvider.overrideWith(
+              (ref, boatId) async => [makeTrip()],
+            ),
+            tripStatsProvider.overrideWith(
+              (ref, trips) => makeTripStats(),
+            ),
+          ],
+        ),
+      );
+      await pumpFrames(tester);
+
+      await tester.tap(find.byType(TripCard));
+      await pumpFrames(tester);
+
+      expect(spy.last, '/trips/trip-1');
+    });
+
+    testWidgets('Statistics button navigates to the stats page',
+        (tester) async {
+      final spy = RouteSpy();
+      await tester.pumpWidget(
+        buildRoutedTestApp(
+          const LogbookScreen(boatId: boatId),
+          spy: spy,
+          overrides: [
+            boatTripsProvider.overrideWith(
+              (ref, boatId) async => [makeTrip()],
+            ),
+            tripStatsProvider.overrideWith(
+              (ref, trips) => makeTripStats(),
+            ),
+          ],
+        ),
+      );
+      await pumpFrames(tester);
+
+      await tester.tap(find.byTooltip('Statistics'));
+      await pumpFrames(tester);
+
+      expect(spy.last, '/boats/$boatId/stats');
+    });
+
+    testWidgets('empty state CTA navigates to the trip precheck',
+        (tester) async {
+      final spy = RouteSpy();
+      await tester.pumpWidget(
+        buildRoutedTestApp(
+          const LogbookScreen(boatId: boatId),
+          spy: spy,
+          overrides: [
+            boatTripsProvider.overrideWith(
+              (ref, boatId) async => <Trip>[],
+            ),
+          ],
+        ),
+      );
+      await pumpFrames(tester);
+
+      await tester.tap(find.text('Record Trip'));
+      await pumpFrames(tester);
+
+      expect(spy.last, '/boats/$boatId/precheck');
     });
 
     testWidgets('displays Logbook title in app bar', (tester) async {

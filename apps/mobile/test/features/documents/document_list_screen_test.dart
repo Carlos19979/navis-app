@@ -11,6 +11,7 @@ import 'package:navis_mobile/features/documents/domain/entities/document.dart';
 import 'package:navis_mobile/features/documents/domain/repositories/document_repository.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
+import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
 import 'package:navis_mobile/features/documents/presentation/screens/document_list_screen.dart';
@@ -363,6 +364,33 @@ void main() {
 
       // _formatType converts underscores to spaces and capitalizes
       expect(find.text('Safety Certificate'), findsOneWidget);
+    });
+
+    testWidgets('FAB is hidden when the member cannot manage documents',
+        (tester) async {
+      await setPhoneSize(tester);
+      await tester.pumpWidget(
+        buildTestApp(
+          const DocumentListScreen(boatId: boatId),
+          overrides: [
+            boatDocumentsProvider.overrideWith((ref, id) async => testDocs),
+            boatProvider.overrideWith(
+              (ref, id) async => Boat(
+                id: id,
+                name: 'Test Boat',
+                registration: 'TEST-1',
+                type: 'sailboat',
+                lengthMeters: 10,
+                isOwner: false,
+                permissions: const BoatPermissions(canManageDocuments: false),
+              ),
+            ),
+          ],
+        ),
+      );
+      await pumpScreen(tester);
+
+      expect(find.byType(FloatingActionButton), findsNothing);
     });
 
     testWidgets('shows multiple expired documents correctly', (tester) async {
