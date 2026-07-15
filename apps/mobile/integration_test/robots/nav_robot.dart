@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:navis_mobile/shared/widgets/navis_bottom_nav.dart';
+
 import '../helpers/pumping.dart';
 
 /// Bottom-tab + chrome navigation. Tab labels are the English l10n values
@@ -10,9 +12,15 @@ class NavRobot {
 
   final WidgetTester tester;
 
+  /// Scoped to the bottom nav: screen titles and section headers reuse the
+  /// same words ('Community', 'Profile'…), so a bare text tap is ambiguous.
   Future<void> goToTab(String label) async {
-    await pumpUntilFound(tester, find.text(label));
-    await tester.tap(find.text(label).last);
+    final tab = find.descendant(
+      of: find.byType(NavisBottomNav),
+      matching: find.text(label),
+    );
+    await pumpUntilFound(tester, tab);
+    await tester.tap(tab.first, warnIfMissed: false);
     await tester.pump(const Duration(milliseconds: 400));
   }
 
