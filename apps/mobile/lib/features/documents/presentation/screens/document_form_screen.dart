@@ -46,32 +46,44 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
   final _alertDaysController = TextEditingController(text: '30');
   final _renewalCostController = TextEditingController();
   final _renewalProviderController = TextEditingController();
-  String _selectedType = 'Registration';
+  String _selectedType = 'itb';
   DateTime _expiryDate = DateTime.now().add(const Duration(days: 365));
   bool _isLoading = false;
   bool _isEdit = false;
   String? _photoPath;
   String? _existingPhotoUrl;
 
+  // Canonical API document types (see internal/dto/document_dto.go oneof).
+  // The form used to offer display strings ('Registration', 'Insurance'…)
+  // that the API rejects with 400 — document creation was broken. 'custom'
+  // is not offered yet: it requires a custom_name field (future work).
   static final _documentTypes = [
-    'Registration',
-    'Insurance',
-    'Inspection',
-    'License',
-    'Safety Certificate',
-    'Radio License',
-    'Pollution Certificate',
-    'Medical Certificate',
-    'Life Raft',
-    'Fire Extinguisher',
-    'Flares',
-    'First Aid Kit',
-    'Fishing Permit',
-    'Other',
+    'itb',
+    'insurance_rc',
+    'insurance_full',
+    'life_raft',
+    'extinguisher',
+    'flares',
+    'first_aid',
+    'medical_cert',
+    'radio_cert',
+    'navigation_license',
   ];
 
   static String _localizedDocType(AppLocalizations l, String type) =>
       switch (type) {
+        'itb' => l.docTypeItb,
+        'insurance_rc' => l.docTypeInsuranceRc,
+        'insurance_full' => l.docTypeInsuranceFull,
+        'life_raft' => l.docTypeLifeRaft,
+        'extinguisher' => l.docTypeFireExtinguisher,
+        'flares' => l.docTypeFlares,
+        'first_aid' => l.docTypeFirstAidKit,
+        'medical_cert' => l.docTypeMedicalCertificate,
+        'radio_cert' => l.docTypeRadioLicense,
+        'navigation_license' => l.docTypeNavigationLicense,
+        // Legacy rows created before the canonical alignment keep rendering
+        // through the old display names.
         'Registration' => l.docTypeRegistration,
         'Insurance' => l.docTypeInsurance,
         'Inspection' => l.docTypeInspection,
@@ -86,6 +98,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
         'First Aid Kit' => l.docTypeFirstAidKit,
         'Fishing Permit' => l.docTypeFishingPermit,
         'Other' => l.other,
+        'custom' => l.other,
         _ => type,
       };
 

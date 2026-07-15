@@ -2468,6 +2468,30 @@ abstract class AppLocalizations {
   /// **'Tap a port marker for details'**
   String get tapPortForDetails;
 
+  /// No description provided for @docTypeItb.
+  ///
+  /// In en, this message translates to:
+  /// **'Technical Inspection (ITB)'**
+  String get docTypeItb;
+
+  /// No description provided for @docTypeInsuranceRc.
+  ///
+  /// In en, this message translates to:
+  /// **'Third-Party Insurance'**
+  String get docTypeInsuranceRc;
+
+  /// No description provided for @docTypeInsuranceFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Insurance'**
+  String get docTypeInsuranceFull;
+
+  /// No description provided for @docTypeNavigationLicense.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigation License'**
+  String get docTypeNavigationLicense;
+
   /// No description provided for @docTypeRegistration.
   ///
   /// In en, this message translates to:

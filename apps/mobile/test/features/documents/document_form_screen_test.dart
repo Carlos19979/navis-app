@@ -91,8 +91,8 @@ void main() {
         find.byType(DropdownButtonFormField<String>),
         findsOneWidget,
       );
-      // Default selected type is Registration
-      expect(find.text('Registration'), findsOneWidget);
+      // Default selected type is the first canonical type (itb).
+      expect(find.text('Technical Inspection (ITB)'), findsOneWidget);
     });
 
     testWidgets('dropdown shows all document types when opened',
@@ -104,11 +104,11 @@ void main() {
       await tester.tap(find.byType(DropdownButtonFormField<String>));
       await tester.pumpAndSettle();
 
-      // Verify key document types near the top are visible
-      expect(find.text('Insurance'), findsAtLeastNWidgets(1));
-      expect(find.text('Inspection'), findsAtLeastNWidgets(1));
-      expect(find.text('License'), findsAtLeastNWidgets(1));
-      expect(find.text('Safety Certificate'), findsAtLeastNWidgets(1));
+      // Verify key canonical document types near the top are visible
+      expect(find.text('Third-Party Insurance'), findsAtLeastNWidgets(1));
+      expect(find.text('Full Insurance'), findsAtLeastNWidgets(1));
+      expect(find.text('Life Raft'), findsAtLeastNWidgets(1));
+      expect(find.text('Navigation License'), findsAtLeastNWidgets(1));
     });
 
     testWidgets('can select a different document type from dropdown',
@@ -120,12 +120,12 @@ void main() {
       await tester.tap(find.byType(DropdownButtonFormField<String>));
       await tester.pumpAndSettle();
 
-      // Select Insurance
-      await tester.tap(find.text('Insurance').last);
+      // Select Third-Party Insurance (canonical insurance_rc)
+      await tester.tap(find.text('Third-Party Insurance').last);
       await tester.pumpAndSettle();
 
-      // Dropdown should now show Insurance as selected
-      expect(find.text('Insurance'), findsOneWidget);
+      // Dropdown should now show it as selected
+      expect(find.text('Third-Party Insurance'), findsOneWidget);
     });
 
     testWidgets('shows expiry date field', (tester) async {
