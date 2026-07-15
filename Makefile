@@ -105,6 +105,9 @@ mobile-build-ios: ## Build a production iOS release (requires release env vars)
 mobile-codegen: ## Run Flutter build_runner code generation
 	cd apps/mobile && dart run build_runner build --delete-conflicting-outputs
 
+mobile-e2e-smoke: ## E2E smoke on iOS simulator (needs 'make dev' stack up)
+	TARGET=smoke_test.dart ./scripts/e2e.sh
+
 lint: ## Run all linters (Go + Flutter)
 	cd apps/api && golangci-lint run --timeout=5m
 	cd apps/mobile && flutter analyze --fatal-infos
