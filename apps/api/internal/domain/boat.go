@@ -23,7 +23,7 @@ type Boat struct {
 	Registration string
 	Type         BoatType
 	LengthM      float64
-	HomePort     string
+	HomePort     *string
 	HomePortLat  *float64
 	HomePortLon  *float64
 	PhotoURL     *string

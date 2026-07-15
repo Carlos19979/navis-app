@@ -17,14 +17,26 @@ final notificationServiceProvider = Provider<NotificationService>((ref) {
 /// foreground/background handling, deep links), see
 /// `NotificationNotifier` in the notifications feature.
 class NotificationService {
-  final FirebaseMessaging _messaging = FirebaseMessaging.instance;
+  /// Lazily resolved: `FirebaseMessaging.instance` itself throws
+  /// [core/no-app] when Firebase.initializeApp() failed (no
+  /// GoogleService-Info.plist / google-services.json), so it must not run
+  /// in a field initializer — constructing this service would then break
+  /// the auth listeners that read it. Null means push is unavailable.
+  FirebaseMessaging? get _messaging {
+    try {
+      return FirebaseMessaging.instance;
+    } catch (e) {
+      debugPrint('notifications: Firebase unavailable: $e');
+      return null;
+    }
+  }
 
   /// Requests notification permission. Never throws: on a device without
   /// Firebase configured (or with Google services unavailable) notifications
   /// are simply skipped — they must not break login or startup.
   Future<void> requestPermission() async {
     try {
-      await _messaging.requestPermission();
+      await _messaging?.requestPermission();
     } catch (e) {
       debugPrint('notifications: requestPermission failed: $e');
     }
@@ -33,7 +45,7 @@ class NotificationService {
   /// Returns the FCM token, or null when unavailable. Never throws.
   Future<String?> getToken() async {
     try {
-      return await _messaging.getToken();
+      return await _messaging?.getToken();
     } catch (e) {
       debugPrint('notifications: getToken failed: $e');
       return null;
@@ -68,7 +80,7 @@ class NotificationService {
   }
 
   void onTokenRefresh(void Function(String token) callback) {
-    _messaging.onTokenRefresh.listen(callback);
+    _messaging?.onTokenRefresh.listen(callback);
   }
 
   String _getPlatform() {

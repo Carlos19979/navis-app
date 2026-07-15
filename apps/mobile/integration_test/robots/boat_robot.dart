@@ -21,18 +21,20 @@ class BoatRobot {
   }
 
   /// Fills the required fields (type dropdown keeps its default) and submits.
-  /// Home port is labelled optional in the UI but the API rejects an empty
-  /// one (422, `validate:"required"`), so always fill it.
+  /// Home port is genuinely optional (nullable end to end since migration
+  /// 00033) — pass [homePort] to also exercise the with-port path.
   Future<void> createBoat({
     required String name,
     required String registration,
     String length = '9.5',
-    String homePort = 'Palma de Mallorca',
+    String? homePort,
   }) async {
     await _enterField('Boat Name', name);
     await _enterField('Registration Number', registration);
     await _enterField('Length (m)', length);
-    await _enterField('Home Port (optional)', homePort);
+    if (homePort != null) {
+      await _enterField('Home Port (optional)', homePort);
+    }
     // Dismiss the keyboard so the submit button is tappable, then require the
     // form to actually go away — a missed tap or validation error would
     // otherwise pass silently (field values don't show up as Text widgets).

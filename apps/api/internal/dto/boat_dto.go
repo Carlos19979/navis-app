@@ -12,7 +12,7 @@ type CreateBoatRequest struct {
 	Registration string          `json:"registration" validate:"required,min=1,max=50"`
 	Type         domain.BoatType `json:"type"         validate:"required,oneof=sailboat motorboat catamaran rib jetski other"`
 	LengthM      float64         `json:"length_m"     validate:"required,gt=0"`
-	HomePort     string          `json:"home_port"    validate:"required,min=1,max=100"`
+	HomePort     *string         `json:"home_port"    validate:"omitempty,min=1,max=100"`
 	HomePortLat  *float64        `json:"home_port_lat" validate:"omitempty,latitude"`
 	HomePortLon  *float64        `json:"home_port_lon" validate:"omitempty,longitude"`
 	PhotoURL     *string         `json:"photo_url"    validate:"omitempty,url"`
@@ -63,7 +63,7 @@ func (r *UpdateBoatRequest) ApplyTo(boat *domain.Boat) {
 		boat.LengthM = *r.LengthM
 	}
 	if r.HomePort != nil {
-		boat.HomePort = *r.HomePort
+		boat.HomePort = r.HomePort
 	}
 	if r.HomePortLat != nil {
 		boat.HomePortLat = r.HomePortLat
@@ -86,7 +86,7 @@ type BoatResponse struct {
 	Registration string                  `json:"registration"`
 	Type         domain.BoatType         `json:"type"`
 	LengthM      float64                 `json:"length_m"`
-	HomePort     string                  `json:"home_port"`
+	HomePort     *string                 `json:"home_port"`
 	HomePortLat  *float64                `json:"home_port_lat,omitempty"`
 	HomePortLon  *float64                `json:"home_port_lon,omitempty"`
 	PhotoURL     *string                 `json:"photo_url,omitempty"`
