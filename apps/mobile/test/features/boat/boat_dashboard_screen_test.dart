@@ -1,25 +1,20 @@
 // ignore_for_file: lines_longer_than_80_chars
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
-import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/boat/domain/repositories/boat_repository.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/boat_dashboard_screen.dart';
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
 import 'package:navis_mobile/features/weather/presentation/providers/weather_provider.dart';
 
-import '../../helpers/test_helpers.dart';
+import '../../helpers/helpers.dart';
 
 class MockBoatRepository extends Mock implements BoatRepository {}
-
-class FakeRoute extends Fake implements Route<dynamic> {}
 
 class FakeBoatsNotifier extends AsyncNotifier<List<Boat>>
     implements BoatsNotifier {
@@ -73,40 +68,6 @@ class _NeverCompleteBoatsNotifier extends AsyncNotifier<List<Boat>>
   Future<void> deleteBoat(String id) async {}
 }
 
-/// Creates a GoRouter that renders the given child at '/' and
-/// handles all other routes with a placeholder page, preventing
-/// navigation errors in widget tests.
-GoRouter _testRouter(Widget child) {
-  return GoRouter(
-    initialLocation: '/',
-    routes: [
-      GoRoute(
-        path: '/',
-        builder: (_, __) => child,
-      ),
-      // Catch-all for any navigation triggered by taps
-      GoRoute(
-        path: '/boats/new',
-        builder: (_, __) => const Scaffold(body: Text('New Boat Page')),
-      ),
-      GoRoute(
-        path: '/boats/:id',
-        builder: (_, __) => const Scaffold(body: Text('Boat Detail Page')),
-        routes: [
-          GoRoute(
-            path: 'documents',
-            builder: (_, __) => const Scaffold(body: Text('Documents Page')),
-          ),
-          GoRoute(
-            path: 'trips',
-            builder: (_, __) => const Scaffold(body: Text('Trips Page')),
-          ),
-        ],
-      ),
-    ],
-  );
-}
-
 void main() {
   setUpAll(() {
     registerFallbackValue(FakeRoute());
@@ -126,9 +87,11 @@ void main() {
     List<Boat> boats = const [],
     bool useError = false,
     bool isPro = false,
+    RouteSpy? spy,
   }) {
-    final router = _testRouter(const BoatDashboardScreen());
-    return ProviderScope(
+    return buildRoutedTestApp(
+      const BoatDashboardScreen(),
+      spy: spy,
       overrides: [
         boatsProvider.overrideWith(
           () => useError ? ErrorBoatsNotifier() : FakeBoatsNotifier(boats),
@@ -139,42 +102,12 @@ void main() {
           (ref, boatId) async => const DocumentSummary(),
         ),
       ],
-      child: MaterialApp.router(
-        routerConfig: router,
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: const [
-          Locale('en'),
-          Locale('es'),
-        ],
-      ),
     );
-  }
-
-  /// Pump enough frames for async providers and animation init
-  /// without pumpAndSettle (which never completes due to
-  /// flutter_animate's repeating animations).
-  Future<void> pumpScreen(WidgetTester tester) async {
-    await tester.pump();
-    await tester.pump(const Duration(seconds: 1));
-  }
-
-  Future<void> setPhoneSize(WidgetTester tester) async {
-    tester.view.physicalSize = const Size(1080, 1920);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(() {
-      tester.view.resetPhysicalSize();
-      tester.view.resetDevicePixelRatio();
-    });
   }
 
   group('BoatDashboardScreen', () {
     testWidgets('shows app bar with title', (tester) async {
-      await setPhoneSize(tester);
+      setPhoneSize(tester);
       await tester.pumpWidget(buildSubject(boats: testBoats));
       await pumpScreen(tester);
 
@@ -183,7 +116,7 @@ void main() {
 
     testWidgets('renders boat cards with name, type, and registration',
         (tester) async {
-      await setPhoneSize(tester);
+      setPhoneSize(tester);
       await tester.pumpWidget(buildSubject(boats: testBoats));
       await pumpScreen(tester);
 
@@ -196,7 +129,7 @@ void main() {
     });
 
     testWidgets('shows length and home port info chips', (tester) async {
-      await setPhoneSize(tester);
+      setPhoneSize(tester);
       await tester.pumpWidget(buildSubject(boats: testBoats));
       await pumpScreen(tester);
 
@@ -205,7 +138,7 @@ void main() {
     });
 
     testWidgets('shows Documents and Logbook buttons per card', (tester) async {
-      await setPhoneSize(tester);
+      setPhoneSize(tester);
       await tester.pumpWidget(buildSubject(boats: testBoats));
       await pumpScreen(tester);
 
@@ -214,7 +147,7 @@ void main() {
     });
 
     testWidgets('shows FAB with add tooltip', (tester) async {
-      await setPhoneSize(tester);
+      setPhoneSize(tester);
       await tester.pumpWidget(buildSubject(boats: testBoats));
       await pumpScreen(tester);
 
@@ -227,31 +160,35 @@ void main() {
 
     testWidgets('FAB navigates to new boat page when under plan limit',
         (tester) async {
-      await setPhoneSize(tester);
-      await tester.pumpWidget(buildSubject(boats: testBoats, isPro: true));
+      setPhoneSize(tester);
+      final spy = RouteSpy();
+      await tester.pumpWidget(
+        buildSubject(boats: testBoats, isPro: true, spy: spy),
+      );
       await pumpScreen(tester);
 
       await tester.tap(find.byType(FloatingActionButton));
       await pumpScreen(tester);
 
-      expect(find.text('New Boat Page'), findsOneWidget);
+      expect(spy.last, '/boats/new');
     });
 
     testWidgets('FAB shows paywall when free plan boat limit is reached',
         (tester) async {
-      await setPhoneSize(tester);
-      await tester.pumpWidget(buildSubject(boats: testBoats));
+      setPhoneSize(tester);
+      final spy = RouteSpy();
+      await tester.pumpWidget(buildSubject(boats: testBoats, spy: spy));
       await pumpScreen(tester);
 
       await tester.tap(find.byType(FloatingActionButton));
       await pumpScreen(tester);
 
-      expect(find.text('New Boat Page'), findsNothing);
-      expect(find.text('Navis Pro'), findsOneWidget);
+      expect(spy.locations, isEmpty);
+      expectPaywall();
     });
 
     testWidgets('shows empty state when no boats', (tester) async {
-      await setPhoneSize(tester);
+      setPhoneSize(tester);
       await tester.pumpWidget(buildSubject(boats: []));
       await pumpScreen(tester);
 
@@ -264,7 +201,7 @@ void main() {
 
     testWidgets('single boat renders the boat overview (focus mode)',
         (tester) async {
-      await setPhoneSize(tester);
+      setPhoneSize(tester);
       await tester.pumpWidget(buildSubject(boats: [makeBoat()]));
       await pumpScreen(tester);
 
@@ -275,18 +212,19 @@ void main() {
     });
 
     testWidgets('empty state Add Boat button navigates', (tester) async {
-      await setPhoneSize(tester);
-      await tester.pumpWidget(buildSubject(boats: []));
+      setPhoneSize(tester);
+      final spy = RouteSpy();
+      await tester.pumpWidget(buildSubject(boats: [], spy: spy));
       await pumpScreen(tester);
 
       await tester.tap(find.text('Add Boat'));
       await pumpScreen(tester);
 
-      expect(find.text('New Boat Page'), findsOneWidget);
+      expect(spy.last, '/boats/new');
     });
 
     testWidgets('shows error state with retry button', (tester) async {
-      await setPhoneSize(tester);
+      setPhoneSize(tester);
       await tester.pumpWidget(buildSubject(useError: true));
       await pumpScreen(tester);
 
@@ -295,7 +233,7 @@ void main() {
     });
 
     testWidgets('retry button triggers provider invalidation', (tester) async {
-      await setPhoneSize(tester);
+      setPhoneSize(tester);
       await tester.pumpWidget(buildSubject(useError: true));
       await pumpScreen(tester);
 
@@ -306,10 +244,10 @@ void main() {
     });
 
     testWidgets('shows loading state initially', (tester) async {
-      await setPhoneSize(tester);
-      final router = _testRouter(const BoatDashboardScreen());
+      setPhoneSize(tester);
       await tester.pumpWidget(
-        ProviderScope(
+        buildRoutedTestApp(
+          const BoatDashboardScreen(),
           overrides: [
             boatsProvider.overrideWith(_NeverCompleteBoatsNotifier.new),
             currentWeatherProvider.overrideWith((ref) async => null),
@@ -317,19 +255,6 @@ void main() {
               (ref, boatId) async => const DocumentSummary(),
             ),
           ],
-          child: MaterialApp.router(
-            routerConfig: router,
-            localizationsDelegates: const [
-              AppLocalizations.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            supportedLocales: const [
-              Locale('en'),
-              Locale('es'),
-            ],
-          ),
         ),
       );
       // Pump multiple frames to let flutter_animate's zero-duration
@@ -342,48 +267,50 @@ void main() {
       expect(find.byType(BoatDashboardScreen), findsOneWidget);
 
       // Dispose widget tree and drain any remaining timers.
-      await tester.pumpWidget(const SizedBox());
-      await tester.pump();
+      await drain(tester);
     });
 
     testWidgets('boat card navigates to detail', (tester) async {
-      await setPhoneSize(tester);
-      await tester.pumpWidget(buildSubject(boats: testBoats));
+      setPhoneSize(tester);
+      final spy = RouteSpy();
+      await tester.pumpWidget(buildSubject(boats: testBoats, spy: spy));
       await pumpScreen(tester);
 
       await tester.tap(find.text('Luna Azul'));
       await pumpScreen(tester);
 
-      expect(find.text('Boat Detail Page'), findsOneWidget);
+      expect(spy.last, '/boats/boat-1');
     });
 
     testWidgets('Documents button navigates to documents page', (tester) async {
-      await setPhoneSize(tester);
-      await tester.pumpWidget(buildSubject(boats: testBoats));
+      setPhoneSize(tester);
+      final spy = RouteSpy();
+      await tester.pumpWidget(buildSubject(boats: testBoats, spy: spy));
       await pumpScreen(tester);
 
       await tester.tap(find.text('Documents').first);
       await pumpScreen(tester);
 
-      expect(find.text('Documents Page'), findsOneWidget);
+      expect(spy.last, '/boats/boat-1/documents');
     });
 
     testWidgets('Logbook button navigates to trips page', (tester) async {
-      await setPhoneSize(tester);
-      await tester.pumpWidget(buildSubject(boats: testBoats));
+      setPhoneSize(tester);
+      final spy = RouteSpy();
+      await tester.pumpWidget(buildSubject(boats: testBoats, spy: spy));
       await pumpScreen(tester);
 
       await tester.tap(find.text('Logbook').first);
       await pumpScreen(tester);
 
-      expect(find.text('Trips Page'), findsOneWidget);
+      expect(spy.last, '/boats/boat-1/trips');
     });
 
     testWidgets('shows document summary badges when available', (tester) async {
-      await setPhoneSize(tester);
-      final router = _testRouter(const BoatDashboardScreen());
+      setPhoneSize(tester);
       await tester.pumpWidget(
-        ProviderScope(
+        buildRoutedTestApp(
+          const BoatDashboardScreen(),
           overrides: [
             boatsProvider.overrideWith(
               () => FakeBoatsNotifier(testBoats),
@@ -397,19 +324,6 @@ void main() {
               ),
             ),
           ],
-          child: MaterialApp.router(
-            routerConfig: router,
-            localizationsDelegates: const [
-              AppLocalizations.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            supportedLocales: const [
-              Locale('en'),
-              Locale('es'),
-            ],
-          ),
         ),
       );
       await pumpScreen(tester);
@@ -419,7 +333,7 @@ void main() {
     });
 
     testWidgets('pull to refresh works on boat list', (tester) async {
-      await setPhoneSize(tester);
+      setPhoneSize(tester);
       await tester.pumpWidget(buildSubject(boats: testBoats));
       await pumpScreen(tester);
 
