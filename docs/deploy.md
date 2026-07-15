@@ -22,7 +22,7 @@ yet (the CI deploy job exists but is gated off — see the last section).
    ```bash
    cd packages/supabase
    supabase link --project-ref <ref>
-   supabase db push          # applies migrations 00001..00029
+   supabase db push          # applies all migrations (00001..00032 at the time of writing)
    ```
    Confirm afterwards (SQL editor): `documents` bucket is **private**,
    `sent_notifications` has RLS enabled, and the pagination indexes exist.
