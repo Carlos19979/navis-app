@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:navis_mobile/features/boat/presentation/screens/boat_detail_screen.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 
 import '../helpers/pumping.dart';
@@ -15,9 +16,52 @@ class BoatRobot {
       pumpUntilFound(tester, find.text('Add Boat'));
 
   Future<void> startAddBoat() async {
-    await pumpUntilFound(tester, find.text('Add Boat'));
-    await tester.tap(find.text('Add Boat').first);
-    await pumpUntilFound(tester, find.text('New Boat'));
+    await tapUntil(tester, _addBoatTrigger(), find.text('New Boat'));
+  }
+
+  /// On the Free plan at the boat limit, the add action opens the paywall
+  /// instead of the form.
+  Future<void> startAddBoatExpectingPaywall() async {
+    await tapUntil(tester, _addBoatTrigger(), find.text('Navis Pro'));
+  }
+
+  Future<void> dismissPaywall() async {
+    // Modal bottom sheet: tapping the barrier above it dismisses.
+    await tester.tapAt(const Offset(200, 60));
+    await pumpUntilGone(tester, find.text('Navis Pro'));
+  }
+
+  /// Empty dashboards offer the empty-state CTA; populated ones the FAB.
+  Finder _addBoatTrigger() {
+    final cta = find.text('Add Boat');
+    if (cta.evaluate().isNotEmpty) return cta;
+    return find.byType(FloatingActionButton);
+  }
+
+  /// Deletes a boat from its detail screen (danger action + confirm dialog).
+  /// The tile lives at the bottom of a lazy CustomScrollView — scroll first.
+  Future<void> deleteBoat(String name) async {
+    await openDetail(name);
+    final tile = find.text('Delete Boat');
+    await scrollTo(
+      tester,
+      tile,
+      scrollable: find.descendant(
+        of: find.byType(BoatDetailScreen),
+        matching: find.byType(Scrollable),
+      ),
+    );
+    await tapUntil(tester, tile, find.text('Cancel'));
+    await pumpFor(tester, const Duration(milliseconds: 400));
+    await tapUntilGone(
+      tester,
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.text('Delete'),
+      ),
+      find.byType(AlertDialog),
+    );
+    await pumpFor(tester, const Duration(seconds: 1));
   }
 
   /// Fills the required fields (type dropdown keeps its default) and submits.
@@ -62,6 +106,39 @@ class BoatRobot {
 
   Future<void> expectBoatOnDashboard(String name) =>
       pumpUntilFound(tester, find.text(name));
+
+  /// Opens the boat detail hub. Single-boat dashboards render a focus card
+  /// with a 'Manage boat' link; multi-boat dashboards navigate by card tap.
+  /// 'Details' (info section header) is the detail-only marker that renders
+  /// above the fold — hub tiles further down are lazy sliver children.
+  Future<void> openDetail(String name) async {
+    final detailMarker = find.text('Details');
+    final manage = find.text('Manage boat');
+    await pumpFor(tester, const Duration(milliseconds: 400));
+    if (manage.evaluate().isNotEmpty) {
+      await tapUntil(tester, manage, detailMarker);
+    } else {
+      await tapUntil(tester, find.text(name), detailMarker);
+    }
+    await pumpFor(tester, const Duration(milliseconds: 400));
+  }
+
+  /// Taps a hub tile on the boat detail screen (e.g. 'Documents',
+  /// 'Maintenance & expenses', 'Bookings') and waits for [appears]. Tiles
+  /// low in the hub are lazy sliver children — scroll to build them.
+  Future<void> openTile(String tile, Finder appears) async {
+    final f = find.text(tile);
+    await scrollTo(
+      tester,
+      f,
+      scrollable: find.descendant(
+        of: find.byType(BoatDetailScreen),
+        matching: find.byType(Scrollable),
+      ),
+    );
+    await tapUntil(tester, f, appears);
+    await pumpFor(tester, const Duration(milliseconds: 400));
+  }
 
   Future<void> _enterField(String label, String value) async {
     final field = find.widgetWithText(TextFormField, label);

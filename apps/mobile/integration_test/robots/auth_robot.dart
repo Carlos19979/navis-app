@@ -16,12 +16,11 @@ class AuthRobot {
       pumpUntilFound(tester, find.widgetWithText(NavisButton, 'Log In'));
 
   Future<void> goToRegister() async {
-    await pumpUntilFound(
+    await tapUntil(
       tester,
       find.textContaining("Don't have an account?"),
+      find.text('Create Account'),
     );
-    await tester.tap(find.textContaining("Don't have an account?"));
-    await pumpUntilFound(tester, find.text('Create Account'));
     // Let the route transition finish: while both auth screens are in the
     // tree, unscoped field indices point at the outgoing screen.
     await pumpFor(tester, const Duration(milliseconds: 800));
