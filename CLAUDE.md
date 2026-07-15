@@ -52,6 +52,7 @@ Dependency flow: `handler → service → port ← adapter`
 ### Go — HTTP & Routing
 
 - Chi v5 router. Versioned: `/api/v1/boats`, `/api/v1/documents`, etc.
+- Beyond CRUD resources, notable endpoints (see `internal/router/router.go`): `GET /boats/{id}/readiness`, `GET /boats/{id}/cost-analytics`, `GET /boats/{id}/anomalies`, maintenance tasks under `/boats/{id}/maintenance/tasks`, bookings under `/boats/{id}/bookings`, expense splits under `/expenses/{expenseId}/splits` (+ `/settle`, + `/boats/{id}/expense-splits-summary`), `POST /webhooks/revenuecat`, and public (no JWT) `GET /legal/privacy` + `GET /legal/terms`.
 - Use `response.go` helpers: `response.JSON(w, status, data)`, `response.Error(w, status, err)`.
 - Status codes: 201 create, 204 delete, 400 validation, 401 auth, 403 forbidden, 404 not found, 409 conflict, 422 unprocessable, 429 rate limit, 500 only for unexpected internal errors.
 - Pagination: return `next_cursor` in response. Never use offset.
@@ -162,10 +163,14 @@ lib/
   core/
     config/       — Env vars (Supabase URL, API base URL)
     network/      — ApiClient (Dio with interceptors), SupabaseClient
-    theme/        — AppColors (nautical palette), AppTypography
+    theme/        — AppColors (nautical palette), AppTypography, design tokens
+                    (dimens.dart, shadows.dart, motion.dart)
     error/        — Failure sealed class hierarchy
     utils/        — Date utils, distance utils (nautical miles, coordinates)
-  features/
+  features/       — auth, boat, documents, logbook, maintenance, charts, weather,
+                    community (merges events+groups), events, groups, regattas,
+                    profile, billing (RevenueCat paywall), readiness, cost,
+                    anomaly, passport (client-side PDF), shared (bookings/splits)
     <feature>/
       domain/
         entities/     — Immutable: const constructor, final fields, copyWith, ==, hashCode
@@ -375,6 +380,14 @@ Use these Dart 3.x features everywhere they apply:
 - Test all `sealed class` branches with exhaustive switch in test assertions.
 - Test error states and loading states, not just happy paths.
 - Code MUST pass `flutter analyze` without warnings.
+- **Golden screenshot harness** (`test/golden/golden_harness.dart`): pumps real
+  screens with provider overrides at a fixed phone viewport, light+dark, locale
+  `es`. Tagged `@Tags(['golden'])` and **deliberately excluded from CI**
+  (pixel output is machine-dependent); regenerate locally with
+  `flutter test --update-goldens --tags golden`. Baselines in `test/golden/goldens/`.
+- **E2E integration tests** (`integration_test/`): drive the real app against
+  the local stack (`make dev`) on a simulator — see `make mobile-e2e-smoke` /
+  `make mobile-e2e`. Excluded from the normal CI test job.
 
 ### Adding a New Flutter Feature
 
@@ -416,19 +429,20 @@ Use these Dart 3.x features everywhere they apply:
 ## Database (Supabase)
 
 - PostgreSQL with PostGIS enabled.
-- Key tables: `profiles` (plan), `boats` (+`share_code`), `boat_members` (shared crew/co-owners), `documents` (computed `status` column), `trips` (+ group/regatta, `share_token`), `trip_tracks` (PostGIS), `trip_participants` (RSVP), `trip_checklist_items`, `maintenance_logs`, `expenses`, `groups`, `group_members`, `events` (+ stream/tracking urls), `event_interests`, `notification_logs`, `sent_notifications`.
+- Key tables: `profiles` (plan), `boats` (+`share_code`), `boat_members` (shared crew/co-owners), `documents` (computed `status` column), `trips` (+ group/regatta, `share_token`), `trip_tracks` (PostGIS), `trip_participants` (RSVP), `trip_checklist_items`, `maintenance_logs` (+`task_id` FK), `maintenance_tasks` (recurring service tasks, `interval_months`/`interval_hours`), `expenses`, `expense_splits` (per-member shares, `settled_at`), `bookings` (boat-time reservations), `groups`, `group_members`, `events` (+ stream/tracking urls), `event_interests`, `notification_logs`, `sent_notifications`.
 - RLS enforces `user_id = auth.uid()` on user tables. Shared boats: members READ a boat + its sub-resources (enforced in the Go service via `boatRepo.HasAccess`, reading as the owner's scope); all WRITES stay owner-only. Events readable by all, writable by admins.
-- Plans: `profiles.plan` ∈ `free|pro` gates boat count (1/3), group creation (Pro), and document-expiry reminders (Free=1 doc); enforced in services, returns 402. Paid tier driven by RevenueCat webhook (`POST /api/v1/webhooks/revenuecat`); `PUT /me/plan` is a dev-only switcher (debug builds / non-production). A B2B "fleet" tier is future work.
+- Plans: `profiles.plan` ∈ `free|pro`. Single source of gating: `CanUse*` methods in `apps/api/internal/domain/profile.go` → `Entitlements` DTO → `Account` in Flutter → `showPaywall`. Current gates: boat count (`MaxBoats` 1/3), group creation (Pro), document-expiry reminders (`ReminderDocLimit` Free=1), maintenance attachments (`AttachmentLimit` Free=1), maintenance schedules (Pro), full readiness score (Free sees documents block only), cost analytics (Pro), passport PDF export (Pro), shared-boat coordination — bookings + expense splits (Pro), fuel-anomaly alerts (Pro). Enforced in services, returns 402. Paid tier driven by RevenueCat webhook (`POST /api/v1/webhooks/revenuecat`); `PUT /me/plan` is a dev-only switcher (debug builds / non-production). A B2B "fleet" tier is future work.
 - Migrations in `packages/supabase/migrations/` numbered `00001_`, `00002_`, etc.
 - Document types: itb, insurance_rc, insurance_full, life_raft, extinguisher, flares, first_aid, medical_cert, radio_cert, navigation_license, custom.
 - Document status is a computed column: expired / critical (30d) / warning (90d) / ok.
 
-## Cron Job
+## Cron Job & Notifications
 
 - `robfig/cron/v3` in Go API, runs daily at 08:00 UTC.
 - Checks document expiry against `alert_days` array (default: 30, 7 days).
 - Triggers Novu `document-expiry` workflow per user. Novu delivers via FCM (push) and Resend (email).
 - Logs to `notification_logs` to avoid duplicates.
+- Besides the cron, service flows trigger 7 more Novu workflows (see `internal/service/notifier.go`): `regatta-rsvp`, `regatta-scheduled`, `regatta-reminder`, `group-join-request`, `group-request-approved`, `event-live`, `expense-split`. The notifier is async (fire-and-forget goroutines with shutdown coordination).
 
 ## Commands
 
@@ -445,6 +459,7 @@ make db-reset        # Reset and reseed database
 
 # Go API
 make api-dev         # Hot reload (air)
+make api-run         # go run (no hot reload)
 make api-build       # go build
 make api-test        # go test ./...
 make api-lint        # golangci-lint run
@@ -453,9 +468,20 @@ make api-lint        # golangci-lint run
 make mobile-run      # flutter run (device/emulator)
 make mobile-run-emu  # flutter run on Android emulator (10.0.2.2 URLs)
 make mobile-test     # flutter test
+make mobile-analyze  # flutter analyze
 make mobile-lint     # flutter analyze --fatal-infos
 make mobile-format   # dart format --line-length=80
 make mobile-codegen  # build_runner code generation
+make mobile-build-apk  # production Android APK (release env vars required)
+make mobile-build-ios  # production iOS release (release env vars required)
+
+# E2E (local stack + iOS simulator)
+make mobile-e2e-smoke  # E2E smoke: auth + boat CRUD + delete account
+make mobile-e2e        # Full E2E journey sweep
+
+# Misc
+make lint            # all linters
+make install-hooks   # git hooks
 ```
 
 ## Local Development Setup
@@ -487,10 +513,11 @@ Note: Android emulator uses `10.0.2.2` to reach the host machine's localhost.
 | **Firebase** | FCM push transport (Android/iOS) | console.firebase.google.com | `google-services.json` (Android), `GoogleService-Info.plist` (iOS) |
 | **Resend** | Email delivery (integrated via Novu) | resend.com/emails | Configured in Novu Integrations |
 | **Sentry** | Error/crash reporting (Go API + Flutter) | sentry.io | `SENTRY_DSN` (Go), `--dart-define=SENTRY_DSN=...` (Flutter) |
+| **RevenueCat** | Subscriptions / Pro entitlement (webhook flips `profiles.plan`) | app.revenuecat.com | `REVENUECAT_WEBHOOK_SECRET` (Go), `--dart-define=REVENUECAT_IOS_KEY / REVENUECAT_ANDROID_KEY` (Flutter) |
 
 ### Novu Setup
 
-- **Workflow:** `document-expiry` — triggered by Go API cron. Steps: Push (FCM) → Email (Resend).
+- **Workflows (8):** `document-expiry` (cron) + `regatta-rsvp`, `regatta-scheduled`, `regatta-reminder`, `group-join-request`, `group-request-approved`, `event-live`, `expense-split` (service flows, see `internal/service/notifier.go`). Steps per workflow: Push (FCM) → Email (Resend).
 - **Integrations:** FCM (Service Account JSON from Firebase) + Resend (API Key).
 - **Environments:** Development and Production — each has its own API Key. Same Firebase Service Account and Resend key in both.
 - **Subscribers:** Created automatically when users register device tokens via `POST /api/v1/devices`. Subscriber ID = Supabase `user_id`.
@@ -568,6 +595,7 @@ code → local checks → push → PR → CI green → merge → delete branch
 - Go 1.26, Chi v5, pgx/v5, robfig/cron/v3, go-playground/validator/v10, log/slog
 - Flutter 3.32, Dart 3.x, Riverpod 2, GoRouter 14, Dio 5, supabase_flutter 2.5
 - flutter_map 7, geolocator 12, drift/sqflite, mocktail, cached_network_image
+- purchases_flutter (RevenueCat SDK), pdf (client-side passport export)
 - Supabase (Auth, Storage, PostGIS, RLS)
 - Novu (notification orchestration: push + email + in-app), Resend (email delivery)
 - Firebase Messaging (push transport layer in Flutter)
