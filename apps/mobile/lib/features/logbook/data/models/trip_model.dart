@@ -104,14 +104,17 @@ class TripModel {
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
+  // API-bound dates must be UTC (RFC3339 with zone) — see #32.
+  static String _utcIso(DateTime d) => d.toUtc().toIso8601String();
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'boat_id': boatId,
       'departure_port': departurePort,
-      'departure_time': departureTime.toUtc().toIso8601String(),
+      'departure_time': _utcIso(departureTime),
       if (arrivalPort != null) 'arrival_port': arrivalPort,
-      if (arrivalTime != null) 'arrival_time': arrivalTime!.toUtc().toIso8601String(),
+      if (arrivalTime != null) 'arrival_time': _utcIso(arrivalTime!),
       if (distanceNm != null) 'distance_nm': distanceNm,
       if (maxSpeedKnots != null) 'max_speed_knots': maxSpeedKnots,
       if (avgSpeedKnots != null) 'avg_speed_knots': avgSpeedKnots,
