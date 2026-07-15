@@ -45,6 +45,8 @@ func (m *mockBoatRepo) Delete(ctx context.Context, userID, id string) error {
 
 // --- helpers ---
 
+func strPtr(s string) *string { return &s }
+
 func newTestBoat() *domain.Boat {
 	return &domain.Boat{
 		ID:           "boat-1",
@@ -53,13 +55,38 @@ func newTestBoat() *domain.Boat {
 		Registration: "ES-1234-AB",
 		Type:         domain.BoatTypeSailboat,
 		LengthM:      12.5,
-		HomePort:     "Valencia",
+		HomePort:     strPtr("Valencia"),
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}
 }
 
 // --- Create tests ---
+
+func TestBoatService_Create_NoHomePort(t *testing.T) {
+	t.Parallel()
+
+	boat := newTestBoat()
+	boat.HomePort = nil
+	repo := &mockBoatRepo{
+		createFn: func(_ context.Context, b *domain.Boat) (*domain.Boat, error) {
+			if b.HomePort != nil {
+				t.Errorf("expected nil home port, got %q", *b.HomePort)
+			}
+			b.ID = "boat-1"
+			return b, nil
+		},
+	}
+	svc := NewBoatService(repo, nil)
+
+	result, err := svc.Create(context.Background(), boat)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if result.HomePort != nil {
+		t.Errorf("expected nil home port in result, got %q", *result.HomePort)
+	}
+}
 
 func TestBoatService_Create_Success(t *testing.T) {
 	t.Parallel()
