@@ -79,12 +79,15 @@ class _SplitSheetState extends ConsumerState<_SplitSheet> {
   }
 
   Future<void> _load() async {
-    final l = AppLocalizations.of(context)!;
     final repo = ref.read(sharedRepositoryProvider);
     try {
       final members = await ref.read(boatMembersProvider(widget.boatId).future);
       final existing = await repo.listSplits(widget.boatId, widget.expenseId);
+      if (!mounted) return;
 
+      // Looked up after the first await: initState must not depend on
+      // inherited widgets.
+      final l = AppLocalizations.of(context)!;
       final myId = supabaseClient.auth.currentUser?.id;
       final people = <_Person>[
         if (myId != null) _Person(myId, l.bookingYou),

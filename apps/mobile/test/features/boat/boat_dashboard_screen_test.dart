@@ -187,6 +187,29 @@ void main() {
       expectPaywall();
     });
 
+    testWidgets('FAB shows plan-limit snackbar for Pro at the 3-boat limit',
+        (tester) async {
+      setPhoneSize(tester);
+      final spy = RouteSpy();
+      final threeBoats = [
+        ...testBoats,
+        makeBoat(id: 'boat-3', name: 'Mistral', registration: 'ES-VAL-1-9999'),
+      ];
+      await tester.pumpWidget(
+        buildSubject(boats: threeBoats, isPro: true, spy: spy),
+      );
+      await pumpScreen(tester);
+
+      await tester.tap(find.byType(FloatingActionButton));
+      await pumpScreen(tester);
+
+      expect(spy.locations, isEmpty);
+      expectPaywall(shown: false);
+      expectSnackbar(tester, "You've reached your plan's boat limit.");
+
+      await drain(tester);
+    });
+
     testWidgets('shows empty state when no boats', (tester) async {
       setPhoneSize(tester);
       await tester.pumpWidget(buildSubject(boats: []));
