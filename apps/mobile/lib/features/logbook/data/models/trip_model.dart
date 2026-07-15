@@ -109,9 +109,9 @@ class TripModel {
       'id': id,
       'boat_id': boatId,
       'departure_port': departurePort,
-      'departure_time': departureTime.toIso8601String(),
+      'departure_time': departureTime.toUtc().toIso8601String(),
       if (arrivalPort != null) 'arrival_port': arrivalPort,
-      if (arrivalTime != null) 'arrival_time': arrivalTime!.toIso8601String(),
+      if (arrivalTime != null) 'arrival_time': arrivalTime!.toUtc().toIso8601String(),
       if (distanceNm != null) 'distance_nm': distanceNm,
       if (maxSpeedKnots != null) 'max_speed_knots': maxSpeedKnots,
       if (avgSpeedKnots != null) 'avg_speed_knots': avgSpeedKnots,
@@ -188,7 +188,7 @@ class TrackPointModel {
     return {
       'latitude': latitude,
       'longitude': longitude,
-      'timestamp': timestamp.toIso8601String(),
+      'timestamp': timestamp.toUtc().toIso8601String(),
       if (speedKnots != null) 'speed_knots': speedKnots,
     };
   }

@@ -201,7 +201,7 @@ class TripRepository {
         .map((p) => {
               'lat': p.latitude,
               'lon': p.longitude,
-              'recorded_at': p.timestamp.toIso8601String(),
+              'recorded_at': p.timestamp.toUtc().toIso8601String(),
               if (p.speedKnots != null) 'speed_knots': p.speedKnots,
             })
         .toList();
