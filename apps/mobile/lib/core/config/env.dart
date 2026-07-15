@@ -39,7 +39,7 @@ class Env {
   static const termsUrl = '$apiUrl/legal/terms';
 
   /// Support contact used by Help & Support and the legal pages.
-  static const supportEmail = 'soporte@aerolume.app';
+  static const supportEmail = 'carloscode23@icloud.com';
 
   // RevenueCat public SDK keys (per platform). Empty disables in-app purchases
   // (billing degrades gracefully). Pass via --dart-define.

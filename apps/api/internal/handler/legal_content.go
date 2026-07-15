@@ -2,18 +2,18 @@ package handler
 
 // Draft legal texts served by LegalHandler. Spanish first, English below.
 //
-// ⚠️ REVIEW BEFORE LAUNCH: replace the [PLACEHOLDER] identity/contact values
-// and have the wording reviewed — the app operator is legally responsible for
-// these documents.
+// ⚠️ REVIEW BEFORE LAUNCH: have the wording reviewed — the app operator is
+// legally responsible for these documents.
 
 const privacyBody = `
 <h1>Política de Privacidad</h1>
-<p class="updated">Última actualización: 11 de julio de 2026</p>
+<p class="updated">Última actualización: 15 de julio de 2026</p>
 
 <h2>1. Responsable del tratamiento</h2>
-<p>[NOMBRE DEL TITULAR O EMPRESA], con domicilio en [DIRECCIÓN] (el «Responsable»),
+<p>Carlos Pérez Martínez, con domicilio en Calle Juan Estelles 24B, Valencia,
+España (el «Responsable»),
 opera la aplicación móvil Navis (la «App»). Contacto de privacidad:
-<a href="mailto:soporte@aerolume.app">soporte@aerolume.app</a>.</p>
+<a href="mailto:carloscode23@icloud.com">carloscode23@icloud.com</a>.</p>
 
 <h2>2. Datos que tratamos</h2>
 <table>
@@ -54,7 +54,7 @@ tus archivos. Podemos conservar registros técnicos anonimizados.</p>
 <p>Puedes ejercer tus derechos de acceso, rectificación, supresión, portabilidad,
 limitación y oposición. Dentro de la App: exporta todos tus datos (Perfil →
 Exportar datos) o elimina tu cuenta. También por email a
-<a href="mailto:soporte@aerolume.app">soporte@aerolume.app</a>. Tienes derecho a
+<a href="mailto:carloscode23@icloud.com">carloscode23@icloud.com</a>. Tienes derecho a
 reclamar ante la Agencia Española de Protección de Datos (aepd.es).</p>
 
 <h2>7. Seguridad</h2>
@@ -72,12 +72,13 @@ de «última actualización».</p>
 <hr class="lang">
 
 <h1>Privacy Policy</h1>
-<p class="updated">Last updated: July 11, 2026</p>
+<p class="updated">Last updated: July 15, 2026</p>
 
 <h2>1. Data controller</h2>
-<p>[OWNER OR COMPANY NAME], located at [ADDRESS] (the "Controller"), operates the
+<p>Carlos Pérez Martínez, located at Calle Juan Estelles 24B, Valencia, Spain
+(the "Controller"), operates the
 Navis mobile application (the "App"). Privacy contact:
-<a href="mailto:soporte@aerolume.app">soporte@aerolume.app</a>.</p>
+<a href="mailto:carloscode23@icloud.com">carloscode23@icloud.com</a>.</p>
 
 <h2>2. Data we process</h2>
 <table>
@@ -112,7 +113,7 @@ files. We may retain anonymised technical logs.</p>
 <p>You may exercise your rights of access, rectification, erasure, portability,
 restriction and objection. In-app: export all your data (Profile → Export data)
 or delete your account. You can also email
-<a href="mailto:soporte@aerolume.app">soporte@aerolume.app</a>. You have the
+<a href="mailto:carloscode23@icloud.com">carloscode23@icloud.com</a>. You have the
 right to lodge a complaint with your supervisory authority.</p>
 
 <h2>7. Security</h2>
@@ -128,13 +129,13 @@ bucket accessible only through signed URLs. API access requires authentication.<
 
 const termsBody = `
 <h1>Términos de Servicio</h1>
-<p class="updated">Última actualización: 11 de julio de 2026</p>
+<p class="updated">Última actualización: 15 de julio de 2026</p>
 
 <h2>1. El servicio</h2>
 <p>Navis es una aplicación de gestión de embarcaciones de recreo: documentación
 con recordatorios de caducidad, cuaderno de bitácora con rutas GPS, mantenimiento,
-gastos, grupos y meteorología. El servicio lo presta [NOMBRE DEL TITULAR O
-EMPRESA] («nosotros»). Al crear una cuenta aceptas estos términos.</p>
+gastos, grupos y meteorología. El servicio lo presta Carlos Pérez Martínez
+(«nosotros»). Al crear una cuenta aceptas estos términos.</p>
 
 <h2>2. Uso de la información náutica — aviso importante</h2>
 <p><strong>Navis no es un instrumento de navegación ni un sistema de seguridad.</strong>
@@ -188,17 +189,17 @@ suspender cuentas que incumplan estos términos.</p>
 someterá a los juzgados del domicilio del consumidor.</p>
 
 <h2>10. Contacto</h2>
-<p><a href="mailto:soporte@aerolume.app">soporte@aerolume.app</a></p>
+<p><a href="mailto:carloscode23@icloud.com">carloscode23@icloud.com</a></p>
 
 <hr class="lang">
 
 <h1>Terms of Service</h1>
-<p class="updated">Last updated: July 11, 2026</p>
+<p class="updated">Last updated: July 15, 2026</p>
 
 <h2>1. The service</h2>
 <p>Navis is a recreational boat management app: documents with expiry reminders,
 GPS logbook, maintenance, expenses, groups and weather. The service is provided
-by [OWNER OR COMPANY NAME] ("we"). By creating an account you accept these terms.</p>
+by Carlos Pérez Martínez ("we"). By creating an account you accept these terms.</p>
 
 <h2>2. Use of nautical information — important notice</h2>
 <p><strong>Navis is not a navigation instrument or a safety system.</strong>
@@ -251,5 +252,5 @@ accounts that breach these terms.</p>
 courts of the consumer's domicile.</p>
 
 <h2>10. Contact</h2>
-<p><a href="mailto:soporte@aerolume.app">soporte@aerolume.app</a></p>
+<p><a href="mailto:carloscode23@icloud.com">carloscode23@icloud.com</a></p>
 `
