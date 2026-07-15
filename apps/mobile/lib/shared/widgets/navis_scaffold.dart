@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 
@@ -36,6 +37,16 @@ class NavisScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Tab screens (safeAreaBottom: false) sit under the floating bottom nav,
+    // which overlays this scaffold from the shell: an unpadded FAB lands
+    // BEHIND the nav and taps hit the nav's rightmost item instead. Lift it
+    // above the nav clearance (16 = the FAB's own default margin).
+    final fab = floatingActionButton != null && !safeAreaBottom
+        ? Padding(
+            padding: const EdgeInsets.only(bottom: Dimens.navClearance - 16),
+            child: floatingActionButton,
+          )
+        : floatingActionButton;
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: transparentAppBar,
@@ -47,7 +58,7 @@ class NavisScaffold extends StatelessWidget {
         bottom: appBarBottom,
         showProfileAction: showProfileAction,
       ),
-      floatingActionButton: floatingActionButton,
+      floatingActionButton: fab,
       body: GradientBackground(
         child: SafeArea(
           bottom: safeAreaBottom,
