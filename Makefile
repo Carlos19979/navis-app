@@ -108,6 +108,9 @@ mobile-codegen: ## Run Flutter build_runner code generation
 mobile-e2e-smoke: ## E2E smoke on iOS simulator (needs 'make dev' stack up)
 	TARGET=smoke_test.dart ./scripts/e2e.sh
 
+mobile-e2e: ## Full E2E journey sweep on iOS simulator (needs 'make dev' stack up)
+	TARGET=suite_test.dart ./scripts/e2e.sh
+
 lint: ## Run all linters (Go + Flutter)
 	cd apps/api && golangci-lint run --timeout=5m
 	cd apps/mobile && flutter analyze --fatal-infos

@@ -46,6 +46,21 @@ class SettingsRobot {
         matching: matching,
       );
 
+  /// Pops Settings and returns to the Home tab.
+  Future<void> backToDashboard() async {
+    final nav = NavRobot(tester);
+    await nav.back();
+    await nav.home();
+  }
+
+  /// Debug-only dev plan switcher (top card in Settings). Sets the plan via
+  /// the real PUT /me/plan endpoint.
+  Future<void> setPlan(String label) async {
+    await pumpUntilFound(tester, find.text('PLAN (PRUEBAS)'));
+    await tester.tap(_inSettings(find.text(label)).first);
+    await pumpFor(tester, const Duration(seconds: 1));
+  }
+
   Future<void> logout() async {
     await _scrollTo(_inSettings(find.text('Log Out')));
     await tapUntil(
