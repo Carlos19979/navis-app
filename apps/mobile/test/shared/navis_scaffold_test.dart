@@ -19,9 +19,8 @@ void main() {
         ),
       );
 
-  testWidgets(
-      'tab screens (safeAreaBottom: false) lift the FAB above the '
-      'floating bottom nav', (tester) async {
+  testWidgets('tab screens lift the FAB above the floating nav',
+      (tester) async {
     setPhoneSize(tester);
     await tester.pumpWidget(subject(safeAreaBottom: false));
     await pumpScreen(tester);
@@ -37,8 +36,7 @@ void main() {
     );
   });
 
-  testWidgets('pushed screens (safeAreaBottom: true) keep the default FAB '
-      'position', (tester) async {
+  testWidgets('pushed screens keep the default FAB position', (tester) async {
     setPhoneSize(tester);
     await tester.pumpWidget(subject(safeAreaBottom: true));
     await pumpScreen(tester);
