@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -12,7 +13,7 @@ import 'package:navis_mobile/features/logbook/presentation/screens/trip_detail_s
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
 
-import '../../helpers/test_helpers.dart';
+import '../../helpers/helpers.dart';
 
 class MockTripRepository extends Mock implements TripRepository {}
 
@@ -325,6 +326,106 @@ void main() {
       await pumpFrames(tester);
 
       expect(find.text('Distance'), findsOneWidget);
+    });
+
+    testWidgets('renders the map card when track points exist', (tester) async {
+      setPhoneSize(tester);
+      // Ignore tile/network-image plumbing errors from FlutterMap in tests
+      // (same pattern as the W1 chart spike).
+      final originalOnError = FlutterError.onError;
+      FlutterError.onError = (details) {
+        final message = details.exceptionAsString();
+        const tolerated = [
+          'MissingPluginException',
+          'HTTP request failed',
+          'NetworkImage',
+          'CachedNetworkImageProvider',
+          'HttpException',
+          'SocketException',
+          'Failed host lookup',
+          'Connection refused',
+          'Connection closed',
+          'Couldn\'t download or retrieve file',
+          'HttpExceptionWithStatus',
+        ];
+        if (tolerated.any(message.contains)) return;
+        originalOnError?.call(details);
+      };
+      addTearDown(() => FlutterError.onError = originalOnError);
+
+      final trip = makeTrip().copyWith(
+        trackPoints: [
+          TrackPoint(
+            latitude: 39.57,
+            longitude: 2.63,
+            timestamp: DateTime(2026, 4, 26, 10),
+            speedKnots: 4,
+          ),
+          TrackPoint(
+            latitude: 39.60,
+            longitude: 2.70,
+            timestamp: DateTime(2026, 4, 26, 11),
+            speedKnots: 7,
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        buildScreen(
+          extraOverrides: [
+            tripProvider.overrideWith((ref, id) async => trip),
+          ],
+        ),
+      );
+      await pumpFrames(tester);
+
+      expect(find.byType(FlutterMap), findsOneWidget);
+      // Speed legend accompanies the track map.
+      expect(find.text('<3 kt'), findsOneWidget);
+      expect(find.text('>12 kt'), findsOneWidget);
+
+      // Dispose the map to cancel tile-loading/fade timers before teardown.
+      await drain(tester);
+    });
+
+    testWidgets('share menu opens with link and summary options',
+        (tester) async {
+      setPhoneSize(tester);
+      await tester.pumpWidget(
+        buildScreen(
+          extraOverrides: [
+            tripProvider.overrideWith((ref, id) async => makeTrip()),
+          ],
+        ),
+      );
+      await pumpFrames(tester);
+
+      await tester.tap(find.byTooltip('Share trip'));
+      await pumpFrames(tester);
+
+      expect(find.text('Compartir enlace'), findsOneWidget);
+      expect(find.text('Compartir resumen'), findsOneWidget);
+    });
+
+    testWidgets('edit action navigates to the trip edit route', (tester) async {
+      setPhoneSize(tester);
+      final spy = RouteSpy();
+      await tester.pumpWidget(
+        buildRoutedTestApp(
+          const TripDetailScreen(tripId: tripId),
+          spy: spy,
+          overrides: [
+            tripProvider.overrideWith((ref, id) async => makeTrip()),
+            tripRepositoryProvider.overrideWithValue(mockRepo),
+          ],
+        ),
+      );
+      await pumpFrames(tester);
+
+      await tester.tap(find.byTooltip('Edit trip'));
+      await pumpFrames(tester);
+
+      expect(spy.last, '/trips/$tripId/edit');
     });
 
     testWidgets('displays max speed stat when present', (tester) async {

@@ -10,7 +10,7 @@ import 'package:navis_mobile/features/logbook/presentation/screens/trip_stats_sc
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
 
-import '../../helpers/test_helpers.dart';
+import '../../helpers/helpers.dart';
 
 class FakeRoute extends Fake implements Route<dynamic> {}
 
@@ -265,6 +265,60 @@ void main() {
       await pumpFrames(tester);
 
       expect(callCount, greaterThan(initialCount));
+    });
+
+    testWidgets('shows empty state message when there are no trips',
+        (tester) async {
+      await tester.pumpWidget(
+        buildTestApp(
+          const TripStatsScreen(boatId: boatId),
+          overrides: [
+            boatTripsProvider.overrideWith(
+              (ref, boatId) async => <Trip>[],
+            ),
+          ],
+        ),
+      );
+      await pumpFrames(tester);
+
+      expect(
+        find.text('No trips recorded yet. Start your first trip!'),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+          'Record trips to see distance, hours at sea and monthly '
+          'activity here.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('shows total engine hours row when engine hours exist',
+        (tester) async {
+      setPhoneSize(tester);
+      final trips = [makeTrip().copyWith(engineHours: 10)];
+
+      await tester.pumpWidget(
+        buildTestApp(
+          const TripStatsScreen(boatId: boatId),
+          overrides: [
+            boatTripsProvider.overrideWith(
+              (ref, boatId) async => trips,
+            ),
+          ],
+        ),
+      );
+      await pumpFrames(tester);
+
+      await tester.scrollUntilVisible(
+        find.text('Total engine hours'),
+        200,
+      );
+      await tester.pump();
+
+      expect(find.text('Total engine hours'), findsOneWidget);
+      expect(find.text('10.0 h'), findsOneWidget);
     });
 
     testWidgets('shows top speed from trip data', (tester) async {
