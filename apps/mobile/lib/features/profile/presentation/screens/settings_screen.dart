@@ -11,6 +11,7 @@ import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
 import 'package:navis_mobile/features/profile/data/account_provider.dart';
+import 'package:navis_mobile/features/profile/presentation/widgets/export_data_tile.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
@@ -245,6 +246,12 @@ class SettingsScreen extends ConsumerWidget {
                         }
                       },
                     ),
+                    Divider(
+                      height: 1,
+                      color: context.glassBorderColor.withValues(alpha: 0.3),
+                      indent: 56,
+                    ),
+                    const ExportDataTile(),
                   ],
                 ),
               ),

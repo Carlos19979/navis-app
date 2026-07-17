@@ -41,8 +41,8 @@ tier; a B2B "fleet" tier is future work). Migration `00027_plan_free_pro.sql` re
 - Verified E2E (local API + DB): free `/me` → 402 on 2nd boat & group; webhook grant → pro
   (max_boats 3, groups, unlimited reminders); pro creates boat+group; webhook expiration → free;
   bad webhook secret → 401.
-- **Pending external config (not code):** RevenueCat products (`navis_pro_monthly` **5,99 €** /
-  `navis_pro_yearly` **39,99 €**, 7-day trial) + entitlement `pro` + webhook secret + App
+- **Pending external config (not code):** RevenueCat products (`navis_pro_monthly` **3,99 €** /
+  `navis_pro_yearly` **29,99 €**, 7-day trial) + entitlement `pro` + webhook secret + App
   Store/Play subscriptions; Novu `document-expiry` workflow with an **Email (Resend)** step;
   `--dart-define` RC keys.
 
@@ -69,7 +69,7 @@ Six Pro-gated features built on the plan-gating pattern (`domain/profile.go` cap
 - **Expiry-threshold single source**: `NavisDateUtils.expiryCriticalDays=30 / expiryWarningDays=90`
   (aligned with the `documents.status` trigger) + `statusFor()`; badge + summary consume it.
 
-**Monetization update:** Pro price set to **€39.99/yr + €5.99/mo, 7-day trial** (RevenueCat
+**Monetization update:** Pro price set to **€29.99/yr + €3.99/mo, 7-day trial** (RevenueCat
 product config pending; webhook already maps `pro`). New entitlements in `/me`:
 `full_readiness, cost_analytics, export_passport, shared_coordination, anomaly_alerts`.
 

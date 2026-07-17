@@ -754,5 +754,23 @@
   "tideLow": "Bajamar",
   "manageBoat": "Gestionar barco",
   "openSettings": "Abrir ajustes",
-  "locationUnavailable": "Ubicación no disponible"
+  "locationUnavailable": "Ubicación no disponible",
+  "docTypeCustom": "Otro (personalizado)",
+  "customDocumentName": "Nombre del documento",
+  "customDocumentNameRequired": "Introduce el nombre del documento",
+  "selectAtLeastOneAlertDay": "Selecciona al menos una alerta",
+  "alertChipDays": "{days, plural, one{{days} día} other{{days} días}}",
+  "@alertChipDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "customAlertDay": "Personalizado",
+  "customAlertDayHint": "Días antes del vencimiento, p. ej. 45",
+  "exportMyData": "Exportar mis datos",
+  "exportMyDataSubtitle": "Descarga todo en un archivo JSON",
+  "exportDataReady": "Exportación lista para compartir",
+  "exportDataFailed": "No se pudieron exportar tus datos. Inténtalo de nuevo."
 }

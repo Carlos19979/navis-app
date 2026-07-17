@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:image/image.dart' as img show decodeImage;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
@@ -60,7 +61,19 @@ class PassportLabels {
 const _navy = PdfColor.fromInt(0xFF1B2A4A);
 const _cyan = PdfColor.fromInt(0xFF4DA8DA);
 
+/// Custom documents render their user-given name; the raw type otherwise.
+String _docTypeLabel(Document d) {
+  final customName = d.customName;
+  if (d.type == 'custom' && customName != null && customName.isNotEmpty) {
+    return customName;
+  }
+  return d.type;
+}
+
 /// Builds the boat passport dossier as PDF bytes.
+///
+/// [boatPhotoBytes] (optional) is the boat's photo; it is embedded in the
+/// header when the bytes decode as an image, and silently skipped otherwise.
 Future<Uint8List> buildPassportPdf({
   required Boat boat,
   required List<Document> documents,
@@ -68,12 +81,26 @@ Future<Uint8List> buildPassportPdf({
   required ExpenseSummary? expenses,
   required PassportLabels labels,
   required String generatedOnValue,
+  Uint8List? boatPhotoBytes,
 }) async {
   // The pdf package's built-in Helvetica has no Unicode: it can't draw "€" or
   // accents. Use the bundled Inter font (full glyph coverage) for the whole doc.
   final inter = pw.Font.ttf(await rootBundle.load('assets/fonts/Inter.ttf'));
   final theme = pw.ThemeData.withFont(base: inter, bold: inter);
   final doc = pw.Document(theme: theme);
+
+  // Only embed the photo when the bytes actually decode as an image —
+  // otherwise pdf rendering would blow up the whole export.
+  pw.MemoryImage? photo;
+  if (boatPhotoBytes != null && boatPhotoBytes.isNotEmpty) {
+    try {
+      if (img.decodeImage(boatPhotoBytes) != null) {
+        photo = pw.MemoryImage(boatPhotoBytes);
+      }
+    } catch (_) {
+      photo = null;
+    }
+  }
 
   String statusLabel(DateTime expiry) =>
       switch (NavisDateUtils.statusFor(expiry)) {
@@ -88,7 +115,7 @@ Future<Uint8List> buildPassportPdf({
       pageFormat: PdfPageFormat.a4,
       margin: const pw.EdgeInsets.all(32),
       build: (context) => [
-        _header(boat, labels, generatedOnValue),
+        _header(boat, labels, generatedOnValue, photo),
         pw.SizedBox(height: 20),
         _boatDetails(boat, labels),
         pw.SizedBox(height: 20),
@@ -101,7 +128,7 @@ Future<Uint8List> buildPassportPdf({
             rows: [
               for (final d in documents)
                 [
-                  d.type,
+                  _docTypeLabel(d),
                   NavisDateUtils.formatDate(d.expiryDate),
                   statusLabel(d.expiryDate),
                 ],
@@ -142,10 +169,26 @@ Future<Uint8List> buildPassportPdf({
   return doc.save();
 }
 
-pw.Widget _header(Boat boat, PassportLabels labels, String generatedOn) {
+pw.Widget _header(
+  Boat boat,
+  PassportLabels labels,
+  String generatedOn,
+  pw.MemoryImage? photo,
+) {
   return pw.Column(
     crossAxisAlignment: pw.CrossAxisAlignment.start,
     children: [
+      if (photo != null)
+        pw.Container(
+          height: 120,
+          width: double.infinity,
+          margin: const pw.EdgeInsets.only(bottom: 12),
+          child: pw.ClipRRect(
+            horizontalRadius: 8,
+            verticalRadius: 8,
+            child: pw.Image(photo, fit: pw.BoxFit.cover),
+          ),
+        ),
       pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         crossAxisAlignment: pw.CrossAxisAlignment.end,

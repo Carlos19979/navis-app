@@ -15,6 +15,7 @@ import 'package:navis_mobile/features/auth/domain/auth_state.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
 import 'package:navis_mobile/features/profile/data/account_provider.dart';
 import 'package:navis_mobile/features/profile/presentation/screens/settings_screen.dart';
+import 'package:navis_mobile/features/profile/presentation/widgets/export_data_tile.dart';
 
 import '../../helpers/plan.dart';
 
@@ -71,6 +72,7 @@ void main() {
 
   Widget buildSettingsScreenWithPrefs({
     bool isDarkMode = true,
+    List<Override> extraOverrides = const [],
   }) {
     SharedPreferences.setMockInitialValues({
       'settings_theme_mode': isDarkMode ? 'dark' : 'light',
@@ -92,6 +94,7 @@ void main() {
             accountRepositoryProvider.overrideWithValue(
               mockAccountRepository,
             ),
+            ...extraOverrides,
           ],
           child: MaterialApp.router(
             routerConfig: GoRouter(
@@ -339,6 +342,69 @@ void main() {
 
         expect(
           find.text('Offline data cleared'),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('displays Export my data option', (tester) async {
+        setPhoneSize(tester);
+        await tester.pumpWidget(buildSettingsScreenWithPrefs());
+        await tester.pumpAndSettle();
+
+        expect(find.text('Export my data'), findsOneWidget);
+        expect(
+          find.text('Download everything as a JSON file'),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets(
+          'export calls the API, shares the file and confirms via snackbar',
+          (tester) async {
+        when(() => mockAccountRepository.exportData())
+            .thenAnswer((_) async => {'boats': <Object>[]});
+
+        final sharedPayloads = <String>[];
+        setPhoneSize(tester);
+        await tester.pumpWidget(buildSettingsScreenWithPrefs(
+          extraOverrides: [
+            exportShareProvider.overrideWithValue((json, origin) async {
+              sharedPayloads.add(json);
+            }),
+          ],
+        ));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Export my data'));
+        await tester.pumpAndSettle();
+
+        verify(() => mockAccountRepository.exportData()).called(1);
+        expect(sharedPayloads, hasLength(1));
+        expect(sharedPayloads.single, contains('"boats"'));
+        expect(find.text('Export ready to share'), findsOneWidget);
+      });
+
+      testWidgets('a failed export shows an error snackbar', (tester) async {
+        when(() => mockAccountRepository.exportData())
+            .thenThrow(Exception('boom'));
+
+        var shared = false;
+        setPhoneSize(tester);
+        await tester.pumpWidget(buildSettingsScreenWithPrefs(
+          extraOverrides: [
+            exportShareProvider.overrideWithValue((json, origin) async {
+              shared = true;
+            }),
+          ],
+        ));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Export my data'));
+        await tester.pumpAndSettle();
+
+        expect(shared, isFalse);
+        expect(
+          find.text('Could not export your data. Try again.'),
           findsOneWidget,
         );
       });

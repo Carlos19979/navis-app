@@ -1,11 +1,14 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'package:navis_mobile/core/network/storage_service.dart';
 import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
@@ -62,6 +65,27 @@ Future<void> exportBoatPassport(
     } catch (_) {
       expenses = null;
     }
+    // Boat photo for the PDF header — also best-effort. The stored URL may
+    // point at a private bucket, so it goes through the same signed-URL
+    // exchange the app uses to display it; public URLs pass through.
+    Uint8List? photoBytes;
+    final photoUrl = boat.photoUrl;
+    if (photoUrl != null && photoUrl.isNotEmpty) {
+      try {
+        final storage = ref.read(storageServiceProvider);
+        final resolved = await storage.signedDocumentUrl(photoUrl) ?? photoUrl;
+        final res = await Dio().get<List<int>>(
+          resolved,
+          options: Options(responseType: ResponseType.bytes),
+        );
+        final data = res.data;
+        if (data != null && data.isNotEmpty) {
+          photoBytes = Uint8List.fromList(data);
+        }
+      } catch (_) {
+        photoBytes = null;
+      }
+    }
 
     final labels = PassportLabels(
       title: l.passportTitle,
@@ -93,6 +117,7 @@ Future<void> exportBoatPassport(
       expenses: expenses,
       labels: labels,
       generatedOnValue: NavisDateUtils.formatDate(DateTime.now()),
+      boatPhotoBytes: photoBytes,
     );
 
     final dir = await getTemporaryDirectory();
