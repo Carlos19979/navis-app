@@ -11,6 +11,7 @@ type Entitlements struct {
 	ReminderDocLimit     int  `json:"reminder_doc_limit"` // -1 = unlimited
 	MaintenanceSchedules bool `json:"maintenance_schedules"`
 	AttachmentLimit      int  `json:"attachment_limit"` // -1 = unlimited
+	GalleryLimit         int  `json:"gallery_limit"`    // boat photos incl. cover
 	FullReadiness        bool `json:"full_readiness"`
 	CostAnalytics        bool `json:"cost_analytics"`
 	ExportPassport       bool `json:"export_passport"`
@@ -40,6 +41,7 @@ func MeResponseFromDomain(p *domain.Profile, boatCount int) MeResponse {
 		ReminderDocLimit:     p.Plan.ReminderDocLimit(),
 		MaintenanceSchedules: p.Plan.CanUseMaintenanceSchedules(),
 		AttachmentLimit:      p.Plan.AttachmentLimit(),
+		GalleryLimit:         p.Plan.GalleryLimit(),
 		FullReadiness:        p.Plan.CanUseFullReadiness(),
 		CostAnalytics:        p.Plan.CanUseCostAnalytics(),
 		ExportPassport:       p.Plan.CanExportPassport(),

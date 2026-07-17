@@ -43,6 +43,9 @@ func (s *BoatService) Create(ctx context.Context, boat *domain.Boat) (*domain.Bo
 			return nil, fmt.Errorf("creating boat: %w", domain.ErrPlanLimit)
 		}
 	}
+	if err := s.checkGallery(ctx, boat); err != nil {
+		return nil, fmt.Errorf("creating boat: %w", err)
+	}
 
 	created, err := s.repo.Create(ctx, boat)
 	if err != nil {
@@ -71,10 +74,39 @@ func (s *BoatService) List(ctx context.Context, userID, cursor string, limit int
 	return boats, nextCursor, nil
 }
 
+// maxBoatPhotos is the hard cap of gallery photos per boat (any plan).
+const maxBoatPhotos = 10
+
+// checkGallery normalizes the gallery list and enforces the per-plan photo
+// quota. GalleryLimit counts the photo_url cover, so the extras in PhotoURLs
+// may use the remaining slots (Free = cover only, Pro = 10 in total).
+func (s *BoatService) checkGallery(ctx context.Context, boat *domain.Boat) error {
+	if boat.PhotoURLs == nil {
+		boat.PhotoURLs = []string{}
+	}
+	if len(boat.PhotoURLs) > maxBoatPhotos {
+		return &domain.ValidationError{Field: "photo_urls", Message: "at most 10 gallery photos"}
+	}
+	if s.profiles == nil || len(boat.PhotoURLs) == 0 {
+		return nil
+	}
+	profile, err := s.profiles.GetOrCreate(ctx, boat.UserID)
+	if err != nil {
+		return err
+	}
+	if len(boat.PhotoURLs) > profile.Plan.GalleryLimit()-1 {
+		return domain.ErrPlanLimit
+	}
+	return nil
+}
+
 // Update modifies an existing boat.
 func (s *BoatService) Update(ctx context.Context, userID string, boat *domain.Boat) (*domain.Boat, error) {
 	if boat.ID == "" {
 		return nil, &domain.ValidationError{Field: "id", Message: "id is required"}
+	}
+	if err := s.checkGallery(ctx, boat); err != nil {
+		return nil, fmt.Errorf("updating boat %s: %w", boat.ID, err)
 	}
 
 	updated, err := s.repo.Update(ctx, userID, boat)

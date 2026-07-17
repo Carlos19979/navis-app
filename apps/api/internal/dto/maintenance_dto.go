@@ -17,6 +17,7 @@ type CreateMaintenanceRequest struct {
 	Provider    *string  `json:"provider"`
 	Notes       *string  `json:"notes"`
 	InvoiceURL  *string  `json:"invoice_url"`
+	PhotoURLs   []string `json:"photo_urls" validate:"omitempty,max=10,dive,url"`
 }
 
 // MaintenanceResponse is the API representation of a maintenance log.
@@ -31,6 +32,7 @@ type MaintenanceResponse struct {
 	Provider    *string  `json:"provider"`
 	Notes       *string  `json:"notes"`
 	InvoiceURL  *string  `json:"invoice_url"`
+	PhotoURLs   []string `json:"photo_urls"`
 }
 
 // MaintenanceResponseFromDomain converts a domain log to a response.
@@ -46,7 +48,16 @@ func MaintenanceResponseFromDomain(m *domain.MaintenanceLog) MaintenanceResponse
 		Provider:    m.Provider,
 		Notes:       m.Notes,
 		InvoiceURL:  m.InvoiceURL,
+		PhotoURLs:   emptyIfNil(m.PhotoURLs),
 	}
+}
+
+// emptyIfNil keeps photo arrays serializing as [] instead of null.
+func emptyIfNil(urls []string) []string {
+	if urls == nil {
+		return []string{}
+	}
+	return urls
 }
 
 // MaintenanceListFromDomain converts a slice of logs.

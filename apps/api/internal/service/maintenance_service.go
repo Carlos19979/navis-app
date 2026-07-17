@@ -11,16 +11,43 @@ import (
 
 // MaintenanceService handles boat maintenance logs, tasks and expenses.
 type MaintenanceService struct {
-	maint port.MaintenanceRepository
-	tasks port.MaintenanceTaskRepository
-	exp   port.ExpenseRepository
-	boats port.BoatRepository
-	now   func() time.Time
+	maint    port.MaintenanceRepository
+	tasks    port.MaintenanceTaskRepository
+	exp      port.ExpenseRepository
+	boats    port.BoatRepository
+	profiles port.ProfileRepository
+	now      func() time.Time
 }
 
 // NewMaintenanceService creates a new MaintenanceService.
-func NewMaintenanceService(maint port.MaintenanceRepository, tasks port.MaintenanceTaskRepository, exp port.ExpenseRepository, boats port.BoatRepository) *MaintenanceService {
-	return &MaintenanceService{maint: maint, tasks: tasks, exp: exp, boats: boats, now: time.Now}
+func NewMaintenanceService(maint port.MaintenanceRepository, tasks port.MaintenanceTaskRepository, exp port.ExpenseRepository, boats port.BoatRepository, profiles port.ProfileRepository) *MaintenanceService {
+	return &MaintenanceService{maint: maint, tasks: tasks, exp: exp, boats: boats, profiles: profiles, now: time.Now}
+}
+
+// maxLogPhotos is the hard cap of photos per maintenance log (any plan).
+const maxLogPhotos = 10
+
+// checkLogPhotos normalizes the photo list and enforces the per-plan
+// attachment quota (Free = 1 photo per log, Pro unlimited up to the cap).
+func (s *MaintenanceService) checkLogPhotos(ctx context.Context, log *domain.MaintenanceLog) error {
+	if log.PhotoURLs == nil {
+		log.PhotoURLs = []string{}
+	}
+	if len(log.PhotoURLs) > maxLogPhotos {
+		return &domain.ValidationError{Field: "photo_urls", Message: "at most 10 photos per log"}
+	}
+	if s.profiles == nil || len(log.PhotoURLs) == 0 {
+		return nil
+	}
+	profile, err := s.profiles.GetOrCreate(ctx, log.UserID)
+	if err != nil {
+		return err
+	}
+	limit := profile.Plan.AttachmentLimit()
+	if limit != domain.Unlimited && len(log.PhotoURLs) > limit {
+		return domain.ErrPlanLimit
+	}
+	return nil
 }
 
 // assertMaintenance verifies the user may manage maintenance on the boat.
@@ -63,6 +90,9 @@ func (s *MaintenanceService) AddLog(ctx context.Context, log *domain.Maintenance
 	if err := s.assertMaintenance(ctx, log.UserID, log.BoatID); err != nil {
 		return nil, fmt.Errorf("add maintenance: %w", err)
 	}
+	if err := s.checkLogPhotos(ctx, log); err != nil {
+		return nil, fmt.Errorf("add maintenance: %w", err)
+	}
 	return s.maint.Create(ctx, log)
 }
 
@@ -80,6 +110,9 @@ func (s *MaintenanceService) UpdateLog(ctx context.Context, userID string, log *
 		return nil, &domain.ValidationError{Field: "type", Message: "type is required"}
 	}
 	if err := s.assertMaintenance(ctx, userID, log.BoatID); err != nil {
+		return nil, fmt.Errorf("update maintenance: %w", err)
+	}
+	if err := s.checkLogPhotos(ctx, log); err != nil {
 		return nil, fmt.Errorf("update maintenance: %w", err)
 	}
 	return s.maint.Update(ctx, log)

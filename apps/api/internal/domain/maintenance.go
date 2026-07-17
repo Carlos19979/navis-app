@@ -16,6 +16,7 @@ type MaintenanceLog struct {
 	Provider    *string
 	Notes       *string
 	InvoiceURL  *string
+	PhotoURLs   []string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
