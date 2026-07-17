@@ -517,7 +517,7 @@ Note: Android emulator uses `10.0.2.2` to reach the host machine's localhost.
 
 ### Novu Setup
 
-- **Workflows (8):** `document-expiry` (cron) + `regatta-rsvp`, `regatta-scheduled`, `regatta-reminder`, `group-join-request`, `group-request-approved`, `event-live`, `expense-split` (service flows, see `internal/service/notifier.go`). Steps per workflow: Push (FCM) → Email (Resend).
+- **Workflows (9):** `document-expiry` + `maintenance-due` (crons) + `regatta-rsvp`, `regatta-scheduled`, `regatta-reminder`, `group-join-request`, `group-request-approved`, `event-live`, `expense-split` (service flows, see `internal/service/notifier.go`). Steps per workflow: Push (FCM) → Email (Resend).
 - **Integrations:** FCM (Service Account JSON from Firebase) + Resend (API Key).
 - **Environments:** Development and Production — each has its own API Key. Same Firebase Service Account and Resend key in both.
 - **Subscribers:** Created automatically when users register device tokens via `POST /api/v1/devices`. Subscriber ID = Supabase `user_id`.

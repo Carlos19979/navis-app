@@ -58,6 +58,34 @@ const (
 	MaintenanceNoPlan  MaintenanceTaskStatus = "none"     // history-only (no interval)
 )
 
+// MaintenanceDueNotice is a due/overdue task occurrence ready to notify:
+// the task's evaluated state plus the owner and boat context the
+// notification needs. DueKey pins the concrete occurrence (see the
+// maintenance_notification_logs migration).
+type MaintenanceDueNotice struct {
+	TaskID        string
+	TaskName      string
+	BoatID        string
+	BoatName      string
+	OwnerID       string
+	Status        MaintenanceTaskStatus
+	NextDueDate   *time.Time
+	DueDays       int
+	HoursUntilDue *float64
+	DueKey        string
+}
+
+// MaintenanceTaskWithLatest is a task joined with its boat context and the
+// latest service log, for cross-boat due evaluation (notification cron).
+type MaintenanceTaskWithLatest struct {
+	Task            MaintenanceTask
+	BoatName        string
+	OwnerID         string
+	EngineHours     float64
+	LastPerformedAt *time.Time
+	LastEngineHours *float64
+}
+
 // Expense is a cost associated with a boat (fuel, mooring, insurance…).
 type Expense struct {
 	ID         string

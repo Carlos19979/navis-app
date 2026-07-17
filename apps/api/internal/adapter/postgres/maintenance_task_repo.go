@@ -111,3 +111,43 @@ func (r *MaintenanceTaskRepo) Delete(ctx context.Context, boatID, id string) err
 	}
 	return nil
 }
+
+// ListAllWithLatest returns every task across all boats joined with its boat
+// context (name, owner, engine hours) and latest service log. Input for the
+// maintenance-due notification cron.
+func (r *MaintenanceTaskRepo) ListAllWithLatest(ctx context.Context) ([]domain.MaintenanceTaskWithLatest, error) {
+	rows, err := r.pool.Query(ctx, `
+		SELECT t.id, t.boat_id, t.name, t.interval_months, t.interval_hours,
+		       t.created_at, t.updated_at,
+		       b.name, b.user_id, b.engine_hours,
+		       l.performed_at, l.engine_hours
+		FROM maintenance_tasks t
+		JOIN boats b ON b.id = t.boat_id
+		LEFT JOIN LATERAL (
+			SELECT performed_at, engine_hours
+			FROM maintenance_logs
+			WHERE task_id = t.id
+			ORDER BY performed_at DESC
+			LIMIT 1
+		) l ON true`)
+	if err != nil {
+		return nil, fmt.Errorf("listing tasks for notify: %w", err)
+	}
+	defer rows.Close()
+
+	var out []domain.MaintenanceTaskWithLatest
+	for rows.Next() {
+		var row domain.MaintenanceTaskWithLatest
+		if err := rows.Scan(
+			&row.Task.ID, &row.Task.BoatID, &row.Task.Name,
+			&row.Task.IntervalMonths, &row.Task.IntervalHours,
+			&row.Task.CreatedAt, &row.Task.UpdatedAt,
+			&row.BoatName, &row.OwnerID, &row.EngineHours,
+			&row.LastPerformedAt, &row.LastEngineHours,
+		); err != nil {
+			return nil, fmt.Errorf("scanning task for notify: %w", err)
+		}
+		out = append(out, row)
+	}
+	return out, rows.Err()
+}

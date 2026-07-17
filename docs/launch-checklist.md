@@ -55,7 +55,7 @@ este documento es solo el índice de progreso. Actualizado: 2026-07-15.
 - [ ] Copiar SDK key iOS (`appl_…`) para los builds (`REVENUECAT_IOS_KEY`).
 
 ### 7. Novu
-- [ ] Cuenta + los 8 workflows de `internal/service/notifier.go`: `document-expiry`,
+- [ ] Cuenta + los 9 workflows (7 de `internal/service/notifier.go` + 2 crons): `document-expiry`, `maintenance-due`,
       `regatta-rsvp`, `regatta-scheduled`, `regatta-reminder`, `group-join-request`,
       `group-request-approved`, `event-live`, `expense-split` (Push FCM → Email Resend).
 - [ ] Integraciones: FCM (Service Account JSON del paso 3) + Resend (API key).

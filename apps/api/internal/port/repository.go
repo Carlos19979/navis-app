@@ -55,6 +55,16 @@ type MaintenanceTaskRepository interface {
 	// GetByID returns a single task on a boat (caller enforces access).
 	GetByID(ctx context.Context, boatID, id string) (*domain.MaintenanceTask, error)
 	Delete(ctx context.Context, boatID, id string) error
+	// ListAllWithLatest returns every task across all boats joined with its
+	// boat context and latest service log — the notification cron's input.
+	ListAllWithLatest(ctx context.Context) ([]domain.MaintenanceTaskWithLatest, error)
+}
+
+// MaintenanceNotificationLogRepository tracks sent maintenance-due
+// notifications to avoid duplicates (one per task+status+due occurrence).
+type MaintenanceNotificationLogRepository interface {
+	Exists(ctx context.Context, userID, taskID, status, dueKey string) (bool, error)
+	Create(ctx context.Context, userID, taskID, status, dueKey string) error
 }
 
 // ExpenseRepository persists boat expenses.
