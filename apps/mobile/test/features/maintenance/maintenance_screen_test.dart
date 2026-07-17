@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:navis_mobile/core/network/storage_service.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/maintenance/data/maintenance_models.dart';
@@ -13,12 +14,15 @@ import 'package:navis_mobile/features/maintenance/presentation/screens/maintenan
 import 'package:navis_mobile/features/shared/data/shared_repository.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_gradient_fab.dart';
+import 'package:navis_mobile/shared/widgets/navis_photo_strip.dart';
 import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
 
 import '../../helpers/helpers.dart';
 
 class _MockMaintenanceRepository extends Mock
     implements MaintenanceRepository {}
+
+class _MockStorageService extends Mock implements StorageService {}
 
 void main() {
   setUpAll(() {
@@ -28,9 +32,15 @@ void main() {
   const boatId = 'boat-1';
 
   late _MockMaintenanceRepository mockRepo;
+  late _MockStorageService mockStorage;
 
   setUp(() {
     mockRepo = _MockMaintenanceRepository();
+    mockStorage = _MockStorageService();
+    // Signed resolution "offline": photo thumbnails render the placeholder
+    // instead of fetching a network image.
+    when(() => mockStorage.signedDocumentUrl(any()))
+        .thenAnswer((_) async => null);
   });
 
   Widget buildSubject({
@@ -40,10 +50,13 @@ void main() {
     ExpenseSummary? summary,
     Map<String, ExpenseSplitSummary> splits = const {},
     bool canManage = true,
+    bool pro = true,
   }) {
     return buildTestApp(
       const MaintenanceScreen(boatId: boatId),
       overrides: [
+        ...planOverrides(pro: pro),
+        storageServiceProvider.overrideWithValue(mockStorage),
         maintenanceRepositoryProvider.overrideWithValue(mockRepo),
         maintenanceTasksProvider.overrideWith(
           (ref, id) => tasks?.call() ?? Future.value(<MaintenanceTask>[]),
@@ -318,6 +331,83 @@ void main() {
           .single as Map<String, dynamic>;
       expect(body['name'], 'Rigging check');
       expect(body['interval_months'], 12);
+    });
+  });
+
+  group('MaintenanceScreen log photos', () {
+    testWidgets('log card renders photo thumbnails', (tester) async {
+      setPhoneSize(tester);
+      await tester.pumpWidget(
+        buildSubject(
+          logs: () async => [
+            makeMaintenanceLog(photoUrls: const [
+              'https://x.test/impeller.jpg',
+              'https://x.test/anode.jpg',
+            ]),
+          ],
+        ),
+      );
+      await pumpScreen(tester);
+
+      expect(find.byType(NavisPhotoThumbRow), findsOneWidget);
+      expect(find.byType(NavisPhotoThumb), findsNWidgets(2));
+    });
+
+    testWidgets(
+        'record-service sheet has the photo strip and saves '
+        'photo_urls', (tester) async {
+      setPhoneSize(tester);
+      when(() => mockRepo.addLog(boatId, any())).thenAnswer((_) async {});
+      await tester.pumpWidget(
+        buildSubject(tasks: () async => [makeMaintenanceTask()]),
+      );
+      await pumpScreen(tester);
+
+      await tester.tap(find.byTooltip('Record service'));
+      await pumpScreen(tester);
+
+      expect(find.text('Photos'), findsOneWidget);
+      expect(find.byType(NavisPhotoStrip), findsOneWidget);
+      expect(find.byTooltip('Add Photo'), findsOneWidget);
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Type (e.g. oil change)'),
+        'Impeller swap',
+      );
+      await tester.tap(find.text('Save'));
+      await pumpScreen(tester);
+
+      final body = verify(() => mockRepo.addLog(boatId, captureAny()))
+          .captured
+          .single as Map<String, dynamic>;
+      expect(body['type'], 'Impeller swap');
+      expect(body['photo_urls'], isA<List<String>>());
+    });
+
+    testWidgets('Free plan: adding beyond one photo shows the paywall',
+        (tester) async {
+      setPhoneSize(tester);
+      final log = makeMaintenanceLog(
+        photoUrls: const ['https://x.test/one.jpg'],
+      );
+      await tester.pumpWidget(
+        buildSubject(pro: false, logs: () async => [log]),
+      );
+      await pumpScreen(tester);
+
+      // Open the edit sheet from the log card, then try to add a second
+      // photo: Free's AttachmentLimit (1) is already used up.
+      await tester.tap(find.text('engine_service'));
+      await pumpScreen(tester);
+      await tester.ensureVisible(find.byTooltip('Add Photo'));
+      await tester.tap(find.byTooltip('Add Photo'));
+      await pumpScreen(tester);
+
+      expectPaywall();
+      // The source picker never opened.
+      expect(find.text('Take Photo'), findsNothing);
+
+      await drain(tester);
     });
   });
 

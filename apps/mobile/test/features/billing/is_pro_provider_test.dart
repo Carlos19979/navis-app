@@ -12,6 +12,8 @@ Account account({required bool isPro}) => Account(
       canCreateGroups: isPro,
       reminderDocLimit: isPro ? -1 : 1,
       maintenanceSchedules: isPro,
+      attachmentLimit: isPro ? -1 : 1,
+      galleryLimit: isPro ? 10 : 1,
       fullReadiness: isPro,
       costAnalytics: isPro,
       exportPassport: isPro,

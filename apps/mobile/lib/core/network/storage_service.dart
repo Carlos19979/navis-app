@@ -185,6 +185,58 @@ class StorageService {
     return url;
   }
 
+  /// Uploads a service-evidence photo for a maintenance log. Lives in the
+  /// private `documents` bucket (like invoices); display goes through
+  /// [signedDocumentUrl].
+  Future<String> uploadMaintenancePhoto({
+    required String userId,
+    required File file,
+  }) async {
+    uploadProgress.value = 0.0;
+    final compressed = await _compressImage(file);
+    uploadProgress.value = 0.5;
+    final stamp = DateTime.now().millisecondsSinceEpoch;
+    final path = '$userId/maintenance/$stamp.jpg';
+    await supabaseClient.storage.from('documents').uploadBinary(
+          path,
+          compressed,
+          fileOptions: const FileOptions(
+            contentType: 'image/jpeg',
+            upsert: true,
+          ),
+        );
+    uploadProgress.value = 1.0;
+    final url = supabaseClient.storage.from('documents').getPublicUrl(path);
+    uploadProgress.value = null;
+    return url;
+  }
+
+  /// Uploads an extra gallery photo for a boat (public `boats` bucket, like
+  /// the cover photo).
+  Future<String> uploadBoatGalleryPhoto({
+    required String userId,
+    required String boatId,
+    required File file,
+  }) async {
+    uploadProgress.value = 0.0;
+    final compressed = await _compressImage(file);
+    uploadProgress.value = 0.5;
+    final stamp = DateTime.now().millisecondsSinceEpoch;
+    final path = '$userId/$boatId/gallery/$stamp.jpg';
+    await supabaseClient.storage.from('boats').uploadBinary(
+          path,
+          compressed,
+          fileOptions: const FileOptions(
+            contentType: 'image/jpeg',
+            upsert: true,
+          ),
+        );
+    uploadProgress.value = 1.0;
+    final url = supabaseClient.storage.from('boats').getPublicUrl(path);
+    uploadProgress.value = null;
+    return url;
+  }
+
   Future<void> deleteBoatPhoto({
     required String userId,
     required String boatId,

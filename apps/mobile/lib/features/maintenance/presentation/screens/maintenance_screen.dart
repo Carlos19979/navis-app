@@ -18,6 +18,7 @@ import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/maintenance/data/maintenance_models.dart';
 import 'package:navis_mobile/features/maintenance/data/maintenance_repository.dart';
+import 'package:navis_mobile/features/profile/data/account_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
@@ -27,6 +28,7 @@ import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_empty_state.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_gradient_fab.dart';
+import 'package:navis_mobile/shared/widgets/navis_photo_strip.dart';
 import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 import 'package:navis_mobile/shared/widgets/navis_text_field.dart';
@@ -136,6 +138,14 @@ String? _dueLabel(AppLocalizations l, MaintenanceTask t) {
   }
   if (days != null) return l.maintenanceInDays(days);
   return null;
+}
+
+/// How many photos a maintenance log may hold for the current user: Free
+/// mirrors the server AttachmentLimit (1), Pro gets the hard cap (10).
+int _logPhotoCap(WidgetRef ref) {
+  if (ref.read(isProProvider)) return 10;
+  final limit = ref.read(accountProvider).valueOrNull?.attachmentLimit ?? 1;
+  return limit < 0 ? 10 : limit;
 }
 
 String _taskStatusLabel(AppLocalizations l, MaintenanceTask t) =>
@@ -340,6 +350,10 @@ class _MaintenanceTab extends ConsumerWidget {
                               color: AppColors.cyan, fontSize: 12)),
                     ],
                   ),
+                ],
+                if (m.photoUrls.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  NavisPhotoThumbRow(urls: m.photoUrls, signed: true),
                 ],
               ],
             ),
@@ -549,6 +563,7 @@ class _MaintenanceTab extends ConsumerWidget {
     final providerCtrl = TextEditingController(text: existing?.provider ?? '');
     var date = existing?.performedAt ?? DateTime.now();
     String? invoiceUrl = existing?.invoiceUrl;
+    var photoUrls = List<String>.of(existing?.photoUrls ?? const []);
     // Only keep a selected task id that still exists in the list.
     final taskIds = tasks.map((t) => t.id).toSet();
     var selectedTaskId = existing?.taskId ?? presetTaskId;
@@ -641,6 +656,25 @@ class _MaintenanceTab extends ConsumerWidget {
                   url: invoiceUrl,
                   onPicked: (u) => setState(() => invoiceUrl = u),
                 ),
+                const SizedBox(height: 8),
+                NavisPhotoStrip(
+                  label: l.photosLabel,
+                  urls: photoUrls,
+                  signed: true,
+                  maxPhotos: _logPhotoCap(ref),
+                  onLimitReached: () =>
+                      showPaywall(ctx, ref, reason: l.paywallReasonLogPhotos),
+                  upload: (file) {
+                    final userId = supabaseClient.auth.currentUser?.id;
+                    if (userId == null) {
+                      throw StateError('not signed in');
+                    }
+                    return ref
+                        .read(storageServiceProvider)
+                        .uploadMaintenancePhoto(userId: userId, file: file);
+                  },
+                  onChanged: (u) => setState(() => photoUrls = u),
+                ),
                 const SizedBox(height: 12),
                 NavisButton(
                   label: l.save,
@@ -688,6 +722,7 @@ class _MaintenanceTab extends ConsumerWidget {
       'provider':
           providerCtrl.text.trim().isEmpty ? null : providerCtrl.text.trim(),
       'invoice_url': invoiceUrl,
+      'photo_urls': photoUrls,
     };
     try {
       final repo = ref.read(maintenanceRepositoryProvider);

@@ -100,6 +100,8 @@ Boat makeBoat({
   String type = 'sailboat',
   double lengthMeters = 12.5,
   String? homePort = 'Palma de Mallorca',
+  String? photoUrl,
+  List<String> photoUrls = const [],
 }) {
   return Boat(
     id: id,
@@ -108,6 +110,8 @@ Boat makeBoat({
     type: type,
     lengthMeters: lengthMeters,
     homePort: homePort,
+    photoUrl: photoUrl,
+    photoUrls: photoUrls,
     createdAt: DateTime(2026),
     updatedAt: DateTime(2026),
   );
@@ -352,6 +356,7 @@ MaintenanceLog makeMaintenanceLog({
   String? provider = 'Marina Service',
   String? notes,
   String? invoiceUrl,
+  List<String> photoUrls = const [],
 }) {
   return MaintenanceLog(
     id: id,
@@ -364,6 +369,7 @@ MaintenanceLog makeMaintenanceLog({
     provider: provider,
     notes: notes,
     invoiceUrl: invoiceUrl,
+    photoUrls: photoUrls,
   );
 }
 
