@@ -4099,6 +4099,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Location unavailable'**
   String get locationUnavailable;
+
+  /// No description provided for @docTypeCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Other (custom)'**
+  String get docTypeCustom;
+
+  /// No description provided for @customDocumentName.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom document name'**
+  String get customDocumentName;
+
+  /// No description provided for @customDocumentNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a document name'**
+  String get customDocumentNameRequired;
+
+  /// No description provided for @selectAtLeastOneAlertDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least one alert'**
+  String get selectAtLeastOneAlertDay;
+
+  /// No description provided for @alertChipDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, one{{days} day} other{{days} days}}'**
+  String alertChipDays(int days);
+
+  /// No description provided for @customAlertDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get customAlertDay;
+
+  /// No description provided for @customAlertDayHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Days before expiry, e.g. 45'**
+  String get customAlertDayHint;
+
+  /// No description provided for @exportMyData.
+  ///
+  /// In en, this message translates to:
+  /// **'Export my data'**
+  String get exportMyData;
+
+  /// No description provided for @exportMyDataSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Download everything as a JSON file'**
+  String get exportMyDataSubtitle;
+
+  /// No description provided for @exportDataReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Export ready to share'**
+  String get exportDataReady;
+
+  /// No description provided for @exportDataFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not export your data. Try again.'**
+  String get exportDataFailed;
 }
 
 class _AppLocalizationsDelegate

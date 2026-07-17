@@ -3,12 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:navis_mobile/features/documents/data/models/document_model.dart';
 import 'package:navis_mobile/features/documents/domain/entities/document.dart';
 import 'package:navis_mobile/features/documents/domain/repositories/document_repository.dart';
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
 import 'package:navis_mobile/features/documents/presentation/screens/document_form_screen.dart';
 
-import '../../helpers/test_helpers.dart';
+import '../../helpers/helpers.dart';
 
 class MockDocumentRepository extends Mock implements DocumentRepository {}
 
@@ -17,9 +18,10 @@ class FakeRoute extends Fake implements Route<dynamic> {}
 class FakeDocument extends Fake implements Document {}
 
 void main() {
-  setUpAll(() {
+  setUpAll(() async {
     registerFallbackValue(FakeRoute());
     registerFallbackValue(FakeDocument());
+    await signInFakeUser();
   });
 
   const boatId = 'boat-1';
@@ -60,6 +62,28 @@ void main() {
       overrides: overrides,
     );
   }
+
+  /// Routed variant for flows that reach `context.pop()` after saving.
+  Widget buildRoutedSubject() {
+    return buildRoutedTestApp(
+      const DocumentFormScreen(boatId: boatId),
+      overrides: [
+        documentRepositoryProvider.overrideWithValue(mockRepository),
+        boatDocumentsProvider.overrideWith(
+          (ref, id) async => <Document>[],
+        ),
+      ],
+    );
+  }
+
+  /// The [FilterChip] rendering [label] (e.g. '30 days').
+  FilterChip chipFor(WidgetTester tester, String label) =>
+      tester.widget<FilterChip>(
+        find.ancestor(
+          of: find.text(label),
+          matching: find.byType(FilterChip),
+        ),
+      );
 
   group('DocumentFormScreen - Create Mode', () {
     testWidgets('shows New Document title in create mode', (tester) async {
@@ -135,13 +159,23 @@ void main() {
       expect(find.text('Expiry Date'), findsOneWidget);
     });
 
-    testWidgets('shows alert days before expiry field', (tester) async {
+    testWidgets('shows alert day chips with 30 and 7 preselected',
+        (tester) async {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
       expect(find.text('Alert Days Before Expiry'), findsOneWidget);
-      // Default value is 30
-      expect(find.text('30'), findsOneWidget);
+      // Preset thresholds render as chips (plus the custom-entry chip).
+      expect(find.text('30 days'), findsOneWidget);
+      expect(find.text('15 days'), findsOneWidget);
+      expect(find.text('7 days'), findsOneWidget);
+      expect(find.text('1 day'), findsOneWidget);
+      expect(find.text('Custom'), findsOneWidget);
+      // Default selection mirrors the API default [30, 7].
+      expect(chipFor(tester, '30 days').selected, isTrue);
+      expect(chipFor(tester, '7 days').selected, isTrue);
+      expect(chipFor(tester, '15 days').selected, isFalse);
+      expect(chipFor(tester, '1 day').selected, isFalse);
     });
 
     testWidgets('shows notes field', (tester) async {
@@ -165,40 +199,80 @@ void main() {
       expect(find.text('Add Scan'), findsOneWidget);
     });
 
-    testWidgets('alert days validates non-numeric input', (tester) async {
-      tester.view.physicalSize = const Size(1080, 1920);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(() {
-        tester.view.resetPhysicalSize();
-        tester.view.resetDevicePixelRatio();
-      });
-
+    testWidgets('deselecting every alert chip blocks saving', (tester) async {
+      setPhoneSize(tester);
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
-      // Find the alert days field by its label text
-      final alertField = find.widgetWithText(
-        TextFormField,
-        'Alert Days Before Expiry',
-      );
-      expect(alertField, findsOneWidget);
-
-      // Clear and type invalid value
-      await tester.enterText(alertField, 'abc');
+      // Clear the default [30, 7] selection.
+      await tester.tap(find.text('30 days'));
+      await tester.tap(find.text('7 days'));
       await tester.pumpAndSettle();
 
-      // Scroll down to Save button
-      await tester.drag(
-        find.byType(SingleChildScrollView),
-        const Offset(0, -300),
-      );
-      await tester.pumpAndSettle();
-
-      // Tap save to trigger validation
       await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Please enter a valid number'), findsOneWidget);
+      expect(find.text('Select at least one alert'), findsOneWidget);
+      verifyNever(() => mockRepository.createDocument(any()));
+    });
+
+    testWidgets('custom chip adds a new threshold via dialog', (tester) async {
+      setPhoneSize(tester);
+      await tester.pumpWidget(buildSubject());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Custom'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField).last, '45');
+      await tester.tap(find.text('Confirm'));
+      await tester.pumpAndSettle();
+
+      expect(chipFor(tester, '45 days').selected, isTrue);
+    });
+
+    testWidgets('custom chip rejects non-numeric input with a snackbar',
+        (tester) async {
+      setPhoneSize(tester);
+      await tester.pumpWidget(buildSubject());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Custom'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField).last, 'abc');
+      await tester.tap(find.text('Confirm'));
+      await tester.pumpAndSettle();
+
+      expectSnackbar(tester, 'Please enter a valid number');
+    });
+
+    testWidgets('saving sends the selected alert days as an array',
+        (tester) async {
+      when(() => mockRepository.createDocument(any()))
+          .thenAnswer((_) async => makeDocument());
+
+      setPhoneSize(tester);
+      await tester.pumpWidget(buildRoutedSubject());
+      await tester.pumpAndSettle();
+
+      // Start from [30, 7]: select 15, deselect 7 → [30, 15].
+      await tester.tap(find.text('15 days'));
+      await tester.tap(find.text('7 days'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+
+      final captured = verify(
+        () => mockRepository.createDocument(captureAny()),
+      ).captured.single as Document;
+      expect(captured.alertDays, [30, 15]);
+      expect(captured.alertDaysBefore, 30);
+
+      // The wire format carries the full array.
+      final json = DocumentModel.fromEntity(captured).toJson();
+      expect(json['alert_days'], [30, 15]);
     });
 
     testWidgets('can enter notes text', (tester) async {
@@ -503,6 +577,129 @@ void main() {
 
       // The custom type should be dynamically added and shown
       expect(find.text('Diving Certificate'), findsOneWidget);
+    });
+  });
+
+  group('DocumentFormScreen - Custom Type', () {
+    Future<void> selectCustomType(WidgetTester tester) async {
+      await tester.tap(find.byType(DropdownButtonFormField<String>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Other (custom)').last);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('dropdown offers Other (custom)', (tester) async {
+      setPhoneSize(tester);
+      await tester.pumpWidget(buildSubject());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(DropdownButtonFormField<String>));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Other (custom)'), findsAtLeastNWidgets(1));
+    });
+
+    testWidgets('selecting custom reveals the required name field',
+        (tester) async {
+      setPhoneSize(tester);
+      await tester.pumpWidget(buildSubject());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Custom document name'), findsNothing);
+
+      await selectCustomType(tester);
+
+      expect(find.text('Custom document name'), findsOneWidget);
+    });
+
+    testWidgets('saving custom without a name shows a validation error',
+        (tester) async {
+      setPhoneSize(tester);
+      await tester.pumpWidget(buildSubject());
+      await tester.pumpAndSettle();
+
+      await selectCustomType(tester);
+
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Please enter a document name'), findsOneWidget);
+      verifyNever(() => mockRepository.createDocument(any()));
+    });
+
+    testWidgets('saving custom sends custom_name', (tester) async {
+      when(() => mockRepository.createDocument(any()))
+          .thenAnswer((_) async => makeDocument());
+
+      setPhoneSize(tester);
+      await tester.pumpWidget(buildRoutedSubject());
+      await tester.pumpAndSettle();
+
+      await selectCustomType(tester);
+
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Custom document name'),
+        'Diving Permit',
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+
+      final captured = verify(
+        () => mockRepository.createDocument(captureAny()),
+      ).captured.single as Document;
+      expect(captured.type, 'custom');
+      expect(captured.customName, 'Diving Permit');
+
+      final json = DocumentModel.fromEntity(captured).toJson();
+      expect(json['type'], 'custom');
+      expect(json['custom_name'], 'Diving Permit');
+    });
+
+    testWidgets('non-custom types do not send custom_name', (tester) async {
+      await signInFakeUser();
+      when(() => mockRepository.createDocument(any()))
+          .thenAnswer((_) async => makeDocument());
+
+      setPhoneSize(tester);
+      await tester.pumpWidget(buildRoutedSubject());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+
+      final captured = verify(
+        () => mockRepository.createDocument(captureAny()),
+      ).captured.single as Document;
+      expect(captured.customName, isNull);
+      expect(
+        DocumentModel.fromEntity(captured).toJson(),
+        isNot(contains('custom_name')),
+      );
+    });
+
+    testWidgets('edit mode pre-fills custom name and alert chips',
+        (tester) async {
+      final customDoc = makeDocument(
+        id: 'doc-9',
+        type: 'custom',
+        customName: 'Marina Permit',
+        alertDays: [15, 1],
+      );
+
+      setPhoneSize(tester);
+      await tester.pumpWidget(buildSubject(
+        documentId: 'doc-9',
+        existingDocument: customDoc,
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Marina Permit'), findsOneWidget);
+      expect(chipFor(tester, '15 days').selected, isTrue);
+      expect(chipFor(tester, '1 day').selected, isTrue);
+      expect(chipFor(tester, '30 days').selected, isFalse);
+      expect(chipFor(tester, '7 days').selected, isFalse);
     });
   });
 }

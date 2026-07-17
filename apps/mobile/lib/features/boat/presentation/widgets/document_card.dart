@@ -35,6 +35,18 @@ class DocumentCard extends StatelessWidget {
       .map((w) => w[0].toUpperCase() + w.substring(1))
       .join(' ');
 
+  /// Display title: the user-given name for `custom` documents, the
+  /// prettified type otherwise.
+  String get _title {
+    final customName = document.customName;
+    if (document.type == 'custom' &&
+        customName != null &&
+        customName.isNotEmpty) {
+      return customName;
+    }
+    return _prettyType(document.type);
+  }
+
   @override
   Widget build(BuildContext context) {
     return NavisCard(
@@ -77,7 +89,7 @@ class DocumentCard extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            _prettyType(document.type),
+                            _title,
                             style: Theme.of(context)
                                 .textTheme
                                 .titleSmall

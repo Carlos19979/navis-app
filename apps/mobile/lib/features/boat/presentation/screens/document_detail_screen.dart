@@ -76,6 +76,17 @@ class DocumentDetailScreen extends ConsumerWidget {
             ),
             data: (doc) {
               final daysLeft = NavisDateUtils.daysUntil(doc.expiryDate);
+              // Custom documents show their user-given name as the title.
+              final customName = doc.customName;
+              final title = doc.type == 'custom' &&
+                      customName != null &&
+                      customName.isNotEmpty
+                  ? customName
+                  : doc.type;
+              // Full alert-threshold list, falling back to the single legacy
+              // value for rows cached before alert_days was carried through.
+              final alertDays = doc.alertDays ??
+                  [if (doc.alertDaysBefore != null) doc.alertDaysBefore!];
               final statusColor = daysLeft < 0
                   ? AppColors.red
                   : daysLeft <= 30
@@ -125,7 +136,7 @@ class DocumentDetailScreen extends ConsumerWidget {
                                       children: [
                                         Expanded(
                                           child: Text(
-                                            doc.type,
+                                            title,
                                             style: Theme.of(context)
                                                 .textTheme
                                                 .headlineMedium
@@ -186,13 +197,13 @@ class DocumentDetailScreen extends ConsumerWidget {
                             label: l.expiryDate,
                             value: NavisDateUtils.formatDate(doc.expiryDate),
                           ),
-                          if (doc.alertDaysBefore != null) ...[
+                          if (alertDays.isNotEmpty) ...[
                             const SizedBox(height: 12),
                             _DetailRow(
                               icon: Icons.notifications_outlined,
                               label: l.alert,
-                              value:
-                                  '${doc.alertDaysBefore} ${l.daysBeforeExpiry}',
+                              value: '${alertDays.join(", ")} '
+                                  '${l.daysBeforeExpiry}',
                             ),
                           ],
                           if (doc.notes != null && doc.notes!.isNotEmpty) ...[

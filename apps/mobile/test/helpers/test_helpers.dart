@@ -117,17 +117,22 @@ Document makeDocument({
   String id = 'doc-1',
   String boatId = 'boat-1',
   String type = 'Insurance',
+  String? customName,
   String? status = 'ok',
   int daysUntilExpiry = 180,
+  List<int>? alertDays,
 }) {
   return Document(
     id: id,
     boatId: boatId,
     type: type,
+    customName: customName,
     expiryDate: DateTime.now().add(Duration(days: daysUntilExpiry)),
     status: status,
     notes: 'Test document',
-    alertDaysBefore: 30,
+    alertDaysBefore:
+        alertDays != null && alertDays.isNotEmpty ? alertDays.first : 30,
+    alertDays: alertDays,
     createdAt: DateTime(2026),
     updatedAt: DateTime(2026),
   );

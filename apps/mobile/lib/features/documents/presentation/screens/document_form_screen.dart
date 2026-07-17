@@ -18,6 +18,7 @@ import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
+import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 
 class DocumentFormScreen extends ConsumerStatefulWidget {
@@ -43,7 +44,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
 
   final _formKey = GlobalKey<FormState>();
   final _notesController = TextEditingController();
-  final _alertDaysController = TextEditingController(text: '30');
+  final _customNameController = TextEditingController();
   final _renewalCostController = TextEditingController();
   final _renewalProviderController = TextEditingController();
   String _selectedType = 'itb';
@@ -53,10 +54,25 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
   String? _photoPath;
   String? _existingPhotoUrl;
 
+  /// Selected expiry-alert thresholds (days before expiry). The API stores
+  /// the full array (`alert_days`); default mirrors the server's [30, 7].
+  final Set<int> _selectedAlertDays = {30, 7};
+
+  /// Extra (non-preset) thresholds added via the custom chip or loaded from
+  /// an existing document.
+  final List<int> _extraAlertDays = [];
+
+  static const _alertDayPresets = [30, 15, 7, 1];
+
+  List<int> get _alertDayOptions =>
+      {..._alertDayPresets, ..._extraAlertDays, ..._selectedAlertDays}.toList()
+        ..sort((a, b) => b.compareTo(a));
+
   // Canonical API document types (see internal/dto/document_dto.go oneof).
   // The form used to offer display strings ('Registration', 'Insurance'…)
   // that the API rejects with 400 — document creation was broken. 'custom'
-  // is not offered yet: it requires a custom_name field (future work).
+  // requires a custom_name (required_if in the API DTO): the form shows a
+  // mandatory name field when it is selected.
   static final _documentTypes = [
     'itb',
     'insurance_rc',
@@ -68,6 +84,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
     'medical_cert',
     'radio_cert',
     'navigation_license',
+    'custom',
   ];
 
   static String _localizedDocType(AppLocalizations l, String type) =>
@@ -98,7 +115,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
         'First Aid Kit' => l.docTypeFirstAidKit,
         'Fishing Permit' => l.docTypeFishingPermit,
         'Other' => l.other,
-        'custom' => l.other,
+        'custom' => l.docTypeCustom,
         _ => type,
       };
 
@@ -117,10 +134,22 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
   Future<void> _loadDocument() async {
     final doc = await ref.read(documentProvider(widget.documentId!).future);
     _notesController.text = doc.notes ?? '';
-    _alertDaysController.text = (doc.alertDaysBefore ?? 30).toString();
+    _customNameController.text = doc.customName ?? '';
     _renewalCostController.text = doc.lastRenewalCost?.toStringAsFixed(2) ?? '';
     _renewalProviderController.text = doc.lastRenewalProvider ?? '';
+    final loadedAlerts = (doc.alertDays ??
+            [if (doc.alertDaysBefore != null) doc.alertDaysBefore!])
+        .where((d) => d > 0)
+        .toSet();
     setState(() {
+      if (loadedAlerts.isNotEmpty) {
+        _selectedAlertDays
+          ..clear()
+          ..addAll(loadedAlerts);
+        _extraAlertDays.addAll(
+          loadedAlerts.where((d) => !_alertDayPresets.contains(d)),
+        );
+      }
       _selectedType = doc.type;
       if (!_documentTypes.contains(doc.type)) {
         _documentTypes.add(doc.type);
@@ -135,7 +164,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
   @override
   void dispose() {
     _notesController.dispose();
-    _alertDaysController.dispose();
+    _customNameController.dispose();
     _renewalCostController.dispose();
     _renewalProviderController.dispose();
     super.dispose();
@@ -203,15 +232,23 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
       final storage = ref.read(storageServiceProvider);
       final repository = ref.read(documentRepositoryProvider);
 
+      final alertDays = _selectedAlertDays.toList()
+        ..sort((a, b) => b.compareTo(a));
+      final customName = _customNameController.text.trim();
+
       final document = Document(
         id: widget.documentId ?? '',
         boatId: widget.boatId,
         type: _selectedType,
+        customName: _selectedType == 'custom' && customName.isNotEmpty
+            ? customName
+            : null,
         expiryDate: _expiryDate,
         notes: _notesController.text.trim().isEmpty
             ? null
             : _notesController.text.trim(),
-        alertDaysBefore: int.tryParse(_alertDaysController.text.trim()),
+        alertDays: alertDays,
+        alertDaysBefore: alertDays.isNotEmpty ? alertDays.first : null,
         photoUrl: _existingPhotoUrl,
         // Renewing stamps a new renewal date; editing keeps the existing one.
         lastRenewalDate: widget.isRenew ? DateTime.now() : null,
@@ -277,6 +314,99 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
     }
   }
 
+  /// Multi-select chips for the expiry-alert thresholds. A [FormField] so
+  /// "at least one selected" validates alongside the rest of the form.
+  Widget _buildAlertDaysField(BuildContext context, AppLocalizations l) {
+    return FormField<Set<int>>(
+      validator: (_) =>
+          _selectedAlertDays.isEmpty ? l.selectAtLeastOneAlertDay : null,
+      builder: (field) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.notifications_outlined,
+                size: 20,
+                color: context.txtSecondary,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l.alertDaysBeforeExpiry,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: context.txtSecondary,
+                      ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final days in _alertDayOptions)
+                FilterChip(
+                  label: Text(l.alertChipDays(days)),
+                  selected: _selectedAlertDays.contains(days),
+                  onSelected: (selected) {
+                    setState(() {
+                      if (selected) {
+                        _selectedAlertDays.add(days);
+                      } else {
+                        _selectedAlertDays.remove(days);
+                      }
+                    });
+                    field.didChange(_selectedAlertDays);
+                  },
+                ),
+              ActionChip(
+                avatar: const Icon(Icons.add, size: 18),
+                label: Text(l.customAlertDay),
+                onPressed: () => _addCustomAlertDay(field),
+              ),
+            ],
+          ),
+          if (field.hasError) ...[
+            const SizedBox(height: 6),
+            Text(
+              field.errorText!,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.error,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _addCustomAlertDay(FormFieldState<Set<int>> field) async {
+    final l = AppLocalizations.of(context)!;
+    final text = await NavisInputDialog.show(
+      context,
+      title: l.alertDaysBeforeExpiry,
+      hintText: l.customAlertDayHint,
+    );
+    if (text == null) return;
+    final days = int.tryParse(text.trim());
+    if (days == null || days <= 0) {
+      if (mounted) {
+        NavisSnackbar.error(context, l.validNumber);
+      }
+      return;
+    }
+    setState(() {
+      if (!_alertDayPresets.contains(days)) {
+        _extraAlertDays.add(days);
+      }
+      _selectedAlertDays.add(days);
+    });
+    field.didChange(_selectedAlertDays);
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -335,6 +465,25 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                             }
                           },
                         ),
+                        if (_selectedType == 'custom') ...[
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _customNameController,
+                            maxLength: 100,
+                            decoration: InputDecoration(
+                              labelText: l.customDocumentName,
+                              prefixIcon: const Icon(Icons.edit_outlined),
+                              counterText: '',
+                            ),
+                            validator: (value) {
+                              if (_selectedType == 'custom' &&
+                                  (value == null || value.trim().isEmpty)) {
+                                return l.customDocumentNameRequired;
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
                         const SizedBox(height: 16),
                         GestureDetector(
                           onTap: _pickDate,
@@ -372,23 +521,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                                   ),
                         ),
                         const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _alertDaysController,
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
-                            labelText: l.alertDaysBeforeExpiry,
-                            prefixIcon:
-                                const Icon(Icons.notifications_outlined),
-                          ),
-                          validator: (value) {
-                            if (value != null && value.isNotEmpty) {
-                              if (int.tryParse(value) == null) {
-                                return l.validNumber;
-                              }
-                            }
-                            return null;
-                          },
-                        ),
+                        _buildAlertDaysField(context, l),
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _notesController,

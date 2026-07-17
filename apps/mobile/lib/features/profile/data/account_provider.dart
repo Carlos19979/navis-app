@@ -103,6 +103,14 @@ class AccountRepository {
     return Account.fromJson(response.data!['data'] as Map<String, dynamic>);
   }
 
+  /// GDPR data export: everything the server stores for this user, as a
+  /// JSON-ready map (GET /api/v1/user/export).
+  Future<Map<String, dynamic>> exportData() async {
+    final response =
+        await _apiClient.get<Map<String, dynamic>>('/api/v1/user/export');
+    return response.data!['data'] as Map<String, dynamic>;
+  }
+
   /// Permanently deletes the account, its data and files (GDPR). The backend
   /// removes the auth user, so the session is invalid afterwards.
   Future<void> deleteAccount() async {

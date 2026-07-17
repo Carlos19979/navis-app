@@ -865,5 +865,23 @@
   "tideLow": "Low tide",
   "manageBoat": "Manage boat",
   "openSettings": "Open settings",
-  "locationUnavailable": "Location unavailable"
+  "locationUnavailable": "Location unavailable",
+  "docTypeCustom": "Other (custom)",
+  "customDocumentName": "Custom document name",
+  "customDocumentNameRequired": "Please enter a document name",
+  "selectAtLeastOneAlertDay": "Select at least one alert",
+  "alertChipDays": "{days, plural, one{{days} day} other{{days} days}}",
+  "@alertChipDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "customAlertDay": "Custom",
+  "customAlertDayHint": "Days before expiry, e.g. 45",
+  "exportMyData": "Export my data",
+  "exportMyDataSubtitle": "Download everything as a JSON file",
+  "exportDataReady": "Export ready to share",
+  "exportDataFailed": "Could not export your data. Try again."
 }

@@ -2141,4 +2141,46 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get locationUnavailable => 'Ubicación no disponible';
+
+  @override
+  String get docTypeCustom => 'Otro (personalizado)';
+
+  @override
+  String get customDocumentName => 'Nombre del documento';
+
+  @override
+  String get customDocumentNameRequired => 'Introduce el nombre del documento';
+
+  @override
+  String get selectAtLeastOneAlertDay => 'Selecciona al menos una alerta';
+
+  @override
+  String alertChipDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days días',
+      one: '$days día',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get customAlertDay => 'Personalizado';
+
+  @override
+  String get customAlertDayHint => 'Días antes del vencimiento, p. ej. 45';
+
+  @override
+  String get exportMyData => 'Exportar mis datos';
+
+  @override
+  String get exportMyDataSubtitle => 'Descarga todo en un archivo JSON';
+
+  @override
+  String get exportDataReady => 'Exportación lista para compartir';
+
+  @override
+  String get exportDataFailed =>
+      'No se pudieron exportar tus datos. Inténtalo de nuevo.';
 }
