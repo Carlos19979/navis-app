@@ -263,6 +263,7 @@ void main() {
       expect(find.byType(NavisGradientFab), findsNothing);
 
       await drain(tester);
+      await tester.pump(const Duration(seconds: 5));
     });
   });
 
@@ -412,6 +413,9 @@ void main() {
   });
 
   group('MaintenanceScreen expenses tab', () {
+    // The ledger defaults to the current month, so fixtures must land there.
+    final thisMonth = DateTime(DateTime.now().year, DateTime.now().month, 15);
+
     testWidgets('loading shows shimmer', (tester) async {
       setPhoneSize(tester);
       final completer = Completer<List<Expense>>();
@@ -444,7 +448,7 @@ void main() {
       await pumpScreen(tester);
       await openExpensesTab(tester);
 
-      expect(find.text('No expenses recorded'), findsOneWidget);
+      expect(find.text('No expenses in this period'), findsOneWidget);
 
       await drain(tester);
       await tester.pump(const Duration(seconds: 5));
@@ -456,48 +460,86 @@ void main() {
       await tester.pumpWidget(
         buildSubject(
           expenses: () async => [
-            makeExpense(id: 'e-1', category: 'combustible', amount: 86),
-            makeExpense(id: 'e-2', category: 'amarre', amount: 300),
-            makeExpense(id: 'e-3', category: 'winch service', amount: 50),
+            makeExpense(
+                id: 'e-1',
+                category: 'combustible',
+                amount: 86,
+                incurredOn: thisMonth),
+            makeExpense(
+                id: 'e-2',
+                category: 'amarre',
+                amount: 300,
+                incurredOn: thisMonth),
+            makeExpense(
+                id: 'e-3',
+                category: 'winch service',
+                amount: 50,
+                incurredOn: thisMonth),
           ],
         ),
       );
       await pumpScreen(tester);
       await openExpensesTab(tester);
 
-      expect(find.text('Fuel'), findsOneWidget);
-      expect(find.text('Mooring'), findsOneWidget);
+      expect(find.text('Fuel'), findsWidgets);
+      expect(find.text('Mooring'), findsWidgets);
       // Custom categories pass through unmapped.
-      expect(find.text('winch service'), findsOneWidget);
+      expect(find.text('winch service'), findsWidgets);
       expect(find.text('86 €'), findsOneWidget);
       expect(find.text('300 €'), findsOneWidget);
 
       await drain(tester);
+      await tester.pump(const Duration(seconds: 5));
     });
 
-    testWidgets('summary card shows total and per-category totals',
-        (tester) async {
+    testWidgets('period total sums the current month', (tester) async {
       setPhoneSize(tester);
       await tester.pumpWidget(
         buildSubject(
-          expenses: () async => [makeExpense()],
-          summary: const ExpenseSummary(
-            totals: {'combustible': 500, 'amarre': 450},
-            total: 950,
-          ),
+          expenses: () async => [
+            makeExpense(id: 'e-1', amount: 500, incurredOn: thisMonth),
+            makeExpense(id: 'e-2', amount: 450, incurredOn: thisMonth),
+            // A prior-year expense is outside the current month → excluded.
+            makeExpense(id: 'e-old', amount: 999, incurredOn: DateTime(2020)),
+          ],
         ),
       );
       await pumpScreen(tester);
       await openExpensesTab(tester);
 
-      expect(find.text('Total spent'), findsOneWidget);
+      expect(find.text('Period total'), findsOneWidget);
       expect(find.text('950 €'), findsOneWidget);
-      expect(find.text('Fuel'), findsWidgets);
-      expect(find.text('500 €'), findsOneWidget);
-      expect(find.text('Mooring'), findsOneWidget);
-      expect(find.text('450 €'), findsOneWidget);
 
       await drain(tester);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('year view breaks down per-month subtotals', (tester) async {
+      setPhoneSize(tester);
+      final year = DateTime.now().year;
+      await tester.pumpWidget(
+        buildSubject(
+          expenses: () async => [
+            makeExpense(id: 'a', amount: 100, incurredOn: DateTime(year, 3, 5)),
+            makeExpense(id: 'b', amount: 60, incurredOn: DateTime(year, 3, 9)),
+            makeExpense(id: 'c', amount: 40, incurredOn: DateTime(year, 8, 2)),
+          ],
+        ),
+      );
+      await pumpScreen(tester);
+      await openExpensesTab(tester);
+
+      // Switch to Year mode.
+      await tester.tap(find.text('Year'));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // March subtotal = 160, August = 40, year total = 200.
+      expect(find.text('160 €'), findsOneWidget);
+      expect(find.text('40 €'), findsOneWidget);
+      expect(find.text('200 €'), findsOneWidget); // period total
+
+      await drain(tester);
+      await tester.pump(const Duration(seconds: 5));
     });
 
     testWidgets('split badges show settled / you-owe / shared variants',
@@ -506,9 +548,10 @@ void main() {
       await tester.pumpWidget(
         buildSubject(
           expenses: () async => [
-            makeExpense(id: 'e-settled'),
-            makeExpense(id: 'e-owe', category: 'amarre'),
-            makeExpense(id: 'e-shared', category: 'limpieza'),
+            makeExpense(id: 'e-settled', incurredOn: thisMonth),
+            makeExpense(id: 'e-owe', category: 'amarre', incurredOn: thisMonth),
+            makeExpense(
+                id: 'e-shared', category: 'limpieza', incurredOn: thisMonth),
           ],
           splits: const {
             'e-settled': ExpenseSplitSummary(
@@ -537,6 +580,66 @@ void main() {
       expect(find.text('Split among 3'), findsOneWidget);
 
       await drain(tester);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('category chip filters the list and total', (tester) async {
+      setPhoneSize(tester);
+      await tester.pumpWidget(
+        buildSubject(
+          expenses: () async => [
+            makeExpense(
+                id: 'f',
+                category: 'combustible',
+                amount: 80,
+                incurredOn: thisMonth),
+            makeExpense(
+                id: 'm',
+                category: 'amarre',
+                amount: 300,
+                incurredOn: thisMonth),
+          ],
+        ),
+      );
+      await pumpScreen(tester);
+      await openExpensesTab(tester);
+
+      // All → total 380.
+      expect(find.text('380 €'), findsOneWidget);
+
+      // Filter to Fuel → total 80, mooring card gone.
+      await tester.tap(find.widgetWithText(FilterChip, 'Fuel'));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('80 €'), findsWidgets);
+      expect(find.text('300 €'), findsNothing);
+
+      await drain(tester);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('prev-month chevron moves out of the current month',
+        (tester) async {
+      setPhoneSize(tester);
+      await tester.pumpWidget(
+        buildSubject(
+          expenses: () async =>
+              [makeExpense(id: 'e', amount: 120, incurredOn: thisMonth)],
+        ),
+      );
+      await pumpScreen(tester);
+      await openExpensesTab(tester);
+
+      // Shows in both the card and the period-total row.
+      expect(find.text('120 €'), findsNWidgets(2));
+
+      // Step back one month → this month's expense drops out.
+      await tester.tap(find.byIcon(Icons.chevron_left));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('No expenses in this period'), findsOneWidget);
+      expect(find.text('120 €'), findsNothing);
+
+      await drain(tester);
+      await tester.pump(const Duration(seconds: 5));
     });
   });
 }

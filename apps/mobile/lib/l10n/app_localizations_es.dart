@@ -1751,6 +1751,27 @@ class AppLocalizationsEs extends AppLocalizations {
   String get noExpensesRecorded => 'Sin gastos registrados';
 
   @override
+  String get expensesPeriodMonth => 'Mes';
+
+  @override
+  String get expensesPeriodYear => 'Año';
+
+  @override
+  String get expensesFilterAll => 'Todos';
+
+  @override
+  String get expensesPeriodTotal => 'Total del periodo';
+
+  @override
+  String get expensesPrevPeriod => 'Anterior';
+
+  @override
+  String get expensesNextPeriod => 'Siguiente';
+
+  @override
+  String get expensesNoneInPeriod => 'Sin gastos en este periodo';
+
+  @override
   String get categoryLabel => 'Categoría';
 
   @override

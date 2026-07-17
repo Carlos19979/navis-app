@@ -3368,6 +3368,48 @@ abstract class AppLocalizations {
   /// **'No expenses recorded'**
   String get noExpensesRecorded;
 
+  /// No description provided for @expensesPeriodMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get expensesPeriodMonth;
+
+  /// No description provided for @expensesPeriodYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get expensesPeriodYear;
+
+  /// No description provided for @expensesFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get expensesFilterAll;
+
+  /// No description provided for @expensesPeriodTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Period total'**
+  String get expensesPeriodTotal;
+
+  /// No description provided for @expensesPrevPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous'**
+  String get expensesPrevPeriod;
+
+  /// No description provided for @expensesNextPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get expensesNextPeriod;
+
+  /// No description provided for @expensesNoneInPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'No expenses in this period'**
+  String get expensesNoneInPeriod;
+
   /// No description provided for @categoryLabel.
   ///
   /// In en, this message translates to:
