@@ -200,22 +200,29 @@ void main() {
       );
     });
 
-    testWidgets('overlap warning cancel aborts the booking', (tester) async {
+    testWidgets('API overlap (409) + cancel aborts without forcing',
+        (tester) async {
       setPhoneSize(tester);
-      final now = DateTime.now();
-      final clashing = makeBooking(
-        startsAt: DateTime(now.year, now.month, now.day, 9),
-        endsAt: DateTime(now.year, now.month, now.day, 10),
-      );
+      // The API is the overlap authority now: the unforced create throws.
+      when(() => mockRepo.createBooking(
+            any(),
+            startsAt: any(named: 'startsAt'),
+            endsAt: any(named: 'endsAt'),
+            purpose: any(named: 'purpose'),
+          )).thenThrow(const BookingOverlapException());
 
-      await tester.pumpWidget(buildSubject(bookings: [clashing]));
+      await tester.pumpWidget(buildSubject());
       await pumpScreen(tester);
 
       await tester.tap(find.byTooltip('Book a day'));
       await pumpScreen(tester);
       await tapOk(tester); // date: today
       await tapOk(tester); // start 08:00
-      await tapOk(tester); // end 12:00 (overlaps 09:00-10:00)
+      await tapOk(tester); // end 12:00
+
+      await tester.enterText(find.byType(TextField).last, 'Race day');
+      await tester.tap(find.text('Save'));
+      await pumpScreen(tester);
 
       expect(find.text('Overlaps another booking'), findsOneWidget);
 
@@ -227,10 +234,11 @@ void main() {
             startsAt: any(named: 'startsAt'),
             endsAt: any(named: 'endsAt'),
             purpose: any(named: 'purpose'),
+            force: true,
           ));
     });
 
-    testWidgets('overlap warning book-anyway proceeds with the booking',
+    testWidgets('API overlap (409) + book-anyway retries with force',
         (tester) async {
       setPhoneSize(tester);
       when(() => mockRepo.createBooking(
@@ -238,14 +246,16 @@ void main() {
             startsAt: any(named: 'startsAt'),
             endsAt: any(named: 'endsAt'),
             purpose: any(named: 'purpose'),
+          )).thenThrow(const BookingOverlapException());
+      when(() => mockRepo.createBooking(
+            any(),
+            startsAt: any(named: 'startsAt'),
+            endsAt: any(named: 'endsAt'),
+            purpose: any(named: 'purpose'),
+            force: true,
           )).thenAnswer((_) async {});
-      final now = DateTime.now();
-      final clashing = makeBooking(
-        startsAt: DateTime(now.year, now.month, now.day, 9),
-        endsAt: DateTime(now.year, now.month, now.day, 10),
-      );
 
-      await tester.pumpWidget(buildSubject(bookings: [clashing]));
+      await tester.pumpWidget(buildSubject());
       await pumpScreen(tester);
 
       await tester.tap(find.byTooltip('Book a day'));
@@ -254,11 +264,11 @@ void main() {
       await tapOk(tester);
       await tapOk(tester);
 
-      await tester.tap(find.text('Book anyway'));
-      await pumpScreen(tester);
-
       await tester.enterText(find.byType(TextField).last, 'Race day');
       await tester.tap(find.text('Save'));
+      await pumpScreen(tester);
+
+      await tester.tap(find.text('Book anyway'));
       await pumpScreen(tester);
 
       verify(() => mockRepo.createBooking(
@@ -266,7 +276,35 @@ void main() {
             startsAt: any(named: 'startsAt'),
             endsAt: any(named: 'endsAt'),
             purpose: 'Race day',
+            force: true,
           )).called(1);
+    });
+
+    testWidgets('overlapping bookings carry the amber badge in the list',
+        (tester) async {
+      setPhoneSize(tester);
+      final now = DateTime.now();
+      final a = makeBooking(
+        id: 'b1',
+        startsAt: DateTime(now.year, now.month, now.day, 9),
+        endsAt: DateTime(now.year, now.month, now.day, 12),
+      );
+      final b = makeBooking(
+        id: 'b2',
+        startsAt: DateTime(now.year, now.month, now.day, 11),
+        endsAt: DateTime(now.year, now.month, now.day, 14),
+      );
+      final c = makeBooking(
+        id: 'b3',
+        startsAt: DateTime(now.year, now.month, now.day, 15),
+        endsAt: DateTime(now.year, now.month, now.day, 18),
+      );
+
+      await tester.pumpWidget(buildSubject(bookings: [a, b, c]));
+      await pumpScreen(tester);
+
+      // a & b clash with each other; c is clean.
+      expect(find.text('Overlaps another booking'), findsNWidgets(2));
     });
   });
 

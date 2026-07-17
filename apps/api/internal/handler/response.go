@@ -89,6 +89,9 @@ func MapDomainError(w http.ResponseWriter, err error) {
 	case errors.Is(err, domain.ErrDuplicateRegistration):
 		Error(w, http.StatusConflict, err.Error(), "DUPLICATE")
 
+	case errors.Is(err, domain.ErrBookingOverlap):
+		Error(w, http.StatusConflict, err.Error(), "BOOKING_OVERLAP")
+
 	case errors.Is(err, domain.ErrConflict):
 		Error(w, http.StatusConflict, err.Error(), "CONFLICT")
 

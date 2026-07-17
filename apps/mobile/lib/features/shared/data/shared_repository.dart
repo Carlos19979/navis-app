@@ -1,8 +1,15 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:navis_mobile/core/network/api_client.dart';
 
 /// A reservation of boat time.
+/// The API rejected an unforced booking that overlaps an existing one
+/// (409 BOOKING_OVERLAP). Retry with `force: true` after user confirmation.
+class BookingOverlapException implements Exception {
+  const BookingOverlapException();
+}
+
 class Booking {
   const Booking({
     required this.id,
@@ -90,20 +97,34 @@ class SharedRepository {
         .toList();
   }
 
+  /// Creates a booking. The API is the overlap authority: without [force]
+  /// it rejects clashes with 409 BOOKING_OVERLAP, surfaced here as
+  /// [BookingOverlapException] so the UI can confirm and retry forced.
   Future<void> createBooking(
     String boatId, {
     required DateTime startsAt,
     required DateTime endsAt,
     String? purpose,
+    bool force = false,
   }) async {
-    await _apiClient.post<Map<String, dynamic>>(
-      '/api/v1/boats/$boatId/bookings',
-      data: {
-        'starts_at': startsAt.toUtc().toIso8601String(),
-        'ends_at': endsAt.toUtc().toIso8601String(),
-        if (purpose != null && purpose.isNotEmpty) 'purpose': purpose,
-      },
-    );
+    try {
+      await _apiClient.post<Map<String, dynamic>>(
+        '/api/v1/boats/$boatId/bookings',
+        data: {
+          'starts_at': startsAt.toUtc().toIso8601String(),
+          'ends_at': endsAt.toUtc().toIso8601String(),
+          if (purpose != null && purpose.isNotEmpty) 'purpose': purpose,
+          if (force) 'force': true,
+        },
+      );
+    } on DioException catch (e) {
+      final code =
+          (e.response?.data as Map<String, dynamic>?)?['error']?['code'];
+      if (e.response?.statusCode == 409 && code == 'BOOKING_OVERLAP') {
+        throw const BookingOverlapException();
+      }
+      rethrow;
+    }
   }
 
   Future<void> deleteBooking(String boatId, String bookingId) async {

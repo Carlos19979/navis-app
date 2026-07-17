@@ -66,7 +66,7 @@ func (s *SharedService) ListBookings(ctx context.Context, userID, boatID string)
 }
 
 // CreateBooking reserves boat time (any member; Pro).
-func (s *SharedService) CreateBooking(ctx context.Context, b *domain.Booking) (*domain.Booking, error) {
+func (s *SharedService) CreateBooking(ctx context.Context, b *domain.Booking, force bool) (*domain.Booking, error) {
 	if err := s.assertPro(ctx, b.UserID); err != nil {
 		return nil, fmt.Errorf("create booking: %w", err)
 	}
@@ -75,6 +75,19 @@ func (s *SharedService) CreateBooking(ctx context.Context, b *domain.Booking) (*
 	}
 	if !b.EndsAt.After(b.StartsAt) {
 		return nil, &domain.ValidationError{Field: "ends_at", Message: "ends_at must be after starts_at"}
+	}
+	// Overlaps are advisory, not forbidden (a shared boat may want a joint
+	// outing): without force the API rejects with 409 so the client can
+	// confirm; with force the booking is created anyway. Checking here (not
+	// in the client) closes the two-users-book-at-once race.
+	if !force {
+		clash, err := s.bookings.HasOverlap(ctx, b.BoatID, b.StartsAt, b.EndsAt)
+		if err != nil {
+			return nil, fmt.Errorf("create booking: %w", err)
+		}
+		if clash {
+			return nil, domain.ErrBookingOverlap
+		}
 	}
 	if b.Status == "" {
 		b.Status = domain.BookingConfirmed

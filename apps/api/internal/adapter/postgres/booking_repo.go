@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -41,6 +42,23 @@ func (r *BookingRepo) Create(ctx context.Context, b *domain.Booking) (*domain.Bo
 		return nil, fmt.Errorf("creating booking: %w", err)
 	}
 	return out, nil
+}
+
+// HasOverlap reports whether any non-cancelled booking for the boat
+// intersects the [startsAt, endsAt) range.
+func (r *BookingRepo) HasOverlap(ctx context.Context, boatID string, startsAt, endsAt time.Time) (bool, error) {
+	var exists bool
+	err := r.pool.QueryRow(ctx,
+		`SELECT EXISTS(
+			SELECT 1 FROM bookings
+			WHERE boat_id = $1 AND status <> 'cancelled'
+			  AND starts_at < $3 AND ends_at > $2
+		)`,
+		boatID, startsAt, endsAt).Scan(&exists)
+	if err != nil {
+		return false, fmt.Errorf("checking booking overlap: %w", err)
+	}
+	return exists, nil
 }
 
 // ListByBoat returns a boat's bookings, soonest first.

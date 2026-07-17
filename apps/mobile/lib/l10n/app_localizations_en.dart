@@ -314,6 +314,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bookingEndTime => 'End time';
 
   @override
+  String get bookingOverlapsBadge => 'Overlaps another booking';
+
+  @override
   String get bookingOverlapTitle => 'Overlaps another booking';
 
   @override

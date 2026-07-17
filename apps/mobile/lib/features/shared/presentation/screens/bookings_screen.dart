@@ -65,6 +65,16 @@ class BookingsScreen extends ConsumerWidget {
             return l.bookingCrew;
           }
 
+          // Mark bookings whose range intersects another active one, so
+          // conflicts stay visible after creation (forced or raced).
+          bool clashes(Booking a) =>
+              a.status != 'cancelled' &&
+              bookings.any((b) =>
+                  !identical(a, b) &&
+                  b.status != 'cancelled' &&
+                  a.startsAt.isBefore(b.endsAt) &&
+                  a.endsAt.isAfter(b.startsAt));
+
           return ListView.separated(
             padding: const EdgeInsets.all(Dimens.spaceLg),
             itemCount: bookings.length,
@@ -73,6 +83,7 @@ class BookingsScreen extends ConsumerWidget {
               boatId: boatId,
               booking: bookings[i],
               bookerName: bookerName(bookings[i].userId),
+              overlaps: clashes(bookings[i]),
             ),
           );
         },
@@ -113,22 +124,6 @@ class BookingsScreen extends ConsumerWidget {
       end = end.add(const Duration(days: 1));
     }
 
-    // Overlap warning against existing bookings (non-blocking).
-    final existing = ref.read(boatBookingsProvider(boatId)).valueOrNull ?? [];
-    final clash = existing.any((b) =>
-        b.status != 'cancelled' &&
-        start.isBefore(b.endsAt) &&
-        end.isAfter(b.startsAt));
-    if (clash) {
-      final proceed = await NavisConfirmDialog.show(
-        context,
-        title: l.bookingOverlapTitle,
-        message: l.bookingOverlapMessage,
-        confirmLabel: l.bookingBookAnyway,
-      );
-      if (!proceed || !context.mounted) return;
-    }
-
     final purpose = await NavisInputDialog.show(
       context,
       title: l.bookingAdd,
@@ -137,13 +132,35 @@ class BookingsScreen extends ConsumerWidget {
     );
     if (purpose == null || !context.mounted) return;
 
+    // The API is the overlap authority (it sees bookings this client hasn't
+    // loaded yet — two members booking at once). On 409 the user can still
+    // confirm and force it: overlaps are advisory on a shared boat.
+    final repo = ref.read(sharedRepositoryProvider);
     try {
-      await ref.read(sharedRepositoryProvider).createBooking(
-            boatId,
-            startsAt: start,
-            endsAt: end,
-            purpose: purpose,
-          );
+      try {
+        await repo.createBooking(
+          boatId,
+          startsAt: start,
+          endsAt: end,
+          purpose: purpose,
+        );
+      } on BookingOverlapException {
+        if (!context.mounted) return;
+        final proceed = await NavisConfirmDialog.show(
+          context,
+          title: l.bookingOverlapTitle,
+          message: l.bookingOverlapMessage,
+          confirmLabel: l.bookingBookAnyway,
+        );
+        if (!proceed) return;
+        await repo.createBooking(
+          boatId,
+          startsAt: start,
+          endsAt: end,
+          purpose: purpose,
+          force: true,
+        );
+      }
       ref.invalidate(boatBookingsProvider(boatId));
     } catch (_) {
       if (context.mounted) NavisSnackbar.error(context, l.somethingWentWrong);
@@ -156,11 +173,15 @@ class _BookingCard extends ConsumerWidget {
     required this.boatId,
     required this.booking,
     required this.bookerName,
+    this.overlaps = false,
   });
 
   final String boatId;
   final Booking booking;
   final String bookerName;
+
+  /// Whether this booking's range intersects another active booking.
+  final bool overlaps;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -197,6 +218,26 @@ class _BookingCard extends ConsumerWidget {
                       : bookerName,
                   style: TextStyle(fontSize: 13, color: context.txtSecondary),
                 ),
+                if (overlaps)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.warning_amber_rounded,
+                            size: 14, color: AppColors.amber),
+                        const SizedBox(width: 4),
+                        Text(
+                          l.bookingOverlapsBadge,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.amber,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
               ],
             ),
           ),
