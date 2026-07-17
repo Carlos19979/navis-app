@@ -138,6 +138,13 @@ func main() {
 	expirationChecker.Start()
 	defer expirationChecker.Stop()
 
+	// Create and start maintenance-due checker cron (Pro reminders).
+	maintNotifLogRepo := postgres.NewMaintenanceNotificationLogRepo(pool)
+	maintenanceChecker := cron.NewMaintenanceChecker(
+		maintenanceSvc, maintNotifLogRepo, profileRepo, notifier, logger)
+	maintenanceChecker.Start()
+	defer maintenanceChecker.Stop()
+
 	// Create and start regatta reminder / live-event notifier cron.
 	regattaNotifier := cron.NewRegattaNotifier(
 		tripRepo, groupMemberRepo, eventRepo, interestRepo, sentNotifRepo, notifySvc, logger)

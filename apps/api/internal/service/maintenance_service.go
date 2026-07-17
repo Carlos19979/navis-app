@@ -136,6 +136,53 @@ func (s *MaintenanceService) ListTasks(ctx context.Context, userID, boatID strin
 	return views, nil
 }
 
+// DueNotices evaluates every task across all boats and returns the ones in
+// due_soon/overdue state, with the owner/boat context and a DueKey pinning
+// the concrete occurrence — the maintenance-due notification cron's input.
+func (s *MaintenanceService) DueNotices(ctx context.Context) ([]domain.MaintenanceDueNotice, error) {
+	rows, err := s.tasks.ListAllWithLatest(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("due notices: %w", err)
+	}
+	now := s.now()
+	var out []domain.MaintenanceDueNotice
+	for _, r := range rows {
+		var logs []domain.MaintenanceLog
+		if r.LastPerformedAt != nil {
+			logs = []domain.MaintenanceLog{{
+				PerformedAt: *r.LastPerformedAt,
+				EngineHours: r.LastEngineHours,
+			}}
+		}
+		ev := evaluateTask(r.Task, logs, r.EngineHours, now)
+		if ev.Status != domain.MaintenanceDueSoon && ev.Status != domain.MaintenanceOverdue {
+			continue
+		}
+		// DueKey pins the occurrence: after servicing, the next due date /
+		// hours threshold changes and the same status notifies again.
+		key := "n/a"
+		switch {
+		case ev.NextDueDate != nil:
+			key = ev.NextDueDate.Format("2006-01-02")
+		case ev.HoursUntilDue != nil && r.LastEngineHours != nil && r.Task.IntervalHours != nil:
+			key = fmt.Sprintf("h%.0f", *r.LastEngineHours+*r.Task.IntervalHours)
+		}
+		out = append(out, domain.MaintenanceDueNotice{
+			TaskID:        r.Task.ID,
+			TaskName:      r.Task.Name,
+			BoatID:        r.Task.BoatID,
+			BoatName:      r.BoatName,
+			OwnerID:       r.OwnerID,
+			Status:        ev.Status,
+			NextDueDate:   ev.NextDueDate,
+			DueDays:       ev.DueDays,
+			HoursUntilDue: ev.HoursUntilDue,
+			DueKey:        key,
+		})
+	}
+	return out, nil
+}
+
 // UpdateTask edits a maintenance task (owner or editor member).
 func (s *MaintenanceService) UpdateTask(ctx context.Context, userID string, t *domain.MaintenanceTask) (*domain.MaintenanceTask, error) {
 	if t.Name == "" {

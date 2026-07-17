@@ -56,6 +56,14 @@ func (m *mockMaintenanceTaskRepo) GetByID(_ context.Context, _, id string) (*dom
 	return nil, domain.ErrNotFound
 }
 
+func (m *mockMaintenanceTaskRepo) ListAllWithLatest(_ context.Context) ([]domain.MaintenanceTaskWithLatest, error) {
+	out := make([]domain.MaintenanceTaskWithLatest, len(m.tasks))
+	for i := range m.tasks {
+		out[i] = domain.MaintenanceTaskWithLatest{Task: m.tasks[i]}
+	}
+	return out, nil
+}
+
 func (m *mockMaintenanceTaskRepo) Delete(_ context.Context, _, _ string) error { return nil }
 
 const testTaskID = "task-1"
