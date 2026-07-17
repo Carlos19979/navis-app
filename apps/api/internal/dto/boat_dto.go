@@ -16,6 +16,7 @@ type CreateBoatRequest struct {
 	HomePortLat  *float64        `json:"home_port_lat" validate:"omitempty,latitude"`
 	HomePortLon  *float64        `json:"home_port_lon" validate:"omitempty,longitude"`
 	PhotoURL     *string         `json:"photo_url"    validate:"omitempty,url"`
+	PhotoURLs    []string        `json:"photo_urls"   validate:"omitempty,max=10,dive,url"`
 	EngineHours  float64         `json:"engine_hours" validate:"gte=0"`
 }
 
@@ -31,6 +32,7 @@ func (r *CreateBoatRequest) ToDomain(userID string) *domain.Boat {
 		HomePortLat:  r.HomePortLat,
 		HomePortLon:  r.HomePortLon,
 		PhotoURL:     r.PhotoURL,
+		PhotoURLs:    r.PhotoURLs,
 		EngineHours:  r.EngineHours,
 	}
 }
@@ -45,6 +47,7 @@ type UpdateBoatRequest struct {
 	HomePortLat  *float64         `json:"home_port_lat" validate:"omitempty,latitude"`
 	HomePortLon  *float64         `json:"home_port_lon" validate:"omitempty,longitude"`
 	PhotoURL     *string          `json:"photo_url"    validate:"omitempty,url"`
+	PhotoURLs    []string         `json:"photo_urls"   validate:"omitempty,max=10,dive,url"`
 	EngineHours  *float64         `json:"engine_hours" validate:"omitempty,gte=0"`
 }
 
@@ -74,6 +77,10 @@ func (r *UpdateBoatRequest) ApplyTo(boat *domain.Boat) {
 	if r.PhotoURL != nil {
 		boat.PhotoURL = r.PhotoURL
 	}
+	// nil = field omitted (keep current gallery); [] = clear it.
+	if r.PhotoURLs != nil {
+		boat.PhotoURLs = r.PhotoURLs
+	}
 	if r.EngineHours != nil {
 		boat.EngineHours = *r.EngineHours
 	}
@@ -90,6 +97,7 @@ type BoatResponse struct {
 	HomePortLat  *float64                `json:"home_port_lat,omitempty"`
 	HomePortLon  *float64                `json:"home_port_lon,omitempty"`
 	PhotoURL     *string                 `json:"photo_url,omitempty"`
+	PhotoURLs    []string                `json:"photo_urls"`
 	EngineHours  float64                 `json:"engine_hours"`
 	IsOwner      bool                    `json:"is_owner"`
 	Permissions  BoatPermissionsResponse `json:"permissions"`
@@ -130,6 +138,7 @@ func BoatResponseFromDomain(b *domain.Boat) *BoatResponse {
 		HomePortLat:  b.HomePortLat,
 		HomePortLon:  b.HomePortLon,
 		PhotoURL:     b.PhotoURL,
+		PhotoURLs:    emptyIfNil(b.PhotoURLs),
 		EngineHours:  b.EngineHours,
 		CreatedAt:    b.CreatedAt,
 		UpdatedAt:    b.UpdatedAt,

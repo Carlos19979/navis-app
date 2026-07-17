@@ -13,6 +13,8 @@ class Account {
     required this.canCreateGroups,
     required this.reminderDocLimit,
     required this.maintenanceSchedules,
+    required this.attachmentLimit,
+    required this.galleryLimit,
     required this.fullReadiness,
     required this.costAnalytics,
     required this.exportPassport,
@@ -43,6 +45,9 @@ class Account {
       canCreateGroups: entBool('can_create_groups', 'can_create_groups'),
       reminderDocLimit: entInt('reminder_doc_limit', 'reminder_doc_limit', 1),
       maintenanceSchedules: (ent?['maintenance_schedules'] as bool?) ?? false,
+      attachmentLimit:
+          entInt('attachment_limit', 'attachment_limit', isPro ? -1 : 1),
+      galleryLimit: entInt('gallery_limit', 'gallery_limit', isPro ? 10 : 1),
       fullReadiness: proCap('full_readiness'),
       costAnalytics: proCap('cost_analytics'),
       exportPassport: proCap('export_passport'),
@@ -62,6 +67,12 @@ class Account {
 
   /// Whether scheduled maintenance reminders are unlocked.
   final bool maintenanceSchedules;
+
+  /// Photos/attachments per maintenance log (-1 = unlimited).
+  final int attachmentLimit;
+
+  /// Total photos per boat, cover included (Free keeps just the cover).
+  final int galleryLimit;
 
   /// Full boat-readiness breakdown (docs + gear + maintenance). Free sees docs only.
   final bool fullReadiness;

@@ -11,6 +11,7 @@ class Boat {
     this.homePortLat,
     this.homePortLon,
     this.photoUrl,
+    this.photoUrls = const [],
     this.engineHours = 0,
     this.ownerId,
     this.isOwner = true,
@@ -28,6 +29,9 @@ class Boat {
   final double? homePortLat;
   final double? homePortLon;
   final String? photoUrl;
+
+  /// Gallery extras beyond the [photoUrl] cover (Pro feature).
+  final List<String> photoUrls;
   final double engineHours;
   final String? ownerId;
   final bool isOwner;
@@ -45,6 +49,7 @@ class Boat {
     double? homePortLat,
     double? homePortLon,
     String? photoUrl,
+    List<String>? photoUrls,
     double? engineHours,
     String? ownerId,
     bool? isOwner,
@@ -62,6 +67,7 @@ class Boat {
       homePortLat: homePortLat ?? this.homePortLat,
       homePortLon: homePortLon ?? this.homePortLon,
       photoUrl: photoUrl ?? this.photoUrl,
+      photoUrls: photoUrls ?? this.photoUrls,
       engineHours: engineHours ?? this.engineHours,
       ownerId: ownerId ?? this.ownerId,
       isOwner: isOwner ?? this.isOwner,

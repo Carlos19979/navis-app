@@ -12,6 +12,7 @@ class MaintenanceLog {
     this.provider,
     this.notes,
     this.invoiceUrl,
+    this.photoUrls = const [],
   });
 
   factory MaintenanceLog.fromJson(Map<String, dynamic> json) {
@@ -26,6 +27,7 @@ class MaintenanceLog {
       provider: json['provider'] as String?,
       notes: json['notes'] as String?,
       invoiceUrl: json['invoice_url'] as String?,
+      photoUrls: (json['photo_urls'] as List?)?.cast<String>() ?? const [],
     );
   }
 
@@ -39,6 +41,10 @@ class MaintenanceLog {
   final String? provider;
   final String? notes;
   final String? invoiceUrl;
+
+  /// Service-evidence photos (impeller/anode wear...). Free plan keeps one
+  /// per log; Pro up to ten — mirrored server-side.
+  final List<String> photoUrls;
 }
 
 /// The derived due-state of a maintenance task, mirroring the server.

@@ -3404,6 +3404,48 @@ abstract class AppLocalizations {
   /// **'Attach invoice'**
   String get attachInvoice;
 
+  /// No description provided for @couldNotUploadPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not upload the photo'**
+  String get couldNotUploadPhoto;
+
+  /// No description provided for @photosLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos'**
+  String get photosLabel;
+
+  /// No description provided for @photoLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo'**
+  String get photoLabel;
+
+  /// No description provided for @galleryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery'**
+  String get galleryTitle;
+
+  /// No description provided for @gallerySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra photos beyond the cover'**
+  String get gallerySubtitle;
+
+  /// No description provided for @paywallReasonLogPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Add more service photos with Navis Pro'**
+  String get paywallReasonLogPhotos;
+
+  /// No description provided for @paywallReasonGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a photo gallery to your boat with Navis Pro'**
+  String get paywallReasonGallery;
+
   /// No description provided for @expenseCategoryFuel.
   ///
   /// In en, this message translates to:

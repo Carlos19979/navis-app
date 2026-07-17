@@ -81,6 +81,7 @@ func (h *MaintenanceHandler) CreateLog(w http.ResponseWriter, r *http.Request) {
 		Provider:    req.Provider,
 		Notes:       req.Notes,
 		InvoiceURL:  req.InvoiceURL,
+		PhotoURLs:   req.PhotoURLs,
 	}
 	created, err := h.svc.AddLog(r.Context(), log)
 	if err != nil {
@@ -117,6 +118,7 @@ func (h *MaintenanceHandler) UpdateLog(w http.ResponseWriter, r *http.Request) {
 		Provider:    req.Provider,
 		Notes:       req.Notes,
 		InvoiceURL:  req.InvoiceURL,
+		PhotoURLs:   req.PhotoURLs,
 	}
 	updated, err := h.svc.UpdateLog(r.Context(), userID, log)
 	if err != nil {

@@ -7,6 +7,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/boat_form_screen.dart';
+import 'package:navis_mobile/shared/widgets/navis_photo_strip.dart';
 
 import '../../helpers/helpers.dart';
 
@@ -291,6 +292,88 @@ void main() {
 
       expect(notifier.deleted, ['boat-1']);
       expect(spy.last, '/boats');
+
+      await drain(tester);
+    });
+  });
+
+  group('BoatFormScreen gallery', () {
+    Widget buildGallerySubject({
+      required _RecordingBoatsNotifier notifier,
+      required bool pro,
+      List<String> photoUrls = const [],
+    }) {
+      return buildRoutedTestApp(
+        const BoatFormScreen(boatId: 'boat-1'),
+        overrides: [
+          ...planOverrides(pro: pro),
+          boatsProvider.overrideWith(() => notifier),
+          boatProvider.overrideWith(
+            (ref, id) async => makeBoat(id: id, photoUrls: photoUrls),
+          ),
+        ],
+      );
+    }
+
+    testWidgets('edit mode renders the gallery with its photos',
+        (tester) async {
+      setPhoneSize(tester);
+      installTileNoiseFilter();
+      final notifier = _RecordingBoatsNotifier();
+      await tester.pumpWidget(buildGallerySubject(
+        notifier: notifier,
+        pro: true,
+        photoUrls: const ['https://x.test/a.jpg', 'https://x.test/b.jpg'],
+      ));
+      await pumpScreen(tester);
+
+      expect(find.text('Gallery'), findsOneWidget);
+      expect(find.byType(NavisPhotoThumb), findsNWidgets(2));
+      expect(find.byTooltip('Add Photo'), findsOneWidget);
+    });
+
+    testWidgets('removing a photo drops it from the saved boat',
+        (tester) async {
+      setPhoneSize(tester);
+      installTileNoiseFilter();
+      final notifier = _RecordingBoatsNotifier();
+      await tester.pumpWidget(buildGallerySubject(
+        notifier: notifier,
+        pro: true,
+        photoUrls: const ['https://x.test/a.jpg', 'https://x.test/b.jpg'],
+      ));
+      await pumpScreen(tester);
+
+      await tester.tap(find.byTooltip('Remove').first);
+      await pumpScreen(tester);
+      expect(find.byType(NavisPhotoThumb), findsOneWidget);
+
+      await tester.ensureVisible(find.text('Update Boat'));
+      await tester.tap(find.text('Update Boat'));
+      await pumpScreen(tester);
+
+      expect(notifier.updated, hasLength(1));
+      expect(notifier.updated.single.photoUrls, ['https://x.test/b.jpg']);
+
+      await drain(tester);
+    });
+
+    testWidgets('Free plan: adding a gallery photo shows the paywall',
+        (tester) async {
+      setPhoneSize(tester);
+      final notifier = _RecordingBoatsNotifier();
+      await tester.pumpWidget(buildGallerySubject(
+        notifier: notifier,
+        pro: false,
+      ));
+      await pumpScreen(tester);
+
+      await tester.ensureVisible(find.byTooltip('Add Photo'));
+      await tester.tap(find.byTooltip('Add Photo'));
+      await pumpScreen(tester);
+
+      expectPaywall();
+      expect(find.text('Take Photo'), findsNothing);
 
       await drain(tester);
     });

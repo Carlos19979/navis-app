@@ -64,6 +64,16 @@ func (p Plan) AttachmentLimit() int {
 	return 1
 }
 
+// GalleryLimit is the total number of photos a boat may hold: the single
+// cover (photo_url) plus gallery extras (photo_urls). Free keeps just the
+// cover; Pro gets a small gallery.
+func (p Plan) GalleryLimit() int {
+	if p == PlanPro {
+		return 10
+	}
+	return 1
+}
+
 // CanUseFullReadiness reports whether the plan unlocks the full boat-readiness
 // breakdown (documents + safety gear + maintenance/engine hours). Free users see
 // only the documents block; Pro sees the complete score.

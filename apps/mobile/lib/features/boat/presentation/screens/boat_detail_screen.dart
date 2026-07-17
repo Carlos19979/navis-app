@@ -26,6 +26,8 @@ import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
+import 'package:navis_mobile/shared/widgets/navis_photo_strip.dart';
+import 'package:navis_mobile/shared/widgets/navis_photo_viewer.dart';
 
 class BoatDetailScreen extends ConsumerWidget {
   const BoatDetailScreen({super.key, required this.boatId});
@@ -77,6 +79,13 @@ class _BoatDetailView extends ConsumerWidget {
               padding: const EdgeInsets.all(16),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
+                  if (boat.photoUrls.isNotEmpty) ...[
+                    _GalleryStrip(boat: boat)
+                        .animate()
+                        .fadeIn(duration: 400.ms)
+                        .slideY(begin: 0.05, end: 0, duration: 400.ms),
+                    const SizedBox(height: 16),
+                  ],
                   _InfoSection(boat: boat)
                       .animate()
                       .fadeIn(duration: 400.ms)
@@ -490,6 +499,39 @@ class _BoatSliverAppBar extends StatelessWidget {
           Icons.sailing,
           size: 64,
           color: AppColors.cyan.withValues(alpha: 0.25),
+        ),
+      ),
+    );
+  }
+}
+
+/// Horizontal gallery under the header: cover plus extra photos, each
+/// opening the fullscreen swipe viewer.
+class _GalleryStrip extends StatelessWidget {
+  const _GalleryStrip({required this.boat});
+
+  final Boat boat;
+
+  @override
+  Widget build(BuildContext context) {
+    final photos = [
+      if (boat.photoUrl != null && boat.photoUrl!.isNotEmpty) boat.photoUrl!,
+      ...boat.photoUrls,
+    ];
+    return SizedBox(
+      height: 72,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: photos.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, i) => NavisPhotoThumb(
+          url: photos[i],
+          size: 72,
+          onTap: () => showNavisPhotoViewer(
+            context,
+            urls: photos,
+            initialIndex: i,
+          ),
         ),
       ),
     );

@@ -1769,6 +1769,29 @@ class AppLocalizationsEs extends AppLocalizations {
   String get attachInvoice => 'Adjuntar factura';
 
   @override
+  String get couldNotUploadPhoto => 'No se pudo subir la foto';
+
+  @override
+  String get photosLabel => 'Fotos';
+
+  @override
+  String get photoLabel => 'Foto';
+
+  @override
+  String get galleryTitle => 'Galería';
+
+  @override
+  String get gallerySubtitle => 'Fotos adicionales a la portada';
+
+  @override
+  String get paywallReasonLogPhotos =>
+      'Añade más fotos de servicio con Navis Pro';
+
+  @override
+  String get paywallReasonGallery =>
+      'Añade una galería de fotos a tu barco con Navis Pro';
+
+  @override
   String get expenseCategoryFuel => 'Combustible';
 
   @override

@@ -11,7 +11,10 @@ import 'package:navis_mobile/features/boat/domain/repositories/boat_repository.d
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/boat_detail_screen.dart';
+import 'package:navis_mobile/shared/widgets/navis_photo_strip.dart';
+import 'package:navis_mobile/shared/widgets/navis_photo_viewer.dart';
 
+import '../../helpers/map_noise.dart';
 import '../../helpers/test_helpers.dart';
 
 class MockBoatRepository extends Mock implements BoatRepository {}
@@ -482,6 +485,51 @@ void main() {
 
       expect(find.text('Speed Demon'), findsOneWidget);
       expect(find.text('Motorboat'), findsOneWidget);
+    });
+
+    testWidgets('gallery strip renders cover plus extra photos',
+        (tester) async {
+      await setPhoneSize(tester);
+      installTileNoiseFilter();
+      final boat = makeBoat(
+        id: 'boat-4',
+        photoUrl: 'https://x.test/cover.jpg',
+        photoUrls: const [
+          'https://x.test/deck.jpg',
+          'https://x.test/cabin.jpg',
+        ],
+      );
+
+      await tester.pumpWidget(buildSubject(boat: boat));
+      await pumpScreen(tester);
+
+      expect(find.byType(NavisPhotoThumb), findsNWidgets(3));
+    });
+
+    testWidgets('no gallery photos hides the strip', (tester) async {
+      await setPhoneSize(tester);
+      await tester.pumpWidget(buildSubject());
+      await pumpScreen(tester);
+
+      expect(find.byType(NavisPhotoThumb), findsNothing);
+    });
+
+    testWidgets('tapping a gallery photo opens the fullscreen viewer',
+        (tester) async {
+      await setPhoneSize(tester);
+      installTileNoiseFilter();
+      final boat = makeBoat(
+        id: 'boat-5',
+        photoUrls: const ['https://x.test/deck.jpg'],
+      );
+
+      await tester.pumpWidget(buildSubject(boat: boat));
+      await pumpScreen(tester);
+
+      await tester.tap(find.byType(NavisPhotoThumb).first);
+      await pumpScreen(tester);
+
+      expect(find.byType(NavisPhotoViewer), findsOneWidget);
     });
   });
 }

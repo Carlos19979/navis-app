@@ -12,6 +12,7 @@ class BoatModel {
     this.homePortLat,
     this.homePortLon,
     this.photoUrl,
+    this.photoUrls = const [],
     this.engineHours = 0,
     this.ownerId,
     this.isOwner = true,
@@ -31,6 +32,7 @@ class BoatModel {
       homePortLat: (json['home_port_lat'] as num?)?.toDouble(),
       homePortLon: (json['home_port_lon'] as num?)?.toDouble(),
       photoUrl: json['photo_url'] as String?,
+      photoUrls: (json['photo_urls'] as List?)?.cast<String>() ?? const [],
       engineHours: (json['engine_hours'] as num?)?.toDouble() ?? 0,
       ownerId: json['owner_id'] as String?,
       isOwner: json['is_owner'] as bool? ?? true,
@@ -58,6 +60,7 @@ class BoatModel {
       homePortLat: boat.homePortLat,
       homePortLon: boat.homePortLon,
       photoUrl: boat.photoUrl,
+      photoUrls: boat.photoUrls,
       engineHours: boat.engineHours,
       ownerId: boat.ownerId,
       createdAt: boat.createdAt,
@@ -74,6 +77,7 @@ class BoatModel {
   final double? homePortLat;
   final double? homePortLon;
   final String? photoUrl;
+  final List<String> photoUrls;
   final double engineHours;
   final String? ownerId;
   final bool isOwner;
@@ -92,6 +96,7 @@ class BoatModel {
       if (homePortLat != null) 'home_port_lat': homePortLat,
       if (homePortLon != null) 'home_port_lon': homePortLon,
       'photo_url': photoUrl,
+      'photo_urls': photoUrls,
       'engine_hours': engineHours,
       'owner_id': ownerId,
       if (createdAt != null) 'created_at': createdAt!.toIso8601String(),
@@ -110,6 +115,7 @@ class BoatModel {
       homePortLat: homePortLat,
       homePortLon: homePortLon,
       photoUrl: photoUrl,
+      photoUrls: photoUrls,
       engineHours: engineHours,
       ownerId: ownerId,
       isOwner: isOwner,

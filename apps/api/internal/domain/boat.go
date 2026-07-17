@@ -27,6 +27,7 @@ type Boat struct {
 	HomePortLat  *float64
 	HomePortLon  *float64
 	PhotoURL     *string
+	PhotoURLs    []string // gallery extras beyond the PhotoURL cover
 	EngineHours  float64
 	CreatedAt    time.Time
 	UpdatedAt    time.Time

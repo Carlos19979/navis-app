@@ -13,7 +13,10 @@ import 'package:navis_mobile/core/network/storage_service.dart';
 import 'package:navis_mobile/core/network/supabase_client.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
+import 'package:navis_mobile/features/billing/billing.dart';
+import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
+import 'package:navis_mobile/features/profile/data/account_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/map_picker_screen.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -24,6 +27,7 @@ import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
+import 'package:navis_mobile/shared/widgets/navis_photo_strip.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 
 class BoatFormScreen extends ConsumerStatefulWidget {
@@ -51,6 +55,7 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
   bool _isEdit = false;
   String? _photoPath;
   String? _existingPhotoUrl;
+  List<String> _galleryUrls = [];
   double? _homePortLat;
   double? _homePortLon;
 
@@ -77,6 +82,7 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
     setState(() {
       _selectedType = boat.type;
       _existingPhotoUrl = boat.photoUrl;
+      _galleryUrls = List.of(boat.photoUrls);
       _homePortLat = boat.homePortLat;
       _homePortLon = boat.homePortLon;
     });
@@ -100,6 +106,14 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
         _photoPath = image.path;
       });
     }
+  }
+
+  /// How many extra gallery photos this user's plan allows beyond the cover
+  /// (server GalleryLimit counts the cover: Free 1, Pro 10).
+  int _galleryCap() {
+    if (ref.read(isProProvider)) return 9;
+    final limit = ref.read(accountProvider).valueOrNull?.galleryLimit ?? 1;
+    return limit < 0 ? 9 : (limit - 1).clamp(0, 9);
   }
 
   Future<void> _onSave() async {
@@ -129,6 +143,7 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
         homePortLat: _homePortLat,
         homePortLon: _homePortLon,
         photoUrl: photoUrl,
+        photoUrls: _galleryUrls,
         engineHours: double.tryParse(_engineHoursController.text.trim()) ?? 0,
       );
 
@@ -345,6 +360,58 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                     .animate()
                     .fadeIn(duration: 400.ms)
                     .slideY(begin: 0.05, end: 0, duration: 400.ms),
+                if (_isEdit) ...[
+                  const SizedBox(height: 16),
+                  // Gallery section: extra photos beyond the cover.
+                  NavisCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l.galleryTitle,
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          l.gallerySubtitle,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(color: context.txtSecondary),
+                        ),
+                        const SizedBox(height: 12),
+                        NavisPhotoStrip(
+                          urls: _galleryUrls,
+                          maxPhotos: _galleryCap(),
+                          onLimitReached: () => showPaywall(context, ref,
+                              reason: l.paywallReasonGallery),
+                          upload: (file) {
+                            final userId = supabaseClient.auth.currentUser?.id;
+                            if (userId == null) {
+                              throw StateError('not signed in');
+                            }
+                            return ref
+                                .read(storageServiceProvider)
+                                .uploadBoatGalleryPhoto(
+                                  userId: userId,
+                                  boatId: widget.boatId,
+                                  file: file,
+                                );
+                          },
+                          onChanged: (u) => setState(() => _galleryUrls = u),
+                        ),
+                      ],
+                    ),
+                  ).animate().fadeIn(duration: 400.ms, delay: 25.ms).slideY(
+                        begin: 0.05,
+                        end: 0,
+                        duration: 400.ms,
+                        delay: 25.ms,
+                      ),
+                ],
                 const SizedBox(height: 20),
                 // Form fields section
                 NavisCard(
