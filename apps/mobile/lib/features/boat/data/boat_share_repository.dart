@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:navis_mobile/core/network/api_client.dart';
+import 'package:navis_mobile/core/network/session_provider.dart';
 import 'package:navis_mobile/features/boat/data/models/boat_model.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
@@ -94,10 +95,12 @@ final boatShareRepositoryProvider = Provider<BoatShareRepository>(
 );
 
 final sharedBoatsProvider = FutureProvider<List<Boat>>((ref) async {
+  ref.watch(sessionUserIdProvider);
   return ref.read(boatShareRepositoryProvider).listShared();
 });
 
 final boatMembersProvider =
     FutureProvider.family<List<BoatMember>, String>((ref, boatId) async {
+  ref.watch(sessionUserIdProvider);
   return ref.read(boatShareRepositoryProvider).listMembers(boatId);
 });

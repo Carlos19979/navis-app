@@ -67,8 +67,63 @@ class MaintenanceRobot {
   }
 
   Future<void> openExpensesTab() async {
-    await tapUntil(tester, find.text('Expenses'), find.byType(TabBarView));
+    // 'Total spent' only renders on the Expenses tab — TabBarView exists on
+    // both tabs, which would satisfy tapUntil's early-exit before the tap.
+    await tapUntil(tester, find.text('Expenses'), find.text('Total spent'));
     await pumpFor(tester, const Duration(milliseconds: 500));
+  }
+
+  /// Adds an expense via the Expenses-tab FAB (default category chip kept).
+  Future<void> addExpense({required String amount}) async {
+    await pumpUntilGone(
+      tester,
+      find.byType(SnackBar),
+      timeout: const Duration(seconds: 8),
+    );
+    await tapUntil(
+      tester,
+      find.byTooltip('New expense'),
+      find.widgetWithText(NavisTextField, 'Amount €'),
+    );
+    await pumpFor(tester, const Duration(milliseconds: 400));
+    // Category is required and starts unselected — pick Fuel.
+    await tester.tap(find.text('Fuel').last, warnIfMissed: false);
+    await tester.pump(const Duration(milliseconds: 300));
+    await _sheetField('Amount €', amount);
+    await tapUntilGone(
+      tester,
+      find.widgetWithText(NavisButton, 'Save'),
+      find.widgetWithText(NavisButton, 'Save'),
+    );
+    await pumpFor(tester, const Duration(seconds: 1));
+  }
+
+  /// Opens the split sheet from the expense card's groups icon (Pro).
+  Future<void> openSplitSheet() async {
+    await pumpUntilGone(
+      tester,
+      find.byType(SnackBar),
+      timeout: const Duration(seconds: 8),
+    );
+    await tapUntil(
+      tester,
+      find.byTooltip('Split expense'),
+      find.text('Split equally'),
+      timeout: const Duration(seconds: 8),
+    );
+    await pumpFor(tester, const Duration(milliseconds: 600));
+    await tester.tap(find.text('Split equally').first, warnIfMissed: false);
+    await pumpFor(tester, const Duration(milliseconds: 600));
+  }
+
+  Future<void> saveSplit() async {
+    await tapUntilGone(
+      tester,
+      find.widgetWithText(NavisButton, 'Save'),
+      find.text('Split equally'),
+      timeout: const Duration(seconds: 10),
+    );
+    await pumpFor(tester, const Duration(seconds: 1));
   }
 
   Future<void> _sheetField(String label, String value) async {

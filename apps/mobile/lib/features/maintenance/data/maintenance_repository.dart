@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:navis_mobile/core/network/session_provider.dart';
+
 import 'package:navis_mobile/core/network/api_client.dart';
 import 'package:navis_mobile/features/maintenance/data/maintenance_models.dart';
 
@@ -101,20 +103,24 @@ final maintenanceRepositoryProvider = Provider<MaintenanceRepository>(
 
 final maintenanceLogsProvider =
     FutureProvider.family<List<MaintenanceLog>, String>((ref, boatId) {
+  ref.watch(sessionUserIdProvider);
   return ref.read(maintenanceRepositoryProvider).listLogs(boatId);
 });
 
 final maintenanceTasksProvider =
     FutureProvider.family<List<MaintenanceTask>, String>((ref, boatId) {
+  ref.watch(sessionUserIdProvider);
   return ref.read(maintenanceRepositoryProvider).listTasks(boatId);
 });
 
 final expensesProvider =
     FutureProvider.family<List<Expense>, String>((ref, boatId) {
+  ref.watch(sessionUserIdProvider);
   return ref.read(maintenanceRepositoryProvider).listExpenses(boatId);
 });
 
 final expenseSummaryProvider =
     FutureProvider.family<ExpenseSummary, String>((ref, boatId) {
+  ref.watch(sessionUserIdProvider);
   return ref.read(maintenanceRepositoryProvider).expenseSummary(boatId);
 });
