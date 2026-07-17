@@ -22,6 +22,25 @@ void main() {
 
   const boatId = 'boat-1';
 
+  // The screen opens on the calendar view with today selected, so bookings
+  // asserted through the day list must fall on today.
+  Booking todayBooking({
+    String id = 'booking-1',
+    String userId = 'user-1',
+    String? purpose = 'Weekend sail',
+    int startHour = 10,
+    int endHour = 18,
+  }) {
+    final now = DateTime.now();
+    return makeBooking(
+      id: id,
+      userId: userId,
+      purpose: purpose,
+      startsAt: DateTime(now.year, now.month, now.day, startHour),
+      endsAt: DateTime(now.year, now.month, now.day, endHour),
+    );
+  }
+
   late _MockSharedRepository mockRepo;
 
   setUp(() {
@@ -58,7 +77,7 @@ void main() {
     override: (fetch) =>
         boatBookingsProvider.overrideWith((ref, id) => fetch()),
     empty: [],
-    populated: [makeBooking()],
+    populated: [todayBooking()],
     emptyFinder: () => find.text('No bookings yet'),
     populatedFinder: () => find.textContaining('Weekend sail'),
   );
@@ -71,21 +90,22 @@ void main() {
       await tester.pumpWidget(
         buildSubject(
           bookings: [
-            // Factory default userId is user-1, the session user.
-            makeBooking(id: 'b-1', purpose: null),
-            makeBooking(
+            // Factory default userId is user-1, the session user. All three
+            // fall on today (non-overlapping slots) so the calendar's day
+            // list shows them.
+            todayBooking(id: 'b-1', purpose: null, startHour: 8, endHour: 10),
+            todayBooking(
               id: 'b-2',
               userId: 'user-2',
               purpose: null,
-              startsAt: DateTime(2026, 5, 2, 10),
-              endsAt: DateTime(2026, 5, 2, 18),
+              endHour: 12,
             ),
-            makeBooking(
+            todayBooking(
               id: 'b-3',
               userId: 'user-3',
               purpose: null,
-              startsAt: DateTime(2026, 5, 3, 10),
-              endsAt: DateTime(2026, 5, 3, 18),
+              startHour: 12,
+              endHour: 14,
             ),
           ],
           // Factory defaults: userId user-2, name Maria.
@@ -314,7 +334,7 @@ void main() {
       when(() => mockRepo.deleteBooking(boatId, 'booking-1'))
           .thenAnswer((_) async {});
 
-      await tester.pumpWidget(buildSubject(bookings: [makeBooking()]));
+      await tester.pumpWidget(buildSubject(bookings: [todayBooking()]));
       await pumpScreen(tester);
 
       await tester.tap(find.byTooltip('Delete'));
@@ -330,7 +350,7 @@ void main() {
 
     testWidgets('delete cancel keeps the booking', (tester) async {
       setPhoneSize(tester);
-      await tester.pumpWidget(buildSubject(bookings: [makeBooking()]));
+      await tester.pumpWidget(buildSubject(bookings: [todayBooking()]));
       await pumpScreen(tester);
 
       await tester.tap(find.byTooltip('Delete'));

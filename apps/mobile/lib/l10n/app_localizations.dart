@@ -698,6 +698,42 @@ abstract class AppLocalizations {
   /// **'Book anyway'**
   String get bookingBookAnyway;
 
+  /// No description provided for @bookingsViewCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar view'**
+  String get bookingsViewCalendar;
+
+  /// No description provided for @bookingsViewList.
+  ///
+  /// In en, this message translates to:
+  /// **'List view'**
+  String get bookingsViewList;
+
+  /// No description provided for @bookingPrevMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous month'**
+  String get bookingPrevMonth;
+
+  /// No description provided for @bookingNextMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Next month'**
+  String get bookingNextMonth;
+
+  /// No description provided for @bookingAddOnDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Book this day'**
+  String get bookingAddOnDay;
+
+  /// No description provided for @bookingsNoneOnDay.
+  ///
+  /// In en, this message translates to:
+  /// **'No bookings on this day'**
+  String get bookingsNoneOnDay;
+
   /// No description provided for @splitTitle.
   ///
   /// In en, this message translates to:

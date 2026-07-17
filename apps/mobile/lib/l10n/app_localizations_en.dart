@@ -327,6 +327,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bookingBookAnyway => 'Book anyway';
 
   @override
+  String get bookingsViewCalendar => 'Calendar view';
+
+  @override
+  String get bookingsViewList => 'List view';
+
+  @override
+  String get bookingPrevMonth => 'Previous month';
+
+  @override
+  String get bookingNextMonth => 'Next month';
+
+  @override
+  String get bookingAddOnDay => 'Book this day';
+
+  @override
+  String get bookingsNoneOnDay => 'No bookings on this day';
+
+  @override
   String get splitTitle => 'Split expense';
 
   @override

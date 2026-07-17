@@ -329,6 +329,24 @@ class AppLocalizationsEs extends AppLocalizations {
   String get bookingBookAnyway => 'Reservar igualmente';
 
   @override
+  String get bookingsViewCalendar => 'Vista de calendario';
+
+  @override
+  String get bookingsViewList => 'Vista de lista';
+
+  @override
+  String get bookingPrevMonth => 'Mes anterior';
+
+  @override
+  String get bookingNextMonth => 'Mes siguiente';
+
+  @override
+  String get bookingAddOnDay => 'Reservar este día';
+
+  @override
+  String get bookingsNoneOnDay => 'No hay reservas este día';
+
+  @override
   String get splitTitle => 'Repartir gasto';
 
   @override
