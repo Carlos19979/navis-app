@@ -128,8 +128,8 @@ Estado actual: Fases 0-11 implementadas. Fase 12 en progreso. Este roadmap cubre
 - [x] Mapa interactivo con OpenSeaMap tiles
 - [x] Mostrar puertos base de todos los barcos (custom markers)
 - [x] Ver tracks de viajes sobre el mapa (polyline layer)
-- [ ] Información de puertos cercanos (tap handler con popup)
-- [ ] PostGIS queries: ST_DWithin para puertos cercanos a ubicación actual
+- [x] Información de puertos cercanos (tap handler con popup) — port info sheet
+- [ ] PostGIS queries: ST_DWithin para puertos cercanos a ubicación actual (aún online-only)
 
 ### 12.9 — UI Polish
 - [x] RepaintBoundary en todos los FlutterMap widgets
@@ -437,6 +437,21 @@ Estado actual: Fases 0-11 implementadas. Fase 12 en progreso. Este roadmap cubre
 | | **TOTAL RESTANTE** | | **~24-35 días** |
 
 ---
+
+## Ronda de producto vs sector (2026-07-17, PRs #46–#51)
+
+Análisis competitivo (`.claude/plans/refactored-bouncing-hamming.md`) → features:
+- [x] Solapes de booking validados en API (409 BOOKING_OVERLAP + force) + badge en lista
+- [x] **Recordatorios de mantenimiento (cron `maintenance-due`, Pro)** — cierra el ítem histórico "anchor Pro feature"
+- [x] Vista calendario de bookings (mes, puntos por día, filtro por día)
+- [x] alert_days múltiples (chips) + tipo de documento `custom` + Exportar datos (GDPR) + foto en pasaporte PDF
+- [x] Fotos en logs de mantenimiento + galería del barco (`GalleryLimit`)
+
+**Siguiente (planificado, no construido):**
+- [ ] **B1 — Alarma de fondeo** (Pro): marcar ancla + radio de swing + vigilancia GPS + alarma sonora/push al garrear. Reto: background location + critical alerts iOS con móvil bloqueado.
+- [ ] **Rediseño pantalla de gastos**: selector Mes/Año + filtros (categoría/fecha) en vez de scroll infinito + total general.
+- **Descartado:** fuel log (los gastos ya cubren el dinero; el campo fuel por travesía da L/NM básico).
+- **No hacer (fuera de foco):** rutas/AIS/cartas offline MBTiles (mercado savvy navvy/Navionics), reseñas de fondeaderos (foso de Navily), feed social, float plan.
 
 ## NOTAS PARA CLAUDE CODE
 
