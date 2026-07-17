@@ -11,6 +11,9 @@ type CreateBookingRequest struct {
 	StartsAt string  `json:"starts_at" validate:"required"`
 	EndsAt   string  `json:"ends_at" validate:"required"`
 	Purpose  *string `json:"purpose"`
+	// Force creates the booking even when it overlaps an existing one
+	// (the client confirmed the 409 BOOKING_OVERLAP warning).
+	Force bool `json:"force"`
 }
 
 // BookingResponse mirrors a domain.Booking.

@@ -74,6 +74,9 @@ type ExpenseRepository interface {
 type BookingRepository interface {
 	Create(ctx context.Context, b *domain.Booking) (*domain.Booking, error)
 	ListByBoat(ctx context.Context, boatID string) ([]domain.Booking, error)
+	// HasOverlap reports whether any non-cancelled booking for the boat
+	// intersects the [startsAt, endsAt) range.
+	HasOverlap(ctx context.Context, boatID string, startsAt, endsAt time.Time) (bool, error)
 	Delete(ctx context.Context, boatID, id string) error
 }
 

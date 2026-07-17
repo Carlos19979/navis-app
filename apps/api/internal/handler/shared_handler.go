@@ -14,7 +14,7 @@ import (
 // sharedService is the service surface the shared-coordination handlers consume.
 type sharedService interface {
 	ListBookings(ctx context.Context, userID, boatID string) ([]domain.Booking, error)
-	CreateBooking(ctx context.Context, b *domain.Booking) (*domain.Booking, error)
+	CreateBooking(ctx context.Context, b *domain.Booking, force bool) (*domain.Booking, error)
 	DeleteBooking(ctx context.Context, userID, boatID, id string) error
 	ListSplits(ctx context.Context, userID, boatID, expenseID string) ([]domain.ExpenseSplit, error)
 	SetSplits(ctx context.Context, userID, boatID, expenseID string, splits []domain.ExpenseSplit) ([]domain.ExpenseSplit, error)
@@ -72,7 +72,7 @@ func (h *SharedHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
 		StartsAt: startsAt,
 		EndsAt:   endsAt,
 		Purpose:  req.Purpose,
-	})
+	}, req.Force)
 	if err != nil {
 		MapDomainError(w, err)
 		return

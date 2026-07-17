@@ -674,6 +674,12 @@ abstract class AppLocalizations {
   /// **'End time'**
   String get bookingEndTime;
 
+  /// No description provided for @bookingOverlapsBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Overlaps another booking'**
+  String get bookingOverlapsBadge;
+
   /// No description provided for @bookingOverlapTitle.
   ///
   /// In en, this message translates to:

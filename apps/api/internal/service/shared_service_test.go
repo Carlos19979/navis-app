@@ -12,6 +12,7 @@ import (
 
 type mockBookingRepo struct {
 	created *domain.Booking
+	overlap bool
 }
 
 func (m *mockBookingRepo) Create(_ context.Context, b *domain.Booking) (*domain.Booking, error) {
@@ -21,6 +22,9 @@ func (m *mockBookingRepo) Create(_ context.Context, b *domain.Booking) (*domain.
 }
 func (m *mockBookingRepo) ListByBoat(_ context.Context, _ string) ([]domain.Booking, error) {
 	return nil, nil
+}
+func (m *mockBookingRepo) HasOverlap(_ context.Context, _ string, _, _ time.Time) (bool, error) {
+	return m.overlap, nil
 }
 func (m *mockBookingRepo) Delete(_ context.Context, _, _ string) error { return nil }
 
@@ -45,7 +49,7 @@ func TestSharedService_CreateBooking_ForbiddenOnFree(t *testing.T) {
 	_, err := svc.CreateBooking(context.Background(), &domain.Booking{
 		BoatID: "boat-1", UserID: "user-1",
 		StartsAt: time.Now(), EndsAt: time.Now().Add(time.Hour),
-	})
+	}, false)
 	if !errors.Is(err, domain.ErrPlanForbidden) {
 		t.Errorf("err = %v, want ErrPlanForbidden", err)
 	}
@@ -60,12 +64,48 @@ func TestSharedService_CreateBooking_Pro(t *testing.T) {
 	out, err := svc.CreateBooking(context.Background(), &domain.Booking{
 		BoatID: "boat-1", UserID: "user-1",
 		StartsAt: time.Now(), EndsAt: time.Now().Add(time.Hour),
-	})
+	}, false)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if out.Status != domain.BookingConfirmed {
 		t.Errorf("status = %q, want confirmed (default)", out.Status)
+	}
+}
+
+func TestSharedService_CreateBooking_RejectsOverlap(t *testing.T) {
+	t.Parallel()
+	repo := &mockBookingRepo{overlap: true}
+	svc := NewSharedService(repo, &mockSplitRepo{}, &mockExpenseRepo{},
+		&mockBoatRepo{}, &testutil.FakeProfileRepo{Plan: domain.PlanPro}, nil)
+
+	_, err := svc.CreateBooking(context.Background(), &domain.Booking{
+		BoatID: "boat-1", UserID: "user-1",
+		StartsAt: time.Now(), EndsAt: time.Now().Add(time.Hour),
+	}, false)
+	if !errors.Is(err, domain.ErrBookingOverlap) {
+		t.Errorf("err = %v, want ErrBookingOverlap", err)
+	}
+	if repo.created != nil {
+		t.Error("booking must not be created on unforced overlap")
+	}
+}
+
+func TestSharedService_CreateBooking_ForceSkipsOverlapCheck(t *testing.T) {
+	t.Parallel()
+	repo := &mockBookingRepo{overlap: true}
+	svc := NewSharedService(repo, &mockSplitRepo{}, &mockExpenseRepo{},
+		&mockBoatRepo{}, &testutil.FakeProfileRepo{Plan: domain.PlanPro}, nil)
+
+	out, err := svc.CreateBooking(context.Background(), &domain.Booking{
+		BoatID: "boat-1", UserID: "user-1",
+		StartsAt: time.Now(), EndsAt: time.Now().Add(time.Hour),
+	}, true)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if out == nil || repo.created == nil {
+		t.Error("forced booking must be created despite overlap")
 	}
 }
 
@@ -77,7 +117,7 @@ func TestSharedService_CreateBooking_RejectsBadTimes(t *testing.T) {
 	_, err := svc.CreateBooking(context.Background(), &domain.Booking{
 		BoatID: "boat-1", UserID: "user-1",
 		StartsAt: time.Now(), EndsAt: time.Now().Add(-time.Hour), // ends before start
-	})
+	}, false)
 	var ve *domain.ValidationError
 	if !errors.As(err, &ve) {
 		t.Errorf("err = %v, want ValidationError", err)

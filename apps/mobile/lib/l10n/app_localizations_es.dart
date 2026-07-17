@@ -316,6 +316,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get bookingEndTime => 'Hora de fin';
 
   @override
+  String get bookingOverlapsBadge => 'Se solapa con otra reserva';
+
+  @override
   String get bookingOverlapTitle => 'Se solapa con otra reserva';
 
   @override

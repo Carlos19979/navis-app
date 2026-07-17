@@ -21,6 +21,9 @@ var (
 	ErrValidation            = errors.New("validation error")
 	ErrDuplicateRegistration = errors.New("duplicate registration")
 	ErrConflict              = errors.New("conflict")
+	// ErrBookingOverlap is returned when a new booking overlaps an existing
+	// one for the same boat and the client did not ask to force it.
+	ErrBookingOverlap = errors.New("booking overlaps an existing one")
 	// ErrPlanLimit is returned when an action exceeds the user's plan quota
 	// (e.g. creating more boats than the plan allows).
 	ErrPlanLimit = errors.New("plan limit reached")
