@@ -36,7 +36,15 @@ void main() {
         maintenanceLogsProvider.overrideWith(
           (ref, id) async => const <MaintenanceLog>[],
         ),
-        expensesProvider.overrideWith((ref, id) async => [makeExpense()]),
+        // Current-month date so the expenses ledger (defaults to this month)
+        // shows the card and its split button.
+        expensesProvider.overrideWith(
+          (ref, id) async => [
+            makeExpense(
+              incurredOn: DateTime(DateTime.now().year, DateTime.now().month),
+            ),
+          ],
+        ),
         expenseSummaryProvider.overrideWith(
           (ref, id) async =>
               const ExpenseSummary(totals: {'combustible': 85.5}, total: 85.5),

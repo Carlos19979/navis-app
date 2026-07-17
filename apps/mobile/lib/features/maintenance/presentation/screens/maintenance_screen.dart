@@ -10,6 +10,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:navis_mobile/core/network/storage_service.dart';
 import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
+import 'package:intl/intl.dart';
+
 import 'package:navis_mobile/features/shared/data/shared_repository.dart';
 import 'package:navis_mobile/features/shared/presentation/widgets/split_sheet.dart';
 import 'package:navis_mobile/core/network/supabase_client.dart';
@@ -798,17 +800,45 @@ class _SuggestedChips extends ConsumerWidget {
   }
 }
 
-class _ExpensesTab extends ConsumerWidget {
+/// Whether the expenses ledger groups by month or by year.
+enum _ExpensePeriod { month, year }
+
+class _ExpensesTab extends ConsumerStatefulWidget {
   const _ExpensesTab({required this.boatId});
   final String boatId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_ExpensesTab> createState() => _ExpensesTabState();
+}
+
+class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
+  _ExpensePeriod _period = _ExpensePeriod.month;
+  // First day of the selected month (month mode) / any day of the year.
+  DateTime _anchor = DateTime(DateTime.now().year, DateTime.now().month);
+  // null = all categories.
+  String? _category;
+
+  String get boatId => widget.boatId;
+
+  bool _inScope(Expense e) {
+    if (_category != null && e.category != _category) return false;
+    final d = e.incurredOn;
+    if (d.year != _anchor.year) return false;
+    return _period == _ExpensePeriod.year || d.month == _anchor.month;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final expensesAsync = ref.watch(expensesProvider(boatId));
-    final summaryAsync = ref.watch(expenseSummaryProvider(boatId));
     final splits =
         ref.watch(boatSplitSummaryProvider(boatId)).valueOrNull ?? const {};
+    final canManage = ref
+            .watch(boatProvider(boatId))
+            .valueOrNull
+            ?.permissions
+            .canManageExpenses ??
+        true;
 
     return Stack(
       children: [
@@ -816,170 +846,11 @@ class _ExpensesTab extends ConsumerWidget {
           loading: () => const NavisShimmer(itemCount: 4, itemHeight: 84),
           error: (e, _) => NavisErrorWidget(
             message: e.toString(),
-            onRetry: () {
-              ref.invalidate(expensesProvider(boatId));
-              ref.invalidate(expenseSummaryProvider(boatId));
-            },
+            onRetry: () => ref.invalidate(expensesProvider(boatId)),
           ),
-          data: (items) {
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-              children: [
-                if (summaryAsync.valueOrNull case final s?)
-                  NavisCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(l.totalSpent,
-                            style: TextStyle(color: context.txtSecondary)),
-                        const SizedBox(height: 4),
-                        Text('${s.total.toStringAsFixed(0)} €',
-                            style: const TextStyle(
-                                color: AppColors.cyan,
-                                fontSize: 26,
-                                fontWeight: FontWeight.w800)),
-                        const SizedBox(height: 8),
-                        for (final e in s.totals.entries)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(_categoryLabel(l, e.key),
-                                    style:
-                                        TextStyle(color: context.txtSecondary)),
-                                Text('${e.value.toStringAsFixed(0)} €',
-                                    style:
-                                        TextStyle(color: context.txtPrimary)),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                const SizedBox(height: 8),
-                if (items.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 40),
-                    child: NavisEmptyState(
-                      icon: Icons.receipt_long_outlined,
-                      message: l.noExpensesRecorded,
-                    ),
-                  ),
-                for (final e in items)
-                  NavisCard(
-                    onTap: (ref
-                                .watch(boatProvider(boatId))
-                                .valueOrNull
-                                ?.permissions
-                                .canManageExpenses ??
-                            true)
-                        ? () => _editExpense(context, ref, existing: e)
-                        : null,
-                    child: Row(
-                      children: [
-                        const Icon(Icons.euro, color: AppColors.cyan),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(_categoryLabel(l, e.category),
-                                  style: TextStyle(
-                                      color: context.txtPrimary,
-                                      fontWeight: FontWeight.w600)),
-                              const SizedBox(height: 2),
-                              Text(_fmtDate(e.incurredOn),
-                                  style: TextStyle(
-                                      color: context.txtSecondary,
-                                      fontSize: 13)),
-                              if (splits[e.id] case final s?) ...[
-                                const SizedBox(height: 4),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.groups,
-                                        size: 14,
-                                        color: s.mySettled
-                                            ? AppColors.green
-                                            : AppColors.cyan),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      s.mySettled
-                                          ? l.splitSettled
-                                          : (s.myShare != null
-                                              ? l.splitYouOwe(
-                                                  s.myShare!.round())
-                                              : l.splitSharedAmong(s.count)),
-                                      style: TextStyle(
-                                          color: s.mySettled
-                                              ? AppColors.green
-                                              : AppColors.cyan,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                              if (e.invoiceUrl != null) ...[
-                                const SizedBox(height: 4),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.attach_file,
-                                        size: 14, color: AppColors.cyan),
-                                    const SizedBox(width: 2),
-                                    Text(l.invoiceLabel,
-                                        style: const TextStyle(
-                                            color: AppColors.cyan,
-                                            fontSize: 12)),
-                                  ],
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text('${e.amount.toStringAsFixed(0)} €',
-                            style: const TextStyle(
-                                color: AppColors.cyan,
-                                fontSize: 22,
-                                fontWeight: FontWeight.w800)),
-                        IconButton(
-                          icon: Icon(Icons.groups_outlined,
-                              size: 20, color: context.txtSecondary),
-                          tooltip: l.splitTitle,
-                          onPressed: () async {
-                            if (!ref.read(isProProvider)) {
-                              final ok = await showPaywall(context, ref,
-                                  reason: l.paywallReasonShared);
-                              if (!ok || !context.mounted) return;
-                            }
-                            if (context.mounted) {
-                              await showSplitSheet(
-                                context,
-                                ref,
-                                boatId: boatId,
-                                expenseId: e.id,
-                                amount: e.amount,
-                                title: _categoryLabel(l, e.category),
-                              );
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            );
-          },
+          data: (items) => _content(context, l, items, splits, canManage),
         ),
-        if (ref
-                .watch(boatProvider(boatId))
-                .valueOrNull
-                ?.permissions
-                .canManageExpenses ??
-            true)
+        if (canManage)
           Positioned(
             right: 16,
             bottom: 16,
@@ -990,6 +861,257 @@ class _ExpensesTab extends ConsumerWidget {
             ),
           ),
       ],
+    );
+  }
+
+  Widget _content(
+    BuildContext context,
+    AppLocalizations l,
+    List<Expense> items,
+    Map<String, ExpenseSplitSummary> splits,
+    bool canManage,
+  ) {
+    // Category chips come from all-time data so the filter is stable.
+    final categories = {for (final e in items) e.category}.toList()..sort();
+    final scoped = items.where(_inScope).toList()
+      ..sort((a, b) => b.incurredOn.compareTo(a.incurredOn));
+    final total = scoped.fold<double>(0, (s, e) => s + e.amount);
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+      children: [
+        _periodBar(l),
+        const SizedBox(height: 12),
+        if (categories.isNotEmpty) _categoryChips(l, categories),
+        const SizedBox(height: 12),
+        _periodTotal(context, l, total),
+        const SizedBox(height: 8),
+        if (scoped.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 40),
+            child: NavisEmptyState(
+              icon: Icons.receipt_long_outlined,
+              message: l.expensesNoneInPeriod,
+            ),
+          )
+        else if (_period == _ExpensePeriod.year)
+          ..._monthBreakdown(context, l, scoped)
+        else
+          for (final e in scoped)
+            _expenseCard(context, l, e, splits, canManage),
+      ],
+    );
+  }
+
+  /// Month/Year toggle + a ‹ period › navigator.
+  Widget _periodBar(AppLocalizations l) {
+    final label = _period == _ExpensePeriod.month
+        ? DateFormat.yMMMM().format(_anchor)
+        : _anchor.year.toString();
+    return Row(
+      children: [
+        SegmentedButton<_ExpensePeriod>(
+          segments: [
+            ButtonSegment(
+              value: _ExpensePeriod.month,
+              label: Text(l.expensesPeriodMonth),
+            ),
+            ButtonSegment(
+              value: _ExpensePeriod.year,
+              label: Text(l.expensesPeriodYear),
+            ),
+          ],
+          selected: {_period},
+          showSelectedIcon: false,
+          onSelectionChanged: (s) => setState(() => _period = s.first),
+        ),
+        const Spacer(),
+        IconButton(
+          icon: const Icon(Icons.chevron_left),
+          tooltip: l.expensesPrevPeriod,
+          onPressed: () => setState(() => _anchor = _shift(-1)),
+        ),
+        Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+        IconButton(
+          icon: const Icon(Icons.chevron_right),
+          tooltip: l.expensesNextPeriod,
+          onPressed: () => setState(() => _anchor = _shift(1)),
+        ),
+      ],
+    );
+  }
+
+  DateTime _shift(int by) => _period == _ExpensePeriod.month
+      ? DateTime(_anchor.year, _anchor.month + by)
+      : DateTime(_anchor.year + by, _anchor.month);
+
+  Widget _categoryChips(AppLocalizations l, List<String> categories) {
+    return Wrap(
+      spacing: 8,
+      children: [
+        FilterChip(
+          label: Text(l.expensesFilterAll),
+          selected: _category == null,
+          onSelected: (_) => setState(() => _category = null),
+        ),
+        for (final c in categories)
+          FilterChip(
+            label: Text(_categoryLabel(l, c)),
+            selected: _category == c,
+            onSelected: (sel) => setState(() => _category = sel ? c : null),
+          ),
+      ],
+    );
+  }
+
+  Widget _periodTotal(BuildContext context, AppLocalizations l, double total) {
+    return NavisCard(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(l.expensesPeriodTotal,
+              style: TextStyle(color: context.txtSecondary)),
+          Text('${total.toStringAsFixed(0)} €',
+              style: const TextStyle(
+                  color: AppColors.cyan,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800)),
+        ],
+      ),
+    );
+  }
+
+  /// Year mode: one tappable subtotal row per month that has expenses.
+  List<Widget> _monthBreakdown(
+    BuildContext context,
+    AppLocalizations l,
+    List<Expense> yearItems,
+  ) {
+    final byMonth = <int, double>{};
+    for (final e in yearItems) {
+      byMonth[e.incurredOn.month] =
+          (byMonth[e.incurredOn.month] ?? 0) + e.amount;
+    }
+    final months = byMonth.keys.toList()..sort((a, b) => b.compareTo(a));
+    return [
+      for (final m in months)
+        NavisCard(
+          onTap: () => setState(() {
+            _anchor = DateTime(_anchor.year, m);
+            _period = _ExpensePeriod.month;
+          }),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(DateFormat.MMMM().format(DateTime(_anchor.year, m)),
+                  style: TextStyle(
+                      color: context.txtPrimary, fontWeight: FontWeight.w600)),
+              Text('${byMonth[m]!.toStringAsFixed(0)} €',
+                  style: const TextStyle(
+                      color: AppColors.cyan, fontWeight: FontWeight.w800)),
+            ],
+          ),
+        ),
+    ];
+  }
+
+  Widget _expenseCard(
+    BuildContext context,
+    AppLocalizations l,
+    Expense e,
+    Map<String, ExpenseSplitSummary> splits,
+    bool canManage,
+  ) {
+    return NavisCard(
+      onTap: canManage ? () => _editExpense(context, ref, existing: e) : null,
+      child: Row(
+        children: [
+          const Icon(Icons.euro, color: AppColors.cyan),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(_categoryLabel(l, e.category),
+                    style: TextStyle(
+                        color: context.txtPrimary,
+                        fontWeight: FontWeight.w600)),
+                const SizedBox(height: 2),
+                Text(_fmtDate(e.incurredOn),
+                    style:
+                        TextStyle(color: context.txtSecondary, fontSize: 13)),
+                if (splits[e.id] case final s?) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.groups,
+                          size: 14,
+                          color:
+                              s.mySettled ? AppColors.green : AppColors.cyan),
+                      const SizedBox(width: 4),
+                      Text(
+                        s.mySettled
+                            ? l.splitSettled
+                            : (s.myShare != null
+                                ? l.splitYouOwe(s.myShare!.round())
+                                : l.splitSharedAmong(s.count)),
+                        style: TextStyle(
+                            color:
+                                s.mySettled ? AppColors.green : AppColors.cyan,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                ],
+                if (e.invoiceUrl != null) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.attach_file,
+                          size: 14, color: AppColors.cyan),
+                      const SizedBox(width: 2),
+                      Text(l.invoiceLabel,
+                          style: const TextStyle(
+                              color: AppColors.cyan, fontSize: 12)),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text('${e.amount.toStringAsFixed(0)} €',
+              style: const TextStyle(
+                  color: AppColors.cyan,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800)),
+          IconButton(
+            icon: Icon(Icons.groups_outlined,
+                size: 20, color: context.txtSecondary),
+            tooltip: l.splitTitle,
+            onPressed: () async {
+              if (!ref.read(isProProvider)) {
+                final ok = await showPaywall(context, ref,
+                    reason: l.paywallReasonShared);
+                if (!ok || !context.mounted) return;
+              }
+              if (context.mounted) {
+                await showSplitSheet(
+                  context,
+                  ref,
+                  boatId: boatId,
+                  expenseId: e.id,
+                  amount: e.amount,
+                  title: _categoryLabel(l, e.category),
+                );
+              }
+            },
+          ),
+        ],
+      ),
     );
   }
 
