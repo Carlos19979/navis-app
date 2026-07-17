@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:navis_mobile/core/network/session_provider.dart';
+
 import 'package:navis_mobile/features/regattas/data/repositories/regatta_repository.dart';
 import 'package:navis_mobile/features/regattas/domain/entities/regatta.dart';
 
@@ -14,6 +16,7 @@ final groupRegattasProvider =
 });
 
 final regattaProvider = FutureProvider.family<Regatta, String>((ref, id) async {
+  ref.watch(sessionUserIdProvider);
   final repo = ref.watch(regattaRepositoryProvider);
   return repo.getRegatta(id);
 });

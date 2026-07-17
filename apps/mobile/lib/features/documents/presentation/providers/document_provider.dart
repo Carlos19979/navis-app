@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:navis_mobile/core/network/session_provider.dart';
+
 import 'package:navis_mobile/core/database/mutation_queue.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/core/database/offline_repository.dart';
@@ -23,12 +25,14 @@ final boatDocumentsProvider =
 
 final documentProvider =
     FutureProvider.family<Document, String>((ref, id) async {
+  ref.watch(sessionUserIdProvider);
   final repository = ref.watch(documentRepositoryProvider);
   return repository.getDocument(id);
 });
 
 final createDocumentProvider =
     FutureProvider.family<Document, Document>((ref, document) async {
+  ref.watch(sessionUserIdProvider);
   final repository = ref.read(documentRepositoryProvider);
   final created = await repository.createDocument(document);
   ref.invalidate(boatDocumentsProvider(document.boatId));
@@ -61,6 +65,7 @@ class DocumentSummary {
 
 final boatDocumentSummaryProvider =
     FutureProvider.family<DocumentSummary, String>((ref, boatId) async {
+  ref.watch(sessionUserIdProvider);
   final docs = await ref.watch(boatDocumentsProvider(boatId).future);
   var expired = 0;
   var critical = 0;

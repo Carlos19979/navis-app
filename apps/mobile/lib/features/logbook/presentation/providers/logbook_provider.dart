@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:navis_mobile/core/network/session_provider.dart';
+
 import 'package:navis_mobile/core/database/mutation_queue.dart';
 import 'package:navis_mobile/core/database/offline_repository.dart';
 import 'package:navis_mobile/features/logbook/data/repositories/trip_repository.dart';
@@ -14,12 +16,14 @@ final tripRepositoryProvider = Provider<TripRepository>((ref) {
 
 final boatTripsProvider =
     FutureProvider.family<List<Trip>, String>((ref, boatId) async {
+  ref.watch(sessionUserIdProvider);
   final repository = ref.watch(tripRepositoryProvider);
   final response = await repository.getTrips(boatId);
   return response.items.where((t) => t.status == TripStatus.completed).toList();
 });
 
 final tripProvider = FutureProvider.family<Trip, String>((ref, id) async {
+  ref.watch(sessionUserIdProvider);
   final repository = ref.watch(tripRepositoryProvider);
   return repository.getTrip(id);
 });

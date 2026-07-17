@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:navis_mobile/core/network/api_client.dart';
+import 'package:navis_mobile/core/network/session_provider.dart';
 
 /// The current user's plan and derived entitlements, from GET /api/v1/me.
 class Account {
@@ -114,5 +115,6 @@ final accountRepositoryProvider = Provider<AccountRepository>(
 );
 
 final accountProvider = FutureProvider<Account>((ref) async {
+  ref.watch(sessionUserIdProvider);
   return ref.read(accountRepositoryProvider).getMe();
 });

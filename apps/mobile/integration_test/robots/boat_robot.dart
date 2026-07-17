@@ -38,6 +38,55 @@ class BoatRobot {
     return find.byType(FloatingActionButton);
   }
 
+  /// The boat-detail hub's scrollable, for scoped lazy-sliver scrolling.
+  Finder detailScrollable() => find.descendant(
+        of: find.byType(BoatDetailScreen),
+        matching: find.byType(Scrollable),
+      );
+
+  /// Opens the Share boat sheet from the detail hub and reads the invite
+  /// code (the prominent cyan 26pt text — the only reliable handle).
+  Future<String> readShareCode() async {
+    final codeText = find.byWidgetPredicate(
+      (w) => w is Text && w.style?.fontSize == 26,
+    );
+    await scrollTo(
+      tester,
+      find.text('Share boat'),
+      scrollable: detailScrollable(),
+    );
+    await tapUntil(tester, find.text('Share boat'), codeText);
+    final code = (tester.widget<Text>(codeText.first).data ?? '').trim();
+    // Dismiss the sheet (tap the barrier above it).
+    await tester.tapAt(const Offset(200, 60));
+    await pumpFor(tester, const Duration(milliseconds: 600));
+    return code;
+  }
+
+  /// Joins a boat by invite code from the dashboard app-bar action.
+  Future<void> joinByCode(String code) async {
+    // Dialog-scoped: unscoped TextFields (e.g. the outgoing register form
+    // during a route transition) would satisfy the finder prematurely.
+    final dialogField = find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.byType(TextField),
+    );
+    await tapUntil(tester, find.byTooltip('Join a boat'), dialogField);
+    await pumpFor(tester, const Duration(milliseconds: 400));
+    await pumpUntilFound(tester, dialogField);
+    await tester.enterText(dialogField.first, code);
+    await tester.pump(const Duration(milliseconds: 200));
+    await tapUntilGone(
+      tester,
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.text('Join'),
+      ),
+      find.byType(AlertDialog),
+    );
+    await pumpFor(tester, const Duration(seconds: 1));
+  }
+
   /// Deletes a boat from its detail screen (danger action + confirm dialog).
   /// The tile lives at the bottom of a lazy CustomScrollView — scroll first.
   Future<void> deleteBoat(String name) async {

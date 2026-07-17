@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:navis_mobile/core/network/session_provider.dart';
 import 'package:navis_mobile/core/network/supabase_client.dart';
 
 class UserProfile {
@@ -19,6 +20,7 @@ class UserProfile {
 }
 
 final profileProvider = Provider<UserProfile?>((ref) {
+  ref.watch(sessionUserIdProvider);
   final user = supabaseClient.auth.currentUser;
   if (user == null) return null;
 

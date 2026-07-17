@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:navis_mobile/core/analytics/analytics_service.dart';
+import 'package:navis_mobile/core/network/session_provider.dart';
 import 'package:navis_mobile/core/database/mutation_queue.dart';
 import 'package:navis_mobile/core/database/offline_repository.dart';
 import 'package:navis_mobile/features/boat/data/repositories/boat_repository.dart';
@@ -23,6 +24,9 @@ class BoatsNotifier extends AsyncNotifier<List<Boat>> {
 
   @override
   Future<List<Boat>> build() async {
+    // Rebuild when the signed-in user changes: this cache is long-lived and
+    // must never leak the previous account's boats to the next one.
+    ref.watch(sessionUserIdProvider);
     final repository = ref.watch(boatRepositoryProvider);
     final response = await repository.getBoats();
     _nextCursor = response.nextCursor;
@@ -75,6 +79,9 @@ class BoatsNotifier extends AsyncNotifier<List<Boat>> {
 }
 
 final boatProvider = FutureProvider.family<Boat, String>((ref, id) async {
+  // User-scoped (is_owner/permissions come per requester) — rebuild when the
+  // signed-in user changes so one account never sees another's cached view.
+  ref.watch(sessionUserIdProvider);
   final repository = ref.watch(boatRepositoryProvider);
   return repository.getBoat(id);
 });
