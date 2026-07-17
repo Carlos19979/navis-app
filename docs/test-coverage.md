@@ -186,15 +186,14 @@ gaps.
    `core/network/mutation_queue.dart` es código muerto).
 6. **Grabación en vivo (mapa + GPS)** — cubierta en E2E con simulador; sin
    test de widget del render del mapa durante la grabación.
-7. **Features de la ronda de producto (#46–#51) — cobertura widget+Go, sin
-   E2E propio (PENDIENTE):** solape de booking (widget+Go+curl), cron
-   mantenimiento (Go), calendario de bookings (widget), alert_days múltiples /
-   tipo custom / export GDPR / foto pasaporte (widget), fotos mantenimiento +
-   galería (widget+Go). La suite E2E de 9 journeys pasa con todo integrado
-   (confirma no-regresión), pero **no hay journeys E2E que conduzcan
-   específicamente estas features nuevas** — es el hueco a cerrar (subir foto
-   de mantenimiento, reservar por día del calendario, chips/custom en documento,
-   exportar datos, diálogo de solape).
+7. **Features de la ronda de producto (#46–#52) — cobertura E2E AÑADIDA:**
+   J03 crea un documento de **tipo custom** (nombre + chip de alert-day extra);
+   J04 ejercita el **selector Mes/Año + filtro de categoría** de gastos y el
+   **solape de booking** (segunda reserva → 409 → "Reservar igualmente" con
+   force). El rediseño de gastos y el calendario quedan conducidos vía J04.
+   **Siguen sin E2E (frontera nativa, cubierto por widget tests):** subir foto
+   de mantenimiento (image_picker), exportar datos (share sheet). El cron de
+   mantenimiento es backend (Go).
 
 ## Bugs de producto encontrados durante el plan de tests
 

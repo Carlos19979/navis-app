@@ -67,10 +67,31 @@ class MaintenanceRobot {
   }
 
   Future<void> openExpensesTab() async {
-    // 'Total spent' only renders on the Expenses tab — TabBarView exists on
+    // 'Period total' only renders on the Expenses tab — TabBarView exists on
     // both tabs, which would satisfy tapUntil's early-exit before the tap.
-    await tapUntil(tester, find.text('Expenses'), find.text('Total spent'));
+    // (The old 'Total spent' summary card was replaced by the period ledger.)
+    await tapUntil(tester, find.text('Expenses'), find.text('Period total'));
     await pumpFor(tester, const Duration(milliseconds: 500));
+  }
+
+  /// Round #52: exercises the Month/Year period selector and a category
+  /// filter on the expenses ledger.
+  Future<void> checkExpensesPeriods() async {
+    await pumpUntilFound(tester, find.text('Period total'));
+    // Year view → per-month subtotals; then back to Month.
+    await tester.tap(find.text('Year'));
+    await pumpFor(tester, const Duration(milliseconds: 400));
+    await pumpUntilFound(tester, find.text('Period total'));
+    await tester.tap(find.text('Month'));
+    await pumpFor(tester, const Duration(milliseconds: 400));
+    // Filter to Fuel (the category addExpense uses), then back to All.
+    final fuel = find.widgetWithText(FilterChip, 'Fuel');
+    if (fuel.evaluate().isNotEmpty) {
+      await tester.tap(fuel.first);
+      await pumpFor(tester, const Duration(milliseconds: 400));
+      await tester.tap(find.widgetWithText(FilterChip, 'All').first);
+      await pumpFor(tester, const Duration(milliseconds: 400));
+    }
   }
 
   /// Adds an expense via the Expenses-tab FAB (default category chip kept).
