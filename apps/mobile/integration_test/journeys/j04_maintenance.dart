@@ -43,6 +43,12 @@ void j04Maintenance() {
     await pumpUntilFound(tester, find.textContaining('120'));
     await nav.back();
 
+    // Expenses ledger (round #52): add an expense, then exercise the
+    // month/year selector + category filter.
+    await maint.openExpensesTab();
+    await maint.addExpense(amount: '75');
+    await maint.checkExpensesPeriods();
+
     // Readiness from the dashboard card: reflects the documents from J03.
     await nav.back();
     await nav.home();
@@ -82,5 +88,34 @@ void j04Maintenance() {
     }
     await pumpFor(tester, const Duration(seconds: 1));
     await pumpUntilFound(tester, find.textContaining('E2E outing'));
+
+    // Round #46: a second booking on the same default slot overlaps the
+    // first; the API returns 409 → 'Book anyway' forces it.
+    await tapUntil(
+      tester,
+      find.byType(FloatingActionButton),
+      find.text('OK'),
+    );
+    for (var i = 0; i < 3; i++) {
+      await pumpUntilFound(tester, find.text('OK'));
+      await tester.tap(find.text('OK').last);
+      await pumpFor(tester, const Duration(milliseconds: 600));
+    }
+    final purpose2 = find.byType(TextField);
+    await pumpUntilFound(tester, purpose2);
+    await tester.enterText(purpose2.last, 'Overlap outing');
+    await tester.pump(const Duration(milliseconds: 200));
+    final save2 = find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.text('Save'),
+    );
+    await tester.tap(save2.last);
+    await pumpFor(tester, const Duration(seconds: 1));
+
+    // The overlap confirmation → force the booking.
+    await pumpUntilFound(tester, find.text('Book anyway'));
+    await tester.tap(find.text('Book anyway'));
+    await pumpFor(tester, const Duration(seconds: 1));
+    await pumpUntilFound(tester, find.textContaining('Overlap outing'));
   });
 }

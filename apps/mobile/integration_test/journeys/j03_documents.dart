@@ -53,5 +53,10 @@ void j03Documents() {
       await pumpFor(tester, const Duration(milliseconds: 600));
     }
     await pumpUntilCount(tester, find.text('Valid'), 2);
+
+    // Round #49: a custom-type document (name + extra alert day). The list
+    // card shows the custom name as its title.
+    await docs.createCustomDocument(name: 'Fishing permit', expiresInDays: 300);
+    await pumpUntilFound(tester, find.text('Fishing permit'));
   });
 }
