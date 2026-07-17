@@ -169,15 +169,21 @@ gaps.
      el SDK con mocks).
    - `url_launcher` (Watch live, mailto de soporte, enlaces legales).
    - Push notifications (FCM) y deep links desde notificación.
-2. **Flujos multiusuario de barco compartido** — invitar por share code,
-   aceptar como segundo usuario, splits/settle entre miembros. Requiere dos
-   sesiones autenticadas; ni widget ni el E2E actual lo cubren.
+2. ~~Flujos multiusuario de barco compartido~~ — **CUBIERTO (G2, #43)**: E2E
+   J09 con dos usuarios reales (compartir por código, unirse, vista de
+   miembro, split de gasto). Queda sin cubrir: settle desde la sesión del
+   segundo usuario y permisos granulares por miembro.
 3. **CheckEmailScreen inalcanzable en E2E** — la confirmación de email está
    desactivada en el stack local; cubierta solo por widget test.
-4. **Golden tests excluidos de CI** — `cost` y `readiness` tienen baseline
-   local; el resto de pantallas no tiene goldens.
-5. **Offline** — cola de mutaciones y banner de conectividad sin cobertura
-   automatizada.
+4. ~~Golden tests~~ — **AMPLIADO (G4, #44)**: 12 pantallas con baseline
+   claro+oscuro (locale es). Siguen excluidos de CI (píxeles dependientes de
+   máquina); regenerar con `--update-goldens --tags golden`. `document_list`
+   deriva con el día del calendario (fechas relativas) — regenerar al
+   refrescar.
+5. ~~Offline~~ — **CUBIERTO (G3, #42)**: banner, MutationQueue, enqueue de
+   repos y SyncService (27 tests). Hallazgos de diseño documentados en la PR
+   (pérdida silenciosa al 5º reintento, sin dedup, gap del primer syncAll,
+   `core/network/mutation_queue.dart` es código muerto).
 6. **Grabación en vivo (mapa + GPS)** — cubierta en E2E con simulador; sin
    test de widget del render del mapa durante la grabación.
 
@@ -189,6 +195,8 @@ gaps.
 | 2 | `NotificationService` lanzaba excepción y rompía el arranque/logout | **ARREGLADO** (#30) |
 | 3 | Tipos de documento no canónicos → 400 del API | **ARREGLADO** (#31) |
 | 4 | Fechas sin zona UTC → 400 del API (RFC3339) | **ARREGLADO** (#32) |
-| 5 | Overflow de ~100px con teclado abierto en formularios | **PENDIENTE** |
-| 6 | FAB de Community queda bajo el bottom nav | **PENDIENTE** |
+| 5 | Overflow de ~100px con teclado abierto en formularios | **PENDIENTE** (no reproducible aislado: login/register/diálogos son scrollables; cazar con pantalla identificada) |
+| 6 | FAB de Community queda bajo el bottom nav (taps caían en Profile) | **ARREGLADO** (#41) |
 | 7 | `SplitSheet` crasheaba en `initState` al leer l10n sin contexto | **ARREGLADO** (#36) |
+| 8 | Pills de resumen del completion dialog desbordaban con valores largos | **ARREGLADO** (#41) |
+| 9 | Cachés de providers user-scoped sobrevivían al cambio de cuenta (la 2ª cuenta veía datos de la 1ª) | **ARREGLADO** (#43) |
