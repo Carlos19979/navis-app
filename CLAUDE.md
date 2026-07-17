@@ -429,20 +429,18 @@ Use these Dart 3.x features everywhere they apply:
 ## Database (Supabase)
 
 - PostgreSQL with PostGIS enabled.
-- Key tables: `profiles` (plan), `boats` (+`share_code`), `boat_members` (shared crew/co-owners), `documents` (computed `status` column), `trips` (+ group/regatta, `share_token`), `trip_tracks` (PostGIS), `trip_participants` (RSVP), `trip_checklist_items`, `maintenance_logs` (+`task_id` FK), `maintenance_tasks` (recurring service tasks, `interval_months`/`interval_hours`), `expenses`, `expense_splits` (per-member shares, `settled_at`), `bookings` (boat-time reservations), `groups`, `group_members`, `events` (+ stream/tracking urls), `event_interests`, `notification_logs`, `sent_notifications`.
+- Key tables: `profiles` (plan), `boats` (+`share_code`, `photo_urls[]` gallery), `boat_members` (shared crew/co-owners), `documents` (computed `status` column, `custom_name`), `trips` (+ group/regatta, `share_token`), `trip_tracks` (PostGIS), `trip_participants` (RSVP), `trip_checklist_items`, `maintenance_logs` (+`task_id` FK, `photo_urls[]`), `maintenance_tasks` (recurring service tasks, `interval_months`/`interval_hours`), `expenses`, `expense_splits` (per-member shares, `settled_at`), `bookings` (boat-time reservations, API-validated overlap), `groups`, `group_members`, `events` (+ stream/tracking urls), `event_interests`, `notification_logs`, `maintenance_notification_logs`, `sent_notifications`.
 - RLS enforces `user_id = auth.uid()` on user tables. Shared boats: members READ a boat + its sub-resources (enforced in the Go service via `boatRepo.HasAccess`, reading as the owner's scope); all WRITES stay owner-only. Events readable by all, writable by admins.
-- Plans: `profiles.plan` ∈ `free|pro`. Single source of gating: `CanUse*` methods in `apps/api/internal/domain/profile.go` → `Entitlements` DTO → `Account` in Flutter → `showPaywall`. Current gates: boat count (`MaxBoats` 1/3), group creation (Pro), document-expiry reminders (`ReminderDocLimit` Free=1), maintenance attachments (`AttachmentLimit` Free=1), maintenance schedules (Pro), full readiness score (Free sees documents block only), cost analytics (Pro), passport PDF export (Pro), shared-boat coordination — bookings + expense splits (Pro), fuel-anomaly alerts (Pro). Enforced in services, returns 402. Paid tier driven by RevenueCat webhook (`POST /api/v1/webhooks/revenuecat`); `PUT /me/plan` is a dev-only switcher (debug builds / non-production). A B2B "fleet" tier is future work.
+- Plans: `profiles.plan` ∈ `free|pro`. Single source of gating: `CanUse*` methods in `apps/api/internal/domain/profile.go` → `Entitlements` DTO → `Account` in Flutter → `showPaywall`. Current gates: boat count (`MaxBoats` 1/3), group creation (Pro), document-expiry reminders (`ReminderDocLimit` Free=1), maintenance attachments / log photos (`AttachmentLimit` Free=1), boat photo gallery (`GalleryLimit` Free=1 cover/Pro 10), maintenance schedules + due-reminder cron (Pro), full readiness score (Free sees documents block only), cost analytics (Pro), passport PDF export (Pro), shared-boat coordination — bookings + expense splits (Pro), fuel-anomaly alerts (Pro). Enforced in services, returns 402. Paid tier driven by RevenueCat webhook (`POST /api/v1/webhooks/revenuecat`); `PUT /me/plan` is a dev-only switcher (debug builds / non-production). A B2B "fleet" tier is future work.
 - Migrations in `packages/supabase/migrations/` numbered `00001_`, `00002_`, etc.
 - Document types: itb, insurance_rc, insurance_full, life_raft, extinguisher, flares, first_aid, medical_cert, radio_cert, navigation_license, custom.
 - Document status is a computed column: expired / critical (30d) / warning (90d) / ok.
 
 ## Cron Job & Notifications
 
-- `robfig/cron/v3` in Go API, runs daily at 08:00 UTC.
-- Checks document expiry against `alert_days` array (default: 30, 7 days).
-- Triggers Novu `document-expiry` workflow per user. Novu delivers via FCM (push) and Resend (email).
-- Logs to `notification_logs` to avoid duplicates.
-- Besides the cron, service flows trigger 7 more Novu workflows (see `internal/service/notifier.go`): `regatta-rsvp`, `regatta-scheduled`, `regatta-reminder`, `group-join-request`, `group-request-approved`, `event-live`, `expense-split`. The notifier is async (fire-and-forget goroutines with shutdown coordination).
+- Two `robfig/cron/v3` checkers: **document-expiry** (`ExpirationChecker`, 08:00 UTC) against each doc's `alert_days` array (default 30, 7), deduped in `notification_logs`; and **maintenance-due** (`MaintenanceChecker`, 08:15 UTC, Pro-gated) for tasks in due_soon/overdue state, deduped in `maintenance_notification_logs` by a `due_key` that changes after servicing.
+- Trigger Novu workflows `document-expiry` / `maintenance-due`. Novu delivers via FCM (push) and Resend (email).
+- Besides the crons, service flows trigger 7 more Novu workflows (see `internal/service/notifier.go`): `regatta-rsvp`, `regatta-scheduled`, `regatta-reminder`, `group-join-request`, `group-request-approved`, `event-live`, `expense-split`. **9 workflows total.** The notifier is async (fire-and-forget goroutines with shutdown coordination).
 
 ## Commands
 

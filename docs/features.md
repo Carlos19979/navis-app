@@ -1,10 +1,14 @@
 # Navis Feature Roadmap
 
-> **Status (2026-06):** Phases 1–3 are largely implemented, plus a "pro features"
-> batch beyond this roadmap: **user plans/tiers**, **boat sharing** (crew/co-owners),
-> **maintenance & expenses**, **tides + navigation window**, **float plan**, and a
-> **public trip-share web page**. For the authoritative, up-to-date status of what is
-> built / verified / pending, see **`docs/implemented-features.md`**.
+> **Status (2026-07):** Phases 1–3 implemented, plus "pro features": **user
+> plans/tiers**, **boat sharing** (crew/co-owners), **maintenance & expenses +
+> due-reminder cron + service-log photos**, **tides + navigation window**,
+> **readiness score**, **cost analytics + anomalies**, **passport PDF**,
+> **bookings** (calendar + API-validated overlap), **boat photo gallery**,
+> and a **public trip-share web page**. (Float plan and auto trip detection were
+> scrapped.) For the authoritative, up-to-date status of what is built / verified
+> / pending, see **`docs/implemented-features.md`** — the round of 2026-07-17
+> (PRs #46–#51) is documented there.
 
 ## Phase 1 — MVP (Minimum Viable Product)
 

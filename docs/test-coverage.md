@@ -186,6 +186,15 @@ gaps.
    `core/network/mutation_queue.dart` es código muerto).
 6. **Grabación en vivo (mapa + GPS)** — cubierta en E2E con simulador; sin
    test de widget del render del mapa durante la grabación.
+7. **Features de la ronda de producto (#46–#51) — cobertura widget+Go, sin
+   E2E propio (PENDIENTE):** solape de booking (widget+Go+curl), cron
+   mantenimiento (Go), calendario de bookings (widget), alert_days múltiples /
+   tipo custom / export GDPR / foto pasaporte (widget), fotos mantenimiento +
+   galería (widget+Go). La suite E2E de 9 journeys pasa con todo integrado
+   (confirma no-regresión), pero **no hay journeys E2E que conduzcan
+   específicamente estas features nuevas** — es el hueco a cerrar (subir foto
+   de mantenimiento, reservar por día del calendario, chips/custom en documento,
+   exportar datos, diálogo de solape).
 
 ## Bugs de producto encontrados durante el plan de tests
 
@@ -200,3 +209,5 @@ gaps.
 | 7 | `SplitSheet` crasheaba en `initState` al leer l10n sin contexto | **ARREGLADO** (#36) |
 | 8 | Pills de resumen del completion dialog desbordaban con valores largos | **ARREGLADO** (#41) |
 | 9 | Cachés de providers user-scoped sobrevivían al cambio de cuenta (la 2ª cuenta veía datos de la 1ª) | **ARREGLADO** (#43) |
+| 10 | `UpdateDocumentRequest` ignoraba `custom_name` (no editable) y no validaba `type` contra el enum | **ARREGLADO** (#49) |
+| 11 | Solape de booking solo se comprobaba en cliente contra la caché → carrera de dos usuarios sin aviso | **ARREGLADO** (#46) |

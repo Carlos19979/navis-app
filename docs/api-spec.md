@@ -70,9 +70,14 @@ Create a new boat.
   "home_port_lat": 39.5696,
   "home_port_lon": 2.6347,
   "photo_url": "https://storage.supabase.co/boats/abc.jpg",
+  "photo_urls": ["https://storage.supabase.co/boats/abc-2.jpg"],
   "engine_hours": 342.5
 }
 ```
+
+`home_port` is optional (nullable). `photo_urls` is the gallery beyond the
+`photo_url` cover (Pro beyond the cover, `GalleryLimit`); on update, omitting it
+keeps the gallery, `[]` clears it.
 
 **Response (201):**
 ```json
@@ -615,7 +620,7 @@ The `type` field is free text; the above are suggestions for the UI.
 
 ### GET /api/v1/me
 Returns the current user's plan and derived entitlements.
-`{ plan: "free|pro", is_pro, entitlements: { max_boats, boat_count, can_create_groups, reminder_doc_limit, maintenance_schedules, attachment_limit } }`
+`{ plan: "free|pro", is_pro, entitlements: { max_boats, boat_count, can_create_groups, reminder_doc_limit, maintenance_schedules, attachment_limit, gallery_limit, full_readiness, cost_analytics, export_passport, shared_coordination, anomaly_alerts } }`
 (legacy `max_boats|boat_count|can_create_groups` also mirrored at the top level).
 
 ### PUT /api/v1/me/plan
@@ -647,10 +652,19 @@ HTML landing page with a Leaflet/OpenSeaMap map of the route (the share/growth p
 ## Maintenance & Expenses (per boat)
 
 ### GET / POST /api/v1/boats/:id/maintenance · DELETE …/maintenance/:logId
-Service logs `{ type, performed_at, engine_hours?, cost?, provider?, notes? }`.
+Service logs `{ type, performed_at, engine_hours?, cost?, provider?, notes?, invoice_url?, photo_urls?[] }`. `photo_urls` (≤10, private bucket signed URLs) is Pro beyond the first (`AttachmentLimit`).
+
+### GET / POST / PUT / DELETE /api/v1/boats/:id/maintenance/tasks[/:taskId]
+Recurring plan `{ name, interval_months?, interval_hours? }`. Due state is derived server-side and drives the `maintenance-due` reminder cron (Pro).
 
 ### GET / POST /api/v1/boats/:id/expenses · DELETE …/expenses/:expenseId
 Expenses `{ category, amount, incurred_on, notes? }`.
+
+### Bookings & expense splits (shared boat, Pro)
+`GET/POST/DELETE /api/v1/boats/:id/bookings` — POST `{ starts_at, ends_at, purpose?, force? }`; an unforced overlap returns **409** `BOOKING_OVERLAP` (send `force:true` to create anyway). Expense splits under `/api/v1/expenses/:expenseId/splits` (+ `/settle`) and `/api/v1/boats/:id/expense-splits-summary`.
+
+### GET /api/v1/user/export  (GDPR)
+Full JSON export of the user's data (surfaced in Settings → Export my data).
 
 ### GET /api/v1/boats/:id/expenses/summary
 `{ totals: {category: amount}, total }`.
