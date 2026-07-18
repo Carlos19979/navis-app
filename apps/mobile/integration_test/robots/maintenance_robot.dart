@@ -95,7 +95,9 @@ class MaintenanceRobot {
   }
 
   /// Adds an expense via the Expenses-tab FAB (default category chip kept).
-  Future<void> addExpense({required String amount}) async {
+  /// When [liters] is given (fuel), fills the litres field that appears once
+  /// the Fuel category is selected, exercising the €/L capture.
+  Future<void> addExpense({required String amount, String? liters}) async {
     await pumpUntilGone(
       tester,
       find.byType(SnackBar),
@@ -111,6 +113,10 @@ class MaintenanceRobot {
     await tester.tap(find.text('Fuel').last, warnIfMissed: false);
     await tester.pump(const Duration(milliseconds: 300));
     await _sheetField('Amount €', amount);
+    if (liters != null) {
+      // The litres field only renders for the fuel category.
+      await _sheetField('Liters (optional)', liters);
+    }
     await tapUntilGone(
       tester,
       find.widgetWithText(NavisButton, 'Save'),

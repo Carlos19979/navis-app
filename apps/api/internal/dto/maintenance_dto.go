@@ -128,27 +128,32 @@ func MaintenanceTaskListFromDomain(views []domain.MaintenanceTaskView) []Mainten
 
 // CreateExpenseRequest is the payload to record an expense.
 type CreateExpenseRequest struct {
-	Category   string  `json:"category" validate:"required,max=40"`
-	Amount     float64 `json:"amount" validate:"required"`
-	IncurredOn string  `json:"incurred_on" validate:"required"`
-	Notes      *string `json:"notes"`
-	InvoiceURL *string `json:"invoice_url"`
+	Category   string   `json:"category" validate:"required,max=40"`
+	Amount     float64  `json:"amount" validate:"required"`
+	IncurredOn string   `json:"incurred_on" validate:"required"`
+	Notes      *string  `json:"notes"`
+	InvoiceURL *string  `json:"invoice_url"`
+	Liters     *float64 `json:"liters" validate:"omitempty,gt=0"`
 }
 
 // ExpenseResponse is the API representation of an expense.
 type ExpenseResponse struct {
-	ID         string  `json:"id"`
-	BoatID     string  `json:"boat_id"`
-	Category   string  `json:"category"`
-	Amount     float64 `json:"amount"`
-	IncurredOn string  `json:"incurred_on"`
-	Notes      *string `json:"notes"`
-	InvoiceURL *string `json:"invoice_url"`
+	ID         string   `json:"id"`
+	BoatID     string   `json:"boat_id"`
+	Category   string   `json:"category"`
+	Amount     float64  `json:"amount"`
+	IncurredOn string   `json:"incurred_on"`
+	Notes      *string  `json:"notes"`
+	InvoiceURL *string  `json:"invoice_url"`
+	Liters     *float64 `json:"liters,omitempty"`
+	// PricePerLiter is derived (amount/liters) for convenience; nil unless both
+	// are present and liters > 0.
+	PricePerLiter *float64 `json:"price_per_liter,omitempty"`
 }
 
 // ExpenseResponseFromDomain converts a domain expense to a response.
 func ExpenseResponseFromDomain(e *domain.Expense) ExpenseResponse {
-	return ExpenseResponse{
+	resp := ExpenseResponse{
 		ID:         e.ID,
 		BoatID:     e.BoatID,
 		Category:   e.Category,
@@ -156,7 +161,13 @@ func ExpenseResponseFromDomain(e *domain.Expense) ExpenseResponse {
 		IncurredOn: e.IncurredOn.Format("2006-01-02"),
 		Notes:      e.Notes,
 		InvoiceURL: e.InvoiceURL,
+		Liters:     e.Liters,
 	}
+	if e.Liters != nil && *e.Liters > 0 {
+		ppl := e.Amount / *e.Liters
+		resp.PricePerLiter = &ppl
+	}
+	return resp
 }
 
 // ExpenseListFromDomain converts a slice of expenses.

@@ -123,6 +123,8 @@ class Expense {
     required this.incurredOn,
     this.notes,
     this.invoiceUrl,
+    this.liters,
+    this.pricePerLiter,
   });
 
   factory Expense.fromJson(Map<String, dynamic> json) {
@@ -134,6 +136,8 @@ class Expense {
       incurredOn: DateTime.parse(json['incurred_on'] as String),
       notes: json['notes'] as String?,
       invoiceUrl: json['invoice_url'] as String?,
+      liters: (json['liters'] as num?)?.toDouble(),
+      pricePerLiter: (json['price_per_liter'] as num?)?.toDouble(),
     );
   }
 
@@ -144,6 +148,12 @@ class Expense {
   final DateTime incurredOn;
   final String? notes;
   final String? invoiceUrl;
+
+  /// Litres (fuel expenses only); null otherwise.
+  final double? liters;
+
+  /// Server-derived €/L (amount/liters); null unless both are present.
+  final double? pricePerLiter;
 }
 
 /// Aggregated expense totals per category.

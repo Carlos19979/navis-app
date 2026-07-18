@@ -806,5 +806,18 @@
   "anchorResumed": "Vigilancia de fondeo reanudada",
   "anchorTripActiveBlock": "Detén la grabación de la travesía antes de iniciar la alarma de fondeo.",
   "paywallReasonAnchor": "Desbloquea la alarma de fondeo con Navis Pro",
-  "proBenefitAnchor": "Alarma de fondeo: una alarma sonora si tu barco garrea"
+  "proBenefitAnchor": "Alarma de fondeo: una alarma sonora si tu barco garrea",
+  "expenseLitersLabel": "Litros (opcional)",
+  "pricePerLiterValue": "{value} €/L",
+  "@pricePerLiterValue": {
+    "placeholders": { "value": { "type": "String" } }
+  },
+  "expenseLitersSummary": "{liters} L · {price} €/L",
+  "@expenseLitersSummary": {
+    "placeholders": {
+      "liters": { "type": "String" },
+      "price": { "type": "String" }
+    }
+  },
+  "costAvgPricePerLiter": "Precio medio combustible"
 }

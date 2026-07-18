@@ -917,5 +917,18 @@
   "anchorResumed": "Anchor watch resumed",
   "anchorTripActiveBlock": "Stop the trip recording before starting an anchor watch.",
   "paywallReasonAnchor": "Unlock the anchor watch with Navis Pro",
-  "proBenefitAnchor": "Anchor watch: a loud alarm if your boat drags"
+  "proBenefitAnchor": "Anchor watch: a loud alarm if your boat drags",
+  "expenseLitersLabel": "Liters (optional)",
+  "pricePerLiterValue": "{value} €/L",
+  "@pricePerLiterValue": {
+    "placeholders": { "value": { "type": "String" } }
+  },
+  "expenseLitersSummary": "{liters} L · {price} €/L",
+  "@expenseLitersSummary": {
+    "placeholders": {
+      "liters": { "type": "String" },
+      "price": { "type": "String" }
+    }
+  },
+  "costAvgPricePerLiter": "Avg fuel price"
 }

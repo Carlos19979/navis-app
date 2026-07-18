@@ -43,6 +43,8 @@ class CostAnalytics {
     required this.costPerNm,
     required this.costPerTrip,
     required this.fuelPerNm,
+    this.fuelLitersPurchased = 0,
+    this.avgPricePerLiter,
   });
 
   factory CostAnalytics.fromJson(Map<String, dynamic> j) => CostAnalytics(
@@ -61,6 +63,9 @@ class CostAnalytics {
         costPerNm: (j['cost_per_nm'] as num?)?.toDouble(),
         costPerTrip: (j['cost_per_trip'] as num?)?.toDouble(),
         fuelPerNm: (j['fuel_per_nm'] as num?)?.toDouble(),
+        fuelLitersPurchased:
+            (j['fuel_liters_purchased'] as num?)?.toDouble() ?? 0,
+        avgPricePerLiter: (j['avg_price_per_liter'] as num?)?.toDouble(),
       );
 
   final double totalSpend;
@@ -74,6 +79,12 @@ class CostAnalytics {
   final double? costPerNm;
   final double? costPerTrip;
   final double? fuelPerNm;
+
+  /// Litres bought across fuel expenses that recorded a quantity.
+  final double fuelLitersPurchased;
+
+  /// Blended €/L across those fuel expenses; null when none recorded litres.
+  final double? avgPricePerLiter;
 }
 
 class CostRepository {

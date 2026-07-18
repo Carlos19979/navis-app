@@ -121,23 +121,23 @@ func NewExpenseRepo(pool *pgxpool.Pool) *ExpenseRepo {
 	return &ExpenseRepo{pool: pool}
 }
 
-const expenseColumns = `id, boat_id, user_id, category, amount, incurred_on, notes, invoice_url, created_at, updated_at`
+const expenseColumns = `id, boat_id, user_id, category, amount, incurred_on, notes, invoice_url, created_at, updated_at, liters`
 
 func scanExpense(row interface {
 	Scan(...any) error
 }) (*domain.Expense, error) {
 	e := &domain.Expense{}
 	err := row.Scan(&e.ID, &e.BoatID, &e.UserID, &e.Category, &e.Amount,
-		&e.IncurredOn, &e.Notes, &e.InvoiceURL, &e.CreatedAt, &e.UpdatedAt)
+		&e.IncurredOn, &e.Notes, &e.InvoiceURL, &e.CreatedAt, &e.UpdatedAt, &e.Liters)
 	return e, err
 }
 
 // Create inserts an expense.
 func (r *ExpenseRepo) Create(ctx context.Context, e *domain.Expense) (*domain.Expense, error) {
-	query := `INSERT INTO expenses (boat_id, user_id, category, amount, incurred_on, notes, invoice_url)
-		VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING ` + expenseColumns
+	query := `INSERT INTO expenses (boat_id, user_id, category, amount, incurred_on, notes, invoice_url, liters)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING ` + expenseColumns
 	out, err := scanExpense(r.pool.QueryRow(ctx, query,
-		e.BoatID, e.UserID, e.Category, e.Amount, e.IncurredOn, e.Notes, e.InvoiceURL))
+		e.BoatID, e.UserID, e.Category, e.Amount, e.IncurredOn, e.Notes, e.InvoiceURL, e.Liters))
 	if err != nil {
 		return nil, fmt.Errorf("inserting expense: %w", err)
 	}
@@ -147,11 +147,11 @@ func (r *ExpenseRepo) Create(ctx context.Context, e *domain.Expense) (*domain.Ex
 // Update modifies an expense scoped to its boat.
 func (r *ExpenseRepo) Update(ctx context.Context, e *domain.Expense) (*domain.Expense, error) {
 	query := `UPDATE expenses
-		SET category=$1, amount=$2, incurred_on=$3, notes=$4, invoice_url=$5, updated_at=now()
-		WHERE id=$6 AND boat_id=$7
+		SET category=$1, amount=$2, incurred_on=$3, notes=$4, invoice_url=$5, liters=$6, updated_at=now()
+		WHERE id=$7 AND boat_id=$8
 		RETURNING ` + expenseColumns
 	out, err := scanExpense(r.pool.QueryRow(ctx, query,
-		e.Category, e.Amount, e.IncurredOn, e.Notes, e.InvoiceURL, e.ID, e.BoatID))
+		e.Category, e.Amount, e.IncurredOn, e.Notes, e.InvoiceURL, e.Liters, e.ID, e.BoatID))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, domain.ErrNotFound

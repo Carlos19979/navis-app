@@ -2274,4 +2274,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get proBenefitAnchor =>
       'Anchor watch: a loud alarm if your boat drags';
+
+  @override
+  String get expenseLitersLabel => 'Liters (optional)';
+
+  @override
+  String pricePerLiterValue(String value) {
+    return '$value €/L';
+  }
+
+  @override
+  String expenseLitersSummary(String liters, String price) {
+    return '$liters L · $price €/L';
+  }
+
+  @override
+  String get costAvgPricePerLiter => 'Avg fuel price';
 }

@@ -46,7 +46,8 @@ void j04Maintenance() {
     // Expenses ledger (round #52): add an expense, then exercise the
     // month/year selector + category filter.
     await maint.openExpensesTab();
-    await maint.addExpense(amount: '75');
+    // Fuel expense with litres → cost intelligence can derive €/L.
+    await maint.addExpense(amount: '75', liters: '50');
     await maint.checkExpensesPeriods();
 
     // Readiness from the dashboard card: reflects the documents from J03.
