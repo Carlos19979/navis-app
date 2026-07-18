@@ -274,6 +274,7 @@ func (h *MaintenanceHandler) CreateExpense(w http.ResponseWriter, r *http.Reques
 		IncurredOn: incurredOn,
 		Notes:      req.Notes,
 		InvoiceURL: req.InvoiceURL,
+		Liters:     req.Liters,
 	}
 	created, err := h.svc.AddExpense(r.Context(), e)
 	if err != nil {
@@ -307,6 +308,7 @@ func (h *MaintenanceHandler) UpdateExpense(w http.ResponseWriter, r *http.Reques
 		IncurredOn: incurredOn,
 		Notes:      req.Notes,
 		InvoiceURL: req.InvoiceURL,
+		Liters:     req.Liters,
 	}
 	updated, err := h.svc.UpdateExpense(r.Context(), userID, e)
 	if err != nil {

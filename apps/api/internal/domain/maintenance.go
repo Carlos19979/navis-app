@@ -97,6 +97,12 @@ type Expense struct {
 	IncurredOn time.Time
 	Notes      *string
 	InvoiceURL *string
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
+	// Liters is optional and meaningful for fuel expenses; it lets cost
+	// intelligence derive a real €/L trend.
+	Liters    *float64
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
+
+// ExpenseCategoryFuel is the canonical (Spanish) category value for fuel.
+const ExpenseCategoryFuel = "combustible"

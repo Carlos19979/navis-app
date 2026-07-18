@@ -22,8 +22,13 @@ type CostAnalytics struct {
 	TotalDistanceNM  float64
 	CompletedTrips   int
 	TotalFuelL       float64
+	// FuelLitersPurchased is the sum of litres across fuel expenses that
+	// recorded a quantity (independent of trip fuel).
+	FuelLitersPurchased float64
 	// Derived ratios are nil when the denominator is zero.
 	CostPerNM   *float64
 	CostPerTrip *float64
 	FuelPerNM   *float64
+	// AvgPricePerLiter is the blended €/L across fuel expenses with litres.
+	AvgPricePerLiter *float64
 }

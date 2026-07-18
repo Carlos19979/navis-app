@@ -74,6 +74,50 @@ func TestCostService_Get_AggregatesAndDerives(t *testing.T) {
 	}
 }
 
+func TestCostService_Get_AvgPricePerLiter(t *testing.T) {
+	t.Parallel()
+	exp := &mockExpenseRepo{expenses: []domain.Expense{
+		{Category: domain.ExpenseCategoryFuel, Amount: 100, Liters: f64(50), IncurredOn: time.Now()},
+		{Category: domain.ExpenseCategoryFuel, Amount: 60, Liters: f64(40), IncurredOn: time.Now()},
+		{Category: domain.ExpenseCategoryFuel, Amount: 30, IncurredOn: time.Now()},  // no litres → ignored for €/L
+		{Category: "amarre", Amount: 200, Liters: f64(999), IncurredOn: time.Now()}, // non-fuel → ignored
+	}}
+	svc := NewCostService(exp, &mockMaintenanceRepo{}, &mockTripRepo{},
+		&mockBoatRepo{}, &testutil.FakeProfileRepo{Plan: domain.PlanPro})
+
+	ca, err := svc.Get(context.Background(), "user-1", "boat-1")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if ca.FuelLitersPurchased != 90 {
+		t.Errorf("fuel litres = %v, want 90", ca.FuelLitersPurchased)
+	}
+	// Blended €/L over the two fuel expenses with litres: 160 / 90.
+	if ca.AvgPricePerLiter == nil {
+		t.Fatal("avg €/L = nil, want ~1.78")
+	}
+	if got := *ca.AvgPricePerLiter; got < 1.77 || got > 1.78 {
+		t.Errorf("avg €/L = %v, want ~1.777", got)
+	}
+}
+
+func TestCostService_Get_NoLitersNoPricePerLiter(t *testing.T) {
+	t.Parallel()
+	exp := &mockExpenseRepo{expenses: []domain.Expense{
+		{Category: domain.ExpenseCategoryFuel, Amount: 80, IncurredOn: time.Now()},
+	}}
+	svc := NewCostService(exp, &mockMaintenanceRepo{}, &mockTripRepo{},
+		&mockBoatRepo{}, &testutil.FakeProfileRepo{Plan: domain.PlanPro})
+
+	ca, err := svc.Get(context.Background(), "user-1", "boat-1")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if ca.AvgPricePerLiter != nil {
+		t.Errorf("avg €/L = %v, want nil (no litres recorded)", *ca.AvgPricePerLiter)
+	}
+}
+
 func TestCostService_Get_ForbiddenOnFree(t *testing.T) {
 	t.Parallel()
 	svc := NewCostService(&mockExpenseRepo{}, &mockMaintenanceRepo{}, &mockTripRepo{},

@@ -4369,6 +4369,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Anchor watch: a loud alarm if your boat drags'**
   String get proBenefitAnchor;
+
+  /// No description provided for @expenseLitersLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Liters (optional)'**
+  String get expenseLitersLabel;
+
+  /// No description provided for @pricePerLiterValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} €/L'**
+  String pricePerLiterValue(String value);
+
+  /// No description provided for @expenseLitersSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{liters} L · {price} €/L'**
+  String expenseLitersSummary(String liters, String price);
+
+  /// No description provided for @costAvgPricePerLiter.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg fuel price'**
+  String get costAvgPricePerLiter;
 }
 
 class _AppLocalizationsDelegate

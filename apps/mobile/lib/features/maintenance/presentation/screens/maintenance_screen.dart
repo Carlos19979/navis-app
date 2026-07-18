@@ -1044,6 +1044,19 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
                 Text(_fmtDate(e.incurredOn),
                     style:
                         TextStyle(color: context.txtSecondary, fontSize: 13)),
+                if (e.liters != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    l.expenseLitersSummary(
+                      e.liters! % 1 == 0
+                          ? e.liters!.toStringAsFixed(0)
+                          : e.liters!.toStringAsFixed(1),
+                      (e.pricePerLiter ?? (e.amount / e.liters!))
+                          .toStringAsFixed(2),
+                    ),
+                    style: const TextStyle(color: AppColors.cyan, fontSize: 12),
+                  ),
+                ],
                 if (splits[e.id] case final s?) ...[
                   const SizedBox(height: 4),
                   Row(
@@ -1125,6 +1138,13 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
     var category = existing?.category ?? '';
     final amountCtrl =
         TextEditingController(text: existing?.amount.toStringAsFixed(0) ?? '');
+    final litersCtrl = TextEditingController(
+      text: existing?.liters == null
+          ? ''
+          : (existing!.liters! % 1 == 0
+              ? existing.liters!.toStringAsFixed(0)
+              : existing.liters!.toStringAsFixed(2)),
+    );
     var date = existing?.incurredOn ?? DateTime.now();
     String? invoiceUrl = existing?.invoiceUrl;
     const categories = [
@@ -1198,8 +1218,39 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
                   controller: amountCtrl,
                   keyboardType: TextInputType.number,
                   label: l.amountEur,
+                  onChanged: (_) => setState(() {}),
                 ),
                 const SizedBox(height: 10),
+                // Fuel expenses can record litres so cost intelligence derives
+                // a real €/L (the amount alone lost the quantity).
+                if (category == 'combustible') ...[
+                  NavisTextField(
+                    controller: litersCtrl,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    label: l.expenseLitersLabel,
+                    onChanged: (_) => setState(() {}),
+                  ),
+                  Builder(builder: (_) {
+                    final a = double.tryParse(amountCtrl.text.trim());
+                    final li = double.tryParse(litersCtrl.text.trim());
+                    if (a == null || li == null || li <= 0) {
+                      return const SizedBox(height: 10);
+                    }
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 6, bottom: 10),
+                      child: Text(
+                        l.pricePerLiterValue((a / li).toStringAsFixed(2)),
+                        style: const TextStyle(
+                          color: AppColors.cyan,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    );
+                  }),
+                ],
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(l.dateWithValue(_fmtDate(date)),
@@ -1255,11 +1306,17 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
     if (saved != true || category.isEmpty || amountCtrl.text.trim().isEmpty) {
       return;
     }
+    // Litres only make sense for fuel; a parseable positive value is sent,
+    // otherwise null (which also clears a previously-set value on edit).
+    final liters = category == 'combustible'
+        ? double.tryParse(litersCtrl.text.trim())
+        : null;
     final body = <String, dynamic>{
       'category': category,
       'amount': double.tryParse(amountCtrl.text.trim()) ?? 0,
       'incurred_on': _isoDate(date),
       'invoice_url': invoiceUrl,
+      'liters': (liters != null && liters > 0) ? liters : null,
     };
     try {
       final repo = ref.read(maintenanceRepositoryProvider);

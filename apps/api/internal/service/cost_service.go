@@ -65,11 +65,17 @@ func (s *CostService) Get(ctx context.Context, userID, boatID string) (*domain.C
 	ca := &domain.CostAnalytics{}
 	byCategory := map[string]float64{}
 	monthly := map[string]float64{}
+	var fuelAmount, fuelLiters float64
 
 	for _, e := range expenses {
 		ca.ExpenseSpend += e.Amount
 		byCategory[e.Category] += e.Amount
 		monthly[e.IncurredOn.Format("2006-01")] += e.Amount
+		// Blended €/L: only fuel expenses that recorded a quantity.
+		if e.Category == domain.ExpenseCategoryFuel && e.Liters != nil && *e.Liters > 0 {
+			fuelAmount += e.Amount
+			fuelLiters += *e.Liters
+		}
 	}
 	for _, l := range logs {
 		if l.Cost == nil {
@@ -105,6 +111,11 @@ func (s *CostService) Get(ctx context.Context, userID, boatID string) (*domain.C
 	if ca.CompletedTrips > 0 {
 		perTrip := ca.TotalSpend / float64(ca.CompletedTrips)
 		ca.CostPerTrip = &perTrip
+	}
+	if fuelLiters > 0 {
+		ca.FuelLitersPurchased = fuelLiters
+		ppl := fuelAmount / fuelLiters
+		ca.AvgPricePerLiter = &ppl
 	}
 
 	return ca, nil

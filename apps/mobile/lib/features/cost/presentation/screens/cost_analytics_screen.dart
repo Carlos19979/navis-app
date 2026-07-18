@@ -70,6 +70,32 @@ class CostAnalyticsScreen extends ConsumerWidget {
                 ),
               ],
             ),
+            if (c.avgPricePerLiter != null) ...[
+              const SizedBox(height: Dimens.spaceSm),
+              NavisCard(
+                child: Row(
+                  children: [
+                    const Icon(Icons.local_gas_station_rounded,
+                        color: AppColors.cyan, size: 20),
+                    const SizedBox(width: Dimens.spaceMd),
+                    Expanded(
+                      child: Text(
+                        l.costAvgPricePerLiter,
+                        style: TextStyle(color: context.txtSecondary),
+                      ),
+                    ),
+                    Text(
+                      '${c.avgPricePerLiter!.toStringAsFixed(2)} €/L',
+                      style: const TextStyle(
+                        color: AppColors.cyan,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: Dimens.spaceLg),
             if (c.byCategory.isNotEmpty) ...[
               _SectionTitle(l.costByCategory),

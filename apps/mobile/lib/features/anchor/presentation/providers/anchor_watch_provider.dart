@@ -143,8 +143,11 @@ class AnchorWatchNotifier extends StateNotifier<AnchorWatchState> {
       radiusM: radius,
       setAt: setAt,
     );
-    await _alarm.requestPermission();
+    // Start monitoring immediately. The notification permission is requested in
+    // the background — the watch must NOT block on a permission dialog (which
+    // can hang), or it would arm without ever receiving GPS fixes.
     _startStream();
+    unawaited(_alarm.requestPermission());
     return AnchorArmResult.armed;
   }
 
@@ -297,6 +300,10 @@ class AnchorWatchNotifier extends StateNotifier<AnchorWatchState> {
   }
 
   void _onFix(Position position) {
+    // A GPS fix can arrive after the notifier is disposed (the stream is
+    // cancelled asynchronously, and the OS/fake stream may deliver one more
+    // tick during teardown) — touching `state` then throws. Guard it.
+    if (!mounted) return;
     final pos = LatLng(position.latitude, position.longitude);
     final anchor = state.anchorPosition;
     if (anchor == null) {
