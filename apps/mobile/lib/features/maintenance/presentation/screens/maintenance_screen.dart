@@ -280,6 +280,7 @@ class _MaintenanceTab extends ConsumerWidget {
     final (color, _) = _taskVisuals(context, t.status);
     final subtitle = _taskSubtitle(l, t);
     return NavisCard(
+      margin: const EdgeInsets.only(bottom: 12),
       onTap: () => _taskDetail(context, ref, t, canEdit),
       child: Row(
         children: [
@@ -315,6 +316,7 @@ class _MaintenanceTab extends ConsumerWidget {
       bool canEdit, List<MaintenanceTask> tasks) {
     final l = AppLocalizations.of(context)!;
     return NavisCard(
+      margin: const EdgeInsets.only(bottom: 12),
       onTap: canEdit
           ? () => _editMaintenance(context, ref, existing: m, tasks: tasks)
           : null,
@@ -996,6 +998,7 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
     return [
       for (final m in months)
         NavisCard(
+          margin: const EdgeInsets.only(bottom: 12),
           onTap: () => setState(() {
             _anchor = DateTime(_anchor.year, m);
             _period = _ExpensePeriod.month;
@@ -1023,6 +1026,7 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
     bool canManage,
   ) {
     return NavisCard(
+      margin: const EdgeInsets.only(bottom: 12),
       onTap: canManage ? () => _editExpense(context, ref, existing: e) : null,
       child: Row(
         children: [
