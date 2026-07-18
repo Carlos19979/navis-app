@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/domain/repositories/boat_repository.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
