@@ -10,9 +10,12 @@ import (
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 )
 
-// entitlementPro is the RevenueCat entitlement identifier that unlocks Navis Pro.
-// It must match the entitlement configured in the RevenueCat dashboard.
-const entitlementPro = "pro"
+// RevenueCat entitlement identifiers that unlock each paid tier. They must match
+// the entitlements configured in the RevenueCat dashboard.
+const (
+	entitlementPlus = "plus"
+	entitlementPro  = "pro"
+)
 
 // planSetter is the profile service surface the webhook handler consumes.
 type planSetter interface {
@@ -104,15 +107,16 @@ func (h *WebhookHandler) authorized(r *http.Request) bool {
 // planForEvent maps a RevenueCat event to a target plan. The bool is false when
 // the event should not change the plan.
 func planForEvent(eventType, entitlementID string, entitlementIDs []string) (domain.Plan, bool) {
+	tier := highestTier(entitlementID, entitlementIDs)
 	switch eventType {
 	case "INITIAL_PURCHASE", "RENEWAL", "PRODUCT_CHANGE", "UNCANCELLATION",
 		"NON_RENEWING_PURCHASE", "SUBSCRIPTION_EXTENDED":
-		if !mentionsPro(entitlementID, entitlementIDs) {
+		if tier == "" {
 			return "", false
 		}
-		return domain.PlanPro, true
+		return tier, true
 	case "EXPIRATION":
-		if !mentionsPro(entitlementID, entitlementIDs) {
+		if tier == "" {
 			return "", false
 		}
 		return domain.PlanFree, true
@@ -123,20 +127,22 @@ func planForEvent(eventType, entitlementID string, entitlementIDs []string) (dom
 	}
 }
 
-// mentionsPro reports whether the Pro entitlement appears on the event. Events
-// that carry no entitlement fields are treated as relevant (fail open) so a
-// payload shape change can't silently drop upgrades.
-func mentionsPro(entitlementID string, entitlementIDs []string) bool {
+// highestTier returns the top plan whose entitlement appears on the event, or
+// "" if none of ours do. Events that carry no entitlement fields are treated as
+// Pro (fail open) so a payload shape change can't silently drop upgrades.
+func highestTier(entitlementID string, entitlementIDs []string) domain.Plan {
 	if entitlementID == "" && len(entitlementIDs) == 0 {
-		return true
+		return domain.PlanPro
 	}
-	if entitlementID == entitlementPro {
-		return true
-	}
-	for _, id := range entitlementIDs {
-		if id == entitlementPro {
-			return true
+	ids := append([]string{entitlementID}, entitlementIDs...)
+	best := domain.Plan("")
+	for _, id := range ids {
+		switch id {
+		case entitlementPro:
+			return domain.PlanPro // top tier — cannot be beaten
+		case entitlementPlus:
+			best = domain.PlanPlus
 		}
 	}
-	return false
+	return best
 }

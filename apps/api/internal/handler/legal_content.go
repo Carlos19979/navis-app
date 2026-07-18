@@ -23,7 +23,7 @@ opera la aplicación móvil Navis (la «App»). Contacto de privacidad:
 <tr><td>Ubicación</td><td>Posición GPS durante la grabación de rutas (también en segundo plano si lo autorizas)</td><td>Registro de travesías en tu cuaderno de bitácora</td></tr>
 <tr><td>Mantenimiento y gastos</td><td>Registros de mantenimiento, importes, facturas adjuntas</td><td>Historial de mantenimiento del barco</td></tr>
 <tr><td>Dispositivo</td><td>Token de notificaciones push, plataforma</td><td>Envío de recordatorios y avisos</td></tr>
-<tr><td>Suscripción</td><td>Estado de la suscripción (Free/Pro). El pago lo procesa Apple; no vemos tus datos de pago</td><td>Activación del plan Pro</td></tr>
+<tr><td>Suscripción</td><td>Estado de la suscripción (Free/Plus/Pro). El pago lo procesa Apple; no vemos tus datos de pago</td><td>Activación del plan de pago</td></tr>
 </table>
 
 <h2>3. Base jurídica</h2>
@@ -88,7 +88,7 @@ Navis mobile application (the "App"). Privacy contact:
 <tr><td>Location</td><td>GPS position while recording routes (including in the background if you allow it)</td><td>Recording passages in your logbook</td></tr>
 <tr><td>Maintenance & expenses</td><td>Maintenance logs, amounts, attached invoices</td><td>Boat maintenance history</td></tr>
 <tr><td>Device</td><td>Push notification token, platform</td><td>Delivering reminders and alerts</td></tr>
-<tr><td>Subscription</td><td>Subscription status (Free/Pro). Payment is processed by Apple; we never see your payment details</td><td>Enabling the Pro plan</td></tr>
+<tr><td>Subscription</td><td>Subscription status (Free/Plus/Pro). Payment is processed by Apple; we never see your payment details</td><td>Enabling the paid plan</td></tr>
 </table>
 
 <h2>3. Legal basis</h2>
@@ -150,10 +150,11 @@ documentos que subes, así como de mantener la confidencialidad de tu acceso.
 Conservas la titularidad de tu contenido; nos concedes una licencia limitada
 para almacenarlo y procesarlo con el único fin de prestarte el servicio.</p>
 
-<h2>4. Suscripción Navis Pro</h2>
+<h2>4. Suscripciones Navis (Plus y Pro)</h2>
 <ul>
-<li>Navis Pro es una suscripción auto-renovable (mensual: 3,99 € · anual: 29,99 €;
-precios finales según tu App Store local).</li>
+<li>Navis ofrece dos suscripciones auto-renovables: Plus (mensual: 4,99 € ·
+anual: 39,99 €) y Pro (mensual: 8,99 € · anual: 69,99 €); precios finales
+según tu App Store local.</li>
 <li>El pago se carga a tu cuenta de Apple al confirmar la compra. La suscripción
 se renueva automáticamente salvo que la canceles al menos 24 horas antes del
 final del período en curso.</li>
@@ -213,10 +214,11 @@ you upload, and for keeping your access credentials confidential. You retain
 ownership of your content; you grant us a limited licence to store and process
 it solely to provide the service.</p>
 
-<h2>4. Navis Pro subscription</h2>
+<h2>4. Navis subscriptions (Plus and Pro)</h2>
 <ul>
-<li>Navis Pro is an auto-renewable subscription (monthly €3.99 · yearly €29.99;
-final prices per your local App Store).</li>
+<li>Navis offers two auto-renewable subscriptions: Plus (monthly €4.99 · yearly
+€39.99) and Pro (monthly €8.99 · yearly €69.99); final prices per your local
+App Store.</li>
 <li>Payment is charged to your Apple account at purchase confirmation. The
 subscription renews automatically unless cancelled at least 24 hours before the
 end of the current period.</li>

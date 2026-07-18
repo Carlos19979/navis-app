@@ -62,5 +62,5 @@ func MeResponseFromDomain(p *domain.Profile, boatCount int) MeResponse {
 
 // UpdatePlanRequest is the payload for the dev-only plan switcher.
 type UpdatePlanRequest struct {
-	Plan string `json:"plan" validate:"required,oneof=free pro"`
+	Plan string `json:"plan" validate:"required,oneof=free plus pro"`
 }

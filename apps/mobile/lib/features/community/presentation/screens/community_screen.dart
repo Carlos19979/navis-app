@@ -49,7 +49,7 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
 
   Future<void> _onCreateGroup() async {
     final l = AppLocalizations.of(context)!;
-    if (!ref.read(isProProvider)) {
+    if (!ref.read(effectiveTierProvider).canCreateGroups) {
       final purchased =
           await showPaywall(context, ref, reason: l.paywallReasonGroups);
       if (!purchased || !mounted) return;

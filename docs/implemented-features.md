@@ -16,9 +16,24 @@ and what remains (mostly external config). Use this to continue.
 | **Sign in with Apple/Google** | n/a (provider-agnostic JWT) | ✅ code + URL scheme | build only | **Needs external config**: Supabase providers + Apple/Google credentials + iOS capability. iOS Info.plist URL scheme NOT committed (lives in local ios/ hacks) — re-add `CFBundleURLTypes` scheme `navis` when wiring. |
 | **Boat sharing (crew/co-owners)** | ✅ | ✅ | 🔒 security-tested | **Granular per-member permissions** (record trips · manage expenses · manage maintenance · view documents · manage documents). Boat edit/delete + member management stay owner-only. |
 
-## Plans / tiers — Free vs Pro (migration 00027)
-Collapsed the legacy `normal|armador|gestor` tiers into **Free / Pro** (single paid
-tier; a B2B "fleet" tier is future work). Migration `00027_plan_free_pro.sql` remaps
+## Three-tier plans — Free / Plus / Pro (2026-07-18)
+Split the single paid tier into **Plus** (individual owner) and **Pro** (shared boat /
+data). No DB migration — `profiles.plan` gains value `plus` (validated in `Plan.Valid`).
+- **Plus** (4,99 €/mes · 39,99 €/año): 2 boats, unlimited reminders, maintenance schedules
+  + cron, full readiness, **anchor alarm**, gallery/attachments. **Pro** (8,99 €/mes ·
+  69,99 €/año): everything in Plus + cost intelligence/€L/anomalies, shared coordination
+  (bookings + splits), passport PDF, clubs, 5 boats.
+- Go: `Plan.rank()`/`atLeast()`; each `CanUse*`/limit is per-tier. Webhook maps entitlement
+  `plus`/`pro` → plan (`highestTier`). `oneof=free plus pro`.
+- Flutter: `PlanTier` enum with capability getters (mirror of `profile.go`) +
+  `effectiveTierProvider` (max of server plan and live RC tier) in `billing.dart`; every gate
+  reads the specific capability (`.canAnchorAlarm`, `.canCostAnalytics`, …). Paywall rebuilt to
+  a **Plus vs Pro comparison** (`showPaywall(requiredTier:)`). Two RC entitlements.
+- Grandfathering: existing `pro` users keep Pro (superset); store honours their price.
+
+## Plans / tiers — Free vs Pro (migration 00027) — superseded by the 3-tier split above
+Collapsed the legacy `normal|armador|gestor` tiers into **Free / Pro** (later split into
+Free / Plus / Pro, see above; a B2B "fleet" tier is future work). Migration `00027_plan_free_pro.sql` remaps
 `normal→free`, `armador|gestor→pro`, sets default `free` and `CHECK (free|pro)`.
 
 - Table `profiles(plan)` ∈ `free|pro`, default `free` (auto-created). `Plan` helpers in
@@ -41,9 +56,9 @@ tier; a B2B "fleet" tier is future work). Migration `00027_plan_free_pro.sql` re
 - Verified E2E (local API + DB): free `/me` → 402 on 2nd boat & group; webhook grant → pro
   (max_boats 3, groups, unlimited reminders); pro creates boat+group; webhook expiration → free;
   bad webhook secret → 401.
-- **Pending external config (not code):** RevenueCat products (`navis_pro_monthly` **3,99 €** /
-  `navis_pro_yearly` **29,99 €**, 7-day trial) + entitlement `pro` + webhook secret + App
-  Store/Play subscriptions; Novu `document-expiry` workflow with an **Email (Resend)** step;
+- **Pending external config (not code):** RevenueCat 4 products (`navis_plus_monthly` 4,99 € /
+  `navis_plus_yearly` 39,99 € / `navis_pro_monthly` 8,99 € / `navis_pro_yearly` 69,99 €) +
+  entitlements `plus` and `pro` + webhook secret + App Store/Play subscriptions; Novu `document-expiry` workflow with an **Email (Resend)** step;
   `--dart-define` RC keys.
 
 ## Differentiating features batch (2026-07-12)

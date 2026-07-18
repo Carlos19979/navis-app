@@ -246,7 +246,7 @@ void main() {
         (tester) async {
       setPhoneSize(tester);
       final billing = MockBillingService();
-      when(billing.proPackages).thenAnswer((_) async => const []);
+      when(billing.allPackages).thenAnswer((_) async => const []);
 
       await tester.pumpWidget(
         buildTestApp(

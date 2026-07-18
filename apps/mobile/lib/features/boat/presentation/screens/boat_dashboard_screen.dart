@@ -127,13 +127,11 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
 
   Future<void> _onAddBoat() async {
     final l = AppLocalizations.of(context)!;
-    final isPro = ref.read(isProProvider);
-    final account = ref.read(accountProvider).valueOrNull;
+    final tier = ref.read(effectiveTierProvider);
     final boats = ref.read(boatsProvider).valueOrNull ?? const [];
-    final maxBoats = isPro ? 3 : (account?.maxBoats ?? 1);
 
-    if (boats.length >= maxBoats) {
-      if (isPro) {
+    if (boats.length >= tier.maxBoats) {
+      if (tier == PlanTier.pro) {
         NavisSnackbar.info(
           context,
           l.planBoatLimitReached,
@@ -337,8 +335,9 @@ class _BoatCard extends ConsumerWidget {
       NavisSnackbar.info(context, l.anchorTripActiveBlock);
       return;
     }
-    if (!ref.read(isProProvider)) {
-      final ok = await showPaywall(context, ref, reason: l.paywallReasonAnchor);
+    if (!ref.read(effectiveTierProvider).canAnchorAlarm) {
+      final ok = await showPaywall(context, ref,
+          reason: l.paywallReasonAnchor, requiredTier: PlanTier.plus);
       if (!ok || !context.mounted) return;
     }
     if (!context.mounted) return;

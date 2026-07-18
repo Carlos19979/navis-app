@@ -16,7 +16,6 @@ import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
-import 'package:navis_mobile/features/profile/data/account_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/map_picker_screen.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -109,11 +108,9 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
   }
 
   /// How many extra gallery photos this user's plan allows beyond the cover
-  /// (server GalleryLimit counts the cover: Free 1, Pro 10).
+  /// (GalleryLimit counts the cover: Free 1, Plus/Pro 10).
   int _galleryCap() {
-    if (ref.read(isProProvider)) return 9;
-    final limit = ref.read(accountProvider).valueOrNull?.galleryLimit ?? 1;
-    return limit < 0 ? 9 : (limit - 1).clamp(0, 9);
+    return (ref.read(effectiveTierProvider).galleryLimit - 1).clamp(0, 9);
   }
 
   Future<void> _onSave() async {

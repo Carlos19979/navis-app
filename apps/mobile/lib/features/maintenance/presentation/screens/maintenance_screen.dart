@@ -20,7 +20,6 @@ import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/maintenance/data/maintenance_models.dart';
 import 'package:navis_mobile/features/maintenance/data/maintenance_repository.dart';
-import 'package:navis_mobile/features/profile/data/account_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
@@ -73,7 +72,7 @@ class MaintenanceScreen extends ConsumerWidget {
               icon: const Icon(Icons.insights_rounded),
               tooltip: l.costTitle,
               onPressed: () async {
-                if (!ref.read(isProProvider)) {
+                if (!ref.read(effectiveTierProvider).canCostAnalytics) {
                   final ok = await showPaywall(context, ref,
                       reason: l.paywallReasonCostAnalytics);
                   if (!ok || !context.mounted) return;
@@ -145,8 +144,7 @@ String? _dueLabel(AppLocalizations l, MaintenanceTask t) {
 /// How many photos a maintenance log may hold for the current user: Free
 /// mirrors the server AttachmentLimit (1), Pro gets the hard cap (10).
 int _logPhotoCap(WidgetRef ref) {
-  if (ref.read(isProProvider)) return 10;
-  final limit = ref.read(accountProvider).valueOrNull?.attachmentLimit ?? 1;
+  final limit = ref.read(effectiveTierProvider).attachmentLimit;
   return limit < 0 ? 10 : limit;
 }
 
@@ -1110,7 +1108,7 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
                 size: 20, color: context.txtSecondary),
             tooltip: l.splitTitle,
             onPressed: () async {
-              if (!ref.read(isProProvider)) {
+              if (!ref.read(effectiveTierProvider).canSharedCoordination) {
                 final ok = await showPaywall(context, ref,
                     reason: l.paywallReasonShared);
                 if (!ok || !context.mounted) return;

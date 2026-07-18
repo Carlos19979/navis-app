@@ -12,9 +12,10 @@ pasos en orden.
 
 | Qué | Valor | Dónde está en el código |
 |---|---|---|
-| 🔒 Entitlement de RevenueCat | **`pro`** | `apps/mobile/lib/features/billing/billing.dart` (`proEntitlementId`) y `apps/api/internal/handler/webhook_handler.go` (`entitlementPro`) |
-| Product ID mensual (sugerido) | `navis_pro_monthly` — **3,99 €** | offering de RevenueCat |
-| Product ID anual (sugerido) | `navis_pro_yearly` — **29,99 €** | offering de RevenueCat |
+| 🔒 Entitlements de RevenueCat | **`plus`** y **`pro`** | `apps/mobile/lib/features/billing/billing.dart` (`plusEntitlementId`/`proEntitlementId`) y `apps/api/internal/handler/webhook_handler.go` (`entitlementPlus`/`entitlementPro`) |
+| Product IDs Plus (sugeridos) | `navis_plus_monthly` — **4,99 €** · `navis_plus_yearly` — **39,99 €** | offering de RevenueCat (entitlement `plus`) |
+| Product IDs Pro (sugeridos) | `navis_pro_monthly` — **8,99 €** · `navis_pro_yearly` — **69,99 €** | offering de RevenueCat (entitlement `pro`) |
+| ⚠️ Convención de nombres | el paywall separa tiers por el identificador (`*_plus_*` vs `*_pro_*`) | `paywall_sheet.dart` (`_tierOf`) |
 | 🔒 `app_user_id` de RevenueCat | = **Supabase `user_id`** | la app llama `Purchases.logIn(user.id)` |
 | 🔒 Ruta del webhook | `POST /api/v1/webhooks/revenuecat` | `apps/api/internal/router/router.go` (fuera del JWT) |
 | 🔒 Auth del webhook | valor exacto del header `Authorization` = `REVENUECAT_WEBHOOK_SECRET` | `webhook_handler.go` (`subtle.ConstantTimeCompare`) |
@@ -28,10 +29,12 @@ etiqueta por `packageType` (Mensual/Anual), no por su ID. Pero el **entitlement 
 
 1. **Acuerdos.** En *Business → Agreements, Tax, and Banking*: firma el **Paid Applications
    Agreement** y rellena datos fiscales y bancarios. **Sin esto, los IAP no se activan.**
-2. **Grupo de suscripción.** App → *Subscriptions* → crea un grupo (p. ej. `Navis Pro`).
-3. **Productos** dentro del grupo:
-   - `navis_pro_monthly` — Auto-Renewable, **3,99 €/mes**.
-   - `navis_pro_yearly` — Auto-Renewable, **29,99 €/año**.
+2. **Grupo de suscripción.** App → *Subscriptions* → crea un grupo (p. ej. `Navis`).
+3. **Productos** dentro del grupo (4 productos, 2 tiers):
+   - `navis_plus_monthly` — Auto-Renewable, **4,99 €/mes**.
+   - `navis_plus_yearly` — Auto-Renewable, **39,99 €/año**.
+   - `navis_pro_monthly` — Auto-Renewable, **8,99 €/mes**.
+   - `navis_pro_yearly` — Auto-Renewable, **69,99 €/año**.
    - Rellena display name, descripción y screenshot de revisión (Apple lo exige).
 4. **App Store Connect API key (In-App Purchase).** *Users and Access → Integrations → In-App
    Purchase* → genera una key y **guárdala** (la subes a RevenueCat en el paso 3). Sirve para que
@@ -62,13 +65,14 @@ etiqueta por `packageType` (Mensual/Anual), no por su ID. Pero el **entitlement 
 1. Crea un **proyecto** y añade las dos apps (iOS y Android).
    - iOS: pega el **App Store Connect API key** del paso 1.4 + el bundle ID.
    - Android: sube el **JSON de la service account** del paso 2.3 + el package name.
-2. **Products.** *Products* → importa/crea `navis_pro_monthly` y `navis_pro_yearly` en cada tienda.
-3. 🔒 **Entitlement.** *Entitlements* → crea uno con identificador **`pro`** y adjúntale los dos
-   productos. (El identificador **tiene que ser `pro`**.)
-4. **Offering.** *Offerings* → crea un offering marcado como **Current** con dos **packages**:
-   - un package **Monthly** → `navis_pro_monthly`.
-   - un package **Annual** → `navis_pro_yearly`.
-   La app lee `offerings.current.availablePackages`, así que el offering debe estar como *Current*.
+2. **Products.** *Products* → importa/crea los 4 productos (`navis_plus_monthly`,
+   `navis_plus_yearly`, `navis_pro_monthly`, `navis_pro_yearly`) en cada tienda.
+3. 🔒 **Entitlements.** *Entitlements* → crea **dos**: `plus` (adjunta los dos productos
+   `navis_plus_*`) y `pro` (adjunta los dos `navis_pro_*`). Los identificadores **tienen
+   que ser `plus` y `pro`**. Una compra de Pro concede el entitlement `pro`; Plus el `plus`.
+4. **Offering.** *Offerings* → crea un offering **Current** con los 4 **packages** (los dos
+   de Plus y los dos de Pro). La app lee `offerings.current.availablePackages` y separa por
+   tier según el identificador del producto (`*_plus_*` / `*_pro_*`).
 5. **SDK keys.** *API keys* → copia la **public SDK key de iOS** y la **de Android** (empiezan por
    `appl_...` y `goog_...`). Van al build de Flutter (paso 4).
 6. 🔒 **Webhook.** *Integrations → Webhooks* → añade uno:
@@ -145,13 +149,20 @@ Eventos que **conceden** Pro: `INITIAL_PURCHASE`, `RENEWAL`, `PRODUCT_CHANGE`, `
 `NON_RENEWING_PURCHASE`, `SUBSCRIPTION_EXTENDED`. Evento que **revoca** (→ free): `EXPIRATION`.
 `CANCELLATION` NO revoca (el usuario mantiene acceso hasta que expira). Secreto incorrecto → **401**.
 
-## Resumen de qué desbloquea el plan Pro
+## Resumen de qué desbloquea cada tier
 
-| Capacidad | Free | Pro |
-|---|---|---|
-| Barcos | 1 | 3 |
-| Crear grupos/clubes y eventos | ❌ | ✅ |
-| Recordatorios de caducidad de documentos | 1 documento | ilimitados |
-| Adjuntos por documento | limitado | ilimitados |
-| Mantenimiento programado | ❌ | ✅ *(fast-follow)* |
-| Compartir barco + permisos de tripulación | ✅ (gratis siempre) | ✅ |
+| Capacidad | Free | Plus | Pro |
+|---|---|---|---|
+| Barcos | 1 | 2 | 5 |
+| Recordatorios de caducidad de documentos | 1 | ilimitados | ilimitados |
+| Mantenimiento programado + cron | ❌ | ✅ | ✅ |
+| Readiness completo | solo docs | ✅ | ✅ |
+| Alarma de fondeo | ❌ | ✅ | ✅ |
+| Fotos por log / galería | 1 / 1 | ∞ / 10 | ∞ / 10 |
+| Inteligencia de costes + €/L + anomalías | ❌ | ❌ | ✅ |
+| Barco compartido (bookings + splits) | ❌ | ❌ | ✅ |
+| Pasaporte PDF | ❌ | ❌ | ✅ |
+| Crear grupos/clubes y eventos | ❌ | ❌ | ✅ |
+| Compartir barco (ver) + permisos tripulación | ✅ | ✅ | ✅ |
+
+Precios: Plus 4,99 €/mes · 39,99 €/año · Pro 8,99 €/mes · 69,99 €/año.

@@ -90,9 +90,11 @@ class SettingsScreen extends ConsumerWidget {
 
                           return Column(
                             children: [
-                              tile('free', 'Free', '1 barco · sin grupos'),
+                              tile('free', 'Free', '1 barco · básico'),
+                              tile('plus', 'Plus',
+                                  '2 barcos · alarma fondeo · readiness'),
                               tile('pro', 'Pro',
-                                  '3 barcos · grupos · recordatorios'),
+                                  '5 barcos · costes · splits · pasaporte'),
                             ],
                           );
                         },

@@ -96,7 +96,7 @@ void main() {
         boatsProvider.overrideWith(
           () => useError ? ErrorBoatsNotifier() : FakeBoatsNotifier(boats),
         ),
-        proEntitlementProvider.overrideWith((ref) => isPro),
+        ...planOverrides(pro: isPro),
         currentWeatherProvider.overrideWith((ref) async => null),
         boatDocumentSummaryProvider.overrideWith(
           (ref, boatId) async => const DocumentSummary(),
@@ -187,16 +187,16 @@ void main() {
       expectPaywall();
     });
 
-    testWidgets('FAB shows plan-limit snackbar for Pro at the 3-boat limit',
+    testWidgets('FAB shows plan-limit snackbar for Pro at the 5-boat limit',
         (tester) async {
       setPhoneSize(tester);
       final spy = RouteSpy();
-      final threeBoats = [
-        ...testBoats,
-        makeBoat(id: 'boat-3', name: 'Mistral', registration: 'ES-VAL-1-9999'),
+      final fiveBoats = [
+        for (var i = 0; i < 5; i++)
+          makeBoat(id: 'boat-$i', name: 'Boat $i', registration: 'ES-V-$i'),
       ];
       await tester.pumpWidget(
-        buildSubject(boats: threeBoats, isPro: true, spy: spy),
+        buildSubject(boats: fiveBoats, isPro: true, spy: spy),
       );
       await pumpScreen(tester);
 

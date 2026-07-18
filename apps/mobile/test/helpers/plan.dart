@@ -4,6 +4,30 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/features/profile/data/account_provider.dart';
 
+/// Builds an [Account] whose capabilities match a subscription [tier], mirroring
+/// the server (`profile.go`).
+Account accountForTier(PlanTier tier) {
+  final plus = tier.atLeast(PlanTier.plus);
+  final pro = tier == PlanTier.pro;
+  return Account(
+    plan: tier.name,
+    isPro: pro,
+    maxBoats: tier.maxBoats,
+    boatCount: 0,
+    canCreateGroups: pro,
+    reminderDocLimit: plus ? -1 : 1,
+    maintenanceSchedules: plus,
+    attachmentLimit: tier.attachmentLimit,
+    galleryLimit: tier.galleryLimit,
+    fullReadiness: plus,
+    costAnalytics: pro,
+    exportPassport: pro,
+    sharedCoordination: pro,
+    anomalyAlerts: pro,
+    anchorAlarm: plus,
+  );
+}
+
 /// Builds an [Account] with sensible defaults. Pro-only capabilities default
 /// to the plan (`isPro`) unless overridden, mirroring `Account.fromJson`.
 Account makeAccount({
@@ -27,7 +51,7 @@ Account makeAccount({
   return Account(
     plan: plan,
     isPro: pro,
-    maxBoats: maxBoats ?? (pro ? 3 : 1),
+    maxBoats: maxBoats ?? (pro ? 5 : 1),
     boatCount: boatCount,
     canCreateGroups: canCreateGroups ?? pro,
     reminderDocLimit: reminderDocLimit,
@@ -44,20 +68,25 @@ Account makeAccount({
 }
 
 /// Overrides for plan gating: `accountProvider` (server entitlements) and
-/// `proEntitlementProvider` (live RevenueCat mirror) together, so `isPro`
-/// gates behave consistently.
-List<Override> planOverrides({bool pro = false, Account? account}) {
-  final resolved = account ?? makeAccount(plan: pro ? 'pro' : 'free');
+/// `liveTierProvider` (live RevenueCat mirror) together, so tier gates behave
+/// consistently. Pass [tier] for the 3-tier model, or the legacy [pro] bool.
+List<Override> planOverrides({
+  bool pro = false,
+  PlanTier? tier,
+  Account? account,
+}) {
+  final resolvedTier = tier ?? (pro ? PlanTier.pro : PlanTier.free);
+  final resolved = account ?? accountForTier(resolvedTier);
   return [
     accountProvider.overrideWith((ref) async => resolved),
-    proEntitlementProvider.overrideWith((ref) => resolved.isPro),
+    liveTierProvider.overrideWith((ref) => PlanTier.fromName(resolved.plan)),
   ];
 }
 
-/// Asserts whether the Navis Pro paywall sheet is on screen.
+/// Asserts whether the Navis paywall sheet is on screen.
 void expectPaywall({bool shown = true}) {
   expect(
-    find.text('Navis Pro'),
+    find.text('Navis Plus & Pro'),
     shown ? findsOneWidget : findsNothing,
   );
 }

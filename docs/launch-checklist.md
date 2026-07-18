@@ -9,7 +9,8 @@ este documento es solo el índice de progreso. Actualizado: 2026-07-15.
 - [x] Código completo: modelo Free/Pro + 6 features Pro, rediseño UI/UX, endurecimiento
       pre-launch en 5 fases, bookings/expense-splits, mantenimiento programado (PRs #4–#26).
 - [x] Textos legales con identidad real (Carlos Pérez Martínez, Valencia), email de
-      contacto `carloscode23@icloud.com` y precios 3,99 €/mes · 29,99 €/año (PR #27).
+      contacto `carloscode23@icloud.com`. Precios (3 tiers): Plus 4,99 €/mes · 39,99 €/año,
+      Pro 8,99 €/mes · 69,99 €/año (PR #27 + tiers).
 - [x] Build release verificado en iPhone (arranca standalone).
 - [x] CI: lint + test Go y Flutter en cada PR; job de deploy preparado (gated `if: false`).
 
@@ -20,8 +21,9 @@ este documento es solo el índice de progreso. Actualizado: 2026-07-15.
 
 ### 2. App Store Connect
 - [ ] Firmar Paid Applications Agreement + datos fiscales/bancarios.
-- [ ] Crear la app (bundle ID) y el subscription group `Navis Pro`.
-- [ ] Productos: `navis_pro_monthly` (3,99 €/mes) y `navis_pro_yearly` (29,99 €/año).
+- [ ] Crear la app (bundle ID) y el subscription group `Navis`.
+- [ ] Productos (4): `navis_plus_monthly` (4,99 €), `navis_plus_yearly` (39,99 €),
+      `navis_pro_monthly` (8,99 €), `navis_pro_yearly` (69,99 €). Entitlements `plus` y `pro`.
       ⚠️ Si se añade prueba gratuita de 7 días, hay que divulgarla en Términos §4
       (`apps/api/internal/handler/legal_content.go`).
 - [ ] API key de In-App Purchase (para RevenueCat) + al menos un Sandbox tester.

@@ -10,9 +10,41 @@ import 'package:navis_mobile/features/auth/domain/auth_state.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
 import 'package:navis_mobile/features/profile/data/account_provider.dart';
 
-/// RevenueCat entitlement identifier that unlocks Navis Pro. Must match the
-/// entitlement configured in the RevenueCat dashboard and the backend webhook.
+/// RevenueCat entitlement identifiers that unlock each paid tier. Must match the
+/// entitlements configured in the RevenueCat dashboard and the backend webhook.
+const plusEntitlementId = 'plus';
 const proEntitlementId = 'pro';
+
+/// The subscription tier ladder. `index` is the rank (free < plus < pro).
+enum PlanTier {
+  free,
+  plus,
+  pro;
+
+  bool atLeast(PlanTier other) => index >= other.index;
+
+  static PlanTier fromName(String? name) => switch (name) {
+        'pro' => PlanTier.pro,
+        'plus' => PlanTier.plus,
+        _ => PlanTier.free,
+      };
+
+  // Capability rules — mirror of apps/api/internal/domain/profile.go.
+  bool get canAnchorAlarm => atLeast(PlanTier.plus);
+  bool get canMaintenanceSchedules => atLeast(PlanTier.plus);
+  bool get canFullReadiness => atLeast(PlanTier.plus);
+  bool get canCostAnalytics => this == PlanTier.pro;
+  bool get canSharedCoordination => this == PlanTier.pro;
+  bool get canExportPassport => this == PlanTier.pro;
+  bool get canCreateGroups => this == PlanTier.pro;
+  int get maxBoats => switch (this) {
+        PlanTier.pro => 5,
+        PlanTier.plus => 2,
+        PlanTier.free => 1,
+      };
+  int get galleryLimit => atLeast(PlanTier.plus) ? 10 : 1;
+  int get attachmentLimit => atLeast(PlanTier.plus) ? -1 : 1;
+}
 
 /// Thin wrapper around the RevenueCat SDK. This is the ONLY file that imports
 /// `purchases_flutter`, so the rest of the app stays store-agnostic. Every call
@@ -60,19 +92,24 @@ class BillingService {
     } catch (_) {}
   }
 
-  /// Whether the Pro entitlement is currently active for the logged-in user.
-  Future<bool> isProActive() async {
-    if (!_configured) return false;
+  /// The highest tier currently active for the logged-in user.
+  Future<PlanTier> activeTier() async {
+    if (!_configured) return PlanTier.free;
     try {
       final info = await Purchases.getCustomerInfo();
-      return info.entitlements.active.containsKey(proEntitlementId);
+      final active = info.entitlements.active;
+      if (active.containsKey(proEntitlementId)) return PlanTier.pro;
+      if (active.containsKey(plusEntitlementId)) return PlanTier.plus;
+      return PlanTier.free;
     } catch (_) {
-      return false;
+      return PlanTier.free;
     }
   }
 
-  /// The purchasable Pro packages from the current offering (empty if none).
-  Future<List<Package>> proPackages() async {
+  /// All purchasable packages from the current offering (empty if none). The
+  /// paywall splits them per tier by product identifier (navis_plus_* /
+  /// navis_pro_*).
+  Future<List<Package>> allPackages() async {
     if (!_configured) return const [];
     try {
       final offerings = await Purchases.getOfferings();
@@ -82,49 +119,58 @@ class BillingService {
     }
   }
 
-  /// Purchases a package. Returns true if Pro is active afterwards, false if the
-  /// user cancelled. Re-checks entitlement so the result is independent of the
+  /// Purchases a package. Returns the active tier afterwards (free if the user
+  /// cancelled). Re-checks entitlements so the result is independent of the
   /// SDK's purchase return shape.
-  Future<bool> purchase(Package package) async {
-    if (!_configured) return false;
+  Future<PlanTier> purchase(Package package) async {
+    if (!_configured) return PlanTier.free;
     try {
       await Purchases.purchasePackage(package);
     } on PlatformException catch (e) {
       final code = PurchasesErrorHelper.getErrorCode(e);
-      if (code == PurchasesErrorCode.purchaseCancelledError) return false;
+      if (code == PurchasesErrorCode.purchaseCancelledError) {
+        return PlanTier.free;
+      }
       rethrow;
     }
-    return isProActive();
+    return activeTier();
   }
 
-  /// Restores previous purchases. Returns whether Pro is active afterwards.
-  Future<bool> restore() async {
-    if (!_configured) return false;
+  /// Restores previous purchases. Returns the active tier afterwards.
+  Future<PlanTier> restore() async {
+    if (!_configured) return PlanTier.free;
     try {
       await Purchases.restorePurchases();
     } catch (_) {
-      return false;
+      return PlanTier.free;
     }
-    return isProActive();
+    return activeTier();
   }
 }
 
 final billingServiceProvider =
     Provider<BillingService>((ref) => BillingService.instance);
 
-/// Client-side mirror of the live RevenueCat Pro entitlement. Lets the UI unlock
-/// instantly after a purchase, before the server webhook updates `profiles.plan`.
-final proEntitlementProvider = StateProvider<bool>((ref) => false);
+/// Client-side mirror of the live RevenueCat tier. Lets the UI unlock instantly
+/// after a purchase, before the server webhook updates `profiles.plan`.
+final liveTierProvider = StateProvider<PlanTier>((ref) => PlanTier.free);
 
-/// True when the user has Pro either per the server account or the live RC
-/// entitlement. This is what the UI should gate on.
-final isProProvider = Provider<bool>((ref) {
+/// The effective tier: the higher of the server account plan and the live RC
+/// mirror. This is what the UI gates on (via its capability getters).
+final effectiveTierProvider = Provider<PlanTier>((ref) {
   final account = ref.watch(accountProvider).valueOrNull;
-  final rc = ref.watch(proEntitlementProvider);
-  return (account?.isPro ?? false) || rc;
+  final serverTier = PlanTier.fromName(account?.plan);
+  final live = ref.watch(liveTierProvider);
+  return serverTier.index >= live.index ? serverTier : live;
 });
 
-/// Watches auth state and syncs the RevenueCat identity + entitlement mirror.
+/// Backward-compatible "is top tier" flag (Pro). Prefer gating on the specific
+/// capability via [effectiveTierProvider] (e.g. `.canCostAnalytics`).
+final isProProvider = Provider<bool>(
+  (ref) => ref.watch(effectiveTierProvider) == PlanTier.pro,
+);
+
+/// Watches auth state and syncs the RevenueCat identity + live tier mirror.
 /// Must be watched from the app root to stay active.
 final billingAuthListenerProvider = Provider<void>((ref) {
   final authState = ref.watch(authProvider);
@@ -135,10 +181,10 @@ final billingAuthListenerProvider = Provider<void>((ref) {
   if (authState.status == AuthStatus.authenticated && user != null) {
     billing
         .logIn(user.id)
-        .then((_) => billing.isProActive())
-        .then((pro) => ref.read(proEntitlementProvider.notifier).state = pro);
+        .then((_) => billing.activeTier())
+        .then((tier) => ref.read(liveTierProvider.notifier).state = tier);
   } else if (authState.status == AuthStatus.unauthenticated) {
     billing.logOut();
-    ref.read(proEntitlementProvider.notifier).state = false;
+    ref.read(liveTierProvider.notifier).state = PlanTier.free;
   }
 });

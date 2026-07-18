@@ -19,7 +19,7 @@ void main() {
   for (final brightness in Brightness.values) {
     testWidgets('paywall sheet — ${brightness.name}', (tester) async {
       final billing = MockBillingService();
-      when(billing.proPackages).thenAnswer(
+      when(billing.allPackages).thenAnswer(
         (_) async => [
           makePackage(),
           makePackage(type: PackageType.annual, price: '39,99 €'),
