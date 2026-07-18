@@ -227,7 +227,7 @@ class _BoatDetailView extends ConsumerWidget {
     Boat boat,
   ) async {
     final l = AppLocalizations.of(context)!;
-    if (!ref.read(isProProvider)) {
+    if (!ref.read(effectiveTierProvider).canSharedCoordination) {
       final ok = await showPaywall(context, ref, reason: l.paywallReasonShared);
       if (!ok || !context.mounted) return;
     }

@@ -1498,7 +1498,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proBenefitMaintenance => 'Scheduled maintenance reminders';
 
   @override
-  String get proBenefitBoats => 'Up to 3 boats';
+  String get proBenefitBoats => 'Up to 5 boats';
+
+  @override
+  String get plusBenefitBoats => 'Up to 2 boats';
+
+  @override
+  String get paywallTitle => 'Navis Plus & Pro';
+
+  @override
+  String get paywallPlusName => 'Navis Plus';
+
+  @override
+  String get paywallProName => 'Navis Pro';
+
+  @override
+  String get paywallProIncludesPlus => 'Everything in Plus, and:';
 
   @override
   String get proBenefitGroups => 'Create clubs and events';

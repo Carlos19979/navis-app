@@ -22,13 +22,13 @@ class BoatRobot {
   /// On the Free plan at the boat limit, the add action opens the paywall
   /// instead of the form.
   Future<void> startAddBoatExpectingPaywall() async {
-    await tapUntil(tester, _addBoatTrigger(), find.text('Navis Pro'));
+    await tapUntil(tester, _addBoatTrigger(), find.text('Navis Plus & Pro'));
   }
 
   Future<void> dismissPaywall() async {
     // Modal bottom sheet: tapping the barrier above it dismisses.
     await tester.tapAt(const Offset(200, 60));
-    await pumpUntilGone(tester, find.text('Navis Pro'));
+    await pumpUntilGone(tester, find.text('Navis Plus & Pro'));
   }
 
   /// Empty dashboards offer the empty-state CTA; populated ones the FAB.

@@ -30,7 +30,7 @@ Future<void> exportBoatPassport(
 ) async {
   final l = AppLocalizations.of(context)!;
 
-  if (!ref.read(isProProvider)) {
+  if (!ref.read(effectiveTierProvider).canExportPassport) {
     final ok = await showPaywall(context, ref, reason: l.paywallReasonPassport);
     if (!ok || !context.mounted) return;
   }

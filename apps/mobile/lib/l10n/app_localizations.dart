@@ -2933,8 +2933,38 @@ abstract class AppLocalizations {
   /// No description provided for @proBenefitBoats.
   ///
   /// In en, this message translates to:
-  /// **'Up to 3 boats'**
+  /// **'Up to 5 boats'**
   String get proBenefitBoats;
+
+  /// No description provided for @plusBenefitBoats.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to 2 boats'**
+  String get plusBenefitBoats;
+
+  /// No description provided for @paywallTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Navis Plus & Pro'**
+  String get paywallTitle;
+
+  /// No description provided for @paywallPlusName.
+  ///
+  /// In en, this message translates to:
+  /// **'Navis Plus'**
+  String get paywallPlusName;
+
+  /// No description provided for @paywallProName.
+  ///
+  /// In en, this message translates to:
+  /// **'Navis Pro'**
+  String get paywallProName;
+
+  /// No description provided for @paywallProIncludesPlus.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything in Plus, and:'**
+  String get paywallProIncludesPlus;
 
   /// No description provided for @proBenefitGroups.
   ///

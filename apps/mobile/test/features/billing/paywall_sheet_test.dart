@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
+import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 
@@ -67,7 +68,7 @@ void main() {
   group('PaywallSheet', () {
     testWidgets('shows a spinner while packages are loading', (tester) async {
       final completer = Completer<List<Package>>();
-      when(() => billing.proPackages()).thenAnswer((_) => completer.future);
+      when(() => billing.allPackages()).thenAnswer((_) => completer.future);
 
       await openSheet(tester);
 
@@ -81,7 +82,7 @@ void main() {
 
     testWidgets('no offering shows unavailable text and no buy buttons',
         (tester) async {
-      when(() => billing.proPackages()).thenAnswer((_) async => const []);
+      when(() => billing.allPackages()).thenAnswer((_) async => const []);
 
       await openSheet(tester);
 
@@ -97,7 +98,7 @@ void main() {
 
     testWidgets('renders package tiles with the first one pre-selected',
         (tester) async {
-      when(() => billing.proPackages()).thenAnswer(
+      when(() => billing.allPackages()).thenAnswer(
         (_) async => [
           makePackage(),
           makePackage(type: PackageType.annual, price: '39,99 €'),
@@ -124,7 +125,7 @@ void main() {
     });
 
     testWidgets('tapping another tile moves the selection', (tester) async {
-      when(() => billing.proPackages()).thenAnswer(
+      when(() => billing.allPackages()).thenAnswer(
         (_) async => [
           makePackage(),
           makePackage(type: PackageType.annual, price: '39,99 €'),
@@ -148,9 +149,9 @@ void main() {
 
     testWidgets('successful purchase pops with true and shows welcome',
         (tester) async {
-      when(() => billing.proPackages())
+      when(() => billing.allPackages())
           .thenAnswer((_) async => [makePackage()]);
-      when(() => billing.purchase(any())).thenAnswer((_) async => true);
+      when(() => billing.purchase(any())).thenAnswer((_) async => PlanTier.pro);
 
       await openSheet(tester);
 
@@ -166,9 +167,10 @@ void main() {
 
     testWidgets('cancelled purchase resets busy and keeps the sheet open',
         (tester) async {
-      when(() => billing.proPackages())
+      when(() => billing.allPackages())
           .thenAnswer((_) async => [makePackage()]);
-      when(() => billing.purchase(any())).thenAnswer((_) async => false);
+      when(() => billing.purchase(any()))
+          .thenAnswer((_) async => PlanTier.free);
 
       await openSheet(tester);
 
@@ -183,7 +185,7 @@ void main() {
     });
 
     testWidgets('failed purchase shows the error snackbar', (tester) async {
-      when(() => billing.proPackages())
+      when(() => billing.allPackages())
           .thenAnswer((_) async => [makePackage()]);
       when(() => billing.purchase(any()))
           .thenThrow(Exception('store exploded'));
@@ -202,9 +204,9 @@ void main() {
 
     testWidgets('successful restore unlocks Pro and pops with true',
         (tester) async {
-      when(() => billing.proPackages())
+      when(() => billing.allPackages())
           .thenAnswer((_) async => [makePackage()]);
-      when(() => billing.restore()).thenAnswer((_) async => true);
+      when(() => billing.restore()).thenAnswer((_) async => PlanTier.pro);
 
       await openSheet(tester);
 
@@ -220,9 +222,9 @@ void main() {
 
     testWidgets('restore without purchases shows nothing-to-restore',
         (tester) async {
-      when(() => billing.proPackages())
+      when(() => billing.allPackages())
           .thenAnswer((_) async => [makePackage()]);
-      when(() => billing.restore()).thenAnswer((_) async => false);
+      when(() => billing.restore()).thenAnswer((_) async => PlanTier.free);
 
       await openSheet(tester);
 

@@ -60,6 +60,9 @@ func TestPlanForEvent(t *testing.T) {
 		wantAction bool
 	}{
 		{"initial purchase grants pro", "INITIAL_PURCHASE", "pro", nil, domain.PlanPro, true},
+		{"initial purchase grants plus", "INITIAL_PURCHASE", "plus", nil, domain.PlanPlus, true},
+		{"grant with both entitlements picks pro", "INITIAL_PURCHASE", "", []string{"plus", "pro"}, domain.PlanPro, true},
+		{"expiration of plus resets to free", "EXPIRATION", "plus", nil, domain.PlanFree, true},
 		{"renewal grants pro", "RENEWAL", "", []string{"pro"}, domain.PlanPro, true},
 		{"uncancellation grants pro", "UNCANCELLATION", "pro", nil, domain.PlanPro, true},
 		{"expiration resets to free", "EXPIRATION", "pro", nil, domain.PlanFree, true},

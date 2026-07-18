@@ -1510,7 +1510,22 @@ class AppLocalizationsEs extends AppLocalizations {
       'Recordatorios de mantenimiento programado';
 
   @override
-  String get proBenefitBoats => 'Hasta 3 barcos';
+  String get proBenefitBoats => 'Hasta 5 barcos';
+
+  @override
+  String get plusBenefitBoats => 'Hasta 2 barcos';
+
+  @override
+  String get paywallTitle => 'Navis Plus y Pro';
+
+  @override
+  String get paywallPlusName => 'Navis Plus';
+
+  @override
+  String get paywallProName => 'Navis Pro';
+
+  @override
+  String get paywallProIncludesPlus => 'Todo lo de Plus, y además:';
 
   @override
   String get proBenefitGroups => 'Crea clubes y eventos';

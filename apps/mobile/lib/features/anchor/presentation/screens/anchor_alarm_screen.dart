@@ -103,10 +103,10 @@ class _AnchorAlarmScreenState extends ConsumerState<AnchorAlarmScreen>
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final isPro = ref.watch(isProProvider);
+    final canUse = ref.watch(effectiveTierProvider).canAnchorAlarm;
     final watch = ref.watch(anchorWatchProvider);
 
-    if (!isPro) {
+    if (!canUse) {
       return NavisScaffold(
         title: l.anchorAlarmTitle,
         showBack: true,
@@ -115,8 +115,8 @@ class _AnchorAlarmScreenState extends ConsumerState<AnchorAlarmScreen>
           message: l.anchorAlarmTitle,
           description: l.paywallReasonAnchor,
           actionLabel: l.subscribe,
-          onAction: () =>
-              showPaywall(context, ref, reason: l.paywallReasonAnchor),
+          onAction: () => showPaywall(context, ref,
+              reason: l.paywallReasonAnchor, requiredTier: PlanTier.plus),
         ),
       );
     }

@@ -203,8 +203,10 @@ func TestBoatService_Create_PlanLimits(t *testing.T) {
 	}{
 		{"free plan under limit succeeds", domain.PlanFree, 0, nil},
 		{"free plan at limit of 1 rejected", domain.PlanFree, 1, domain.ErrPlanLimit},
-		{"pro plan under limit succeeds", domain.PlanPro, 2, nil},
-		{"pro plan at limit of 3 rejected", domain.PlanPro, 3, domain.ErrPlanLimit},
+		{"plus plan under limit succeeds", domain.PlanPlus, 1, nil},
+		{"plus plan at limit of 2 rejected", domain.PlanPlus, 2, domain.ErrPlanLimit},
+		{"pro plan under limit succeeds", domain.PlanPro, 4, nil},
+		{"pro plan at limit of 5 rejected", domain.PlanPro, 5, domain.ErrPlanLimit},
 	}
 
 	for _, tt := range tests {
