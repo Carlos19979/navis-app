@@ -22,9 +22,14 @@ gaps.
   bookings, document list/detail, check-email.
 - **W3** (#36): gating Free/Pro y paywall — plan_gating, paywall_sheet,
   is_pro_provider.
-- **E2E** (#29, #33, #34): fundación + journeys J01–J08.
+- **E2E** (#29, #33, #34): fundación + journeys J01–J10 (J10 = anchor watch).
 - **W5** (esta rama): community, groups, regattas, checklist + extensiones
   de events/profile/settings + esta matriz.
+- **B1 anclaje** (2026-07-18): `anchor_watch_provider_test.dart` (9 casos:
+  armar/deriva/silenciar/recentrar/desarmar/recuperar/filtro de precisión,
+  con GPS falso + alarma mockeada), `anchor_alarm_screen_test.dart` (gate Free),
+  Go `CanUseAnchorAlarm` + DTO, E2E **J10**. El mapa vivo cuelga el widget
+  tester → el flujo armado/mapa se cubre por unit test + E2E, no por widget.
 
 ## Auth
 

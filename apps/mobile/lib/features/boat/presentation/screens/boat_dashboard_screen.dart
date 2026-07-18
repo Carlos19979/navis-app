@@ -18,6 +18,7 @@ import 'package:navis_mobile/features/boat/presentation/widgets/boat_header.dart
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
 import 'package:navis_mobile/features/readiness/presentation/widgets/readiness_card.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/trip_recording_provider.dart';
+import 'package:navis_mobile/features/anchor/presentation/providers/anchor_watch_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/boat/presentation/boat_type_label.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
@@ -45,7 +46,19 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
     _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _offerRecordingRecovery();
+      if (mounted) _resumeAnchorWatch();
     });
+  }
+
+  /// If an anchor watch was armed when the app was killed, silently re-arm it
+  /// (it survives in sqlite) and let the user know it's still watching.
+  Future<void> _resumeAnchorWatch() async {
+    final notifier = ref.read(anchorWatchProvider.notifier);
+    if (!await notifier.hasPersistedWatch()) return;
+    final restored = await notifier.recoverWatch();
+    if (restored && mounted) {
+      NavisSnackbar.info(context, AppLocalizations.of(context)!.anchorResumed);
+    }
   }
 
   /// If the app was killed mid-recording, the session survives in sqlite —
@@ -312,6 +325,26 @@ class _BoatCard extends ConsumerWidget {
   /// the actions are all inline).
   final bool focus;
 
+  /// Opens the anchor watch (Pro). Blocks when a trip is recording — both drive
+  /// the GPS stream — and shows the paywall for Free users.
+  Future<void> _openAnchorWatch(
+    BuildContext context,
+    WidgetRef ref,
+    String boatId,
+  ) async {
+    final l = AppLocalizations.of(context)!;
+    if (ref.read(tripRecordingProvider).isActive) {
+      NavisSnackbar.info(context, l.anchorTripActiveBlock);
+      return;
+    }
+    if (!ref.read(isProProvider)) {
+      final ok = await showPaywall(context, ref, reason: l.paywallReasonAnchor);
+      if (!ok || !context.mounted) return;
+    }
+    if (!context.mounted) return;
+    unawaited(context.push('/boats/$boatId/anchor'));
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
@@ -417,13 +450,30 @@ class _BoatCard extends ConsumerWidget {
             if (focus) ...[
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-                child: NavisButton(
-                  label: l.maintenanceTab,
-                  icon: Icons.build_outlined,
-                  variant: NavisButtonVariant.secondary,
-                  compact: true,
-                  onPressed: () =>
-                      context.push('/boats/${boat.id}/maintenance'),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: NavisButton(
+                        label: l.maintenanceTab,
+                        icon: Icons.build_outlined,
+                        variant: NavisButtonVariant.secondary,
+                        compact: true,
+                        onPressed: () =>
+                            context.push('/boats/${boat.id}/maintenance'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: NavisButton(
+                        label: l.anchorAlarmTitle,
+                        icon: Icons.anchor_outlined,
+                        variant: NavisButtonVariant.secondary,
+                        compact: true,
+                        onPressed: () =>
+                            _openAnchorWatch(context, ref, boat.id),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Align(

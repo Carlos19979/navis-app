@@ -17,6 +17,7 @@ type Entitlements struct {
 	ExportPassport       bool `json:"export_passport"`
 	SharedCoordination   bool `json:"shared_coordination"`
 	AnomalyAlerts        bool `json:"anomaly_alerts"`
+	AnchorAlarm          bool `json:"anchor_alarm"`
 }
 
 // MeResponse describes the current user's plan and derived entitlements.
@@ -47,6 +48,7 @@ func MeResponseFromDomain(p *domain.Profile, boatCount int) MeResponse {
 		ExportPassport:       p.Plan.CanExportPassport(),
 		SharedCoordination:   p.Plan.CanUseSharedCoordination(),
 		AnomalyAlerts:        p.Plan.CanUseAnomalyAlerts(),
+		AnchorAlarm:          p.Plan.CanUseAnchorAlarm(),
 	}
 	return MeResponse{
 		Plan:            string(p.Plan),

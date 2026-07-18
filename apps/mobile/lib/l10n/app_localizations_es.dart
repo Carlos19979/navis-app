@@ -2227,4 +2227,71 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get exportDataFailed =>
       'No se pudieron exportar tus datos. Inténtalo de nuevo.';
+
+  @override
+  String get anchorAlarmTitle => 'Alarma de fondeo';
+
+  @override
+  String get anchorDropHere => 'Fondear aquí';
+
+  @override
+  String get anchorDisarm => 'Detener vigilancia';
+
+  @override
+  String get anchorRadius => 'Radio';
+
+  @override
+  String get anchorDistance => 'Distancia';
+
+  @override
+  String get anchorMaxDistance => 'Máx. borneo';
+
+  @override
+  String get anchorGpsAccuracy => 'GPS';
+
+  @override
+  String get anchorDragTitle => '¡Garreando!';
+
+  @override
+  String get anchorDragBody => 'Tu barco ha salido del círculo de fondeo.';
+
+  @override
+  String get anchorSilence => 'Silenciar';
+
+  @override
+  String get anchorSilenced => 'Silenciada';
+
+  @override
+  String get anchorRecenter => 'Recentrar';
+
+  @override
+  String get anchorKeepPluggedIn =>
+      '¿Fondeado toda la noche? Mantén el móvil enchufado: el GPS continuo consume mucha batería.';
+
+  @override
+  String get anchorDisclaimer =>
+      'La alarma de fondeo es una ayuda de mejor esfuerzo, no un sistema de seguridad certificado. Mantén siempre una guardia adecuada.';
+
+  @override
+  String get anchorPermissionDenied =>
+      'Se necesita permiso de ubicación para la alarma de fondeo.';
+
+  @override
+  String get anchorNoFix =>
+      'Esperando señal GPS: inténtalo de nuevo en un momento.';
+
+  @override
+  String get anchorResumed => 'Vigilancia de fondeo reanudada';
+
+  @override
+  String get anchorTripActiveBlock =>
+      'Detén la grabación de la travesía antes de iniciar la alarma de fondeo.';
+
+  @override
+  String get paywallReasonAnchor =>
+      'Desbloquea la alarma de fondeo con Navis Pro';
+
+  @override
+  String get proBenefitAnchor =>
+      'Alarma de fondeo: una alarma sonora si tu barco garrea';
 }

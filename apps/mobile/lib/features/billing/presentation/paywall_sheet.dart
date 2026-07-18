@@ -36,6 +36,7 @@ List<(IconData, String)> _proBenefits(AppLocalizations l) => [
       (Icons.workspace_premium_rounded, l.proBenefitPassport),
       (Icons.insights_rounded, l.proBenefitCostAnalytics),
       (Icons.calendar_month_rounded, l.proBenefitShared),
+      (Icons.anchor_rounded, l.proBenefitAnchor),
       (Icons.notifications_active_rounded, l.proBenefitReminders),
       (Icons.directions_boat_rounded, l.proBenefitBoats),
       (Icons.groups_rounded, l.proBenefitGroups),

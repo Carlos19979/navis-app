@@ -120,8 +120,46 @@ the 9-journey E2E suite on the simulator. Analysis in
 **Decided (2026-07-17):** fuel log scrapped (expenses already cover the money and
 the per-trip fuel field gives basic L/NM). Instead: **expenses screen redesign**
 (month/year period selector + category/date filters instead of one infinite list
-with a grand total) — planned, not built. **Anchor alarm (B1)** chosen as the
-next big Pro feature — planned, not built.
+with a grand total) — done. **Anchor alarm (B1)** chosen as the next big Pro
+feature — done (see below).
+
+## Anchor watch (B1) — Pro (2026-07-18)
+
+Anchor-drift alarm, the sector's classic paid single-function app (Anchor Pro,
+AnchorSafe). Reuses ~70% of existing infra; new feature lives in
+`features/anchor/`. Plan in `.claude/plans/refactored-bouncing-hamming.md`.
+
+- **Scope v1 — practical parity WITHOUT iOS Critical Alerts.** Matches Anchor
+  Pro (background location + `audio` background mode so the alarm sounds while
+  locked + local notification) but does **not** pursue Apple's Critical Alerts
+  entitlement (would sound through silent/DND but needs Apple approval —
+  deferred to a v2). Ships with a best-effort reliability disclaimer, like the
+  whole sector ("keep your phone plugged in overnight").
+- **Provider** `anchor_watch_provider.dart` (`StateNotifier`, NOT autoDispose):
+  drop anchor at the current fix → arm → background-capable `getPositionStream`
+  drives a drift check (`DistanceUtils.calculateDistance` × 1852 → metres).
+  Anti-false-alarm: ignores fixes with accuracy worse than the radius + requires
+  2 consecutive out-of-circle fixes. Default radius 40 m (clamp 15–150).
+  Methods: dropAnchor / adjustRadius / recenter / silenceAlarm / disarm /
+  recoverWatch / ensureStream.
+- **Persistence**: singleton `anchor_watch` row (sqlite v4, `local_database.dart`)
+  survives an app kill; the dashboard silently re-arms it on relaunch (mirrors
+  the trip-recording recover flow).
+- **Alarm** `core/alarm/alarm_service.dart`: looping `assets/sounds/anchor_alarm.wav`
+  (audioplayers), sustained vibration, high-importance notification channel
+  (`anchor-alarm`, full-screen intent on Android). Initialised in `main.dart`.
+- **Gating**: `Plan.CanUseAnchorAlarm()` → `Entitlements.anchor_alarm` →
+  `Account.anchorAlarm`; **client-only** (no server endpoint), UI-gated via
+  `showPaywall`. Entry from the focus dashboard (blocked while a trip is
+  recording — both use the GPS stream).
+- **Native**: iOS `Info.plist` adds `audio` to `UIBackgroundModes`; Android adds
+  `USE_FULL_SCREEN_INTENT` + `VIBRATE`. New deps: `flutter_local_notifications`,
+  `audioplayers`, `vibration`, `wakelock_plus`.
+- **Tests**: 9 provider unit tests (arm/drift/silence/recenter/disarm/recover/
+  accuracy-filter, fake GPS + mocked alarm), 1 screen widget test (Free paywall
+  gate), Go `CanUseAnchorAlarm` + DTO tests, E2E journey **J10** (arm → drift →
+  alarm banner → silence → disarm; disarms at the end so the long-lived watch
+  doesn't leak into later journeys). EN+ES i18n.
 
 ## Boat sharing — security model (important)
 - Table `boat_members(boat_id, user_id, role, can_record_trips, can_manage_expenses, can_manage_maintenance, can_view_documents, can_manage_documents)` + `boats.share_code`. A new member joins **view-only** (only `can_view_documents` true). The `role` column is legacy/unused; enforcement is on the flags.

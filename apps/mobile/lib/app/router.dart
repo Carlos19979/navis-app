@@ -10,6 +10,7 @@ import 'package:navis_mobile/features/boat/presentation/screens/boat_dashboard_s
 import 'package:navis_mobile/features/boat/presentation/screens/boat_detail_screen.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/boat_form_screen.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/document_detail_screen.dart';
+import 'package:navis_mobile/features/anchor/presentation/screens/anchor_alarm_screen.dart';
 import 'package:navis_mobile/features/charts/presentation/screens/chart_screen.dart';
 import 'package:navis_mobile/features/documents/presentation/screens/document_form_screen.dart';
 import 'package:navis_mobile/features/documents/presentation/screens/document_list_screen.dart';
@@ -232,6 +233,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final boatId = state.pathParameters['id']!;
           return BookingsScreen(boatId: boatId);
+        },
+      ),
+      GoRoute(
+        path: '/boats/:id/anchor',
+        builder: (context, state) {
+          final boatId = state.pathParameters['id']!;
+          return AnchorAlarmScreen(boatId: boatId);
         },
       ),
       GoRoute(
