@@ -20,6 +20,7 @@ class Account {
     required this.exportPassport,
     required this.sharedCoordination,
     required this.anomalyAlerts,
+    required this.anchorAlarm,
   });
 
   factory Account.fromJson(Map<String, dynamic> json) {
@@ -53,6 +54,7 @@ class Account {
       exportPassport: proCap('export_passport'),
       sharedCoordination: proCap('shared_coordination'),
       anomalyAlerts: proCap('anomaly_alerts'),
+      anchorAlarm: proCap('anchor_alarm'),
     );
   }
 
@@ -88,6 +90,9 @@ class Account {
 
   /// Anomaly alerts (e.g. fuel-per-mile outliers).
   final bool anomalyAlerts;
+
+  /// Anchor watch: drop an anchor position + swing radius and get a drift alarm.
+  final bool anchorAlarm;
 
   /// Display label for the plan.
   String get planLabel => isPro ? 'Pro' : 'Free';

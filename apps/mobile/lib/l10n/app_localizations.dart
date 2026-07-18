@@ -4249,6 +4249,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not export your data. Try again.'**
   String get exportDataFailed;
+
+  /// No description provided for @anchorAlarmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Anchor watch'**
+  String get anchorAlarmTitle;
+
+  /// No description provided for @anchorDropHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop anchor here'**
+  String get anchorDropHere;
+
+  /// No description provided for @anchorDisarm.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop watch'**
+  String get anchorDisarm;
+
+  /// No description provided for @anchorRadius.
+  ///
+  /// In en, this message translates to:
+  /// **'Radius'**
+  String get anchorRadius;
+
+  /// No description provided for @anchorDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance'**
+  String get anchorDistance;
+
+  /// No description provided for @anchorMaxDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Max swing'**
+  String get anchorMaxDistance;
+
+  /// No description provided for @anchorGpsAccuracy.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS'**
+  String get anchorGpsAccuracy;
+
+  /// No description provided for @anchorDragTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Dragging anchor!'**
+  String get anchorDragTitle;
+
+  /// No description provided for @anchorDragBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your boat has drifted outside the swing circle.'**
+  String get anchorDragBody;
+
+  /// No description provided for @anchorSilence.
+  ///
+  /// In en, this message translates to:
+  /// **'Silence'**
+  String get anchorSilence;
+
+  /// No description provided for @anchorSilenced.
+  ///
+  /// In en, this message translates to:
+  /// **'Silenced'**
+  String get anchorSilenced;
+
+  /// No description provided for @anchorRecenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-center'**
+  String get anchorRecenter;
+
+  /// No description provided for @anchorKeepPluggedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Anchored for the night? Keep your phone plugged in — continuous GPS drains the battery.'**
+  String get anchorKeepPluggedIn;
+
+  /// No description provided for @anchorDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Anchor watch is a best-effort aid, not a certified safety system. Always keep a proper watch.'**
+  String get anchorDisclaimer;
+
+  /// No description provided for @anchorPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Location permission is required for the anchor watch.'**
+  String get anchorPermissionDenied;
+
+  /// No description provided for @anchorNoFix.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for a GPS fix — try again in a moment.'**
+  String get anchorNoFix;
+
+  /// No description provided for @anchorResumed.
+  ///
+  /// In en, this message translates to:
+  /// **'Anchor watch resumed'**
+  String get anchorResumed;
+
+  /// No description provided for @anchorTripActiveBlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop the trip recording before starting an anchor watch.'**
+  String get anchorTripActiveBlock;
+
+  /// No description provided for @paywallReasonAnchor.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock the anchor watch with Navis Pro'**
+  String get paywallReasonAnchor;
+
+  /// No description provided for @proBenefitAnchor.
+  ///
+  /// In en, this message translates to:
+  /// **'Anchor watch: a loud alarm if your boat drags'**
+  String get proBenefitAnchor;
 }
 
 class _AppLocalizationsDelegate

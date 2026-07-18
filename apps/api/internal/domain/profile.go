@@ -106,6 +106,12 @@ func (p Plan) CanUseAnomalyAlerts() bool {
 	return p == PlanPro
 }
 
+// CanUseAnchorAlarm reports whether the plan unlocks the anchor watch (drop an
+// anchor position + swing radius and get a loud drift alarm). Pro only.
+func (p Plan) CanUseAnchorAlarm() bool {
+	return p == PlanPro
+}
+
 // Valid reports whether p is a known plan.
 func (p Plan) Valid() bool {
 	return p == PlanFree || p == PlanPro

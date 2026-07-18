@@ -2208,4 +2208,70 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get exportDataFailed => 'Could not export your data. Try again.';
+
+  @override
+  String get anchorAlarmTitle => 'Anchor watch';
+
+  @override
+  String get anchorDropHere => 'Drop anchor here';
+
+  @override
+  String get anchorDisarm => 'Stop watch';
+
+  @override
+  String get anchorRadius => 'Radius';
+
+  @override
+  String get anchorDistance => 'Distance';
+
+  @override
+  String get anchorMaxDistance => 'Max swing';
+
+  @override
+  String get anchorGpsAccuracy => 'GPS';
+
+  @override
+  String get anchorDragTitle => 'Dragging anchor!';
+
+  @override
+  String get anchorDragBody =>
+      'Your boat has drifted outside the swing circle.';
+
+  @override
+  String get anchorSilence => 'Silence';
+
+  @override
+  String get anchorSilenced => 'Silenced';
+
+  @override
+  String get anchorRecenter => 'Re-center';
+
+  @override
+  String get anchorKeepPluggedIn =>
+      'Anchored for the night? Keep your phone plugged in — continuous GPS drains the battery.';
+
+  @override
+  String get anchorDisclaimer =>
+      'Anchor watch is a best-effort aid, not a certified safety system. Always keep a proper watch.';
+
+  @override
+  String get anchorPermissionDenied =>
+      'Location permission is required for the anchor watch.';
+
+  @override
+  String get anchorNoFix => 'Waiting for a GPS fix — try again in a moment.';
+
+  @override
+  String get anchorResumed => 'Anchor watch resumed';
+
+  @override
+  String get anchorTripActiveBlock =>
+      'Stop the trip recording before starting an anchor watch.';
+
+  @override
+  String get paywallReasonAnchor => 'Unlock the anchor watch with Navis Pro';
+
+  @override
+  String get proBenefitAnchor =>
+      'Anchor watch: a loud alarm if your boat drags';
 }

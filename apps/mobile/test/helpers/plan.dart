@@ -21,6 +21,7 @@ Account makeAccount({
   bool? exportPassport,
   bool? sharedCoordination,
   bool? anomalyAlerts,
+  bool? anchorAlarm,
 }) {
   final pro = isPro ?? plan == 'pro';
   return Account(
@@ -38,6 +39,7 @@ Account makeAccount({
     exportPassport: exportPassport ?? pro,
     sharedCoordination: sharedCoordination ?? pro,
     anomalyAlerts: anomalyAlerts ?? pro,
+    anchorAlarm: anchorAlarm ?? pro,
   );
 }
 

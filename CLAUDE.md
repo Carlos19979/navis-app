@@ -364,6 +364,16 @@ Use these Dart 3.x features everywhere they apply:
 - `flutter_map` with MapLibre renderer. OpenSeaMap tiles as nautical layer.
 - GPS tracking with `geolocator`.
 - Offline charts: `flutter_map_mbtiles` for local MBTiles/SQLite.
+- **Anchor watch** (Pro): `features/anchor/` — drop an anchor position + swing
+  radius (`CircleLayer`) and get a loud drift alarm. Reuses the trip-recording
+  GPS/persistence pattern (background-capable `getPositionStream`, singleton
+  `anchor_watch` sqlite row that survives an app kill, recover-on-relaunch from
+  the dashboard). The alarm (`core/alarm/alarm_service.dart`) loops a bundled
+  sound (`assets/sounds/anchor_alarm.wav`) via `audioplayers` + the `audio`
+  background mode, `vibration`, and a high-importance `flutter_local_notifications`
+  channel (full-screen intent on Android). Screen keeps awake via `wakelock_plus`.
+  NOT an iOS Critical Alert (that needs Apple's entitlement — deferred); ships
+  with a best-effort reliability disclaimer.
 
 ### Flutter — Offline
 
@@ -431,7 +441,7 @@ Use these Dart 3.x features everywhere they apply:
 - PostgreSQL with PostGIS enabled.
 - Key tables: `profiles` (plan), `boats` (+`share_code`, `photo_urls[]` gallery), `boat_members` (shared crew/co-owners), `documents` (computed `status` column, `custom_name`), `trips` (+ group/regatta, `share_token`), `trip_tracks` (PostGIS), `trip_participants` (RSVP), `trip_checklist_items`, `maintenance_logs` (+`task_id` FK, `photo_urls[]`), `maintenance_tasks` (recurring service tasks, `interval_months`/`interval_hours`), `expenses`, `expense_splits` (per-member shares, `settled_at`), `bookings` (boat-time reservations, API-validated overlap), `groups`, `group_members`, `events` (+ stream/tracking urls), `event_interests`, `notification_logs`, `maintenance_notification_logs`, `sent_notifications`.
 - RLS enforces `user_id = auth.uid()` on user tables. Shared boats: members READ a boat + its sub-resources (enforced in the Go service via `boatRepo.HasAccess`, reading as the owner's scope); all WRITES stay owner-only. Events readable by all, writable by admins.
-- Plans: `profiles.plan` ∈ `free|pro`. Single source of gating: `CanUse*` methods in `apps/api/internal/domain/profile.go` → `Entitlements` DTO → `Account` in Flutter → `showPaywall`. Current gates: boat count (`MaxBoats` 1/3), group creation (Pro), document-expiry reminders (`ReminderDocLimit` Free=1), maintenance attachments / log photos (`AttachmentLimit` Free=1), boat photo gallery (`GalleryLimit` Free=1 cover/Pro 10), maintenance schedules + due-reminder cron (Pro), full readiness score (Free sees documents block only), cost analytics (Pro), passport PDF export (Pro), shared-boat coordination — bookings + expense splits (Pro), fuel-anomaly alerts (Pro). Enforced in services, returns 402. Paid tier driven by RevenueCat webhook (`POST /api/v1/webhooks/revenuecat`); `PUT /me/plan` is a dev-only switcher (debug builds / non-production). A B2B "fleet" tier is future work.
+- Plans: `profiles.plan` ∈ `free|pro`. Single source of gating: `CanUse*` methods in `apps/api/internal/domain/profile.go` → `Entitlements` DTO → `Account` in Flutter → `showPaywall`. Current gates: boat count (`MaxBoats` 1/3), group creation (Pro), document-expiry reminders (`ReminderDocLimit` Free=1), maintenance attachments / log photos (`AttachmentLimit` Free=1), boat photo gallery (`GalleryLimit` Free=1 cover/Pro 10), maintenance schedules + due-reminder cron (Pro), full readiness score (Free sees documents block only), cost analytics (Pro), passport PDF export (Pro), shared-boat coordination — bookings + expense splits (Pro), fuel-anomaly alerts (Pro), anchor watch (Pro, client-only — no server endpoint, gated in the app via `showPaywall`). Enforced in services, returns 402 (except the client-only anchor watch). Paid tier driven by RevenueCat webhook (`POST /api/v1/webhooks/revenuecat`); `PUT /me/plan` is a dev-only switcher (debug builds / non-production). A B2B "fleet" tier is future work.
 - Migrations in `packages/supabase/migrations/` numbered `00001_`, `00002_`, etc.
 - Document types: itb, insurance_rc, insurance_full, life_raft, extinguisher, flares, first_aid, medical_cert, radio_cert, navigation_license, custom.
 - Document status is a computed column: expired / critical (30d) / warning (90d) / ok.
@@ -594,6 +604,7 @@ code → local checks → push → PR → CI green → merge → delete branch
 - Flutter 3.32, Dart 3.x, Riverpod 2, GoRouter 14, Dio 5, supabase_flutter 2.5
 - flutter_map 7, geolocator 12, drift/sqflite, mocktail, cached_network_image
 - purchases_flutter (RevenueCat SDK), pdf (client-side passport export)
+- audioplayers, flutter_local_notifications, vibration, wakelock_plus (anchor-watch alarm)
 - Supabase (Auth, Storage, PostGIS, RLS)
 - Novu (notification orchestration: push + email + in-app), Resend (email delivery)
 - Firebase Messaging (push transport layer in Flutter)

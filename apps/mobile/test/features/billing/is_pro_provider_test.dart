@@ -19,6 +19,7 @@ Account account({required bool isPro}) => Account(
       exportPassport: isPro,
       sharedCoordination: isPro,
       anomalyAlerts: isPro,
+      anchorAlarm: isPro,
     );
 
 void main() {

@@ -21,7 +21,7 @@ class LocalDatabase {
 
     return openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -82,6 +82,7 @@ class LocalDatabase {
       'CREATE INDEX idx_mutations_created ON pending_mutations(created_at)',
     );
     await _createRecordingTables(db);
+    await _createAnchorTable(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -109,6 +110,9 @@ class LocalDatabase {
     if (oldVersion < 3) {
       await _createRecordingTables(db);
     }
+    if (oldVersion < 4) {
+      await _createAnchorTable(db);
+    }
   }
 
   /// Crash-safe trip recording: the active session and every GPS fix are
@@ -134,6 +138,21 @@ class LocalDatabase {
         timestamp TEXT NOT NULL,
         speed_knots REAL,
         handed_off INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
+  }
+
+  /// A single armed anchor watch (anchor position + swing radius), persisted so
+  /// an armed watch survives an app kill and can be re-armed on next launch.
+  Future<void> _createAnchorTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS anchor_watch (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        boat_id TEXT,
+        anchor_lat REAL NOT NULL,
+        anchor_lon REAL NOT NULL,
+        radius_m REAL NOT NULL,
+        set_at TEXT NOT NULL
       )
     ''');
   }
@@ -328,6 +347,47 @@ class LocalDatabase {
       where: 'seq <= ?',
       whereArgs: [maxSeq],
     );
+  }
+
+  // ── Anchor watch persistence ──────────────────────────────────────────
+
+  /// Arms (or replaces) the single anchor watch.
+  Future<void> startAnchorWatch({
+    String? boatId,
+    required double anchorLat,
+    required double anchorLon,
+    required double radiusM,
+    required DateTime setAt,
+  }) async {
+    final db = await database;
+    await db.insert(
+      'anchor_watch',
+      {
+        'id': 1,
+        'boat_id': boatId,
+        'anchor_lat': anchorLat,
+        'anchor_lon': anchorLon,
+        'radius_m': radiusM,
+        'set_at': setAt.toIso8601String(),
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<Map<String, dynamic>?> getAnchorWatch() async {
+    final db = await database;
+    final rows = await db.query('anchor_watch', where: 'id = 1');
+    return rows.isEmpty ? null : rows.first;
+  }
+
+  Future<void> updateAnchorWatch(Map<String, dynamic> fields) async {
+    final db = await database;
+    await db.update('anchor_watch', fields, where: 'id = 1');
+  }
+
+  Future<void> clearAnchorWatch() async {
+    final db = await database;
+    await db.delete('anchor_watch');
   }
 
   Future<void> close() async {
