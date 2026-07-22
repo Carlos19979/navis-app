@@ -74,6 +74,22 @@ func (r *ExpenseSplitRepo) ListByExpense(ctx context.Context, expenseID string) 
 	return out, rows.Err()
 }
 
+// GetByID returns a single split by its ID.
+func (r *ExpenseSplitRepo) GetByID(ctx context.Context, splitID string) (*domain.ExpenseSplit, error) {
+	var s domain.ExpenseSplit
+	err := r.pool.QueryRow(ctx,
+		`SELECT id, expense_id, user_id, share_amount, settled_at, created_at
+		 FROM expense_splits WHERE id = $1`, splitID).
+		Scan(&s.ID, &s.ExpenseID, &s.UserID, &s.ShareAmount, &s.SettledAt, &s.CreatedAt)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, domain.ErrNotFound
+		}
+		return nil, fmt.Errorf("getting split %s: %w", splitID, err)
+	}
+	return &s, nil
+}
+
 // SummaryByBoat rolls up splits per expense for a boat, including the viewer's
 // own share and settled state. Only expenses that have splits are returned.
 func (r *ExpenseSplitRepo) SummaryByBoat(ctx context.Context, boatID, viewerID string) ([]domain.ExpenseSplitSummary, error) {

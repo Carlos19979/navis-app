@@ -52,6 +52,25 @@ func (s *SharedService) assertAccess(ctx context.Context, userID, boatID string)
 	return err
 }
 
+// notifyBoatCrew notifies everyone with access to a boat (owner + members)
+// except the acting user, about a shared-boat event. Best-effort.
+func (s *SharedService) notifyBoatCrew(ctx context.Context, boatID, actorID, workflow, title, body string) {
+	if s.notifier == nil {
+		return
+	}
+	boat, err := s.boats.GetByIDAccessible(ctx, actorID, boatID)
+	if err != nil {
+		return
+	}
+	ids := []string{boat.UserID}
+	if members, mErr := s.boats.ListMembers(ctx, boatID); mErr == nil {
+		for i := range members {
+			ids = append(ids, members[i].UserID)
+		}
+	}
+	s.notifier.SendMany(ctx, ids, actorID, workflow, title, body, "boat", boatID)
+}
+
 // ─── Bookings ───────────────────────────────────────────────────────────────
 
 // ListBookings returns a boat's bookings (any member; Pro).
@@ -92,7 +111,15 @@ func (s *SharedService) CreateBooking(ctx context.Context, b *domain.Booking, fo
 	if b.Status == "" {
 		b.Status = domain.BookingConfirmed
 	}
-	return s.bookings.Create(ctx, b)
+	created, err := s.bookings.Create(ctx, b)
+	if err != nil {
+		return nil, err
+	}
+	// Notify the rest of the crew that the boat has been reserved.
+	name := s.notifier.UserName(ctx, b.UserID)
+	s.notifyBoatCrew(ctx, b.BoatID, b.UserID, WorkflowBookingCreated,
+		"Reserva creada", fmt.Sprintf("%s ha reservado el barco", name))
+	return created, nil
 }
 
 // DeleteBooking removes a booking (owner of the row; Pro).
@@ -103,7 +130,14 @@ func (s *SharedService) DeleteBooking(ctx context.Context, userID, boatID, id st
 	if err := s.assertAccess(ctx, userID, boatID); err != nil {
 		return fmt.Errorf("delete booking: %w", err)
 	}
-	return s.bookings.Delete(ctx, boatID, id)
+	if err := s.bookings.Delete(ctx, boatID, id); err != nil {
+		return err
+	}
+	// Notify the rest of the crew that a reservation was cancelled.
+	name := s.notifier.UserName(ctx, userID)
+	s.notifyBoatCrew(ctx, boatID, userID, WorkflowBookingCancelled,
+		"Reserva cancelada", fmt.Sprintf("%s ha cancelado una reserva", name))
+	return nil
 }
 
 // ─── Expense splits ───────────────────────────────────────────────────────────
@@ -181,5 +215,17 @@ func (s *SharedService) SettleSplit(ctx context.Context, userID, boatID, splitID
 	if !ok || !perms.CanManageExpenses {
 		return fmt.Errorf("settle split: %w", domain.ErrForbidden)
 	}
-	return s.splits.SetSettled(ctx, splitID, settled)
+	if err := s.splits.SetSettled(ctx, splitID, settled); err != nil {
+		return err
+	}
+	// Tell the member their share was marked as paid (only on settle, not unsettle).
+	if settled && s.notifier != nil {
+		if sp, gErr := s.splits.GetByID(ctx, splitID); gErr == nil && sp.UserID != userID {
+			s.notifier.Send(ctx, sp.UserID, WorkflowExpenseSettled,
+				"Gasto saldado",
+				"Tu parte de un gasto compartido se ha marcado como pagada",
+				"boat", boatID)
+		}
+	}
+	return nil
 }

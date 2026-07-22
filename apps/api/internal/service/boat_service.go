@@ -13,11 +13,12 @@ import (
 type BoatService struct {
 	repo     port.BoatRepository
 	profiles port.ProfileRepository
+	notifier *Notifier
 }
 
 // NewBoatService creates a new BoatService.
-func NewBoatService(repo port.BoatRepository, profiles port.ProfileRepository) *BoatService {
-	return &BoatService{repo: repo, profiles: profiles}
+func NewBoatService(repo port.BoatRepository, profiles port.ProfileRepository, notifier *Notifier) *BoatService {
+	return &BoatService{repo: repo, profiles: profiles, notifier: notifier}
 }
 
 // Create persists a new boat after basic validation and plan-limit checks.
@@ -164,6 +165,14 @@ func (s *BoatService) JoinByCode(ctx context.Context, userID, code string) (*dom
 	if err := s.repo.AddMember(ctx, boatID, userID, "viewer"); err != nil {
 		return nil, fmt.Errorf("joining boat: %w", err)
 	}
+	// Notify the boat owner that someone joined their boat.
+	if s.notifier != nil {
+		name := s.notifier.UserName(ctx, userID)
+		s.notifier.Send(ctx, ownerID, WorkflowBoatMemberJoined,
+			"Nuevo tripulante",
+			fmt.Sprintf("%s se ha unido a tu barco", name),
+			"boat", boatID)
+	}
 	return s.repo.GetByIDAccessible(ctx, userID, boatID)
 }
 
@@ -177,7 +186,17 @@ func (s *BoatService) ListMembers(ctx context.Context, userID, boatID string) ([
 
 // RemoveMember revokes a member's access. Owner only (enforced in repo).
 func (s *BoatService) RemoveMember(ctx context.Context, ownerID, boatID, memberUserID string) error {
-	return s.repo.RemoveMember(ctx, ownerID, boatID, memberUserID)
+	if err := s.repo.RemoveMember(ctx, ownerID, boatID, memberUserID); err != nil {
+		return err
+	}
+	// Notify the member that their access was revoked.
+	if s.notifier != nil {
+		s.notifier.Send(ctx, memberUserID, WorkflowBoatMemberRemoved,
+			"Acceso revocado",
+			"Ya no tienes acceso a un barco compartido",
+			"boat", boatID)
+	}
+	return nil
 }
 
 // SetMemberPermissions updates a member's granular permission flags. Owner only.

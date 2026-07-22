@@ -24,7 +24,7 @@ func galleryBoatRepo() *mockBoatRepo {
 func TestBoatService_Create_FreeGalleryPhotoHitsPlanLimit(t *testing.T) {
 	t.Parallel()
 
-	svc := NewBoatService(galleryBoatRepo(), &testutil.FakeProfileRepo{Plan: domain.PlanFree})
+	svc := NewBoatService(galleryBoatRepo(), &testutil.FakeProfileRepo{Plan: domain.PlanFree}, nil)
 	boat := newTestBoat()
 	boat.PhotoURLs = urls(1)
 
@@ -37,7 +37,7 @@ func TestBoatService_Create_FreeGalleryPhotoHitsPlanLimit(t *testing.T) {
 func TestBoatService_Create_ProGalleryWithinLimit(t *testing.T) {
 	t.Parallel()
 
-	svc := NewBoatService(galleryBoatRepo(), &testutil.FakeProfileRepo{Plan: domain.PlanPro})
+	svc := NewBoatService(galleryBoatRepo(), &testutil.FakeProfileRepo{Plan: domain.PlanPro}, nil)
 	boat := newTestBoat()
 	boat.PhotoURLs = urls(9) // cover + 9 extras = GalleryLimit(10)
 
@@ -53,7 +53,7 @@ func TestBoatService_Create_ProGalleryWithinLimit(t *testing.T) {
 func TestBoatService_Update_ProGalleryOverLimit(t *testing.T) {
 	t.Parallel()
 
-	svc := NewBoatService(galleryBoatRepo(), &testutil.FakeProfileRepo{Plan: domain.PlanPro})
+	svc := NewBoatService(galleryBoatRepo(), &testutil.FakeProfileRepo{Plan: domain.PlanPro}, nil)
 	boat := newTestBoat()
 	boat.PhotoURLs = urls(10) // cover + 10 extras exceeds GalleryLimit(10)
 
@@ -66,7 +66,7 @@ func TestBoatService_Update_ProGalleryOverLimit(t *testing.T) {
 func TestBoatService_Update_NormalizesNilGallery(t *testing.T) {
 	t.Parallel()
 
-	svc := NewBoatService(galleryBoatRepo(), &testutil.FakeProfileRepo{Plan: domain.PlanFree})
+	svc := NewBoatService(galleryBoatRepo(), &testutil.FakeProfileRepo{Plan: domain.PlanFree}, nil)
 	boat := newTestBoat()
 	boat.PhotoURLs = nil
 
@@ -82,7 +82,7 @@ func TestBoatService_Update_NormalizesNilGallery(t *testing.T) {
 func TestBoatService_Update_GalleryHardCap(t *testing.T) {
 	t.Parallel()
 
-	svc := NewBoatService(galleryBoatRepo(), &testutil.FakeProfileRepo{Plan: domain.PlanPro})
+	svc := NewBoatService(galleryBoatRepo(), &testutil.FakeProfileRepo{Plan: domain.PlanPro}, nil)
 	boat := newTestBoat()
 	boat.PhotoURLs = urls(11)
 

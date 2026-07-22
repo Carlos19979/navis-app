@@ -149,6 +149,20 @@ func (s *RegattaService) Cancel(ctx context.Context, userID, tripID string) (*do
 	if err != nil {
 		return nil, fmt.Errorf("cancelling trip %s: %w", tripID, err)
 	}
+
+	// Notify the other active group members that the regatta was cancelled.
+	if s.notifier != nil && trip.GroupID != nil {
+		if members, mErr := s.memberRepo.ListMembers(ctx, *trip.GroupID); mErr == nil {
+			body := fmt.Sprintf("Regata cancelada: %s", regattaTitle(trip))
+			for i := range members {
+				if members[i].UserID == userID {
+					continue
+				}
+				s.notifier.Send(ctx, members[i].UserID, WorkflowRegattaCancelled,
+					"Regata cancelada", body, "regatta", trip.ID)
+			}
+		}
+	}
 	return updated, nil
 }
 

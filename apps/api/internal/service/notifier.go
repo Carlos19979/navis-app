@@ -18,6 +18,21 @@ const (
 	WorkflowGroupRequestApproved = "group-request-approved"
 	WorkflowEventLive            = "event-live"
 	WorkflowExpenseSplit         = "expense-split"
+
+	// Added in the "more notifications" round — one workflow per event, each
+	// must also exist (active) in the Novu dashboard with the same identifier.
+	WorkflowRegattaCancelled     = "regatta-cancelled"
+	WorkflowBookingCreated       = "booking-created"
+	WorkflowBookingCancelled     = "booking-cancelled"
+	WorkflowGroupRequestRejected = "group-request-rejected"
+	WorkflowGroupMemberRemoved   = "group-member-removed"
+	WorkflowGroupMemberLeft      = "group-member-left"
+	WorkflowGroupJoined          = "group-joined"
+	WorkflowExpenseSettled       = "expense-settled"
+	WorkflowBoatMemberJoined     = "boat-member-joined"
+	WorkflowBoatMemberRemoved    = "boat-member-removed"
+	WorkflowTripCompleted        = "trip-completed"
+	WorkflowMaintenanceLogged    = "maintenance-logged"
 )
 
 // Notifier centralises push-notification sending. It is best-effort: failures
@@ -112,6 +127,20 @@ func (n *Notifier) Send(ctx context.Context, userID, workflow, title, body, link
 	default:
 		n.logger.Warn("notifier: queue full, dropping notification",
 			"workflow", workflow, "user_id", userID)
+	}
+}
+
+// SendMany fans a workflow out to several recipients, skipping the acting user
+// (exclude) and any empty IDs. Best-effort, like Send.
+func (n *Notifier) SendMany(ctx context.Context, userIDs []string, exclude, workflow, title, body, linkType, linkID string) {
+	if n == nil {
+		return
+	}
+	for _, uid := range userIDs {
+		if uid == "" || uid == exclude {
+			continue
+		}
+		n.Send(ctx, uid, workflow, title, body, linkType, linkID)
 	}
 }
 

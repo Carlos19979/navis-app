@@ -16,12 +16,13 @@ type MaintenanceService struct {
 	exp      port.ExpenseRepository
 	boats    port.BoatRepository
 	profiles port.ProfileRepository
+	notifier *Notifier
 	now      func() time.Time
 }
 
 // NewMaintenanceService creates a new MaintenanceService.
-func NewMaintenanceService(maint port.MaintenanceRepository, tasks port.MaintenanceTaskRepository, exp port.ExpenseRepository, boats port.BoatRepository, profiles port.ProfileRepository) *MaintenanceService {
-	return &MaintenanceService{maint: maint, tasks: tasks, exp: exp, boats: boats, profiles: profiles, now: time.Now}
+func NewMaintenanceService(maint port.MaintenanceRepository, tasks port.MaintenanceTaskRepository, exp port.ExpenseRepository, boats port.BoatRepository, profiles port.ProfileRepository, notifier *Notifier) *MaintenanceService {
+	return &MaintenanceService{maint: maint, tasks: tasks, exp: exp, boats: boats, profiles: profiles, notifier: notifier, now: time.Now}
 }
 
 // maxLogPhotos is the hard cap of photos per maintenance log (any plan).
@@ -93,7 +94,28 @@ func (s *MaintenanceService) AddLog(ctx context.Context, log *domain.Maintenance
 	if err := s.checkLogPhotos(ctx, log); err != nil {
 		return nil, fmt.Errorf("add maintenance: %w", err)
 	}
-	return s.maint.Create(ctx, log)
+	created, err := s.maint.Create(ctx, log)
+	if err != nil {
+		return nil, err
+	}
+	// Notify the rest of the boat's crew that maintenance was logged.
+	if s.notifier != nil && log.BoatID != "" {
+		var ids []string
+		if boat, bErr := s.boats.GetByIDAccessible(ctx, log.UserID, log.BoatID); bErr == nil {
+			ids = append(ids, boat.UserID)
+		}
+		if members, mErr := s.boats.ListMembers(ctx, log.BoatID); mErr == nil {
+			for i := range members {
+				ids = append(ids, members[i].UserID)
+			}
+		}
+		name := s.notifier.UserName(ctx, log.UserID)
+		s.notifier.SendMany(ctx, ids, log.UserID, WorkflowMaintenanceLogged,
+			"Mantenimiento registrado",
+			fmt.Sprintf("%s ha registrado un mantenimiento", name),
+			"boat", log.BoatID)
+	}
+	return created, nil
 }
 
 // ListLogs returns a boat's maintenance logs (owner or any member).
