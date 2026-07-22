@@ -449,8 +449,14 @@ Use these Dart 3.x features everywhere they apply:
 ## Cron Job & Notifications
 
 - Two `robfig/cron/v3` checkers: **document-expiry** (`ExpirationChecker`, 08:00 UTC) against each doc's `alert_days` array (default 30, 7), deduped in `notification_logs`; and **maintenance-due** (`MaintenanceChecker`, 08:15 UTC, Pro-gated) for tasks in due_soon/overdue state, deduped in `maintenance_notification_logs` by a `due_key` that changes after servicing.
-- Trigger Novu workflows `document-expiry` / `maintenance-due`. Novu delivers via FCM (push) and Resend (email).
-- Besides the crons, service flows trigger 7 more Novu workflows (see `internal/service/notifier.go`): `regatta-rsvp`, `regatta-scheduled`, `regatta-reminder`, `group-join-request`, `group-request-approved`, `event-live`, `expense-split`. **9 workflows total.** The notifier is async (fire-and-forget goroutines with shutdown coordination).
+- Both crons trigger the single `reminders` Novu workflow (payload carries title/body + deep-link). Novu delivers via FCM (push) and Resend (email).
+- Notifications are grouped by domain into **5 Novu workflows** (the Novu plan caps total workflows at 20; delivery is generic — each trigger carries its own title/body + `{type,id}` deep-link, so one workflow per domain serves many event types). See the `const` block in `internal/service/notifier.go`: per-event names (e.g. `WorkflowRegattaScheduled`) are Go aliases that all resolve to one of these five identifiers:
+  - `regatta-updates` — regatta scheduled / RSVP / reminder / cancelled
+  - `group-updates` — join request / approved / rejected / member removed / member left / joined
+  - `boat-activity` — expense split & settled, booking created & cancelled, boat member joined & removed, trip completed, maintenance logged
+  - `reminders` — the two crons (document-expiry, maintenance-due)
+  - `event-live` — nautical event goes live
+- The notifier is async (fire-and-forget goroutines with shutdown coordination).
 
 ## Commands
 
@@ -525,7 +531,7 @@ Note: Android emulator uses `10.0.2.2` to reach the host machine's localhost.
 
 ### Novu Setup
 
-- **Workflows (9):** `document-expiry` + `maintenance-due` (crons) + `regatta-rsvp`, `regatta-scheduled`, `regatta-reminder`, `group-join-request`, `group-request-approved`, `event-live`, `expense-split` (service flows, see `internal/service/notifier.go`). Steps per workflow: Push (FCM) → Email (Resend).
+- **Workflows (5, grouped by domain):** `regatta-updates`, `group-updates`, `boat-activity`, `reminders` (both crons), `event-live` (see the `const` block in `internal/service/notifier.go` — per-event names are Go aliases onto these five). Steps per workflow: Push (FCM) → Email (Resend).
 - **Integrations:** FCM (Service Account JSON from Firebase) + Resend (API Key).
 - **Environments:** Development and Production — each has its own API Key. Same Firebase Service Account and Resend key in both.
 - **Subscribers:** Created automatically when users register device tokens via `POST /api/v1/devices`. Subscriber ID = Supabase `user_id`.
@@ -544,7 +550,7 @@ Note: Android emulator uses `10.0.2.2` to reach the host machine's localhost.
 Go API cron (08:00 UTC)
   → detects expiring document
   → checks notification_logs (dedup)
-  → POST Novu /v1/events/trigger (workflow: document-expiry, subscriber: user_id)
+  → POST Novu /v1/events/trigger (workflow: reminders, subscriber: user_id)
     → Novu Push Step → FCM → device notification
     → Novu Email Step → Resend → notifications@aerolume.app → user inbox
 Flutter receives push via firebase_messaging → tap → deep link to document

@@ -69,8 +69,8 @@ func TestMaintenanceChecker_NotifiesProOwner(t *testing.T) {
 		t.Fatalf("triggered = %d, want 1", len(notifier.Triggered))
 	}
 	tw := notifier.Triggered[0]
-	if tw.WorkflowID != "maintenance-due" {
-		t.Errorf("workflow = %q, want maintenance-due", tw.WorkflowID)
+	if tw.WorkflowID != "reminders" {
+		t.Errorf("workflow = %q, want reminders", tw.WorkflowID)
 	}
 	if tw.SubscriberID != "user-1" {
 		t.Errorf("subscriber = %q, want user-1", tw.SubscriberID)

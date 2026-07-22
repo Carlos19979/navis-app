@@ -10,29 +10,42 @@ import (
 
 // Novu workflow identifiers. These must exist in the Novu dashboard for real
 // delivery; with no NOVU_API_KEY the provider runs in dry-run (logs only).
+// Workflows are grouped by domain into a handful of shared Novu workflows
+// (the Novu plan caps total workflows at 20). Delivery is generic — each
+// trigger carries its own title/body + deep-link in the payload — so one
+// workflow per domain serves many event types without losing information.
 const (
-	WorkflowRegattaRSVP          = "regatta-rsvp"
-	WorkflowRegattaScheduled     = "regatta-scheduled"
-	WorkflowRegattaReminder      = "regatta-reminder"
-	WorkflowGroupJoinRequest     = "group-join-request"
-	WorkflowGroupRequestApproved = "group-request-approved"
-	WorkflowEventLive            = "event-live"
-	WorkflowExpenseSplit         = "expense-split"
+	WorkflowRegattaUpdates = "regatta-updates" // regatta lifecycle
+	WorkflowGroupUpdates   = "group-updates"   // club/group membership
+	WorkflowBoatActivity   = "boat-activity"   // shared-boat crew activity
+	WorkflowReminders      = "reminders"       // cron reminders (docs, maintenance)
+	WorkflowEventLive      = "event-live"      // nautical event goes live
+)
 
-	// Added in the "more notifications" round — one workflow per event, each
-	// must also exist (active) in the Novu dashboard with the same identifier.
-	WorkflowRegattaCancelled     = "regatta-cancelled"
-	WorkflowBookingCreated       = "booking-created"
-	WorkflowBookingCancelled     = "booking-cancelled"
-	WorkflowGroupRequestRejected = "group-request-rejected"
-	WorkflowGroupMemberRemoved   = "group-member-removed"
-	WorkflowGroupMemberLeft      = "group-member-left"
-	WorkflowGroupJoined          = "group-joined"
-	WorkflowExpenseSettled       = "expense-settled"
-	WorkflowBoatMemberJoined     = "boat-member-joined"
-	WorkflowBoatMemberRemoved    = "boat-member-removed"
-	WorkflowTripCompleted        = "trip-completed"
-	WorkflowMaintenanceLogged    = "maintenance-logged"
+// Per-event aliases → the grouped workflow they belong to. Keeping the
+// event-specific names lets every call site stay expressive while all
+// triggers resolve to one of the five workflows above.
+const (
+	WorkflowRegattaScheduled = WorkflowRegattaUpdates
+	WorkflowRegattaRSVP      = WorkflowRegattaUpdates
+	WorkflowRegattaReminder  = WorkflowRegattaUpdates
+	WorkflowRegattaCancelled = WorkflowRegattaUpdates
+
+	WorkflowGroupJoinRequest     = WorkflowGroupUpdates
+	WorkflowGroupRequestApproved = WorkflowGroupUpdates
+	WorkflowGroupRequestRejected = WorkflowGroupUpdates
+	WorkflowGroupMemberRemoved   = WorkflowGroupUpdates
+	WorkflowGroupMemberLeft      = WorkflowGroupUpdates
+	WorkflowGroupJoined          = WorkflowGroupUpdates
+
+	WorkflowExpenseSplit      = WorkflowBoatActivity
+	WorkflowExpenseSettled    = WorkflowBoatActivity
+	WorkflowBookingCreated    = WorkflowBoatActivity
+	WorkflowBookingCancelled  = WorkflowBoatActivity
+	WorkflowBoatMemberJoined  = WorkflowBoatActivity
+	WorkflowBoatMemberRemoved = WorkflowBoatActivity
+	WorkflowTripCompleted     = WorkflowBoatActivity
+	WorkflowMaintenanceLogged = WorkflowBoatActivity
 )
 
 // Notifier centralises push-notification sending. It is best-effort: failures

@@ -103,8 +103,8 @@ func TestExpirationChecker_Check_TriggersWorkflows(t *testing.T) {
 	if len(notifier.Triggered) != 2 {
 		t.Fatalf("expected 2 workflow triggers (2 alert days), got %d", len(notifier.Triggered))
 	}
-	if notifier.Triggered[0].WorkflowID != "document-expiry" {
-		t.Errorf("expected workflow 'document-expiry', got %s", notifier.Triggered[0].WorkflowID)
+	if notifier.Triggered[0].WorkflowID != "reminders" {
+		t.Errorf("expected workflow 'reminders', got %s", notifier.Triggered[0].WorkflowID)
 	}
 	if notifier.Triggered[0].SubscriberID != "user-1" {
 		t.Errorf("expected subscriber user-1, got %s", notifier.Triggered[0].SubscriberID)
