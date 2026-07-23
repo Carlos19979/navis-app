@@ -51,7 +51,7 @@ etiqueta por `packageType` (Mensual/Anual), no por su ID. Pero el **entitlement 
 
 1. Play Console → tu app → *Monetize → Products → Subscriptions*.
 2. Crea las suscripciones equivalentes (mismos IDs `navis_pro_monthly` / `navis_pro_yearly`,
-   3,99 € / 29,99 €). En Play, un producto de suscripción tiene *base plans* — crea un base plan
+   8,99 € / 69,99 € (y los `navis_plus_*` a 4,99 € / 39,99 €)). En Play, un producto de suscripción tiene *base plans* — crea un base plan
    mensual y otro anual (o dos productos, como prefieras; mantén los IDs coherentes con RevenueCat).
 3. **Service account para RevenueCat.** Google Cloud → crea una service account con acceso a la
    API de Google Play Developer, descarga el JSON, y en Play Console concédele permisos de
@@ -153,7 +153,7 @@ Eventos que **conceden** Pro: `INITIAL_PURCHASE`, `RENEWAL`, `PRODUCT_CHANGE`, `
 
 | Capacidad | Free | Plus | Pro |
 |---|---|---|---|
-| Barcos | 1 | 2 | 5 |
+| Barcos | 1 | 2 | 3 |
 | Recordatorios de caducidad de documentos | 1 | ilimitados | ilimitados |
 | Mantenimiento programado + cron | ❌ | ✅ | ✅ |
 | Readiness completo | solo docs | ✅ | ✅ |

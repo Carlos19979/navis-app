@@ -75,7 +75,7 @@ void main() {
       expect(PlanTier.pro.canExportPassport, isTrue);
       expect(PlanTier.pro.canCreateGroups, isTrue);
       expect(PlanTier.pro.canAnchorAlarm, isTrue);
-      expect(PlanTier.pro.maxBoats, 5);
+      expect(PlanTier.pro.maxBoats, 3);
     });
 
     test('Free unlocks nothing paid', () {

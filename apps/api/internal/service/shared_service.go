@@ -8,8 +8,9 @@ import (
 	"github.com/Carlos19979/navis-app/apps/api/internal/port"
 )
 
-// SharedService handles shared-boat coordination: bookings and expense
-// splitting. All operations require the Pro plan (CanUseSharedCoordination).
+// SharedService handles shared-boat coordination. Expense splitting is available
+// on all tiers (the viral hook: crews divide costs for free); bookings remain a
+// Pro feature (CanUseSharedCoordination).
 type SharedService struct {
 	bookings port.BookingRepository
 	splits   port.ExpenseSplitRepository
@@ -31,7 +32,7 @@ func NewSharedService(
 	return &SharedService{bookings: bookings, splits: splits, expenses: expenses, boats: boats, profiles: profiles, notifier: notifier}
 }
 
-// assertPro verifies the user's plan unlocks shared coordination.
+// assertPro verifies the user's plan unlocks Pro shared coordination (bookings).
 func (s *SharedService) assertPro(ctx context.Context, userID string) error {
 	if s.profiles == nil {
 		return nil
@@ -142,11 +143,9 @@ func (s *SharedService) DeleteBooking(ctx context.Context, userID, boatID, id st
 
 // ─── Expense splits ───────────────────────────────────────────────────────────
 
-// SetSplits replaces the splits for an expense (requires manage-expenses; Pro).
+// SetSplits replaces the splits for an expense (requires manage-expenses; all
+// tiers — expense splitting is the free viral hook, scoped by boat membership).
 func (s *SharedService) SetSplits(ctx context.Context, userID, boatID, expenseID string, splits []domain.ExpenseSplit) ([]domain.ExpenseSplit, error) {
-	if err := s.assertPro(ctx, userID); err != nil {
-		return nil, fmt.Errorf("set splits: %w", err)
-	}
 	perms, ok, err := s.boats.GetPermissions(ctx, userID, boatID)
 	if err != nil {
 		return nil, fmt.Errorf("set splits: %w", err)
@@ -178,22 +177,16 @@ func (s *SharedService) SetSplits(ctx context.Context, userID, boatID, expenseID
 }
 
 // ListSplitSummary returns per-expense split rollups for a boat from the
-// caller's perspective (their share + settled). Any member; Pro.
+// caller's perspective (their share + settled). Any member; all tiers.
 func (s *SharedService) ListSplitSummary(ctx context.Context, userID, boatID string) ([]domain.ExpenseSplitSummary, error) {
-	if err := s.assertPro(ctx, userID); err != nil {
-		return nil, fmt.Errorf("split summary: %w", err)
-	}
 	if err := s.assertAccess(ctx, userID, boatID); err != nil {
 		return nil, fmt.Errorf("split summary: %w", err)
 	}
 	return s.splits.SummaryByBoat(ctx, boatID, userID)
 }
 
-// ListSplits returns the splits for an expense (any member; Pro).
+// ListSplits returns the splits for an expense (any member; all tiers).
 func (s *SharedService) ListSplits(ctx context.Context, userID, boatID, expenseID string) ([]domain.ExpenseSplit, error) {
-	if err := s.assertPro(ctx, userID); err != nil {
-		return nil, fmt.Errorf("list splits: %w", err)
-	}
 	if err := s.assertAccess(ctx, userID, boatID); err != nil {
 		return nil, fmt.Errorf("list splits: %w", err)
 	}
@@ -203,11 +196,8 @@ func (s *SharedService) ListSplits(ctx context.Context, userID, boatID, expenseI
 	return s.splits.ListByExpense(ctx, expenseID)
 }
 
-// SettleSplit toggles a split's settled state (requires manage-expenses; Pro).
+// SettleSplit toggles a split's settled state (requires manage-expenses; all tiers).
 func (s *SharedService) SettleSplit(ctx context.Context, userID, boatID, splitID string, settled bool) error {
-	if err := s.assertPro(ctx, userID); err != nil {
-		return fmt.Errorf("settle split: %w", err)
-	}
 	perms, ok, err := s.boats.GetPermissions(ctx, userID, boatID)
 	if err != nil {
 		return fmt.Errorf("settle split: %w", err)

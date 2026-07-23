@@ -117,11 +117,26 @@ void main() {
       return spy;
     }
 
-    testWidgets('Free sees the paywall and no split sheet', (tester) async {
-      await pumpAndTapSplit(tester, pro: false);
+    testWidgets('Free opens the split sheet (splitting is free — no paywall)',
+        (tester) async {
+      final shared = MockSharedRepository();
+      when(() => shared.listSplits(any(), any()))
+          .thenAnswer((_) async => const <ExpenseSplit>[]);
 
-      expectPaywall();
-      expect(find.text('Split equally'), findsNothing);
+      await pumpAndTapSplit(
+        tester,
+        pro: false,
+        overrides: [
+          sharedRepositoryProvider.overrideWithValue(shared),
+          boatMembersProvider.overrideWith(
+            (ref, id) async => [makeBoatMember()],
+          ),
+        ],
+      );
+
+      expectPaywall(shown: false);
+      expect(find.text('Split expense'), findsOneWidget);
+      expect(find.text('Split equally'), findsOneWidget);
     });
 
     testWidgets('Pro opens the split sheet', (tester) async {
