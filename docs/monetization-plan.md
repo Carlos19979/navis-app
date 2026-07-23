@@ -1,7 +1,7 @@
 # Navis — Plan de monetización, tiers y crecimiento
 
 > **Estado:** propuesta estratégica (2026-07-23). Contrastada contra el código real
-> (`apps/api/internal/domain/profile.go`, `docs/payments-setup.md`, `docs/features.md`,
+> (`apps/api/internal/domain/profile.go`, `docs/payments-setup.md`,
 > `CLAUDE.md`). Objetivo del dueño: poder **vivir del proyecto** (~4.000 €/mes netos).
 >
 > **Tesis en una frase:** Navis NO es una app de suscripción para particulares con un
@@ -99,7 +99,7 @@ Todos en Plus+. Correcto: son valor de "dueño responsable" y seguridad (apela a
 buenos motores de conversión a Plus.
 
 ### 2.4 Split de gastos básico — MOVER (Pro → Free/Plus) ⚠️ el cambio más importante de B2C
-**Problema detectado:** `features.md` dice que el split debe "traer a la tripulación
+**Problema detectado:** la documentación de features indicaba que el split debía "traer a la tripulación
 gratis", pero `CanUseSharedCoordination` lo tiene **entero detrás de Pro**. Resultado: la
 feature más viral de la app está apagada para el 99% de usuarios.
 
@@ -423,9 +423,19 @@ categoría se organiza en **dos anclas + dos clusters**:
 - **Fleet v3 (moat largo plazo):** channel management vía integración con NauSYS/Booking
   Manager o iCal a Click&Boat/SamBoat/Nautal.
 
-> Requisitos fiscales España a validar para la capa de facturación: **TicketBAI/Verifactu/
-> Facturae**, integraciones **Holded/A3/Sage**, IVA náutico, contratos con menores, despacho/
-> listas de tripulación con capitanía. (Investigación de dolores de operador en curso.)
+> **⚡ Cumplimiento fiscal español = requisito legal DURO + diferenciador (confirmado, investigación 2026).**
+> Todo software de facturación usado en España debe cumplir **Verifactu (RD 1007/2023)**:
+> registros inalterables, envío en tiempo real a la AEAT, QR en la factura, declaración
+> responsable visible por versión. Plazos: **1-ene-2027** (sociedades/IS) / **1-jul-2027**
+> (resto); multas hasta **150.000 €** (art. 201 bis LGT). → La facturación del Fleet debe
+> nacer **Verifactu-native** (+ Facturae, integración **Holded/A3/Sage**). Ningún competidor
+> confirmó liderar aquí = **barrera de entrada legal y comercial**.
+>
+> La vara de paridad la marca **AndroNautic** (check-in/out personalizable, contratos con
+> firma digital, apps de skipper, integración Holded/Reviso, WhatsApp, day-charter y venta
+> per-pax/per-cabin). Tendencia confirmada: el **day-charter es el segmento que más crece**
+> (~10,8% CAGR) frente al semanal (54,6% de cuota 2025) → diseñar el Fleet para **alta
+> rotación diaria**, no solo semana.
 
 ### Estado de los ajustes de fase 1 (aplicados en rama `feat/tier-fixes-mobile-launch`)
 - ✅ Migración `00038` (CHECK `free/plus/pro`).
