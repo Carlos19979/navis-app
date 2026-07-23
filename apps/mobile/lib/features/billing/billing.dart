@@ -136,6 +136,27 @@ class BillingService {
     return activeTier();
   }
 
+  /// The store page where the user manages (or cancels) their subscription.
+  /// RevenueCat's managementURL points at the store the purchase was made in
+  /// (App Store or Play Store); when unavailable we fall back to the current
+  /// platform's generic subscriptions page.
+  Future<Uri?> managementUrl() async {
+    if (_configured) {
+      try {
+        final info = await Purchases.getCustomerInfo();
+        final url = info.managementURL;
+        if (url != null && url.isNotEmpty) return Uri.parse(url);
+      } catch (_) {}
+    }
+    if (Platform.isAndroid) {
+      return Uri.parse('https://play.google.com/store/account/subscriptions');
+    }
+    if (Platform.isIOS || Platform.isMacOS) {
+      return Uri.parse('https://apps.apple.com/account/subscriptions');
+    }
+    return null;
+  }
+
   /// Restores previous purchases. Returns the active tier afterwards.
   Future<PlanTier> restore() async {
     if (!_configured) return PlanTier.free;

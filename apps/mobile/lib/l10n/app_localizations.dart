@@ -2864,6 +2864,12 @@ abstract class AppLocalizations {
   /// **'Restore purchases'**
   String get restorePurchases;
 
+  /// No description provided for @manageSubscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage subscription'**
+  String get manageSubscription;
+
   /// No description provided for @subscriptionsUnavailable.
   ///
   /// In en, this message translates to:
