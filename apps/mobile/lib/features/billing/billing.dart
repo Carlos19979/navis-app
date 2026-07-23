@@ -38,7 +38,7 @@ enum PlanTier {
   bool get canExportPassport => this == PlanTier.pro;
   bool get canCreateGroups => this == PlanTier.pro;
   int get maxBoats => switch (this) {
-        PlanTier.pro => 5,
+        PlanTier.pro => 3,
         PlanTier.plus => 2,
         PlanTier.free => 1,
       };

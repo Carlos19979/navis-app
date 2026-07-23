@@ -51,7 +51,7 @@ Account makeAccount({
   return Account(
     plan: plan,
     isPro: pro,
-    maxBoats: maxBoats ?? (pro ? 5 : 1),
+    maxBoats: maxBoats ?? (pro ? 3 : 1),
     boatCount: boatCount,
     canCreateGroups: canCreateGroups ?? pro,
     reminderDocLimit: reminderDocLimit,

@@ -1108,21 +1108,15 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
                 size: 20, color: context.txtSecondary),
             tooltip: l.splitTitle,
             onPressed: () async {
-              if (!ref.read(effectiveTierProvider).canSharedCoordination) {
-                final ok = await showPaywall(context, ref,
-                    reason: l.paywallReasonShared);
-                if (!ok || !context.mounted) return;
-              }
-              if (context.mounted) {
-                await showSplitSheet(
-                  context,
-                  ref,
-                  boatId: boatId,
-                  expenseId: e.id,
-                  amount: e.amount,
-                  title: _categoryLabel(l, e.category),
-                );
-              }
+              // Expense splitting is available on all tiers (viral hook) — no paywall.
+              await showSplitSheet(
+                context,
+                ref,
+                boatId: boatId,
+                expenseId: e.id,
+                amount: e.amount,
+                title: _categoryLabel(l, e.category),
+              );
             },
           ),
         ],
