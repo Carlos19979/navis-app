@@ -14,7 +14,7 @@ func TestPlan_Tiers(t *testing.T) {
 		plus any
 		pro  any
 	}{
-		{"MaxBoats", func(p Plan) any { return p.MaxBoats() }, 1, 2, 5},
+		{"MaxBoats", func(p Plan) any { return p.MaxBoats() }, 1, 2, 3},
 		{"ReminderDocLimit", func(p Plan) any { return p.ReminderDocLimit() }, 1, Unlimited, Unlimited},
 		{"AttachmentLimit", func(p Plan) any { return p.AttachmentLimit() }, 1, Unlimited, Unlimited},
 		{"GalleryLimit", func(p Plan) any { return p.GalleryLimit() }, 1, 10, 10},

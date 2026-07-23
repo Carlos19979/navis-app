@@ -188,6 +188,14 @@ func (s *GroupService) JoinByCode(ctx context.Context, userID, code string) (*do
 		domain.GroupRoleMember, domain.GroupMemberStatusActive); err != nil {
 		return nil, fmt.Errorf("joining group %s by code: %w", group.ID, err)
 	}
+	// Notify the owner that someone joined via invite code.
+	if s.notifier != nil && group.OwnerID != "" && group.OwnerID != userID {
+		name := s.notifier.UserName(ctx, userID)
+		s.notifier.Send(ctx, group.OwnerID, WorkflowGroupJoined,
+			"Nuevo miembro",
+			fmt.Sprintf("%s se ha unido a %s", name, group.Name),
+			"group", group.ID)
+	}
 	return s.groupRepo.GetByID(ctx, userID, group.ID)
 }
 
@@ -214,6 +222,14 @@ func (s *GroupService) Leave(ctx context.Context, userID, groupID string) error 
 	}
 	if err := s.memberRepo.Remove(ctx, groupID, userID); err != nil {
 		return fmt.Errorf("leaving group %s: %w", groupID, err)
+	}
+	// Notify the owner that a member left.
+	if s.notifier != nil && group.OwnerID != "" && group.OwnerID != userID {
+		name := s.notifier.UserName(ctx, userID)
+		s.notifier.Send(ctx, group.OwnerID, WorkflowGroupMemberLeft,
+			"Un miembro salió del grupo",
+			fmt.Sprintf("%s ha salido de %s", name, group.Name),
+			"group", groupID)
 	}
 	return nil
 }
@@ -268,6 +284,17 @@ func (s *GroupService) RejectRequest(ctx context.Context, ownerID, groupID, targ
 	if err := s.memberRepo.Remove(ctx, groupID, targetUserID); err != nil {
 		return fmt.Errorf("rejecting request in group %s: %w", groupID, err)
 	}
+	// Notify the requester that their request was rejected.
+	if s.notifier != nil {
+		groupName := "el grupo"
+		if g, err := s.groupRepo.GetByID(ctx, ownerID, groupID); err == nil {
+			groupName = g.Name
+		}
+		s.notifier.Send(ctx, targetUserID, WorkflowGroupRequestRejected,
+			"Solicitud rechazada",
+			fmt.Sprintf("Tu solicitud para unirte a %s ha sido rechazada", groupName),
+			"group", groupID)
+	}
 	return nil
 }
 
@@ -281,6 +308,17 @@ func (s *GroupService) RemoveMember(ctx context.Context, ownerID, groupID, targe
 	}
 	if err := s.memberRepo.Remove(ctx, groupID, targetUserID); err != nil {
 		return fmt.Errorf("removing member from group %s: %w", groupID, err)
+	}
+	// Notify the member that they were removed.
+	if s.notifier != nil {
+		groupName := "un grupo"
+		if g, err := s.groupRepo.GetByID(ctx, ownerID, groupID); err == nil {
+			groupName = g.Name
+		}
+		s.notifier.Send(ctx, targetUserID, WorkflowGroupMemberRemoved,
+			"Te han quitado del grupo",
+			fmt.Sprintf("Ya no eres miembro de %s", groupName),
+			"group", groupID)
 	}
 	return nil
 }

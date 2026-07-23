@@ -27,6 +27,7 @@ func newMaintSvc(plan domain.Plan) *MaintenanceService {
 		&mockExpenseRepo{},
 		&mockBoatRepo{},
 		&testutil.FakeProfileRepo{Plan: plan},
+		nil,
 	)
 }
 

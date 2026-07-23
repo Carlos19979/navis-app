@@ -17,14 +17,16 @@ type TripService struct {
 	tripRepo  port.TripRepository
 	trackRepo port.TripTrackRepository
 	boatRepo  port.BoatRepository
+	notifier  *Notifier
 }
 
 // NewTripService creates a new TripService.
-func NewTripService(tripRepo port.TripRepository, trackRepo port.TripTrackRepository, boatRepo port.BoatRepository) *TripService {
+func NewTripService(tripRepo port.TripRepository, trackRepo port.TripTrackRepository, boatRepo port.BoatRepository, notifier *Notifier) *TripService {
 	return &TripService{
 		tripRepo:  tripRepo,
 		trackRepo: trackRepo,
 		boatRepo:  boatRepo,
+		notifier:  notifier,
 	}
 }
 
@@ -161,6 +163,24 @@ func (s *TripService) Complete(ctx context.Context, userID, id string, arrivalPo
 	updated, err := s.tripRepo.Update(ctx, userID, trip)
 	if err != nil {
 		return nil, fmt.Errorf("completing trip %s: %w", id, err)
+	}
+
+	// Notify the rest of the boat's crew that a trip was logged (shared logbook).
+	if s.notifier != nil && trip.BoatID != "" {
+		var ids []string
+		if boat, bErr := s.boatRepo.GetByIDAccessible(ctx, userID, trip.BoatID); bErr == nil {
+			ids = append(ids, boat.UserID)
+		}
+		if members, mErr := s.boatRepo.ListMembers(ctx, trip.BoatID); mErr == nil {
+			for i := range members {
+				ids = append(ids, members[i].UserID)
+			}
+		}
+		name := s.notifier.UserName(ctx, userID)
+		s.notifier.SendMany(ctx, ids, userID, WorkflowTripCompleted,
+			"Travesía registrada",
+			fmt.Sprintf("%s ha completado una travesía", name),
+			"trip", updated.ID)
 	}
 	return updated, nil
 }

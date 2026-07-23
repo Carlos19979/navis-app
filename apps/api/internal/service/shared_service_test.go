@@ -36,6 +36,9 @@ func (m *mockSplitRepo) ReplaceForExpense(_ context.Context, _ string, _ []domai
 func (m *mockSplitRepo) ListByExpense(_ context.Context, _ string) ([]domain.ExpenseSplit, error) {
 	return nil, nil
 }
+func (m *mockSplitRepo) GetByID(_ context.Context, _ string) (*domain.ExpenseSplit, error) {
+	return &domain.ExpenseSplit{}, nil
+}
 func (m *mockSplitRepo) SetSettled(_ context.Context, _ string, _ bool) error { return nil }
 func (m *mockSplitRepo) SummaryByBoat(_ context.Context, _, _ string) ([]domain.ExpenseSplitSummary, error) {
 	return nil, nil

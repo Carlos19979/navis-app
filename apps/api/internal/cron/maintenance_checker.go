@@ -127,7 +127,7 @@ func (mc *MaintenanceChecker) check(ctx context.Context) {
 			payload["due_date"] = n.NextDueDate.Format("2006-01-02")
 		}
 
-		if err := mc.notifier.TriggerWorkflow(ctx, "maintenance-due", n.OwnerID, payload); err != nil {
+		if err := mc.notifier.TriggerWorkflow(ctx, "reminders", n.OwnerID, payload); err != nil {
 			mc.logger.Error("failed to trigger maintenance workflow",
 				slog.String("task_id", n.TaskID),
 				slog.String("user_id", n.OwnerID),

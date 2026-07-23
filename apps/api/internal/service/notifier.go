@@ -10,14 +10,42 @@ import (
 
 // Novu workflow identifiers. These must exist in the Novu dashboard for real
 // delivery; with no NOVU_API_KEY the provider runs in dry-run (logs only).
+// Workflows are grouped by domain into a handful of shared Novu workflows
+// (the Novu plan caps total workflows at 20). Delivery is generic — each
+// trigger carries its own title/body + deep-link in the payload — so one
+// workflow per domain serves many event types without losing information.
 const (
-	WorkflowRegattaRSVP          = "regatta-rsvp"
-	WorkflowRegattaScheduled     = "regatta-scheduled"
-	WorkflowRegattaReminder      = "regatta-reminder"
-	WorkflowGroupJoinRequest     = "group-join-request"
-	WorkflowGroupRequestApproved = "group-request-approved"
-	WorkflowEventLive            = "event-live"
-	WorkflowExpenseSplit         = "expense-split"
+	WorkflowRegattaUpdates = "regatta-updates" // regatta lifecycle
+	WorkflowGroupUpdates   = "group-updates"   // club/group membership
+	WorkflowBoatActivity   = "boat-activity"   // shared-boat crew activity
+	WorkflowReminders      = "reminders"       // cron reminders (docs, maintenance)
+	WorkflowEventLive      = "event-live"      // nautical event goes live
+)
+
+// Per-event aliases → the grouped workflow they belong to. Keeping the
+// event-specific names lets every call site stay expressive while all
+// triggers resolve to one of the five workflows above.
+const (
+	WorkflowRegattaScheduled = WorkflowRegattaUpdates
+	WorkflowRegattaRSVP      = WorkflowRegattaUpdates
+	WorkflowRegattaReminder  = WorkflowRegattaUpdates
+	WorkflowRegattaCancelled = WorkflowRegattaUpdates
+
+	WorkflowGroupJoinRequest     = WorkflowGroupUpdates
+	WorkflowGroupRequestApproved = WorkflowGroupUpdates
+	WorkflowGroupRequestRejected = WorkflowGroupUpdates
+	WorkflowGroupMemberRemoved   = WorkflowGroupUpdates
+	WorkflowGroupMemberLeft      = WorkflowGroupUpdates
+	WorkflowGroupJoined          = WorkflowGroupUpdates
+
+	WorkflowExpenseSplit      = WorkflowBoatActivity
+	WorkflowExpenseSettled    = WorkflowBoatActivity
+	WorkflowBookingCreated    = WorkflowBoatActivity
+	WorkflowBookingCancelled  = WorkflowBoatActivity
+	WorkflowBoatMemberJoined  = WorkflowBoatActivity
+	WorkflowBoatMemberRemoved = WorkflowBoatActivity
+	WorkflowTripCompleted     = WorkflowBoatActivity
+	WorkflowMaintenanceLogged = WorkflowBoatActivity
 )
 
 // Notifier centralises push-notification sending. It is best-effort: failures
@@ -112,6 +140,20 @@ func (n *Notifier) Send(ctx context.Context, userID, workflow, title, body, link
 	default:
 		n.logger.Warn("notifier: queue full, dropping notification",
 			"workflow", workflow, "user_id", userID)
+	}
+}
+
+// SendMany fans a workflow out to several recipients, skipping the acting user
+// (exclude) and any empty IDs. Best-effort, like Send.
+func (n *Notifier) SendMany(ctx context.Context, userIDs []string, exclude, workflow, title, body, linkType, linkID string) {
+	if n == nil {
+		return
+	}
+	for _, uid := range userIDs {
+		if uid == "" || uid == exclude {
+			continue
+		}
+		n.Send(ctx, uid, workflow, title, body, linkType, linkID)
 	}
 }
 

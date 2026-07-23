@@ -8,8 +8,9 @@ import (
 	"github.com/Carlos19979/navis-app/apps/api/internal/port"
 )
 
-// SharedService handles shared-boat coordination: bookings and expense
-// splitting. All operations require the Pro plan (CanUseSharedCoordination).
+// SharedService handles shared-boat coordination. Expense splitting is available
+// on all tiers (the viral hook: crews divide costs for free); bookings remain a
+// Pro feature (CanUseSharedCoordination).
 type SharedService struct {
 	bookings port.BookingRepository
 	splits   port.ExpenseSplitRepository
@@ -31,7 +32,7 @@ func NewSharedService(
 	return &SharedService{bookings: bookings, splits: splits, expenses: expenses, boats: boats, profiles: profiles, notifier: notifier}
 }
 
-// assertPro verifies the user's plan unlocks shared coordination.
+// assertPro verifies the user's plan unlocks Pro shared coordination (bookings).
 func (s *SharedService) assertPro(ctx context.Context, userID string) error {
 	if s.profiles == nil {
 		return nil
@@ -50,6 +51,25 @@ func (s *SharedService) assertPro(ctx context.Context, userID string) error {
 func (s *SharedService) assertAccess(ctx context.Context, userID, boatID string) error {
 	_, err := s.boats.GetByIDAccessible(ctx, userID, boatID)
 	return err
+}
+
+// notifyBoatCrew notifies everyone with access to a boat (owner + members)
+// except the acting user, about a shared-boat event. Best-effort.
+func (s *SharedService) notifyBoatCrew(ctx context.Context, boatID, actorID, workflow, title, body string) {
+	if s.notifier == nil {
+		return
+	}
+	boat, err := s.boats.GetByIDAccessible(ctx, actorID, boatID)
+	if err != nil {
+		return
+	}
+	ids := []string{boat.UserID}
+	if members, mErr := s.boats.ListMembers(ctx, boatID); mErr == nil {
+		for i := range members {
+			ids = append(ids, members[i].UserID)
+		}
+	}
+	s.notifier.SendMany(ctx, ids, actorID, workflow, title, body, "boat", boatID)
 }
 
 // ─── Bookings ───────────────────────────────────────────────────────────────
@@ -92,7 +112,15 @@ func (s *SharedService) CreateBooking(ctx context.Context, b *domain.Booking, fo
 	if b.Status == "" {
 		b.Status = domain.BookingConfirmed
 	}
-	return s.bookings.Create(ctx, b)
+	created, err := s.bookings.Create(ctx, b)
+	if err != nil {
+		return nil, err
+	}
+	// Notify the rest of the crew that the boat has been reserved.
+	name := s.notifier.UserName(ctx, b.UserID)
+	s.notifyBoatCrew(ctx, b.BoatID, b.UserID, WorkflowBookingCreated,
+		"Reserva creada", fmt.Sprintf("%s ha reservado el barco", name))
+	return created, nil
 }
 
 // DeleteBooking removes a booking (owner of the row; Pro).
@@ -103,16 +131,21 @@ func (s *SharedService) DeleteBooking(ctx context.Context, userID, boatID, id st
 	if err := s.assertAccess(ctx, userID, boatID); err != nil {
 		return fmt.Errorf("delete booking: %w", err)
 	}
-	return s.bookings.Delete(ctx, boatID, id)
+	if err := s.bookings.Delete(ctx, boatID, id); err != nil {
+		return err
+	}
+	// Notify the rest of the crew that a reservation was cancelled.
+	name := s.notifier.UserName(ctx, userID)
+	s.notifyBoatCrew(ctx, boatID, userID, WorkflowBookingCancelled,
+		"Reserva cancelada", fmt.Sprintf("%s ha cancelado una reserva", name))
+	return nil
 }
 
 // ─── Expense splits ───────────────────────────────────────────────────────────
 
-// SetSplits replaces the splits for an expense (requires manage-expenses; Pro).
+// SetSplits replaces the splits for an expense (requires manage-expenses; all
+// tiers — expense splitting is the free viral hook, scoped by boat membership).
 func (s *SharedService) SetSplits(ctx context.Context, userID, boatID, expenseID string, splits []domain.ExpenseSplit) ([]domain.ExpenseSplit, error) {
-	if err := s.assertPro(ctx, userID); err != nil {
-		return nil, fmt.Errorf("set splits: %w", err)
-	}
 	perms, ok, err := s.boats.GetPermissions(ctx, userID, boatID)
 	if err != nil {
 		return nil, fmt.Errorf("set splits: %w", err)
@@ -144,22 +177,16 @@ func (s *SharedService) SetSplits(ctx context.Context, userID, boatID, expenseID
 }
 
 // ListSplitSummary returns per-expense split rollups for a boat from the
-// caller's perspective (their share + settled). Any member; Pro.
+// caller's perspective (their share + settled). Any member; all tiers.
 func (s *SharedService) ListSplitSummary(ctx context.Context, userID, boatID string) ([]domain.ExpenseSplitSummary, error) {
-	if err := s.assertPro(ctx, userID); err != nil {
-		return nil, fmt.Errorf("split summary: %w", err)
-	}
 	if err := s.assertAccess(ctx, userID, boatID); err != nil {
 		return nil, fmt.Errorf("split summary: %w", err)
 	}
 	return s.splits.SummaryByBoat(ctx, boatID, userID)
 }
 
-// ListSplits returns the splits for an expense (any member; Pro).
+// ListSplits returns the splits for an expense (any member; all tiers).
 func (s *SharedService) ListSplits(ctx context.Context, userID, boatID, expenseID string) ([]domain.ExpenseSplit, error) {
-	if err := s.assertPro(ctx, userID); err != nil {
-		return nil, fmt.Errorf("list splits: %w", err)
-	}
 	if err := s.assertAccess(ctx, userID, boatID); err != nil {
 		return nil, fmt.Errorf("list splits: %w", err)
 	}
@@ -169,11 +196,8 @@ func (s *SharedService) ListSplits(ctx context.Context, userID, boatID, expenseI
 	return s.splits.ListByExpense(ctx, expenseID)
 }
 
-// SettleSplit toggles a split's settled state (requires manage-expenses; Pro).
+// SettleSplit toggles a split's settled state (requires manage-expenses; all tiers).
 func (s *SharedService) SettleSplit(ctx context.Context, userID, boatID, splitID string, settled bool) error {
-	if err := s.assertPro(ctx, userID); err != nil {
-		return fmt.Errorf("settle split: %w", err)
-	}
 	perms, ok, err := s.boats.GetPermissions(ctx, userID, boatID)
 	if err != nil {
 		return fmt.Errorf("settle split: %w", err)
@@ -181,5 +205,17 @@ func (s *SharedService) SettleSplit(ctx context.Context, userID, boatID, splitID
 	if !ok || !perms.CanManageExpenses {
 		return fmt.Errorf("settle split: %w", domain.ErrForbidden)
 	}
-	return s.splits.SetSettled(ctx, splitID, settled)
+	if err := s.splits.SetSettled(ctx, splitID, settled); err != nil {
+		return err
+	}
+	// Tell the member their share was marked as paid (only on settle, not unsettle).
+	if settled && s.notifier != nil {
+		if sp, gErr := s.splits.GetByID(ctx, splitID); gErr == nil && sp.UserID != userID {
+			s.notifier.Send(ctx, sp.UserID, WorkflowExpenseSettled,
+				"Gasto saldado",
+				"Tu parte de un gasto compartido se ha marcado como pagada",
+				"boat", boatID)
+		}
+	}
+	return nil
 }

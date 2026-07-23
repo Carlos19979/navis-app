@@ -120,7 +120,7 @@ func (ec *ExpirationChecker) check(ctx context.Context) {
 				"expiry_date":       doc.ExpiryDate.Format("2006-01-02"),
 			}
 
-			if err := ec.notifier.TriggerWorkflow(ctx, "document-expiry", doc.UserID, payload); err != nil {
+			if err := ec.notifier.TriggerWorkflow(ctx, "reminders", doc.UserID, payload); err != nil {
 				ec.logger.Error("failed to trigger notification workflow",
 					slog.String("doc_id", doc.ID),
 					slog.String("user_id", doc.UserID),

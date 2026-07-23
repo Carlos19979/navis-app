@@ -114,9 +114,9 @@ func main() {
 	supabaseAdmin := supabase.NewAdmin(cfg.SupabaseURL, cfg.SupabaseServiceRoleKey, logger)
 
 	// Create services.
-	boatSvc := service.NewBoatService(boatRepo, profileRepo)
+	boatSvc := service.NewBoatService(boatRepo, profileRepo, notifySvc)
 	docSvc := service.NewDocumentService(docRepo, boatRepo)
-	tripSvc := service.NewTripService(tripRepo, trackRepo, boatRepo)
+	tripSvc := service.NewTripService(tripRepo, trackRepo, boatRepo, notifySvc)
 	eventSvc := service.NewEventService(eventRepo, interestRepo)
 	groupSvc := service.NewGroupService(groupRepo, groupMemberRepo, profileRepo, notifySvc, postgres.NewTxManager(pool))
 	profileSvc := service.NewProfileService(profileRepo, boatRepo)
@@ -124,7 +124,7 @@ func main() {
 	costSvc := service.NewCostService(expenseRepo, maintenanceRepo, tripRepo, boatRepo, profileRepo)
 	sharedSvc := service.NewSharedService(bookingRepo, expenseSplitRepo, expenseRepo, boatRepo, profileRepo, notifySvc)
 	anomalySvc := service.NewAnomalyService(tripRepo, boatRepo, profileRepo)
-	maintenanceSvc := service.NewMaintenanceService(maintenanceRepo, maintenanceTaskRepo, expenseRepo, boatRepo, profileRepo)
+	maintenanceSvc := service.NewMaintenanceService(maintenanceRepo, maintenanceTaskRepo, expenseRepo, boatRepo, profileRepo, notifySvc)
 	regattaSvc := service.NewRegattaService(tripRepo, participantRepo, checklistRepo, groupMemberRepo, notifySvc)
 	portSvc := service.NewPortService(portRepo)
 	weatherSvc := service.NewWeatherService(weatherProvider)

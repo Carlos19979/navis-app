@@ -52,11 +52,14 @@ func (p Plan) IsPro() bool {
 	return p == PlanPro
 }
 
-// MaxBoats returns how many boats the plan allows (Free 1 / Plus 2 / Pro 5).
+// MaxBoats returns how many boats the plan allows (Free 1 / Plus 2 / Pro 3).
+// Pro is capped low on purpose: a genuine private owner rarely holds 4+ boats,
+// so anyone above this is effectively a fleet and belongs on the (future) Fleet
+// tier — this keeps Pro from cannibalising B2B.
 func (p Plan) MaxBoats() int {
 	switch p {
 	case PlanPro:
-		return 5
+		return 3
 	case PlanPlus:
 		return 2
 	case PlanFree:

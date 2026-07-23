@@ -94,6 +94,7 @@ type BookingRepository interface {
 type ExpenseSplitRepository interface {
 	ReplaceForExpense(ctx context.Context, expenseID string, splits []domain.ExpenseSplit) error
 	ListByExpense(ctx context.Context, expenseID string) ([]domain.ExpenseSplit, error)
+	GetByID(ctx context.Context, splitID string) (*domain.ExpenseSplit, error)
 	SetSettled(ctx context.Context, splitID string, settled bool) error
 	// SummaryByBoat rolls up splits per expense for a boat, from viewerID's
 	// perspective (their share + settled state).

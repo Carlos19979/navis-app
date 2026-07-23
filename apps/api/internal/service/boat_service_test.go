@@ -21,6 +21,7 @@ type mockBoatRepo struct {
 	getPermissionsFn func(ctx context.Context, userID, boatID string) (domain.BoatPermissions, bool, error)
 	countFn          func(ctx context.Context, userID string) (int, error)
 	getAccessibleFn  func(ctx context.Context, userID, id string) (*domain.Boat, error)
+	shareCodeFn      func(ctx context.Context, code string) (string, string, error)
 }
 
 func (m *mockBoatRepo) Create(ctx context.Context, boat *domain.Boat) (*domain.Boat, error) {
@@ -77,7 +78,7 @@ func TestBoatService_Create_NoHomePort(t *testing.T) {
 			return b, nil
 		},
 	}
-	svc := NewBoatService(repo, nil)
+	svc := NewBoatService(repo, nil, nil)
 
 	result, err := svc.Create(context.Background(), boat)
 	if err != nil {
@@ -98,7 +99,7 @@ func TestBoatService_Create_Success(t *testing.T) {
 			return b, nil
 		},
 	}
-	svc := NewBoatService(repo, nil)
+	svc := NewBoatService(repo, nil, nil)
 
 	result, err := svc.Create(context.Background(), boat)
 	if err != nil {
@@ -118,7 +119,7 @@ func TestBoatService_Create_EmptyName(t *testing.T) {
 	boat := newTestBoat()
 	boat.Name = ""
 	repo := &mockBoatRepo{}
-	svc := NewBoatService(repo, nil)
+	svc := NewBoatService(repo, nil, nil)
 
 	_, err := svc.Create(context.Background(), boat)
 	if err == nil {
@@ -140,7 +141,7 @@ func TestBoatService_Create_EmptyUserID(t *testing.T) {
 	boat := newTestBoat()
 	boat.UserID = ""
 	repo := &mockBoatRepo{}
-	svc := NewBoatService(repo, nil)
+	svc := NewBoatService(repo, nil, nil)
 
 	_, err := svc.Create(context.Background(), boat)
 	if err == nil {
@@ -160,7 +161,7 @@ func TestBoatService_Create_DuplicateRegistration(t *testing.T) {
 			return nil, domain.ErrDuplicateRegistration
 		},
 	}
-	svc := NewBoatService(repo, nil)
+	svc := NewBoatService(repo, nil, nil)
 
 	_, err := svc.Create(context.Background(), boat)
 	if err == nil {
@@ -181,7 +182,7 @@ func TestBoatService_Create_RepoError(t *testing.T) {
 			return nil, repoErr
 		},
 	}
-	svc := NewBoatService(repo, nil)
+	svc := NewBoatService(repo, nil, nil)
 
 	_, err := svc.Create(context.Background(), boat)
 	if err == nil {
@@ -205,8 +206,8 @@ func TestBoatService_Create_PlanLimits(t *testing.T) {
 		{"free plan at limit of 1 rejected", domain.PlanFree, 1, domain.ErrPlanLimit},
 		{"plus plan under limit succeeds", domain.PlanPlus, 1, nil},
 		{"plus plan at limit of 2 rejected", domain.PlanPlus, 2, domain.ErrPlanLimit},
-		{"pro plan under limit succeeds", domain.PlanPro, 4, nil},
-		{"pro plan at limit of 5 rejected", domain.PlanPro, 5, domain.ErrPlanLimit},
+		{"pro plan under limit succeeds", domain.PlanPro, 2, nil},
+		{"pro plan at limit of 3 rejected", domain.PlanPro, 3, domain.ErrPlanLimit},
 	}
 
 	for _, tt := range tests {
@@ -224,7 +225,7 @@ func TestBoatService_Create_PlanLimits(t *testing.T) {
 					return tt.existingBoats, nil
 				},
 			}
-			svc := NewBoatService(repo, &testutil.FakeProfileRepo{Plan: tt.plan})
+			svc := NewBoatService(repo, &testutil.FakeProfileRepo{Plan: tt.plan}, nil)
 
 			result, err := svc.Create(context.Background(), newTestBoat())
 
@@ -255,7 +256,7 @@ func TestBoatService_Create_PlanCountError(t *testing.T) {
 		createFn: func(_ context.Context, b *domain.Boat) (*domain.Boat, error) { return b, nil },
 		countFn:  func(_ context.Context, _ string) (int, error) { return 0, countErr },
 	}
-	svc := NewBoatService(repo, &testutil.FakeProfileRepo{Plan: domain.PlanFree})
+	svc := NewBoatService(repo, &testutil.FakeProfileRepo{Plan: domain.PlanFree}, nil)
 
 	_, err := svc.Create(context.Background(), newTestBoat())
 	if !errors.Is(err, countErr) {
@@ -277,7 +278,7 @@ func TestBoatService_GetByID_Success(t *testing.T) {
 			return boat, nil
 		},
 	}
-	svc := NewBoatService(repo, nil)
+	svc := NewBoatService(repo, nil, nil)
 
 	result, err := svc.GetByID(context.Background(), "user-1", "boat-1")
 	if err != nil {
@@ -296,7 +297,7 @@ func TestBoatService_GetByID_NotFound(t *testing.T) {
 			return nil, domain.ErrBoatNotFound
 		},
 	}
-	svc := NewBoatService(repo, nil)
+	svc := NewBoatService(repo, nil, nil)
 
 	_, err := svc.GetByID(context.Background(), "user-1", "nonexistent")
 	if err == nil {
@@ -318,7 +319,7 @@ func TestBoatService_GetByID_WrongUser(t *testing.T) {
 			return newTestBoat(), nil
 		},
 	}
-	svc := NewBoatService(repo, nil)
+	svc := NewBoatService(repo, nil, nil)
 
 	_, err := svc.GetByID(context.Background(), "other-user", "boat-1")
 	if err == nil {
@@ -340,7 +341,7 @@ func TestBoatService_List_Success(t *testing.T) {
 			return boats, "next-cursor", nil
 		},
 	}
-	svc := NewBoatService(repo, nil)
+	svc := NewBoatService(repo, nil, nil)
 
 	result, cursor, err := svc.List(context.Background(), "user-1", "", 10)
 	if err != nil {
@@ -362,7 +363,7 @@ func TestBoatService_List_EmptyResult(t *testing.T) {
 			return []domain.Boat{}, "", nil
 		},
 	}
-	svc := NewBoatService(repo, nil)
+	svc := NewBoatService(repo, nil, nil)
 
 	result, cursor, err := svc.List(context.Background(), "user-1", "", 10)
 	if err != nil {
@@ -386,7 +387,7 @@ func TestBoatService_List_DefaultLimit(t *testing.T) {
 			return []domain.Boat{}, "", nil
 		},
 	}
-	svc := NewBoatService(repo, nil)
+	svc := NewBoatService(repo, nil, nil)
 
 	tests := []struct {
 		name          string
@@ -418,7 +419,7 @@ func TestBoatService_List_RepoError(t *testing.T) {
 			return nil, "", repoErr
 		},
 	}
-	svc := NewBoatService(repo, nil)
+	svc := NewBoatService(repo, nil, nil)
 
 	_, _, err := svc.List(context.Background(), "user-1", "", 10)
 	if err == nil {
@@ -441,7 +442,7 @@ func TestBoatService_Update_Success(t *testing.T) {
 			return b, nil
 		},
 	}
-	svc := NewBoatService(repo, nil)
+	svc := NewBoatService(repo, nil, nil)
 
 	result, err := svc.Update(context.Background(), "user-1", boat)
 	if err != nil {
@@ -458,7 +459,7 @@ func TestBoatService_Update_EmptyID(t *testing.T) {
 	boat := newTestBoat()
 	boat.ID = ""
 	repo := &mockBoatRepo{}
-	svc := NewBoatService(repo, nil)
+	svc := NewBoatService(repo, nil, nil)
 
 	_, err := svc.Update(context.Background(), "user-1", boat)
 	if err == nil {
@@ -483,7 +484,7 @@ func TestBoatService_Update_NotFound(t *testing.T) {
 			return nil, domain.ErrBoatNotFound
 		},
 	}
-	svc := NewBoatService(repo, nil)
+	svc := NewBoatService(repo, nil, nil)
 
 	_, err := svc.Update(context.Background(), "user-1", boat)
 	if err == nil {
@@ -504,7 +505,7 @@ func TestBoatService_Delete_Success(t *testing.T) {
 			return nil
 		},
 	}
-	svc := NewBoatService(repo, nil)
+	svc := NewBoatService(repo, nil, nil)
 
 	err := svc.Delete(context.Background(), "user-1", "boat-1")
 	if err != nil {
@@ -520,7 +521,7 @@ func TestBoatService_Delete_NotFound(t *testing.T) {
 			return domain.ErrBoatNotFound
 		},
 	}
-	svc := NewBoatService(repo, nil)
+	svc := NewBoatService(repo, nil, nil)
 
 	err := svc.Delete(context.Background(), "user-1", "nonexistent")
 	if err == nil {
@@ -553,7 +554,10 @@ func (m *mockBoatRepo) ListShared(_ context.Context, _ string) ([]domain.Boat, e
 func (m *mockBoatRepo) EnsureShareCode(_ context.Context, _, _, candidate string) (string, error) {
 	return candidate, nil
 }
-func (m *mockBoatRepo) GetIDByShareCode(_ context.Context, _ string) (string, string, error) {
+func (m *mockBoatRepo) GetIDByShareCode(ctx context.Context, code string) (string, string, error) {
+	if m.shareCodeFn != nil {
+		return m.shareCodeFn(ctx, code)
+	}
 	return "", "", domain.ErrBoatNotFound
 }
 func (m *mockBoatRepo) AddMember(_ context.Context, _, _, _ string) error { return nil }
