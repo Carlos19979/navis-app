@@ -1470,6 +1470,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get restorePurchases => 'Restaurar compras';
 
   @override
+  String get manageSubscription => 'Gestionar suscripción';
+
+  @override
   String get subscriptionsUnavailable =>
       'Las suscripciones no están disponibles en este momento. Inténtalo de nuevo más tarde.';
 

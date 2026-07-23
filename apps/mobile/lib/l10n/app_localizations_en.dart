@@ -1460,6 +1460,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get restorePurchases => 'Restore purchases';
 
   @override
+  String get manageSubscription => 'Manage subscription';
+
+  @override
   String get subscriptionsUnavailable =>
       'Subscriptions are not available right now. Try again later.';
 

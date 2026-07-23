@@ -10,6 +10,8 @@ import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
+import 'package:navis_mobile/features/billing/billing.dart';
+import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
 import 'package:navis_mobile/features/profile/data/account_provider.dart';
 import 'package:navis_mobile/features/profile/presentation/providers/profile_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -105,28 +107,51 @@ class ProfileScreen extends ConsumerWidget {
 
                 const SizedBox(height: 10),
 
-                // Plan badge
+                // Plan badge — tappable: below Pro it opens the paywall
+                // (upgrade); on Pro it opens the store's manage-subscription
+                // page (App Store / Play Store).
                 Consumer(
                   builder: (context, ref, _) {
                     final account = ref.watch(accountProvider).valueOrNull;
                     if (account == null) return const SizedBox.shrink();
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: AppColors.cyan.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: AppColors.cyan.withValues(alpha: 0.4),
-                          width: 0.5,
+                    final tier = ref.watch(effectiveTierProvider);
+                    return GestureDetector(
+                      onTap: () {
+                        if (tier == PlanTier.pro) {
+                          _openManageSubscription(context, ref);
+                        } else {
+                          showPaywall(context, ref);
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: AppColors.cyan.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: AppColors.cyan.withValues(alpha: 0.4),
+                            width: 0.5,
+                          ),
                         ),
-                      ),
-                      child: Text(
-                        'Plan ${account.planLabel}',
-                        style: const TextStyle(
-                          color: AppColors.cyan,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Plan ${account.planLabel}',
+                              style: const TextStyle(
+                                color: AppColors.cyan,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(
+                              Icons.chevron_right_rounded,
+                              size: 14,
+                              color: AppColors.cyan,
+                            ),
+                          ],
                         ),
                       ),
                     );
@@ -163,6 +188,33 @@ class ProfileScreen extends ConsumerWidget {
                         height: 1,
                         color: context.glassBorderColor.withValues(alpha: 0.3),
                         indent: 56,
+                      ),
+                      // Manage subscription — paid users only; opens the
+                      // App Store / Play Store subscription page.
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final account =
+                              ref.watch(accountProvider).valueOrNull;
+                          if (account == null || account.plan == 'free') {
+                            return const SizedBox.shrink();
+                          }
+                          return Column(
+                            children: [
+                              _ProfileTile(
+                                icon: Icons.workspace_premium_outlined,
+                                title: l.manageSubscription,
+                                onTap: () =>
+                                    _openManageSubscription(context, ref),
+                              ),
+                              Divider(
+                                height: 1,
+                                color: context.glassBorderColor
+                                    .withValues(alpha: 0.3),
+                                indent: 56,
+                              ),
+                            ],
+                          );
+                        },
                       ),
                       _ProfileTile(
                         icon: Icons.help_outline,
@@ -249,6 +301,14 @@ class ProfileScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Opens the store's subscription-management page (App Store / Play Store).
+Future<void> _openManageSubscription(
+    BuildContext context, WidgetRef ref) async {
+  final uri = await ref.read(billingServiceProvider).managementUrl();
+  if (uri == null || !context.mounted) return;
+  await _launchExternal(context, uri);
 }
 
 Future<void> _launchExternal(BuildContext context, Uri uri) async {
