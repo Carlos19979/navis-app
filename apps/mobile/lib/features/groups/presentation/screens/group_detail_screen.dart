@@ -10,6 +10,7 @@ import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/groups/domain/entities/group.dart';
 import 'package:navis_mobile/features/groups/domain/entities/group_member.dart';
 import 'package:navis_mobile/features/groups/presentation/providers/group_provider.dart';
+import 'package:navis_mobile/features/moderation/presentation/widgets/moderation_menu.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/regattas/domain/entities/regatta.dart';
 import 'package:navis_mobile/features/regattas/presentation/providers/regatta_provider.dart';
@@ -40,6 +41,14 @@ class GroupDetailScreen extends ConsumerWidget {
       appBar: NavisAppBar(
         title: groupAsync.valueOrNull?.name ?? l.groupLabel,
         showBack: true,
+        actions: [
+          if (groupAsync.valueOrNull case final group?)
+            ModerationMenuButton(
+              contentType: 'group',
+              contentId: groupId,
+              ownerUserId: group.isOwner ? null : group.ownerId,
+            ),
+        ],
       ),
       body: GradientBackground(
         child: SafeArea(

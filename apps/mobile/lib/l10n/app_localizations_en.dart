@@ -2308,4 +2308,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get costAvgPricePerLiter => 'Avg fuel price';
+
+  @override
+  String get moderationReport => 'Report';
+
+  @override
+  String get moderationBlock => 'Block user';
+
+  @override
+  String get moderationReportTitle => 'Why are you reporting this?';
+
+  @override
+  String get moderationReasonSpam => 'Spam or misleading';
+
+  @override
+  String get moderationReasonOffensive => 'Offensive content';
+
+  @override
+  String get moderationReasonHarassment => 'Harassment';
+
+  @override
+  String get moderationReasonOther => 'Other';
+
+  @override
+  String get moderationReportDone => 'Thanks — we\'ll review it.';
+
+  @override
+  String get moderationBlockTitle => 'Block this user?';
+
+  @override
+  String get moderationBlockMessage =>
+      'You won\'t see their content, and it disappears from Discover.';
+
+  @override
+  String get moderationBlockDone => 'User blocked.';
+
+  @override
+  String get moderationFailed => 'Couldn\'t complete that. Please try again.';
 }
