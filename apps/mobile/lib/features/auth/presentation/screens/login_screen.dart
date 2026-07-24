@@ -357,13 +357,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       onPressed: () => _onOAuth(
                           ref.read(authRepositoryProvider).signInWithApple),
                     ),
-                    const SizedBox(height: 10),
-                    _SocialButton(
-                      icon: Icons.g_mobiledata,
-                      label: l.continueWithGoogle,
-                      onPressed: () => _onOAuth(
-                          ref.read(authRepositoryProvider).signInWithGoogle),
-                    ),
+                    // Google sign-in is deferred until the Supabase Google
+                    // provider is configured; v1.0 ships email + Apple only.
                     const SizedBox(height: 20),
 
                     // -- Forgot Password --
