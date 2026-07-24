@@ -58,6 +58,15 @@ dev_dependencies:
   mocktail: ^1.0.0
   sqflite_common_ffi: ^2.3.0
   flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.14.4
+
+# App icon generation: source is the Navis compass-rose icon (1024x1024, opaque
+# navy). Regenerate with: dart run flutter_launcher_icons
+flutter_launcher_icons:
+  image_path: "assets/icon/navis_icon.png"
+  ios: true
+  remove_alpha_ios: true
+  android: true
 
 flutter:
   uses-material-design: true

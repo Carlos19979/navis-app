@@ -39,9 +39,10 @@ este documento es solo el índice de progreso. Actualizado: 2026-07-15.
       (`apps/api/internal/handler/legal_content.go`).
 - [ ] API key de In-App Purchase (para RevenueCat) + al menos un Sandbox tester.
 - [ ] Capability In-App Purchase en el target Runner de Xcode.
-- [ ] URLs: Privacy Policy `https://<api>/legal/privacy`, Terms `/legal/terms`,
-      Support URL `https://<api>/support` (los 3 los sirve la propia API).
-      ⚠️ `/support` va en la rama `feat/ugc-moderation`, aún sin desplegar en Railway.
+- [x] URLs configuradas en ASC (dominio Railway `navis-app-production.up.railway.app`):
+      Privacy Policy `/legal/privacy` (en Privacidad de la app), Support URL `/support`
+      (en la versión 1.0), Terms `/legal/terms` (EULA estándar de Apple + enlace in-app).
+      Los 3 endpoints responden 200 en producción. ✅ 2026-07-24.
 - [x] Clasificación por edad completada → **13+**. ✅ 2026-07-24.
 - [x] Privacidad de la app (nutrition labels) completada. ✅ 2026-07-24.
 - [x] Estatus de comerciante (DSA): declarado comerciante + datos de contacto
