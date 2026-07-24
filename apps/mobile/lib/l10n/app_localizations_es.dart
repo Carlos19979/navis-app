@@ -1513,7 +1513,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Recordatorios de mantenimiento programado';
 
   @override
-  String get proBenefitBoats => 'Hasta 5 barcos';
+  String get proBenefitBoats => 'Hasta 3 barcos';
 
   @override
   String get plusBenefitBoats => 'Hasta 2 barcos';

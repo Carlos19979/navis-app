@@ -2939,7 +2939,7 @@ abstract class AppLocalizations {
   /// No description provided for @proBenefitBoats.
   ///
   /// In en, this message translates to:
-  /// **'Up to 5 boats'**
+  /// **'Up to 3 boats'**
   String get proBenefitBoats;
 
   /// No description provided for @plusBenefitBoats.

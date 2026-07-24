@@ -94,7 +94,7 @@ class SettingsScreen extends ConsumerWidget {
                               tile('plus', 'Plus',
                                   '2 barcos · alarma fondeo · readiness'),
                               tile('pro', 'Pro',
-                                  '5 barcos · costes · splits · pasaporte'),
+                                  '3 barcos · costes · splits · pasaporte'),
                             ],
                           );
                         },

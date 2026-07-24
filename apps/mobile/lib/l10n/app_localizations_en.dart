@@ -1501,7 +1501,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proBenefitMaintenance => 'Scheduled maintenance reminders';
 
   @override
-  String get proBenefitBoats => 'Up to 5 boats';
+  String get proBenefitBoats => 'Up to 3 boats';
 
   @override
   String get plusBenefitBoats => 'Up to 2 boats';
