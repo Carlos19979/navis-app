@@ -15,7 +15,8 @@
 
 | Campo | Valor propuesto | Nota |
 |---|---|---|
-| Bundle ID 🔒 | `com.navisapp.navis` | **Permanente** una vez creada la app. Mismo valor en Xcode y RevenueCat. |
+| Bundle ID 🔒 | `com.navis.navisMobile` | El que ya estaba en el proyecto Xcode/registrado. **App creada** (2026-07-24), Apple ID `6794321904`. |
+| Nombre en la tienda | `Navis - Gestión náutica` | "Navis" a secas estaba cogido; bajo el icono sigue siendo "Navis". |
 | Categoría principal | **Navigation** | Máxima intención náutica en ASO. Alternativa: Lifestyle. |
 | Categoría secundaria | **Lifestyle** | |
 | Clasificación por edad | **4+** | Sin contenido sensible. |

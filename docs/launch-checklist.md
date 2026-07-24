@@ -21,9 +21,16 @@ este documento es solo el índice de progreso. Actualizado: 2026-07-15.
 
 ### 2. App Store Connect
 - [ ] Firmar Paid Applications Agreement + datos fiscales/bancarios.
-- [ ] Crear la app con bundle ID **`com.navisapp.navis`** y el subscription group `Navis`.
-- [ ] Productos (4): `navis_plus_monthly` (4,99 €), `navis_plus_yearly` (39,99 €),
-      `navis_pro_monthly` (8,99 €), `navis_pro_yearly` (69,99 €). Entitlements `plus` y `pro`.
+- [x] Crear la app con bundle ID **`com.navis.navisMobile`** (el que ya estaba en Xcode) y el
+      subscription group `Navis Suscripciones`. ✅ 2026-07-24 (Apple ID `6794321904`).
+- [x] Productos (4) creados: `navis_plus_monthly`, `navis_plus_yearly`,
+      `navis_pro_monthly`, `navis_pro_yearly` (duraciones 1 mes/1 año). ✅ 2026-07-24.
+- [x] Precios base € puestos (base España/EUR + autocálculo): 4,99/39,99/8,99/69,99 €.
+      EE. UU. subido a la par (4,99/39,99/8,99/69,99 $). ✅ 2026-07-24.
+- [x] Nombre + descripción localizados (ES + EN) en los 4 productos. ✅ 2026-07-24.
+      PENDIENTE en cada producto: **captura de revisión** (imagen del paywall, la aporta el
+      usuario al enviar a revisión — se sube con el build). Disponibilidad: todos los países (ok).
+      Entitlements `plus` y `pro` se configuran en RevenueCat.
       ⚠️ Si se añade prueba gratuita de 7 días, hay que divulgarla en Términos §4
       (`apps/api/internal/handler/legal_content.go`).
 - [ ] API key de In-App Purchase (para RevenueCat) + al menos un Sandbox tester.
