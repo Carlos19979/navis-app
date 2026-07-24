@@ -20,7 +20,10 @@ este documento es solo el índice de progreso. Actualizado: 2026-07-15.
 - [x] Alta en developer.apple.com (99 €/año). ✅ 2026-07-24
 
 ### 2. App Store Connect
-- [ ] Firmar Paid Applications Agreement + datos fiscales/bancarios.
+- [x] Paid Applications Agreement: términos aceptados, entidad legal actualizada,
+      banca (Revolut ES, EUR) enviada → "En proceso" (validación Apple ~24h),
+      formularios fiscales W-8BEN + Certificate of Foreign Status → **Activos**.
+      El acuerdo pasa a Activo cuando Apple valide el banco. ✅ 2026-07-24.
 - [x] Crear la app con bundle ID **`com.navis.navisMobile`** (el que ya estaba en Xcode) y el
       subscription group `Navis Suscripciones`. ✅ 2026-07-24 (Apple ID `6794321904`).
 - [x] Productos (4) creados: `navis_plus_monthly`, `navis_plus_yearly`,
@@ -38,6 +41,16 @@ este documento es solo el índice de progreso. Actualizado: 2026-07-15.
 - [ ] Capability In-App Purchase en el target Runner de Xcode.
 - [ ] URLs: Privacy Policy `https://<api>/legal/privacy`, Terms `/legal/terms`,
       Support URL `https://<api>/support` (los 3 los sirve la propia API).
+      ⚠️ `/support` va en la rama `feat/ugc-moderation`, aún sin desplegar en Railway.
+- [x] Clasificación por edad completada → **13+**. ✅ 2026-07-24.
+- [x] Privacidad de la app (nutrition labels) completada. ✅ 2026-07-24.
+- [x] Estatus de comerciante (DSA): declarado comerciante + datos de contacto
+      (Calle Juan Estellés 24B, Masarojos, Valencia 46112, +34 620377644,
+      carloscode23@icloud.com) verificados por email y SMS + justificante de
+      dirección subido. Estado en App Store Connect: **En revisión**. ✅ 2026-07-24.
+- [x] Documentación de encriptación (export compliance): declarado en
+      `ios/Runner/Info.plist` con `ITSAppUsesNonExemptEncryption=false`
+      (solo encriptación estándar exenta: HTTPS/TLS). ✅ 2026-07-24.
 
 ### 3. Firebase (proyecto `navis-44c8b`, ya existe)
 - [ ] Descargar `GoogleService-Info.plist` → `apps/mobile/ios/Runner/`.
