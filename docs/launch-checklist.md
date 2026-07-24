@@ -28,9 +28,10 @@ este documento es solo el índice de progreso. Actualizado: 2026-07-15.
 - [x] Precios base € puestos (base España/EUR + autocálculo): 4,99/39,99/8,99/69,99 €.
       EE. UU. subido a la par (4,99/39,99/8,99/69,99 $). ✅ 2026-07-24.
 - [x] Nombre + descripción localizados (ES + EN) en los 4 productos. ✅ 2026-07-24.
-      PENDIENTE en cada producto: **captura de revisión** (imagen del paywall, la aporta el
-      usuario al enviar a revisión — se sube con el build). Disponibilidad: todos los países (ok).
-      Entitlements `plus` y `pro` se configuran en RevenueCat.
+- [x] Captura de revisión subida en los 4 productos (paywall a 1170×2532, generado desde
+      el golden a DPR 3×). ✅ 2026-07-24. Disponibilidad: todos los países (ok).
+      Entitlements `plus` y `pro` se configuran en RevenueCat. **Los productos quedan
+      completos**; solo falta enviarlos a revisión con el build (y el Paid Apps Agreement activo).
       ⚠️ Si se añade prueba gratuita de 7 días, hay que divulgarla en Términos §4
       (`apps/api/internal/handler/legal_content.go`).
 - [ ] API key de In-App Purchase (para RevenueCat) + al menos un Sandbox tester.
