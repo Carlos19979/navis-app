@@ -164,10 +164,17 @@ La cancelación surte efecto al final del período ya pagado.</li>
 cancélala también en el App Store.</li>
 </ul>
 
-<h2>5. Uso aceptable</h2>
+<h2>5. Uso aceptable y contenido de la comunidad</h2>
 <p>No puedes usar la App para fines ilícitos, intentar acceder a datos de otros
 usuarios, interferir con el servicio o realizar ingeniería inversa salvo donde
 la ley lo permita.</p>
+<p><strong>Tolerancia cero con el contenido objetable.</strong> Al crear
+contenido (clubs, grupos, eventos) o interactuar con otros usuarios aceptas no
+publicar contenido ofensivo, difamatorio, acosador, ilegal o que infrinja
+derechos de terceros, ni comportarte de forma abusiva. Puedes reportar
+contenido inapropiado desde la propia App y bloquear a otros usuarios.
+Revisamos los reportes y podemos retirar contenido o suspender cuentas que
+incumplan estas normas, normalmente en un plazo de 24 horas.</p>
 
 <h2>6. Disponibilidad y cambios</h2>
 <p>Podemos modificar o interrumpir funciones, y actualizaremos estos términos
@@ -228,10 +235,17 @@ effect at the end of the paid period.</li>
 cancel it in the App Store as well.</li>
 </ul>
 
-<h2>5. Acceptable use</h2>
+<h2>5. Acceptable use and community content</h2>
 <p>You may not use the App for unlawful purposes, attempt to access other
 users' data, interfere with the service, or reverse-engineer it except where
 permitted by law.</p>
+<p><strong>Zero tolerance for objectionable content.</strong> When you create
+content (clubs, groups, events) or interact with other users, you agree not to
+post content that is offensive, defamatory, harassing, illegal, or infringes
+third-party rights, and not to behave abusively. You can report inappropriate
+content from within the App and block other users. We review reports and may
+remove content or suspend accounts that breach these rules, typically within
+24 hours.</p>
 
 <h2>6. Availability and changes</h2>
 <p>We may modify or discontinue features and will update these terms when

@@ -7,6 +7,7 @@ import (
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 	"github.com/Carlos19979/navis-app/apps/api/internal/port"
+	"github.com/Carlos19979/navis-app/apps/api/pkg/moderation"
 	"github.com/Carlos19979/navis-app/apps/api/pkg/pagination"
 )
 
@@ -15,14 +16,16 @@ type GroupService struct {
 	groupRepo  port.GroupRepository
 	memberRepo port.GroupMemberRepository
 	profiles   port.ProfileRepository
+	blocks     port.BlockRepository
 	notifier   *Notifier
 	txm        port.TxManager
 }
 
-// NewGroupService creates a new GroupService. txm may be nil (tests), in which
-// case multi-step writes run without a transaction.
-func NewGroupService(groupRepo port.GroupRepository, memberRepo port.GroupMemberRepository, profiles port.ProfileRepository, notifier *Notifier, txm port.TxManager) *GroupService {
-	return &GroupService{groupRepo: groupRepo, memberRepo: memberRepo, profiles: profiles, notifier: notifier, txm: txm}
+// NewGroupService creates a new GroupService. txm and blocks may be nil (tests),
+// in which case multi-step writes run without a transaction and no block
+// filtering is applied.
+func NewGroupService(groupRepo port.GroupRepository, memberRepo port.GroupMemberRepository, profiles port.ProfileRepository, blocks port.BlockRepository, notifier *Notifier, txm port.TxManager) *GroupService {
+	return &GroupService{groupRepo: groupRepo, memberRepo: memberRepo, profiles: profiles, blocks: blocks, notifier: notifier, txm: txm}
 }
 
 // withinTx runs fn inside a transaction when a TxManager is configured.
@@ -40,6 +43,9 @@ func (s *GroupService) Create(ctx context.Context, group *domain.Group) (*domain
 	}
 	if group.OwnerID == "" {
 		return nil, fmt.Errorf("creating group: %w", domain.ErrUnauthorized)
+	}
+	if err := checkGroupContent(group); err != nil {
+		return nil, err
 	}
 
 	// Only the paid (Pro) plan may create groups.
@@ -115,14 +121,39 @@ func (s *GroupService) List(ctx context.Context, userID, cursor string, limit in
 	return groups, next, nil
 }
 
-// ListPublic returns discoverable public groups the user has not yet joined.
+// ListPublic returns discoverable public groups the user has not yet joined,
+// hiding any owned by a user the caller has blocked (guideline 1.2).
 func (s *GroupService) ListPublic(ctx context.Context, userID, cursor string, limit int) ([]domain.Group, string, error) {
 	limit = pagination.ClampLimit(limit)
 	groups, next, err := s.groupRepo.ListPublic(ctx, userID, cursor, limit)
 	if err != nil {
 		return nil, "", fmt.Errorf("listing public groups: %w", err)
 	}
+	groups = s.filterBlocked(ctx, userID, groups)
 	return groups, next, nil
+}
+
+// filterBlocked drops groups owned by users the viewer has blocked. Errors
+// fetching the block list are non-fatal: discovery still works, just unfiltered.
+func (s *GroupService) filterBlocked(ctx context.Context, userID string, groups []domain.Group) []domain.Group {
+	if s.blocks == nil {
+		return groups
+	}
+	blockedIDs, err := s.blocks.ListBlockedIDs(ctx, userID)
+	if err != nil || len(blockedIDs) == 0 {
+		return groups
+	}
+	blocked := make(map[string]struct{}, len(blockedIDs))
+	for _, id := range blockedIDs {
+		blocked[id] = struct{}{}
+	}
+	kept := groups[:0]
+	for _, g := range groups {
+		if _, isBlocked := blocked[g.OwnerID]; !isBlocked {
+			kept = append(kept, g)
+		}
+	}
+	return kept
 }
 
 // Update modifies a group owned by the user.
@@ -130,11 +161,27 @@ func (s *GroupService) Update(ctx context.Context, userID string, group *domain.
 	if group.ID == "" {
 		return nil, &domain.ValidationError{Field: "id", Message: "id is required"}
 	}
+	if err := checkGroupContent(group); err != nil {
+		return nil, err
+	}
 	if _, err := s.groupRepo.Update(ctx, userID, group); err != nil {
 		return nil, fmt.Errorf("updating group %s: %w", group.ID, err)
 	}
 	// Re-read so derived fields (member count, my role/status) are populated.
 	return s.groupRepo.GetByID(ctx, userID, group.ID)
+}
+
+// checkGroupContent rejects a group whose name or description contains
+// objectionable language (App Store guideline 1.2 content filter).
+func checkGroupContent(group *domain.Group) error {
+	desc := ""
+	if group.Description != nil {
+		desc = *group.Description
+	}
+	if _, bad := moderation.Contains(group.Name, desc); bad {
+		return domain.ErrObjectionableContent
+	}
+	return nil
 }
 
 // Delete removes a group owned by the user.

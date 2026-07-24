@@ -103,6 +103,8 @@ func main() {
 	expenseRepo := postgres.NewExpenseRepo(pool)
 	bookingRepo := postgres.NewBookingRepo(pool)
 	expenseSplitRepo := postgres.NewExpenseSplitRepo(pool)
+	reportRepo := postgres.NewReportRepo(pool)
+	blockRepo := postgres.NewBlockRepo(pool)
 
 	// Create adapters.
 	weatherProvider := openmeteo.New()
@@ -118,7 +120,8 @@ func main() {
 	docSvc := service.NewDocumentService(docRepo, boatRepo)
 	tripSvc := service.NewTripService(tripRepo, trackRepo, boatRepo, notifySvc)
 	eventSvc := service.NewEventService(eventRepo, interestRepo)
-	groupSvc := service.NewGroupService(groupRepo, groupMemberRepo, profileRepo, notifySvc, postgres.NewTxManager(pool))
+	groupSvc := service.NewGroupService(groupRepo, groupMemberRepo, profileRepo, blockRepo, notifySvc, postgres.NewTxManager(pool))
+	moderationSvc := service.NewModerationService(reportRepo, blockRepo)
 	profileSvc := service.NewProfileService(profileRepo, boatRepo)
 	readinessSvc := service.NewReadinessService(docRepo, maintenanceRepo, maintenanceTaskRepo, boatRepo, profileRepo)
 	costSvc := service.NewCostService(expenseRepo, maintenanceRepo, tripRepo, boatRepo, profileRepo)
@@ -170,6 +173,7 @@ func main() {
 	anomalyH := handler.NewAnomalyHandler(anomalySvc)
 	webhookH := handler.NewWebhookHandler(profileSvc, cfg.RevenueCatWebhookSecret, logger)
 	legalH := handler.NewLegalHandler()
+	moderationH := handler.NewModerationHandler(moderationSvc)
 
 	// Create router.
 	jwksURL := cfg.SupabaseURL + "/auth/v1/.well-known/jwks.json"
@@ -183,6 +187,7 @@ func main() {
 		anomalyH,
 		webhookH,
 		legalH,
+		moderationH,
 		cfg.SupabaseJWTSecret,
 		jwksURL,
 		cfg.CORSAllowedOrigins,

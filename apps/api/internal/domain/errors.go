@@ -30,6 +30,11 @@ var (
 	// ErrPlanForbidden is returned when the user's plan does not allow an
 	// action at all (e.g. a normal user creating a group).
 	ErrPlanForbidden = errors.New("not allowed on current plan")
+	// ErrSelfBlock is returned when a user tries to block themselves.
+	ErrSelfBlock = errors.New("cannot block yourself")
+	// ErrObjectionableContent is returned when user-generated text fails the
+	// moderation content filter (App Store guideline 1.2).
+	ErrObjectionableContent = errors.New("content contains objectionable language")
 )
 
 // ValidationError represents a field-level validation failure.
