@@ -164,10 +164,17 @@ La cancelación surte efecto al final del período ya pagado.</li>
 cancélala también en el App Store.</li>
 </ul>
 
-<h2>5. Uso aceptable</h2>
+<h2>5. Uso aceptable y contenido de la comunidad</h2>
 <p>No puedes usar la App para fines ilícitos, intentar acceder a datos de otros
 usuarios, interferir con el servicio o realizar ingeniería inversa salvo donde
 la ley lo permita.</p>
+<p><strong>Tolerancia cero con el contenido objetable.</strong> Al crear
+contenido (clubs, grupos, eventos) o interactuar con otros usuarios aceptas no
+publicar contenido ofensivo, difamatorio, acosador, ilegal o que infrinja
+derechos de terceros, ni comportarte de forma abusiva. Puedes reportar
+contenido inapropiado desde la propia App y bloquear a otros usuarios.
+Revisamos los reportes y podemos retirar contenido o suspender cuentas que
+incumplan estas normas, normalmente en un plazo de 24 horas.</p>
 
 <h2>6. Disponibilidad y cambios</h2>
 <p>Podemos modificar o interrumpir funciones, y actualizaremos estos términos
@@ -228,10 +235,17 @@ effect at the end of the paid period.</li>
 cancel it in the App Store as well.</li>
 </ul>
 
-<h2>5. Acceptable use</h2>
+<h2>5. Acceptable use and community content</h2>
 <p>You may not use the App for unlawful purposes, attempt to access other
 users' data, interfere with the service, or reverse-engineer it except where
 permitted by law.</p>
+<p><strong>Zero tolerance for objectionable content.</strong> When you create
+content (clubs, groups, events) or interact with other users, you agree not to
+post content that is offensive, defamatory, harassing, illegal, or infringes
+third-party rights, and not to behave abusively. You can report inappropriate
+content from within the App and block other users. We review reports and may
+remove content or suspend accounts that breach these rules, typically within
+24 hours.</p>
 
 <h2>6. Availability and changes</h2>
 <p>We may modify or discontinue features and will update these terms when
@@ -255,4 +269,79 @@ courts of the consumer's domicile.</p>
 
 <h2>10. Contact</h2>
 <p><a href="mailto:carloscode23@icloud.com">carloscode23@icloud.com</a></p>
+`
+
+const supportBody = `
+<h1>Soporte de Navis</h1>
+<p class="updated">Navis — tu barco, bajo control.</p>
+
+<p>Navis te ayuda a gestionar los documentos, el mantenimiento, los gastos y la
+bitácora de tu barco. Si necesitas ayuda o quieres reportar un problema,
+escríbenos y te respondemos lo antes posible (normalmente en 1-2 días
+laborables).</p>
+
+<h2>Contacto</h2>
+<p>Email: <a href="mailto:carloscode23@icloud.com">carloscode23@icloud.com</a></p>
+
+<h2>Preguntas frecuentes</h2>
+
+<h3>¿Cómo cancelo mi suscripción?</h3>
+<p>Las suscripciones se gestionan desde tu cuenta de App Store: <em>Ajustes →
+[tu nombre] → Suscripciones → Navis</em>. Cancela al menos 24 horas antes del fin
+del período en curso. La cancelación surte efecto al final del período ya pagado.
+Eliminar tu cuenta de Navis <strong>no</strong> cancela la suscripción: hazlo
+también en el App Store.</p>
+
+<h3>¿Cómo elimino mi cuenta?</h3>
+<p>Desde la app: <em>Perfil → Ajustes → Cuenta → Eliminar cuenta</em>. El borrado
+es inmediato y elimina tus datos; es irreversible.</p>
+
+<h3>He olvidado mi contraseña</h3>
+<p>En la pantalla de acceso, pulsa «¿Olvidaste tu contraseña?» e introduce tu
+email para recibir un enlace de restablecimiento.</p>
+
+<h3>He cambiado de móvil o no veo mi plan de pago</h3>
+<p>Inicia sesión con la misma cuenta y usa <em>Restaurar compras</em> en la
+pantalla de suscripción. Tu plan se reactiva automáticamente.</p>
+
+<h3>¿Cómo tratáis mis datos?</h3>
+<p>Consulta nuestra <a href="/legal/privacy">Política de Privacidad</a> y los
+<a href="/legal/terms">Términos de Servicio</a>.</p>
+
+<hr class="lang">
+
+<h1>Navis Support</h1>
+<p class="updated">Navis — your boat, sorted.</p>
+
+<p>Navis helps you manage your boat's documents, maintenance, expenses and
+logbook. If you need help or want to report a problem, email us and we'll get
+back to you as soon as possible (usually within 1-2 business days).</p>
+
+<h2>Contact</h2>
+<p>Email: <a href="mailto:carloscode23@icloud.com">carloscode23@icloud.com</a></p>
+
+<h2>Frequently asked questions</h2>
+
+<h3>How do I cancel my subscription?</h3>
+<p>Subscriptions are managed from your App Store account: <em>Settings → [your
+name] → Subscriptions → Navis</em>. Cancel at least 24 hours before the end of the
+current period. Cancellation takes effect at the end of the paid period. Deleting
+your Navis account does <strong>not</strong> cancel the subscription — cancel it
+in the App Store as well.</p>
+
+<h3>How do I delete my account?</h3>
+<p>In the app: <em>Profile → Settings → Account → Delete account</em>. Deletion is
+immediate, removes your data and is irreversible.</p>
+
+<h3>I forgot my password</h3>
+<p>On the sign-in screen, tap "Forgot your password?" and enter your email to
+receive a reset link.</p>
+
+<h3>I changed phones or can't see my paid plan</h3>
+<p>Sign in with the same account and tap <em>Restore purchases</em> on the
+subscription screen. Your plan is reactivated automatically.</p>
+
+<h3>How is my data handled?</h3>
+<p>See our <a href="/legal/privacy">Privacy Policy</a> and
+<a href="/legal/terms">Terms of Service</a>.</p>
 `

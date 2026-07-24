@@ -582,7 +582,7 @@
   "proBenefitCostAnalytics": "Cost intelligence: cost per mile, per trip and per season",
   "proBenefitReminders": "Unlimited document expiry reminders",
   "proBenefitMaintenance": "Scheduled maintenance reminders",
-  "proBenefitBoats": "Up to 5 boats",
+  "proBenefitBoats": "Up to 3 boats",
   "plusBenefitBoats": "Up to 2 boats",
   "paywallTitle": "Navis Plus & Pro",
   "paywallPlusName": "Navis Plus",
@@ -936,5 +936,17 @@
       "price": { "type": "String" }
     }
   },
-  "costAvgPricePerLiter": "Avg fuel price"
+  "costAvgPricePerLiter": "Avg fuel price",
+  "moderationReport": "Report",
+  "moderationBlock": "Block user",
+  "moderationReportTitle": "Why are you reporting this?",
+  "moderationReasonSpam": "Spam or misleading",
+  "moderationReasonOffensive": "Offensive content",
+  "moderationReasonHarassment": "Harassment",
+  "moderationReasonOther": "Other",
+  "moderationReportDone": "Thanks — we'll review it.",
+  "moderationBlockTitle": "Block this user?",
+  "moderationBlockMessage": "You won't see their content, and it disappears from Discover.",
+  "moderationBlockDone": "User blocked.",
+  "moderationFailed": "Couldn't complete that. Please try again."
 }

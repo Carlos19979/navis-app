@@ -13,6 +13,7 @@ import 'package:navis_mobile/features/charts/data/tile_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:navis_mobile/features/events/domain/entities/event.dart';
+import 'package:navis_mobile/features/moderation/presentation/widgets/moderation_menu.dart';
 import 'package:navis_mobile/features/events/presentation/providers/event_provider.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
@@ -75,6 +76,12 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
       appBar: NavisAppBar(
         title: l.eventDetails,
         showBack: true,
+        actions: [
+          ModerationMenuButton(
+            contentType: 'event',
+            contentId: widget.eventId,
+          ),
+        ],
       ),
       body: GradientBackground(
         child: eventAsync.when(

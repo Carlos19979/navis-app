@@ -15,6 +15,12 @@
 	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<!-- Export compliance: Navis only uses standard, exempt encryption
+	     (HTTPS/TLS for the API, Supabase auth over TLS). No proprietary
+	     cryptography, so it qualifies for the export-compliance exemption.
+	     Declaring this here stops App Store Connect asking on every build. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

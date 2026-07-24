@@ -17,18 +17,40 @@ este documento es solo el índice de progreso. Actualizado: 2026-07-15.
 ## ⬜ Pendiente — config externa (en orden de dependencia)
 
 ### 1. Apple Developer Program ← bloquea 2, 3 y 6
-- [ ] Alta en developer.apple.com (99 €/año).
+- [x] Alta en developer.apple.com (99 €/año). ✅ 2026-07-24
 
 ### 2. App Store Connect
-- [ ] Firmar Paid Applications Agreement + datos fiscales/bancarios.
-- [ ] Crear la app (bundle ID) y el subscription group `Navis`.
-- [ ] Productos (4): `navis_plus_monthly` (4,99 €), `navis_plus_yearly` (39,99 €),
-      `navis_pro_monthly` (8,99 €), `navis_pro_yearly` (69,99 €). Entitlements `plus` y `pro`.
+- [x] Paid Applications Agreement: términos aceptados, entidad legal actualizada,
+      banca (Revolut ES, EUR) enviada → "En proceso" (validación Apple ~24h),
+      formularios fiscales W-8BEN + Certificate of Foreign Status → **Activos**.
+      El acuerdo pasa a Activo cuando Apple valide el banco. ✅ 2026-07-24.
+- [x] Crear la app con bundle ID **`com.navis.navisMobile`** (el que ya estaba en Xcode) y el
+      subscription group `Navis Suscripciones`. ✅ 2026-07-24 (Apple ID `6794321904`).
+- [x] Productos (4) creados: `navis_plus_monthly`, `navis_plus_yearly`,
+      `navis_pro_monthly`, `navis_pro_yearly` (duraciones 1 mes/1 año). ✅ 2026-07-24.
+- [x] Precios base € puestos (base España/EUR + autocálculo): 4,99/39,99/8,99/69,99 €.
+      EE. UU. subido a la par (4,99/39,99/8,99/69,99 $). ✅ 2026-07-24.
+- [x] Nombre + descripción localizados (ES + EN) en los 4 productos. ✅ 2026-07-24.
+- [x] Captura de revisión subida en los 4 productos (paywall a 1170×2532, generado desde
+      el golden a DPR 3×). ✅ 2026-07-24. Disponibilidad: todos los países (ok).
+      Entitlements `plus` y `pro` se configuran en RevenueCat. **Los productos quedan
+      completos**; solo falta enviarlos a revisión con el build (y el Paid Apps Agreement activo).
       ⚠️ Si se añade prueba gratuita de 7 días, hay que divulgarla en Términos §4
       (`apps/api/internal/handler/legal_content.go`).
 - [ ] API key de In-App Purchase (para RevenueCat) + al menos un Sandbox tester.
 - [ ] Capability In-App Purchase en el target Runner de Xcode.
-- [ ] URLs legales: `https://<api>/legal/privacy` y `/legal/terms`.
+- [ ] URLs: Privacy Policy `https://<api>/legal/privacy`, Terms `/legal/terms`,
+      Support URL `https://<api>/support` (los 3 los sirve la propia API).
+      ⚠️ `/support` va en la rama `feat/ugc-moderation`, aún sin desplegar en Railway.
+- [x] Clasificación por edad completada → **13+**. ✅ 2026-07-24.
+- [x] Privacidad de la app (nutrition labels) completada. ✅ 2026-07-24.
+- [x] Estatus de comerciante (DSA): declarado comerciante + datos de contacto
+      (Calle Juan Estellés 24B, Masarojos, Valencia 46112, +34 620377644,
+      carloscode23@icloud.com) verificados por email y SMS + justificante de
+      dirección subido. Estado en App Store Connect: **En revisión**. ✅ 2026-07-24.
+- [x] Documentación de encriptación (export compliance): declarado en
+      `ios/Runner/Info.plist` con `ITSAppUsesNonExemptEncryption=false`
+      (solo encriptación estándar exenta: HTTPS/TLS). ✅ 2026-07-24.
 
 ### 3. Firebase (proyecto `navis-44c8b`, ya existe)
 - [ ] Descargar `GoogleService-Info.plist` → `apps/mobile/ios/Runner/`.
@@ -37,7 +59,7 @@ este documento es solo el índice de progreso. Actualizado: 2026-07-15.
 
 ### 4. Supabase Cloud
 - [ ] Proyecto en **región UE** (la Política de Privacidad §4 lo afirma).
-- [ ] `supabase link` + `supabase db push` (00001–00032); verificar bucket `documents`
+- [ ] `supabase link` + `supabase db push` (00001–00038); verificar bucket `documents`
       privado, RLS de `sent_notifications`, índices de paginación.
 - [ ] Auth: confirmaciones de email ON, redirect `navis://login-callback`,
       Sign in with Apple + Google, SMTP de Resend como sender.
@@ -50,8 +72,10 @@ este documento es solo el índice de progreso. Actualizado: 2026-07-15.
 
 ### 6. RevenueCat
 - [ ] Proyecto + app iOS (API key de App Store Connect + bundle ID).
-- [ ] Importar productos; entitlement con identificador **exactamente `pro`**;
-      offering marcado Current con paquetes Monthly + Annual.
+- [ ] Importar los 4 productos; crear **dos** entitlements con identificadores
+      **exactamente `plus` y `pro`** (`navis_plus_*` → `plus`, `navis_pro_*` → `pro`);
+      offering marcado Current con los 4 packages (Monthly + Annual de cada tier).
+      El paywall separa tiers por el identificador del producto (`*_plus_*`/`*_pro_*`).
 - [ ] Webhook → `https://<railway>/api/v1/webhooks/revenuecat` con el mismo secret
       que `REVENUECAT_WEBHOOK_SECRET`.
 - [ ] Copiar SDK key iOS (`appl_…`) para los builds (`REVENUECAT_IOS_KEY`).

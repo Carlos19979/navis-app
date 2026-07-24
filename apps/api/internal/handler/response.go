@@ -101,6 +101,12 @@ func MapDomainError(w http.ResponseWriter, err error) {
 	case errors.Is(err, domain.ErrPlanForbidden):
 		Error(w, http.StatusPaymentRequired, err.Error(), "PLAN_FORBIDDEN")
 
+	case errors.Is(err, domain.ErrObjectionableContent):
+		Error(w, http.StatusUnprocessableEntity, err.Error(), "OBJECTIONABLE_CONTENT")
+
+	case errors.Is(err, domain.ErrSelfBlock):
+		Error(w, http.StatusUnprocessableEntity, err.Error(), "SELF_BLOCK")
+
 	default:
 		sentry.CaptureException(err)
 		slog.Error("unhandled error", slog.String("error", err.Error()))

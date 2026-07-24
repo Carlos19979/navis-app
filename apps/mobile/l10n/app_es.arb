@@ -561,7 +561,7 @@
   "proBenefitCostAnalytics": "Inteligencia de costes: coste por milla, por viaje y por temporada",
   "proBenefitReminders": "Recordatorios ilimitados de caducidad de documentos",
   "proBenefitMaintenance": "Recordatorios de mantenimiento programado",
-  "proBenefitBoats": "Hasta 5 barcos",
+  "proBenefitBoats": "Hasta 3 barcos",
   "plusBenefitBoats": "Hasta 2 barcos",
   "paywallTitle": "Navis Plus y Pro",
   "paywallPlusName": "Navis Plus",
@@ -825,5 +825,17 @@
       "price": { "type": "String" }
     }
   },
-  "costAvgPricePerLiter": "Precio medio combustible"
+  "costAvgPricePerLiter": "Precio medio combustible",
+  "moderationReport": "Reportar",
+  "moderationBlock": "Bloquear usuario",
+  "moderationReportTitle": "¿Por qué lo reportas?",
+  "moderationReasonSpam": "Spam o engañoso",
+  "moderationReasonOffensive": "Contenido ofensivo",
+  "moderationReasonHarassment": "Acoso",
+  "moderationReasonOther": "Otro",
+  "moderationReportDone": "Gracias, lo revisaremos.",
+  "moderationBlockTitle": "¿Bloquear a este usuario?",
+  "moderationBlockMessage": "No verás su contenido y desaparecerá de Descubrir.",
+  "moderationBlockDone": "Usuario bloqueado.",
+  "moderationFailed": "No se pudo completar. Inténtalo de nuevo."
 }

@@ -1513,7 +1513,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Recordatorios de mantenimiento programado';
 
   @override
-  String get proBenefitBoats => 'Hasta 5 barcos';
+  String get proBenefitBoats => 'Hasta 3 barcos';
 
   @override
   String get plusBenefitBoats => 'Hasta 2 barcos';
@@ -2328,4 +2328,41 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get costAvgPricePerLiter => 'Precio medio combustible';
+
+  @override
+  String get moderationReport => 'Reportar';
+
+  @override
+  String get moderationBlock => 'Bloquear usuario';
+
+  @override
+  String get moderationReportTitle => '¿Por qué lo reportas?';
+
+  @override
+  String get moderationReasonSpam => 'Spam o engañoso';
+
+  @override
+  String get moderationReasonOffensive => 'Contenido ofensivo';
+
+  @override
+  String get moderationReasonHarassment => 'Acoso';
+
+  @override
+  String get moderationReasonOther => 'Otro';
+
+  @override
+  String get moderationReportDone => 'Gracias, lo revisaremos.';
+
+  @override
+  String get moderationBlockTitle => '¿Bloquear a este usuario?';
+
+  @override
+  String get moderationBlockMessage =>
+      'No verás su contenido y desaparecerá de Descubrir.';
+
+  @override
+  String get moderationBlockDone => 'Usuario bloqueado.';
+
+  @override
+  String get moderationFailed => 'No se pudo completar. Inténtalo de nuevo.';
 }

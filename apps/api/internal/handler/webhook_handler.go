@@ -47,9 +47,9 @@ type revenueCatWebhook struct {
 }
 
 // RevenueCat handles POST /api/v1/webhooks/revenuecat. It maps a subscription
-// lifecycle event to the user's plan: grant events set Pro, expiration resets to
-// Free, and informational events (cancellation, billing issues, tests) are
-// acknowledged without changing the plan.
+// lifecycle event to the user's plan: grant events set the purchased tier (Plus
+// or Pro), expiration resets to Free, and informational events (cancellation,
+// billing issues, tests) are acknowledged without changing the plan.
 func (h *WebhookHandler) RevenueCat(w http.ResponseWriter, r *http.Request) {
 	if !h.authorized(r) {
 		Error(w, http.StatusUnauthorized, "unauthorized", "UNAUTHORIZED")
@@ -70,6 +70,18 @@ func (h *WebhookHandler) RevenueCat(w http.ResponseWriter, r *http.Request) {
 
 	plan, act := planForEvent(evt.Type, evt.EntitlementID, evt.EntitlementIDs)
 	if !act {
+		// A subscription event we couldn't map to a tier means the payload
+		// carried no entitlement we recognise. We fail closed (plan unchanged)
+		// rather than granting a paid tier from an ambiguous payload — but we
+		// log loudly, because a RevenueCat payload-shape change would surface
+		// here as a stream of these and must not silently drop upgrades.
+		if isSubscriptionEvent(evt.Type) {
+			h.logger.Warn("revenuecat webhook: subscription event without a recognised entitlement; plan unchanged",
+				slog.String("app_user_id", evt.AppUserID),
+				slog.String("event_type", evt.Type),
+				slog.String("entitlement_id", evt.EntitlementID),
+				slog.Any("entitlement_ids", evt.EntitlementIDs))
+		}
 		// Informational or unrelated-entitlement event: acknowledge, do nothing.
 		JSON(w, http.StatusOK, map[string]string{"status": "ignored"})
 		return
@@ -104,21 +116,34 @@ func (h *WebhookHandler) authorized(r *http.Request) bool {
 	return subtle.ConstantTimeCompare([]byte(got), []byte(h.secret)) == 1
 }
 
+// isSubscriptionEvent reports whether the event type is one that changes the
+// plan when a recognised entitlement is present (a grant or an expiration), as
+// opposed to informational events (CANCELLATION, BILLING_ISSUE, TEST, …). The
+// handler uses it to decide when an unmapped event deserves a warning.
+func isSubscriptionEvent(eventType string) bool {
+	switch eventType {
+	case "INITIAL_PURCHASE", "RENEWAL", "PRODUCT_CHANGE", "UNCANCELLATION",
+		"NON_RENEWING_PURCHASE", "SUBSCRIPTION_EXTENDED", "EXPIRATION":
+		return true
+	default:
+		return false
+	}
+}
+
 // planForEvent maps a RevenueCat event to a target plan. The bool is false when
 // the event should not change the plan.
 func planForEvent(eventType, entitlementID string, entitlementIDs []string) (domain.Plan, bool) {
 	tier := highestTier(entitlementID, entitlementIDs)
+	if tier == "" {
+		// No recognised entitlement on the payload → change nothing (fail
+		// closed). Applies to grant and expiration events alike.
+		return "", false
+	}
 	switch eventType {
 	case "INITIAL_PURCHASE", "RENEWAL", "PRODUCT_CHANGE", "UNCANCELLATION",
 		"NON_RENEWING_PURCHASE", "SUBSCRIPTION_EXTENDED":
-		if tier == "" {
-			return "", false
-		}
 		return tier, true
 	case "EXPIRATION":
-		if tier == "" {
-			return "", false
-		}
 		return domain.PlanFree, true
 	default:
 		// CANCELLATION keeps access until EXPIRATION; BILLING_ISSUE, TRANSFER,
@@ -128,12 +153,11 @@ func planForEvent(eventType, entitlementID string, entitlementIDs []string) (dom
 }
 
 // highestTier returns the top plan whose entitlement appears on the event, or
-// "" if none of ours do. Events that carry no entitlement fields are treated as
-// Pro (fail open) so a payload shape change can't silently drop upgrades.
+// "" if none of ours do. An event that carries no recognised entitlement yields
+// "" (fail closed): rather than granting a paid tier from an ambiguous payload,
+// the plan is left unchanged and the handler logs it, so a RevenueCat payload
+// shape change is caught in the logs instead of silently giving away Pro.
 func highestTier(entitlementID string, entitlementIDs []string) domain.Plan {
-	if entitlementID == "" && len(entitlementIDs) == 0 {
-		return domain.PlanPro
-	}
 	ids := append([]string{entitlementID}, entitlementIDs...)
 	best := domain.Plan("")
 	for _, id := range ids {

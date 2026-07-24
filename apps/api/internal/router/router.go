@@ -32,6 +32,7 @@ func New(
 	anomalyH *handler.AnomalyHandler,
 	webhookH *handler.WebhookHandler,
 	legalH *handler.LegalHandler,
+	moderationH *handler.ModerationHandler,
 	jwtSecret string,
 	jwksURL string,
 	allowedOrigins []string,
@@ -93,6 +94,9 @@ func New(
 		r.Get("/privacy", legalH.Privacy)
 		r.Get("/terms", legalH.Terms)
 	})
+
+	// Support page (no auth) — the App Store Connect Support URL points here.
+	r.With(middleware.PublicPageCSP).Get("/support", legalH.Support)
 
 	// Provider webhooks (no JWT — authenticated by a shared secret in the
 	// handler). Strict rate limit: RevenueCat sends single events, not bursts.
@@ -258,6 +262,14 @@ func New(
 			})
 		})
 
+		// UGC moderation (App Store Review Guideline 1.2): report content and
+		// block users. Content filtering is enforced in the content services.
+		r.Post("/reports", moderationH.Report)
+		r.Route("/users/{id}/block", func(r chi.Router) {
+			r.Post("/", moderationH.Block)
+			r.Delete("/", moderationH.Unblock)
+		})
+
 		// Weather.
 		r.Route("/weather", func(r chi.Router) {
 			r.Get("/current", weatherH.GetCurrent)
@@ -281,6 +293,8 @@ func New(
 		// Current user's plan and limits.
 		r.Route("/me", func(r chi.Router) {
 			r.Get("/", profileH.Me)
+			// User IDs the caller has blocked (client hides their content).
+			r.Get("/blocked", moderationH.ListBlocked)
 			// Dev-only plan switcher. In production the plan is driven solely by
 			// the RevenueCat webhook, so this route is not registered.
 			if enableDevPlanSwitcher {

@@ -411,6 +411,27 @@ Estado actual: Fases 0-11 implementadas. Fase 12 en progreso. Este roadmap cubre
 
 ---
 
+## FASE 18: Panel de moderación de contenido (post-lanzamiento)
+**Objetivo:** revisar y actuar sobre los reportes de UGC sin entrar a Supabase.
+
+**Contexto:** el backend de moderación (App Store 1.2) ya existe — reportes
+(`content_reports`), bloqueos (`blocked_users`), filtro de contenido y bloqueo en
+Descubrir (rama `feat/ugc-moderation`). Para lanzar, el operador revisa los
+reportes **manualmente en el dashboard de Supabase** (`content_reports`,
+`status='pending'`) y retira contenido/marca estado a mano. Suficiente a volumen
+bajo; a medida que crezca hace falta un panel propio.
+
+### Tareas (post-lanzamiento)
+- [ ] Endpoint admin `GET /admin/reports` (rol admin; hoy no existe rol admin → añadir).
+- [ ] Acciones admin: retirar grupo/evento reportado, suspender usuario, marcar
+      report `reviewed`/`actioned`/`dismissed`.
+- [ ] Vista web de moderación (cola de pendientes, filtros, acción en un clic).
+- [ ] (Opcional) Aviso al operador cuando entra un report (email/push) — se dejó
+      fuera del MVP a propósito.
+- [ ] (Opcional) Auto-ocultar contenido tras N reportes hasta revisión.
+
+---
+
 ## RESUMEN
 
 | Fase | Nombre | Estado | Estimación |
@@ -434,6 +455,7 @@ Estado actual: Fases 0-11 implementadas. Fase 12 en progreso. Este roadmap cubre
 | **15** | **Social y Estadísticas** | **PENDIENTE** | **3-4 días** |
 | **16** | **Infra y Producción** | **EN PROGRESO** | **3-5 días** |
 | **17** | **Premium (Futuro)** | **FUTURO** | **TBD** |
+| **18** | **Panel de moderación** | **POST-LANZAMIENTO** | **TBD** |
 | | **TOTAL RESTANTE** | | **~24-35 días** |
 
 ---

@@ -70,7 +70,8 @@ func TestPlanForEvent(t *testing.T) {
 		{"billing issue is a no-op", "BILLING_ISSUE", "pro", nil, "", false},
 		{"test event is a no-op", "TEST", "", nil, "", false},
 		{"grant for other entitlement ignored", "INITIAL_PURCHASE", "some_other", nil, "", false},
-		{"grant with no entitlement fields fails open", "INITIAL_PURCHASE", "", nil, domain.PlanPro, true},
+		{"grant with no entitlement fields is ignored (fail closed)", "INITIAL_PURCHASE", "", nil, "", false},
+		{"expiration with no entitlement is ignored (fail closed)", "EXPIRATION", "", nil, "", false},
 	}
 
 	for _, tc := range tests {

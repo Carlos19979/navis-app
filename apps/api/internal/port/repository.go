@@ -227,3 +227,19 @@ type DeviceTokenRepository interface {
 	Delete(ctx context.Context, userID, token string) error
 	GetByUserID(ctx context.Context, userID string) ([]domain.DeviceToken, error)
 }
+
+// ReportRepository persists user reports of objectionable content (guideline 1.2).
+type ReportRepository interface {
+	// Create stores a report. Re-reporting the same content by the same user is
+	// a no-op (idempotent on the unique reporter+content index).
+	Create(ctx context.Context, report *domain.Report) error
+}
+
+// BlockRepository persists user-to-user blocks and answers block queries used
+// to hide blocked users' content from discovery.
+type BlockRepository interface {
+	Block(ctx context.Context, blockerID, blockedID string) error
+	Unblock(ctx context.Context, blockerID, blockedID string) error
+	// ListBlockedIDs returns the user IDs that blockerID has blocked.
+	ListBlockedIDs(ctx context.Context, blockerID string) ([]string, error)
+}

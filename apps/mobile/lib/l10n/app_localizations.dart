@@ -2939,7 +2939,7 @@ abstract class AppLocalizations {
   /// No description provided for @proBenefitBoats.
   ///
   /// In en, this message translates to:
-  /// **'Up to 5 boats'**
+  /// **'Up to 3 boats'**
   String get proBenefitBoats;
 
   /// No description provided for @plusBenefitBoats.
@@ -4429,6 +4429,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Avg fuel price'**
   String get costAvgPricePerLiter;
+
+  /// No description provided for @moderationReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Report'**
+  String get moderationReport;
+
+  /// No description provided for @moderationBlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Block user'**
+  String get moderationBlock;
+
+  /// No description provided for @moderationReportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Why are you reporting this?'**
+  String get moderationReportTitle;
+
+  /// No description provided for @moderationReasonSpam.
+  ///
+  /// In en, this message translates to:
+  /// **'Spam or misleading'**
+  String get moderationReasonSpam;
+
+  /// No description provided for @moderationReasonOffensive.
+  ///
+  /// In en, this message translates to:
+  /// **'Offensive content'**
+  String get moderationReasonOffensive;
+
+  /// No description provided for @moderationReasonHarassment.
+  ///
+  /// In en, this message translates to:
+  /// **'Harassment'**
+  String get moderationReasonHarassment;
+
+  /// No description provided for @moderationReasonOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get moderationReasonOther;
+
+  /// No description provided for @moderationReportDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks — we\'ll review it.'**
+  String get moderationReportDone;
+
+  /// No description provided for @moderationBlockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Block this user?'**
+  String get moderationBlockTitle;
+
+  /// No description provided for @moderationBlockMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You won\'t see their content, and it disappears from Discover.'**
+  String get moderationBlockMessage;
+
+  /// No description provided for @moderationBlockDone.
+  ///
+  /// In en, this message translates to:
+  /// **'User blocked.'**
+  String get moderationBlockDone;
+
+  /// No description provided for @moderationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t complete that. Please try again.'**
+  String get moderationFailed;
 }
 
 class _AppLocalizationsDelegate
