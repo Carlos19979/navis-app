@@ -5,8 +5,9 @@ import (
 	"net/http"
 )
 
-// LegalHandler serves the privacy policy and terms of service as standalone
-// HTML pages. App Store Connect and the in-app links point here.
+// LegalHandler serves the privacy policy, terms of service and support page as
+// standalone HTML pages. App Store Connect (Privacy Policy URL + Support URL)
+// and the in-app links point here.
 //
 // ⚠️ The documents are drafts: the identity/contact placeholders and the legal
 // wording must be reviewed by the operator before launch (see docs/deploy.md).
@@ -32,6 +33,16 @@ func (h *LegalHandler) Terms(w http.ResponseWriter, _ *http.Request) {
 	_ = legalPageTemplate.Execute(w, map[string]any{
 		"Title": "Términos de Servicio · Terms of Service · Navis",
 		"Body":  template.HTML(termsBody), //nolint:gosec // static server-side content
+	})
+}
+
+// Support handles GET /support. Apple requires a working support web page (a
+// mailto link is not accepted); this serves one with contact and FAQs.
+func (h *LegalHandler) Support(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_ = legalPageTemplate.Execute(w, map[string]any{
+		"Title": "Soporte · Support · Navis",
+		"Body":  template.HTML(supportBody), //nolint:gosec // static server-side content
 	})
 }
 

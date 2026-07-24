@@ -94,6 +94,9 @@ func New(
 		r.Get("/terms", legalH.Terms)
 	})
 
+	// Support page (no auth) — the App Store Connect Support URL points here.
+	r.With(middleware.PublicPageCSP).Get("/support", legalH.Support)
+
 	// Provider webhooks (no JWT — authenticated by a shared secret in the
 	// handler). Strict rate limit: RevenueCat sends single events, not bursts.
 	r.With(middleware.RateLimit(20, time.Minute)).
