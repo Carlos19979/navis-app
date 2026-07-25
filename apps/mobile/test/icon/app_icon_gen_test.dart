@@ -30,7 +30,7 @@ const Color white = Color(0xFFFFFFFF);
 /// Paints the shared full-bleed background: diagonal navy gradient plus a
 /// subtle radial glow centered slightly above the middle behind the mark.
 void _paintBackground(Canvas canvas) {
-  final Rect full = const Rect.fromLTWH(0, 0, kSize, kSize);
+  const Rect full = Rect.fromLTWH(0, 0, kSize, kSize);
 
   // Diagonal gradient top-left -> bottom-right.
   final Paint bg = Paint()
@@ -77,8 +77,8 @@ void _paintSailboat(Canvas canvas) {
     ..strokeWidth = kSize * 0.014
     ..strokeCap = StrokeCap.round;
   canvas.drawLine(
-    Offset(mastX, mastTop - kSize * 0.005),
-    Offset(mastX, sailBottom),
+    const Offset(mastX, mastTop - kSize * 0.005),
+    const Offset(mastX, sailBottom),
     mastPaint,
   );
 
@@ -95,7 +95,7 @@ void _paintSailboat(Canvas canvas) {
       end: Alignment.bottomCenter,
       colors: [white, Color(0xFFE8F4FB)],
     ).createShader(
-      Rect.fromLTWH(mastX, mastTop, kSize * 0.235, sailBottom - mastTop),
+      const Rect.fromLTWH(mastX, mastTop, kSize * 0.235, sailBottom - mastTop),
     );
   canvas.drawPath(mainsail, mainPaint);
 
@@ -111,7 +111,7 @@ void _paintSailboat(Canvas canvas) {
       end: Alignment.bottomCenter,
       colors: [cyanLight, cyan],
     ).createShader(
-      Rect.fromLTWH(
+      const Rect.fromLTWH(
         mastX - kSize * 0.165,
         mastTop,
         kSize * 0.16,
@@ -151,14 +151,20 @@ void _paintSailboat(Canvas canvas) {
   final Path wave1 = Path()
     ..moveTo(cx - kSize * 0.30, waveY1)
     ..cubicTo(
-      cx - kSize * 0.14, waveY1 - kSize * 0.055,
-      cx - kSize * 0.06, waveY1 + kSize * 0.055,
-      cx + kSize * 0.06, waveY1,
+      cx - kSize * 0.14,
+      waveY1 - kSize * 0.055,
+      cx - kSize * 0.06,
+      waveY1 + kSize * 0.055,
+      cx + kSize * 0.06,
+      waveY1,
     )
     ..cubicTo(
-      cx + kSize * 0.16, waveY1 - kSize * 0.045,
-      cx + kSize * 0.22, waveY1 + kSize * 0.02,
-      cx + kSize * 0.30, waveY1 - kSize * 0.01,
+      cx + kSize * 0.16,
+      waveY1 - kSize * 0.045,
+      cx + kSize * 0.22,
+      waveY1 + kSize * 0.02,
+      cx + kSize * 0.30,
+      waveY1 - kSize * 0.01,
     );
   canvas.drawPath(wave1, wavePaint);
 
@@ -171,14 +177,20 @@ void _paintSailboat(Canvas canvas) {
   final Path wave2 = Path()
     ..moveTo(cx - kSize * 0.24, waveY2)
     ..cubicTo(
-      cx - kSize * 0.10, waveY2 - kSize * 0.045,
-      cx - kSize * 0.02, waveY2 + kSize * 0.045,
-      cx + kSize * 0.10, waveY2,
+      cx - kSize * 0.10,
+      waveY2 - kSize * 0.045,
+      cx - kSize * 0.02,
+      waveY2 + kSize * 0.045,
+      cx + kSize * 0.10,
+      waveY2,
     )
     ..cubicTo(
-      cx + kSize * 0.17, waveY2 - kSize * 0.035,
-      cx + kSize * 0.20, waveY2 + kSize * 0.015,
-      cx + kSize * 0.24, waveY2,
+      cx + kSize * 0.17,
+      waveY2 - kSize * 0.035,
+      cx + kSize * 0.20,
+      waveY2 + kSize * 0.015,
+      cx + kSize * 0.24,
+      waveY2,
     );
   canvas.drawPath(wave2, wavePaint2);
 }
@@ -211,8 +223,8 @@ void _paintCompass(Canvas canvas) {
   const double waist = kSize * 0.052; // half-width of star arms at center
 
   // --- Minor (diagonal) 4-point star, drawn first so it sits behind ---
-  final Path minorStar = _fourPointStar(cx, cy, minorLen, waist * 0.72,
-      rotation: math.pi / 4);
+  final Path minorStar =
+      _fourPointStar(cx, cy, minorLen, waist * 0.72, rotation: math.pi / 4);
   canvas.drawPath(minorStar, Paint()..color = cyan.withValues(alpha: 0.85));
 
   // --- Major 4-point star (N/E/S/W) ---
@@ -236,7 +248,7 @@ void _paintCompass(Canvas canvas) {
       colors: [white, cyanLight, cyan],
       stops: [0.0, 0.45, 1.0],
     ).createShader(
-      Rect.fromLTWH(cx - waist, cy - majorLen, waist * 2, majorLen),
+      const Rect.fromLTWH(cx - waist, cy - majorLen, waist * 2, majorLen),
     );
   canvas.drawPath(northSpike, northPaint);
 
@@ -268,7 +280,8 @@ void _paintCompass(Canvas canvas) {
   canvas.drawPath(westFacet, Paint()..color = white.withValues(alpha: 0.10));
 
   // --- Center hub ---
-  canvas.drawCircle(const Offset(cx, cy), waist * 0.9, Paint()..color = navyDeep);
+  canvas.drawCircle(
+      const Offset(cx, cy), waist * 0.9, Paint()..color = navyDeep);
   canvas.drawCircle(
     const Offset(cx, cy),
     waist * 0.9,
@@ -326,8 +339,8 @@ Future<void> _writeIcon(String name, void Function(Canvas) paint) async {
       await image.toByteData(format: ui.ImageByteFormat.png);
   expect(bytes, isNotNull);
 
-  final Directory outDir =
-      Directory('build/icon_gen')..createSync(recursive: true);
+  final Directory outDir = Directory('build/icon_gen')
+    ..createSync(recursive: true);
   final File out = File('${outDir.path}/$name');
   out.writeAsBytesSync(bytes!.buffer.asUint8List());
   // Sanity: dimensions.

@@ -1,4 +1,4 @@
-.PHONY: help dev stop api-run api-build api-test api-lint api-dev mobile-run mobile-run-emu mobile-test mobile-lint mobile-analyze mobile-format mobile-build-apk mobile-build-ios mobile-codegen db-start db-stop db-reset db-migrate install-hooks lint
+.PHONY: help dev stop api-run api-build api-test api-lint api-dev mobile-run mobile-run-emu mobile-test mobile-lint mobile-analyze mobile-format mobile-build-apk mobile-build-aab mobile-build-ios mobile-codegen db-start db-stop db-reset db-migrate install-hooks lint
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -90,6 +90,16 @@ mobile-build-apk: ## Build a production Android APK (requires release env vars)
 	$(call require,APP_VERSION)
 	$(call require,REVENUECAT_ANDROID_KEY)
 	cd apps/mobile && flutter build apk --release $(RELEASE_COMMON) \
+		--dart-define=REVENUECAT_ANDROID_KEY=$(REVENUECAT_ANDROID_KEY)
+
+mobile-build-aab: ## Build a production Android App Bundle for Play (requires release env vars)
+	$(call require,API_URL)
+	$(call require,SUPABASE_URL)
+	$(call require,SUPABASE_ANON_KEY)
+	$(call require,SENTRY_DSN)
+	$(call require,APP_VERSION)
+	$(call require,REVENUECAT_ANDROID_KEY)
+	cd apps/mobile && flutter build appbundle --release $(RELEASE_COMMON) \
 		--dart-define=REVENUECAT_ANDROID_KEY=$(REVENUECAT_ANDROID_KEY)
 
 mobile-build-ios: ## Build a production iOS release (requires release env vars)
