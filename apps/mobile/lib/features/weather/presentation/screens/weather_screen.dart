@@ -4,13 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/weather/domain/entities/weather_overview.dart';
 import 'package:navis_mobile/features/weather/presentation/providers/weather_provider.dart';
-import 'package:navis_mobile/features/weather/presentation/widgets/daily_forecast_list.dart';
-import 'package:navis_mobile/features/weather/presentation/widgets/day_detail_sheet.dart';
-import 'package:navis_mobile/features/weather/presentation/widgets/hourly_forecast_strip.dart';
 import 'package:navis_mobile/features/weather/presentation/widgets/weather_visuals.dart';
+import 'package:navis_mobile/features/weather/presentation/widgets/weekly_day_selector.dart';
 import 'package:navis_mobile/features/weather/presentation/widgets/wind_indicator.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
@@ -84,7 +83,7 @@ class _OverviewBody extends StatelessWidget {
         16,
         kToolbarHeight + MediaQuery.of(context).padding.top + 8,
         16,
-        100,
+        Dimens.navClearance,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,12 +150,30 @@ class _OverviewBody extends StatelessWidget {
           ),
           const SizedBox(height: 24),
 
-          // Hourly strip (next 24h).
-          if (overview.hourly.isNotEmpty)
-            HourlyForecastStrip(hours: overview.hourly).animate().fadeIn(
+          // Day selector + a single hourly strip for the selected day.
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 12),
+            child: Text(
+              l.sevenDayForecast,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+          ),
+          if (overview.daily.isNotEmpty)
+            WeeklyDaySelector(overview: overview).animate().fadeIn(
                   delay: 300.ms,
                   duration: 500.ms,
-                ),
+                )
+          else
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                l.forecastNotAvailable,
+                style: TextStyle(color: secondary),
+              ),
+            ),
           const SizedBox(height: 12),
 
           // Current conditions detail card.
@@ -180,35 +197,6 @@ class _OverviewBody extends StatelessWidget {
                   duration: 400.ms,
                 ),
           ],
-          const SizedBox(height: 24),
-
-          // Daily forecast.
-          Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 12),
-            child: Text(
-              l.sevenDayForecast,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-          ),
-          if (overview.daily.isNotEmpty)
-            DailyForecastList(
-              days: overview.daily,
-              onDayTap: (day) => showDayDetailSheet(context, day),
-            ).animate().fadeIn(
-                  delay: 500.ms,
-                  duration: 400.ms,
-                )
-          else
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                l.forecastNotAvailable,
-                style: TextStyle(color: secondary),
-              ),
-            ),
         ],
       ),
     );
