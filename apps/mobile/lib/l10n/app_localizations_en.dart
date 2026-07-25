@@ -975,6 +975,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get failedToSendResetEmail => 'Failed to send reset email';
 
   @override
+  String get newPasswordTitle => 'Set a new password';
+
+  @override
+  String get newPasswordSubtitle =>
+      'Choose a strong password to secure your account.';
+
+  @override
+  String get newPasswordLabel => 'New password';
+
+  @override
+  String get resetPwSubmit => 'Update password';
+
+  @override
+  String get resetPwSuccess => 'Password updated. You are now signed in.';
+
+  @override
+  String get resetPwFailed => 'Could not update password. Please try again.';
+
+  @override
   String get tripSaved => 'Trip saved!';
 
   @override

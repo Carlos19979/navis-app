@@ -983,6 +983,27 @@ class AppLocalizationsEs extends AppLocalizations {
       'Error al enviar email de restablecimiento';
 
   @override
+  String get newPasswordTitle => 'Establece una nueva contraseña';
+
+  @override
+  String get newPasswordSubtitle =>
+      'Elige una contraseña segura para proteger tu cuenta.';
+
+  @override
+  String get newPasswordLabel => 'Nueva contraseña';
+
+  @override
+  String get resetPwSubmit => 'Actualizar contraseña';
+
+  @override
+  String get resetPwSuccess =>
+      'Contraseña actualizada. Ya has iniciado sesión.';
+
+  @override
+  String get resetPwFailed =>
+      'No se pudo actualizar la contraseña. Inténtalo de nuevo.';
+
+  @override
   String get tripSaved => '¡Viaje guardado!';
 
   @override

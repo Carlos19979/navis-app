@@ -1,11 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' as supa;
 
 import 'package:navis_mobile/core/network/supabase_client.dart';
+import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
 import 'package:navis_mobile/features/auth/presentation/screens/check_email_screen.dart';
 import 'package:navis_mobile/features/auth/presentation/screens/login_screen.dart';
 import 'package:navis_mobile/features/auth/presentation/screens/register_screen.dart';
+import 'package:navis_mobile/features/auth/presentation/screens/reset_password_screen.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/boat_dashboard_screen.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/boat_detail_screen.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/boat_form_screen.dart';
@@ -36,31 +41,58 @@ import 'package:navis_mobile/features/profile/presentation/screens/settings_scre
 import 'package:navis_mobile/features/weather/presentation/screens/weather_screen.dart';
 import 'package:navis_mobile/shared/widgets/navis_bottom_nav.dart';
 
+/// Bridges Supabase auth events to GoRouter refreshes. Also flips the
+/// [passwordRecoveryProvider] flag when a recovery deep link is opened so the
+/// router can force the reset-password screen instead of treating the recovery
+/// session as a normal login.
 class _AuthNotifier extends ChangeNotifier {
-  _AuthNotifier() {
-    supabaseClient.auth.onAuthStateChange.listen((_) {
+  _AuthNotifier(this._ref) {
+    _subscription = supabaseClient.auth.onAuthStateChange.listen((data) {
+      if (data.event == supa.AuthChangeEvent.passwordRecovery) {
+        _ref.read(passwordRecoveryProvider.notifier).state = true;
+      }
       notifyListeners();
     });
   }
-}
 
-final _authNotifier = _AuthNotifier();
+  final Ref _ref;
+  late final StreamSubscription<supa.AuthState> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+}
 
 /// Global navigator key used by GoRouter.
 /// Exposed for deep link navigation from push notification taps.
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 
 final routerProvider = Provider<GoRouter>((ref) {
+  final authNotifier = _AuthNotifier(ref);
+  ref.onDispose(authNotifier.dispose);
+
   return GoRouter(
     navigatorKey: rootNavigatorKey,
     initialLocation: '/boats',
-    refreshListenable: _authNotifier,
+    refreshListenable: authNotifier,
     redirect: (context, state) {
       final session = supabaseClient.auth.currentSession;
       final isAuthenticated = session != null && !session.isExpired;
-      final isAuthRoute = state.matchedLocation == '/login' ||
-          state.matchedLocation == '/register' ||
-          state.matchedLocation == '/check-email';
+      final isRecovering = ref.read(passwordRecoveryProvider);
+      final location = state.matchedLocation;
+
+      // A password-recovery session must land on the reset screen (never on
+      // /boats) until the new password is set and the flag is cleared.
+      if (isRecovering) {
+        return location == '/reset-password' ? null : '/reset-password';
+      }
+
+      final isAuthRoute = location == '/login' ||
+          location == '/register' ||
+          location == '/check-email' ||
+          location == '/reset-password';
 
       if (!isAuthenticated && !isAuthRoute) {
         return '/login';
@@ -73,10 +105,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginScreen(),
-      ),
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
@@ -84,6 +113,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/check-email',
         builder: (context, state) => const CheckEmailScreen(),
+      ),
+      GoRoute(
+        path: '/reset-password',
+        builder: (context, state) => const ResetPasswordScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
