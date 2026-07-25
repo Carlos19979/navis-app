@@ -41,7 +41,13 @@ abstract final class Dimens {
 
   /// Bottom padding a scrollable screen must leave so its last item clears the
   /// floating bottom nav. Use instead of the ad-hoc 100/112/130 constants.
-  static const double navClearance = 112;
+  ///
+  /// Sized for the worst case: the pill height ([bottomNavHeight] = 68) plus the
+  /// pill's own bottom offset above the home indicator (safe-area inset ~34 on
+  /// notched phones, minus the ~10 the nav eats back) plus breathing room, so
+  /// the last item clears the pill on home-indicator devices, not just those
+  /// with a hardware button.
+  static const double navClearance = 120;
 }
 
 /// Common EdgeInsets built from the spacing scale, to avoid re-declaring the

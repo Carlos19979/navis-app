@@ -121,11 +121,18 @@ void main() {
         expect(find.textContaining('Register'), findsOneWidget);
       });
 
-      testWidgets('displays sailing icon', (tester) async {
+      testWidgets('displays the app icon', (tester) async {
         await tester.pumpWidget(buildLoginScreen());
         await tester.pumpAndSettle();
 
-        expect(find.byIcon(Icons.sailing), findsOneWidget);
+        final image = tester.widget<Image>(
+          find.byType(Image).first,
+        );
+        expect(image.image, isA<AssetImage>());
+        expect(
+          (image.image as AssetImage).assetName,
+          'assets/icon/navis_icon.png',
+        );
       });
     });
 

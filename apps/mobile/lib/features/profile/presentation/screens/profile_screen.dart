@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:navis_mobile/core/config/env.dart';
 import 'package:navis_mobile/core/network/notification_service.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
@@ -41,7 +42,7 @@ class ProfileScreen extends ConsumerWidget {
       body: GradientBackground(
         child: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+            padding: Insets.screenWithNav,
             child: Column(
               children: [
                 const SizedBox(height: 16),

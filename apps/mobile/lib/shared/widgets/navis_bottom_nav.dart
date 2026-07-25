@@ -11,6 +11,17 @@ import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 
+/// The bottom-nav shell: a transparent [Scaffold] with `extendBody: true` and a
+/// floating glass pill ([Dimens.bottomNavHeight]) that overlays the branch
+/// content of the 5 tabs.
+///
+/// Bottom-nav clearance is intentionally the *screen's* responsibility, NOT
+/// injected here: because the pill floats over `extendBody` content, each tab
+/// screen must pad its own scroll view so its last item clears the pill. Inject
+/// a MediaQuery bottom inset here and every screen that already pads would
+/// double up. The single source of the clearance value is
+/// [Dimens.navClearance] (or the ready-made [Insets.screenWithNav] padding) —
+/// use one of those, never a hardcoded 100/112/130.
 class NavisBottomNav extends ConsumerWidget {
   const NavisBottomNav({super.key, required this.navigationShell});
 

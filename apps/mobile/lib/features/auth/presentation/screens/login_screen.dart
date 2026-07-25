@@ -179,10 +179,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               sigmaX: 12,
                               sigmaY: 12,
                             ),
-                            child: const Icon(
-                              Icons.sailing,
-                              size: 100,
-                              color: AppColors.cyan,
+                            child: Image.asset(
+                              'assets/icon/navis_icon.png',
+                              width: 100,
+                              height: 100,
+                              fit: BoxFit.cover,
                             ),
                           ),
                         ),

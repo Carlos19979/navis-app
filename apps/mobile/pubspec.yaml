@@ -73,6 +73,7 @@ flutter:
   generate: true
   assets:
     - assets/sounds/
+    - assets/icon/
   fonts:
     - family: Inter
       fonts:
