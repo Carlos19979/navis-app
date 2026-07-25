@@ -20,6 +20,7 @@ class NavisScaffold extends StatelessWidget {
     this.transparentAppBar = false,
     this.showProfileAction = true,
     this.safeAreaBottom = true,
+    this.bottomNavClearance = false,
   });
 
   final String title;
@@ -34,6 +35,13 @@ class NavisScaffold extends StatelessWidget {
   /// is a first-class tab (phase 2).
   final bool showProfileAction;
   final bool safeAreaBottom;
+
+  /// When true, pads the body bottom by [Dimens.navClearance] so its last item
+  /// clears the floating bottom nav. Opt-in (default false) so pushed screens —
+  /// which sit above the shell and never see the nav — are unaffected. Screens
+  /// that already pad their own scroll view (e.g. via [Insets.screenWithNav])
+  /// should leave this false to avoid doubling the clearance.
+  final bool bottomNavClearance;
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +70,14 @@ class NavisScaffold extends StatelessWidget {
       body: GradientBackground(
         child: SafeArea(
           bottom: safeAreaBottom,
-          child: body,
+          child: bottomNavClearance
+              ? Padding(
+                  padding: const EdgeInsets.only(
+                    bottom: Dimens.navClearance,
+                  ),
+                  child: body,
+                )
+              : body,
         ),
       ),
     );
