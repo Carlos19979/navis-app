@@ -536,6 +536,18 @@ abstract class AppLocalizations {
   /// **'Unlock cost intelligence with Navis Pro'**
   String get paywallReasonCostAnalytics;
 
+  /// No description provided for @costAnalyticsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel spend, €/NM, cost trends and anomalies'**
+  String get costAnalyticsSubtitle;
+
+  /// No description provided for @proBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'PRO'**
+  String get proBadge;
+
   /// No description provided for @status.
   ///
   /// In en, this message translates to:

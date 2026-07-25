@@ -243,6 +243,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Unlock cost intelligence with Navis Pro';
 
   @override
+  String get costAnalyticsSubtitle =>
+      'Fuel spend, €/NM, cost trends and anomalies';
+
+  @override
+  String get proBadge => 'PRO';
+
+  @override
   String get status => 'Status';
 
   @override

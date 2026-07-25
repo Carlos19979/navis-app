@@ -99,6 +99,8 @@
   "costByCategory": "By category",
   "costMonthlySpend": "Monthly spend",
   "paywallReasonCostAnalytics": "Unlock cost intelligence with Navis Pro",
+  "costAnalyticsSubtitle": "Fuel spend, €/NM, cost trends and anomalies",
+  "proBadge": "PRO",
   "status": "Status",
   "total": "Total",
   "passportTitle": "Boat passport",
