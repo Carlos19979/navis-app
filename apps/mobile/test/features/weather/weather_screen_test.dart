@@ -9,9 +9,8 @@ import 'package:navis_mobile/features/weather/domain/entities/weather.dart';
 import 'package:navis_mobile/features/weather/domain/entities/weather_overview.dart';
 import 'package:navis_mobile/features/weather/presentation/providers/weather_provider.dart';
 import 'package:navis_mobile/features/weather/presentation/screens/weather_screen.dart';
-import 'package:navis_mobile/features/weather/presentation/widgets/daily_forecast_list.dart';
-import 'package:navis_mobile/features/weather/presentation/widgets/day_detail_sheet.dart';
 import 'package:navis_mobile/features/weather/presentation/widgets/hourly_forecast_strip.dart';
+import 'package:navis_mobile/features/weather/presentation/widgets/weekly_day_selector.dart';
 import 'package:navis_mobile/features/weather/presentation/widgets/wind_indicator.dart';
 
 import '../../helpers/geo.dart';
@@ -100,12 +99,12 @@ void main() {
         expect(find.byType(HourlyForecastStrip), findsOneWidget);
       });
 
-      testWidgets('shows daily forecast list', (tester) async {
+      testWidgets('shows the weekly day selector', (tester) async {
         await pumpScreen(tester, overrides: [
           weatherOverviewProvider.overrideWith((ref) async => makeOverview()),
         ]);
 
-        expect(find.byType(DailyForecastList), findsOneWidget);
+        expect(find.byType(WeeklyDaySelector), findsOneWidget);
       });
 
       testWidgets('shows wind indicator, waves and humidity in details card',
@@ -130,24 +129,29 @@ void main() {
         expect(find.text('7-Day Forecast'), findsOneWidget);
       });
 
-      testWidgets('tapping a day opens the hourly detail sheet',
+      testWidgets('selecting a future day loads that day\'s hourly forecast',
           (tester) async {
+        final today = DateTime(2026, 5);
+        final tomorrow = DateTime(2026, 5, 2);
         await pumpScreen(tester, overrides: [
-          weatherOverviewProvider.overrideWith((ref) async => makeOverview()),
-          // makeOverview()'s single day is dated 2026-05-01.
-          hourlyForDayProvider(DateTime(2026, 5)).overrideWith(
-            (ref) async => [makeHourly(DateTime(2026, 5, 1, 10))],
+          weatherOverviewProvider.overrideWith(
+            (ref) async => makeOverview(
+              daily: [makeDaily(today), makeDaily(tomorrow)],
+            ),
+          ),
+          hourlyForDayProvider(tomorrow).overrideWith(
+            (ref) async =>
+                [makeHourly(DateTime(2026, 5, 2, 9), temperature: 15)],
           ),
         ]);
 
-        // 'Today' is the tappable label of the first daily row; it sits below
-        // the fold, so scroll it into view before tapping.
-        await tester.ensureVisible(find.text('Today'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Today'));
+        // Tap the second day chip; the single strip re-fetches that day.
+        await tester.ensureVisible(find.byKey(const ValueKey('weather-day-1')));
+        await tester.tap(find.byKey(const ValueKey('weather-day-1')));
         await tester.pumpAndSettle();
 
-        expect(find.byType(DayDetailSheet), findsOneWidget);
+        // The strip now shows tomorrow's 15° hour.
+        expect(find.text('15°'), findsWidgets);
       });
 
       testWidgets('shows dash for humidity when humidity is null',
@@ -199,7 +203,7 @@ void main() {
         ]);
 
         expect(find.byType(HourlyForecastStrip), findsNothing);
-        expect(find.byType(DailyForecastList), findsNothing);
+        expect(find.byType(WeeklyDaySelector), findsNothing);
         expect(find.byType(RefreshIndicator), findsNothing);
       });
     });
@@ -410,7 +414,7 @@ void main() {
         ]);
 
         expect(find.text('Forecast data not available.'), findsOneWidget);
-        expect(find.byType(DailyForecastList), findsNothing);
+        expect(find.byType(WeeklyDaySelector), findsNothing);
       });
     });
 
