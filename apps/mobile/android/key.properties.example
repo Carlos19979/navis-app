@@ -1,0 +1,9 @@
+# Copy to android/key.properties (gitignored) and fill in the real values.
+# Generate the upload keystore with:
+#   keytool -genkey -v -keystore ~/navis-upload-keystore.jks \
+#     -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+# storeFile must be an ABSOLUTE path (or relative to android/app/).
+storePassword=CHANGEME
+keyPassword=CHANGEME
+keyAlias=upload
+storeFile=/absolute/path/to/navis-upload-keystore.jks
