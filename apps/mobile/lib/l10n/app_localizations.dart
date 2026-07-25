@@ -3332,6 +3332,24 @@ abstract class AppLocalizations {
   /// **'You\'ve joined {name}'**
   String joinedGroup(String name);
 
+  /// No description provided for @joinByCodeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the invite code someone shared with you to join.'**
+  String get joinByCodeDescription;
+
+  /// No description provided for @joinClubTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Join a club'**
+  String get joinClubTitle;
+
+  /// No description provided for @joinEmptyCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Invited? Join with a code'**
+  String get joinEmptyCta;
+
   /// No description provided for @requestSent.
   ///
   /// In en, this message translates to:

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/data/boat_share_repository.dart';
@@ -21,10 +22,10 @@ import 'package:navis_mobile/features/logbook/presentation/providers/trip_record
 import 'package:navis_mobile/features/anchor/presentation/providers/anchor_watch_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/boat/presentation/boat_type_label.dart';
+import 'package:navis_mobile/shared/widgets/join_by_code_sheet.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
-import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_empty_state.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
@@ -151,12 +152,11 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
 
   Future<void> _joinBoat() async {
     final l = AppLocalizations.of(context)!;
-    final code = await NavisInputDialog.show(
+    final code = await showJoinByCodeSheet(
       context,
       title: l.joinBoat,
-      hintText: l.inviteCode,
-      confirmLabel: l.join,
-      uppercase: true,
+      description: l.joinByCodeDescription,
+      hint: l.inviteCode,
     );
     if (code == null || code.isEmpty) return;
     try {
@@ -183,10 +183,20 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
       appBar: NavisAppBar(
         title: l.myBoats,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.group_add_outlined),
-            tooltip: l.joinBoat,
-            onPressed: _joinBoat,
+          Padding(
+            padding: const EdgeInsets.only(right: Dimens.spaceSm),
+            child: TextButton.icon(
+              onPressed: _joinBoat,
+              icon: const Icon(
+                Icons.group_add_outlined,
+                size: Dimens.iconSm,
+                color: AppColors.cyan,
+              ),
+              label: Text(
+                l.joinBoat,
+                style: const TextStyle(color: AppColors.cyan),
+              ),
+            ),
           ),
         ],
       ),
@@ -220,7 +230,12 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
               },
               child: ListView(
                 controller: _scrollController,
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 112),
+                padding: const EdgeInsets.fromLTRB(
+                  16,
+                  16,
+                  16,
+                  Dimens.navClearance,
+                ),
                 children: [
                   ReadinessCard(boatId: boats.first.id),
                   const SizedBox(height: 12),
@@ -232,7 +247,7 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
 
           final hasShared = shared.isNotEmpty;
           final headerCount = hasShared ? 1 : 0;
-          final total = boats.length + headerCount + shared.length + 1;
+          final total = boats.length + headerCount + shared.length;
 
           return RefreshIndicator(
             color: AppColors.cyan,
@@ -242,40 +257,40 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
             },
             child: ListView.builder(
               controller: _scrollController,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(
+                16,
+                16,
+                16,
+                Dimens.navClearance,
+              ),
               itemCount: total,
               itemBuilder: (context, index) {
                 if (index < boats.length) {
                   return _BoatCard(boat: boats[index], index: index);
                 }
                 var i = index - boats.length;
-                if (hasShared) {
-                  if (i == 0) {
-                    return Padding(
-                      padding: const EdgeInsets.fromLTRB(4, 8, 4, 12),
-                      child: Text(
-                        l.sharedWithMe,
-                        style: TextStyle(
-                          color: context.txtSecondary,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                        ),
+                if (hasShared && i == 0) {
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(4, 8, 4, 12),
+                    child: Text(
+                      l.sharedWithMe,
+                      style: TextStyle(
+                        color: context.txtSecondary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
                       ),
-                    );
-                  }
-                  i -= 1;
-                  if (i < shared.length) {
-                    return _BoatCard(boat: shared[i], index: boats.length + i);
-                  }
+                    ),
+                  );
                 }
-                return const SizedBox(height: 100);
+                if (hasShared) i -= 1;
+                return _BoatCard(boat: shared[i], index: boats.length + i);
               },
             ),
           );
         },
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 112),
+        padding: const EdgeInsets.only(bottom: Dimens.navClearance),
         child: Container(
           decoration: BoxDecoration(
             gradient: AppColors.cyanGradient,

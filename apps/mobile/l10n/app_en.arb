@@ -686,6 +686,9 @@
       }
     }
   },
+  "joinByCodeDescription": "Enter the invite code someone shared with you to join.",
+  "joinClubTitle": "Join a club",
+  "joinEmptyCta": "Invited? Join with a code",
   "requestSent": "Request sent",
   "couldNotRequest": "Could not send request",
   "requestAction": "Request",

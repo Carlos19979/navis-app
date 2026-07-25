@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/events/presentation/providers/event_provider.dart';
 import 'package:navis_mobile/features/events/presentation/widgets/calendar_view.dart';
@@ -96,7 +97,12 @@ class _EventsBodyState extends ConsumerState<EventsBody> {
                       backgroundColor: context.dialogSurface,
                       onRefresh: () async => ref.invalidate(eventsProvider),
                       child: ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 120),
+                        padding: const EdgeInsets.fromLTRB(
+                          16,
+                          4,
+                          16,
+                          Dimens.navClearance,
+                        ),
                         itemCount: regattas.length,
                         itemBuilder: (context, index) {
                           return EventCard(event: regattas[index])

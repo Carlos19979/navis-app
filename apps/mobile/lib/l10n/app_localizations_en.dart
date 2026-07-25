@@ -1715,6 +1715,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get joinByCodeDescription =>
+      'Enter the invite code someone shared with you to join.';
+
+  @override
+  String get joinClubTitle => 'Join a club';
+
+  @override
+  String get joinEmptyCta => 'Invited? Join with a code';
+
+  @override
   String get requestSent => 'Request sent';
 
   @override

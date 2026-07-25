@@ -84,17 +84,26 @@ void main() {
       await pumpScreen(tester);
 
       expect(find.byType(NavisGradientFab), findsNothing);
-      expect(find.byTooltip('Join by code'), findsNothing);
+      expect(
+        find.widgetWithText(TextButton, 'Join by code'),
+        findsNothing,
+      );
 
       await openTab(tester, 'My groups');
 
       expect(find.byType(NavisGradientFab), findsOneWidget);
-      expect(find.byTooltip('Join by code'), findsOneWidget);
+      expect(
+        find.widgetWithText(TextButton, 'Join by code'),
+        findsOneWidget,
+      );
 
       await openTab(tester, 'Discover');
 
       expect(find.byType(NavisGradientFab), findsOneWidget);
-      expect(find.byTooltip('Join by code'), findsOneWidget);
+      expect(
+        find.widgetWithText(TextButton, 'Join by code'),
+        findsOneWidget,
+      );
 
       await drain(tester);
       await tester.pump(const Duration(seconds: 5));
@@ -301,7 +310,7 @@ void main() {
   group('CommunityScreen join by code', () {
     Future<void> openDialog(WidgetTester tester) async {
       await openTab(tester, 'My groups');
-      await tester.tap(find.byTooltip('Join by code'));
+      await tester.tap(find.widgetWithText(TextButton, 'Join by code'));
       await pumpScreen(tester);
     }
 
@@ -314,9 +323,10 @@ void main() {
       await pumpScreen(tester);
       await openDialog(tester);
 
-      expect(find.text('Join by code'), findsOneWidget);
+      expect(find.text('Join a club'), findsOneWidget);
 
       await tester.enterText(find.byType(TextField), 'ABC123');
+      await tester.pump();
       await tester.tap(find.text('Join'));
       await pumpScreen(tester);
 
@@ -332,6 +342,7 @@ void main() {
       await openDialog(tester);
 
       await tester.enterText(find.byType(TextField), 'WRONG1');
+      await tester.pump();
       await tester.tap(find.text('Join'));
       await pumpScreen(tester);
 
