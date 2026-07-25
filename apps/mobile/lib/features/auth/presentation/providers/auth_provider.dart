@@ -11,6 +11,12 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository();
 });
 
+/// True while a password-recovery deep link has been opened and the user has
+/// not yet set a new password. The router consumes this to force the
+/// `/reset-password` screen so a recovery session is not treated as a normal
+/// login that bounces to `/boats`. Cleared once the password is updated.
+final passwordRecoveryProvider = StateProvider<bool>((ref) => false);
+
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final repository = ref.watch(authRepositoryProvider);
   final analytics = ref.watch(analyticsProvider);
@@ -47,10 +53,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     });
   }
 
-  Future<void> login({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> login({required String email, required String password}) async {
     state = state.copyWith(status: AuthStatus.loading);
     try {
       final response = await _repository.signInWithPassword(
