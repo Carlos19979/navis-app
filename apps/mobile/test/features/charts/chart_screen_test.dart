@@ -63,7 +63,7 @@ void main() {
       buildTestApp(
         const ChartScreen(),
         overrides: [
-          allPortsProvider.overrideWith((ref) async => []),
+          visiblePortsProvider.overrideWith((ref, bbox) async => []),
           boatsProvider.overrideWith(
             () => _FakeBoatsNotifier(boats ?? [makeBoat()]),
           ),

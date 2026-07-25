@@ -4286,6 +4286,36 @@ abstract class AppLocalizations {
   /// **'Location unavailable'**
   String get locationUnavailable;
 
+  /// No description provided for @portsZoomInHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom in to see ports'**
+  String get portsZoomInHint;
+
+  /// No description provided for @searchPortByName.
+  ///
+  /// In en, this message translates to:
+  /// **'Search port by name…'**
+  String get searchPortByName;
+
+  /// No description provided for @portSearchTypeMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Type at least 2 letters'**
+  String get portSearchTypeMore;
+
+  /// No description provided for @noPortsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No ports found'**
+  String get noPortsFound;
+
+  /// No description provided for @portSearchError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t search ports'**
+  String get portSearchError;
+
   /// No description provided for @docTypeCustom.
   ///
   /// In en, this message translates to:

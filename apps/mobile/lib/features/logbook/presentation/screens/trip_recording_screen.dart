@@ -18,6 +18,7 @@ import 'package:navis_mobile/features/logbook/presentation/providers/trip_record
 import 'package:navis_mobile/features/logbook/presentation/widgets/navigation_hud.dart';
 import 'package:navis_mobile/features/logbook/presentation/widgets/recording_controls.dart';
 import 'package:navis_mobile/features/logbook/presentation/widgets/trip_completion_dialog.dart';
+import 'package:navis_mobile/features/ports/domain/entities/port.dart';
 import 'package:navis_mobile/features/ports/presentation/providers/port_provider.dart';
 import 'package:navis_mobile/features/ports/presentation/widgets/port_markers_layer.dart';
 import 'package:navis_mobile/features/regattas/presentation/providers/regatta_provider.dart';
@@ -64,6 +65,9 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
   bool _showSeamarks = true;
   bool _showPorts = true;
   final MapController _mapController = MapController();
+
+  /// Snapped visible bounds driving the viewport ports fetch.
+  PortsBBox? _bbox;
 
   // Incremental polyline cache: only the segments for NEW points are built on
   // rebuild instead of the whole track every frame.
@@ -229,7 +233,29 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
     notifier.pause();
     unawaited(HapticFeedback.heavyImpact());
 
-    final ports = ref.read(allPortsProvider).valueOrNull;
+    // Ports near the trip for the completion dialog's start/end pickers,
+    // ordered by proximity to where the boat is (or started).
+    final points = recording.trackPoints;
+    final refPos = recording.currentPosition ??
+        (points.isNotEmpty
+            ? LatLng(points.first.latitude, points.first.longitude)
+            : null);
+    var ports = const <Port>[];
+    if (refPos != null) {
+      try {
+        ports = await ref.read(
+          nearbyPortsProvider(
+            roundedPortParams(
+              lat: refPos.latitude,
+              lon: refPos.longitude,
+              radiusKm: 100,
+            ),
+          ).future,
+        );
+      } catch (_) {
+        // Best effort: the pickers still offer map/search selection.
+      }
+    }
 
     // For group regattas, pre-fill the crew with members who RSVP'd "going".
     var crewSuggestions = const <String>[];
@@ -247,7 +273,6 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
     }
     if (!mounted) return;
 
-    final points = recording.trackPoints;
     final completionData = await showDialog<TripCompletionData>(
       context: context,
       barrierDismissible: false,
@@ -257,7 +282,7 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
             ? DateTime.now().difference(recording.startTime!)
             : Duration.zero,
         avgSpeed: recording.avgSpeedKnots,
-        nearbyPorts: ports ?? [],
+        nearbyPorts: ports,
         initialCrew: crewSuggestions,
         crewSuggestions: crewSuggestions,
         startLat: points.isNotEmpty
@@ -293,6 +318,17 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
         );
       }
     }
+  }
+
+  void _seedPortsBBox() {
+    final bounds = _mapController.camera.visibleBounds;
+    final snapped = snapBBox(
+      minLon: bounds.west,
+      minLat: bounds.south,
+      maxLon: bounds.east,
+      maxLat: bounds.north,
+    );
+    if (snapped != _bbox) setState(() => _bbox = snapped);
   }
 
   void _centerOnPosition() {
@@ -357,7 +393,11 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
       },
     );
 
-    final nearbyPorts = _showPorts ? ref.watch(allPortsProvider) : null;
+    // Ports for the visible area (viewport-driven, scales to a global dataset).
+    final bbox = _bbox;
+    final visiblePorts = _showPorts && bbox != null
+        ? ref.watch(visiblePortsProvider(bbox)).valueOrNull ?? const <Port>[]
+        : const <Port>[];
 
     return Scaffold(
       backgroundColor: AppColors.navy,
@@ -386,9 +426,23 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
                       interactionOptions: const InteractionOptions(
                         flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
                       ),
-                      onPositionChanged: (_, hasGesture) {
-                        if (hasGesture) {
-                          setState(() => _followMode = false);
+                      onMapReady: _seedPortsBBox,
+                      onPositionChanged: (camera, hasGesture) {
+                        final bounds = camera.visibleBounds;
+                        final snapped = snapBBox(
+                          minLon: bounds.west,
+                          minLat: bounds.south,
+                          maxLon: bounds.east,
+                          maxLat: bounds.north,
+                        );
+                        // Only rebuild when the follow flag or the snapped box
+                        // actually changes, not on every pan frame.
+                        final followChanged = hasGesture && _followMode;
+                        if (followChanged || snapped != _bbox) {
+                          setState(() {
+                            if (hasGesture) _followMode = false;
+                            _bbox = snapped;
+                          });
                         }
                       },
                     ),
@@ -399,9 +453,9 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
                         PolylineLayer(
                           polylines: _trackPolylines(recording.trackPoints),
                         ),
-                      if (nearbyPorts case AsyncData(:final value))
+                      if (visiblePorts.isNotEmpty)
                         PortMarkersLayer(
-                          ports: value,
+                          ports: visiblePorts,
                           userPosition: recording.currentPosition,
                         ),
                       if (recording.currentPosition != null)

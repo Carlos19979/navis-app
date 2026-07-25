@@ -98,6 +98,18 @@ func New(
 	// Support page (no auth) — the App Store Connect Support URL points here.
 	r.With(middleware.PublicPageCSP).Get("/support", legalH.Support)
 
+	// Public ports (no auth) — global read-only nautical map data. The ports
+	// table is public-read (RLS `USING (true)`), so the bbox map feed needs no
+	// JWT. Tighter per-IP rate limit on top of the global one: this is an
+	// unauthenticated surface hit on every map pan. The authenticated
+	// /api/v1/ports/nearby + /api/v1/ports/{id} routes stay for existing
+	// callers.
+	r.Route("/ports", func(r chi.Router) {
+		r.Use(middleware.RateLimit(120, time.Minute))
+		r.Get("/", portH.List)
+		r.Get("/{id}", portH.GetByID)
+	})
+
 	// Provider webhooks (no JWT — authenticated by a shared secret in the
 	// handler). Strict rate limit: RevenueCat sends single events, not bursts.
 	r.With(middleware.RateLimit(20, time.Minute)).

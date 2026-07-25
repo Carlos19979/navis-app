@@ -2223,6 +2223,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get locationUnavailable => 'Location unavailable';
 
   @override
+  String get portsZoomInHint => 'Zoom in to see ports';
+
+  @override
+  String get searchPortByName => 'Search port by name…';
+
+  @override
+  String get portSearchTypeMore => 'Type at least 2 letters';
+
+  @override
+  String get noPortsFound => 'No ports found';
+
+  @override
+  String get portSearchError => 'Couldn\'t search ports';
+
+  @override
   String get docTypeCustom => 'Other (custom)';
 
   @override

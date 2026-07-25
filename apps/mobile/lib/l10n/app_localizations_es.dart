@@ -2243,6 +2243,21 @@ class AppLocalizationsEs extends AppLocalizations {
   String get locationUnavailable => 'Ubicación no disponible';
 
   @override
+  String get portsZoomInHint => 'Acerca el mapa para ver puertos';
+
+  @override
+  String get searchPortByName => 'Buscar puerto por nombre…';
+
+  @override
+  String get portSearchTypeMore => 'Escribe al menos 2 letras';
+
+  @override
+  String get noPortsFound => 'Sin puertos';
+
+  @override
+  String get portSearchError => 'No se pudieron buscar puertos';
+
+  @override
   String get docTypeCustom => 'Otro (personalizado)';
 
   @override
