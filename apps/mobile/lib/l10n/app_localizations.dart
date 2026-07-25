@@ -95,7 +95,7 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
-    Locale('es')
+    Locale('es'),
   ];
 
   /// No description provided for @appTitle.
@@ -4220,6 +4220,36 @@ abstract class AppLocalizations {
   /// **'Location unavailable'**
   String get locationUnavailable;
 
+  /// No description provided for @portsZoomInHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom in to see ports'**
+  String get portsZoomInHint;
+
+  /// No description provided for @searchPortByName.
+  ///
+  /// In en, this message translates to:
+  /// **'Search port by name…'**
+  String get searchPortByName;
+
+  /// No description provided for @portSearchTypeMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Type at least 2 letters'**
+  String get portSearchTypeMore;
+
+  /// No description provided for @noPortsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No ports found'**
+  String get noPortsFound;
+
+  /// No description provided for @portSearchError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t search ports'**
+  String get portSearchError;
+
   /// No description provided for @docTypeCustom.
   ///
   /// In en, this message translates to:
@@ -4530,8 +4560,9 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   }
 
   throw FlutterError(
-      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-      'an issue with the localizations generation tool. Please file an issue '
-      'on GitHub with a reproducible sample app and the gen-l10n configuration '
-      'that was used.');
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
 }

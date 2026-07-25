@@ -70,7 +70,7 @@ void main() {
         const ChartScreen(),
         overrides: [
           boatsProvider.overrideWith(_FakeBoatsNotifier.new),
-          allPortsProvider.overrideWith((ref) async => []),
+          visiblePortsProvider.overrideWith((ref, bbox) async => []),
         ],
       ),
     );

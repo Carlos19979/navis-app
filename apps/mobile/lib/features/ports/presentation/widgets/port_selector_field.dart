@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/map_picker_screen.dart';
 import 'package:navis_mobile/features/ports/domain/entities/port.dart';
 import 'package:navis_mobile/features/ports/presentation/providers/port_provider.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 
 /// Reusable port picker: horizontal chips of recommended ports (sorted by
 /// distance to a reference point) plus an "Other" chip that opens the map
@@ -110,7 +112,10 @@ class _PortSelectorFieldState extends State<PortSelectorField> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => const _PortSearchSheet(),
+      builder: (_) => _PortSearchSheet(
+        refLat: widget.refLat,
+        refLon: widget.refLon,
+      ),
     );
     if (port != null && mounted) {
       setState(() {
@@ -324,21 +329,42 @@ class _ActionChip extends StatelessWidget {
   }
 }
 
-/// Bottom sheet to search all ports by name and pick one.
+/// Bottom sheet that searches ports by name server-side (debounced), ordered
+/// by distance to an optional reference point, and returns the picked port.
 class _PortSearchSheet extends ConsumerStatefulWidget {
-  const _PortSearchSheet();
+  const _PortSearchSheet({this.refLat, this.refLon});
+
+  final double? refLat;
+  final double? refLon;
 
   @override
   ConsumerState<_PortSearchSheet> createState() => _PortSearchSheetState();
 }
 
 class _PortSearchSheetState extends ConsumerState<_PortSearchSheet> {
+  final _controller = TextEditingController();
+  Timer? _debounce;
   String _query = '';
 
   @override
+  void dispose() {
+    _debounce?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onChanged(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      if (mounted) setState(() => _query = value.trim());
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final portsAsync = ref.watch(allPortsProvider);
+    final l = AppLocalizations.of(context)!;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final hasQuery = _query.length >= 2;
 
     return Container(
       margin: EdgeInsets.only(bottom: bottomInset),
@@ -361,11 +387,12 @@ class _PortSearchSheetState extends ConsumerState<_PortSearchSheet> {
           Padding(
             padding: const EdgeInsets.all(16),
             child: TextField(
+              controller: _controller,
               autofocus: true,
               style: TextStyle(color: context.txtPrimary),
-              onChanged: (v) => setState(() => _query = v.toLowerCase()),
+              onChanged: _onChanged,
               decoration: InputDecoration(
-                hintText: 'Buscar puerto por nombre…',
+                hintText: l.searchPortByName,
                 hintStyle: TextStyle(color: context.txtSecondary),
                 prefixIcon: Icon(Icons.search, color: context.txtSecondary),
                 filled: true,
@@ -378,43 +405,64 @@ class _PortSearchSheetState extends ConsumerState<_PortSearchSheet> {
             ),
           ),
           Expanded(
-            child: portsAsync.when(
-              loading: () => const Center(
-                  child: CircularProgressIndicator(color: AppColors.cyan)),
-              error: (e, _) => Center(
-                  child: Text('Error: $e',
-                      style: const TextStyle(color: AppColors.red))),
-              data: (ports) {
-                final filtered = _query.isEmpty
-                    ? ports
-                    : ports
-                        .where((p) => p.name.toLowerCase().contains(_query))
-                        .toList();
-                if (filtered.isEmpty) {
-                  return Center(
-                    child: Text('Sin resultados',
-                        style: TextStyle(color: context.txtSecondary)),
-                  );
-                }
-                return ListView.builder(
-                  itemCount: filtered.length,
-                  itemBuilder: (context, i) {
-                    final p = filtered[i];
-                    return ListTile(
-                      leading: const Icon(Icons.anchor, color: AppColors.cyan),
-                      title: Text(p.name,
-                          style: TextStyle(color: context.txtPrimary)),
-                      subtitle: Text(p.country,
-                          style: TextStyle(color: context.txtSecondary)),
-                      onTap: () => Navigator.of(context).pop(p),
-                    );
-                  },
-                );
-              },
-            ),
+            child: hasQuery
+                ? _buildResults(context, l)
+                : Center(
+                    child: Text(
+                      l.portSearchTypeMore,
+                      style: TextStyle(color: context.txtSecondary),
+                    ),
+                  ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildResults(BuildContext context, AppLocalizations l) {
+    final resultsAsync = ref.watch(
+      portSearchProvider((
+        query: _query,
+        nearLat: widget.refLat,
+        nearLon: widget.refLon,
+      )),
+    );
+
+    return resultsAsync.when(
+      loading: () => const Center(
+        child: CircularProgressIndicator(color: AppColors.cyan),
+      ),
+      error: (_, __) => Center(
+        child: Text(
+          l.portSearchError,
+          style: const TextStyle(color: AppColors.red),
+        ),
+      ),
+      data: (ports) {
+        if (ports.isEmpty) {
+          return Center(
+            child: Text(
+              l.noPortsFound,
+              style: TextStyle(color: context.txtSecondary),
+            ),
+          );
+        }
+        return ListView.builder(
+          itemCount: ports.length,
+          itemBuilder: (context, i) {
+            final p = ports[i];
+            return ListTile(
+              leading: const Icon(Icons.anchor, color: AppColors.cyan),
+              title: Text(p.name, style: TextStyle(color: context.txtPrimary)),
+              subtitle: Text(
+                p.country,
+                style: TextStyle(color: context.txtSecondary),
+              ),
+              onTap: () => Navigator.of(context).pop(p),
+            );
+          },
+        );
+      },
     );
   }
 }

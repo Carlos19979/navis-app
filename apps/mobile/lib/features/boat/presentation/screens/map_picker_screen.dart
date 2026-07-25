@@ -7,6 +7,7 @@ import 'package:latlong2/latlong.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/features/charts/data/tile_provider.dart';
+import 'package:navis_mobile/features/ports/domain/entities/port.dart';
 import 'package:navis_mobile/features/ports/presentation/providers/port_provider.dart';
 import 'package:navis_mobile/features/ports/presentation/widgets/port_markers_layer.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -47,6 +48,9 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
   final _nameCtrl = TextEditingController();
   final _mapController = MapController();
 
+  /// Snapped visible bounds driving the viewport ports fetch.
+  PortsBBox? _bbox;
+
   static const _defaultCenter = LatLng(39.57, 2.63);
 
   @override
@@ -67,6 +71,19 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
     super.dispose();
   }
 
+  void _onPositionChanged(MapCamera camera, bool hasGesture) {
+    final bounds = camera.visibleBounds;
+    final snapped = snapBBox(
+      minLon: bounds.west,
+      minLat: bounds.south,
+      maxLon: bounds.east,
+      maxLat: bounds.north,
+    );
+    if (snapped != _bbox) {
+      setState(() => _bbox = snapped);
+    }
+  }
+
   void _confirm() {
     if (_selectedPoint == null) return;
     final name = _nameCtrl.text.trim();
@@ -83,6 +100,12 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
 
     final canConfirm = _selectedPoint != null &&
         (!widget.showNameField || _nameCtrl.text.trim().isNotEmpty);
+
+    // Ports for the visible area (viewport-driven, scales to a global dataset).
+    final bbox = _bbox;
+    final visiblePorts = bbox != null
+        ? ref.watch(visiblePortsProvider(bbox)).valueOrNull ?? const <Port>[]
+        : const <Port>[];
 
     return Scaffold(
       appBar: NavisAppBar(
@@ -108,6 +131,9 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
               options: MapOptions(
                 initialCenter: center,
                 initialZoom: _selectedPoint != null ? 14 : 6,
+                onMapReady: () =>
+                    _onPositionChanged(_mapController.camera, false),
+                onPositionChanged: _onPositionChanged,
                 onTap: (_, point) {
                   setState(() {
                     _selectedPoint = point;
@@ -118,9 +144,9 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
               children: [
                 OpenSeaMapTileProvider.baseLayer,
                 OpenSeaMapTileProvider.seamarkLayer,
-                if (ref.watch(allPortsProvider) case AsyncData(:final value))
+                if (visiblePorts.isNotEmpty)
                   PortMarkersLayer(
-                    ports: value,
+                    ports: visiblePorts,
                     onPortTap: (port) {
                       setState(() {
                         _selectedPoint = LatLng(port.lat, port.lon);

@@ -66,6 +66,20 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
     }
   }
 
+  // Seed the viewport ports fetch as soon as the map is laid out, so ports
+  // appear on the initial view without waiting for a pan.
+  void _seedPortsBBox() {
+    final bounds = _mapController.camera.visibleBounds;
+    ref.read(chartProvider.notifier).setPortsBBox(
+          snapBBox(
+            minLon: bounds.west,
+            minLat: bounds.south,
+            maxLon: bounds.east,
+            maxLat: bounds.north,
+          ),
+        );
+  }
+
   void _centerOnGps() {
     if (_currentPosition != null) {
       ref.read(chartProvider.notifier).centerOnPosition(_currentPosition!);
@@ -78,6 +92,17 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
     final mapState = ref.watch(chartProvider);
     final boatsAsync = ref.watch(boatsProvider);
 
+    // Fetch ports for the visible area, but only once zoomed in enough to
+    // bound it — at low zoom the box would be too large (and the server
+    // rejects it). Render from the async value directly so there is no
+    // spinner while a new box loads.
+    final bbox = mapState.portsBBox;
+    final portsActive =
+        mapState.showPorts && mapState.zoom >= kMinPortsZoom && bbox != null;
+    final visiblePorts = portsActive
+        ? ref.watch(visiblePortsProvider(bbox)).valueOrNull ?? const <Port>[]
+        : const <Port>[];
+
     return Scaffold(
       body: Stack(
         children: [
@@ -89,28 +114,41 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                 initialZoom: mapState.zoom,
                 minZoom: 3,
                 maxZoom: 18,
+                onMapReady: _seedPortsBBox,
                 onPositionChanged: (position, hasGesture) {
+                  final notifier = ref.read(chartProvider.notifier);
                   if (hasGesture) {
-                    ref.read(chartProvider.notifier).setCenter(position.center);
-                    ref.read(chartProvider.notifier).setZoom(position.zoom);
+                    notifier.setCenter(position.center);
+                    notifier.setZoom(position.zoom);
                   }
+                  // Drive the viewport ports fetch. setPortsBBox no-ops unless
+                  // the snapped box changed, so panning within a grid cell
+                  // neither rebuilds nor refetches.
+                  final bounds = position.visibleBounds;
+                  notifier.setPortsBBox(
+                    snapBBox(
+                      minLon: bounds.west,
+                      minLat: bounds.south,
+                      maxLon: bounds.east,
+                      maxLat: bounds.north,
+                    ),
+                  );
                 },
               ),
               children: [
                 OpenSeaMapTileProvider.baseLayer,
                 if (mapState.showSeamarks) OpenSeaMapTileProvider.seamarkLayer,
-                if (mapState.showPorts)
-                  if (ref.watch(allPortsProvider) case AsyncData(:final value))
-                    PortMarkersLayer(
-                      ports: value,
-                      userPosition: _currentPosition,
-                    ),
+                if (mapState.showPorts && visiblePorts.isNotEmpty)
+                  PortMarkersLayer(
+                    ports: visiblePorts,
+                    userPosition: _currentPosition,
+                  ),
                 if (_currentPosition != null && mapState.showPosition)
                   PositionIndicator(position: _currentPosition!),
                 if (boatsAsync case AsyncData(:final value))
                   _HomePortMarkers(
                     boats: value,
-                    nearbyPorts: ref.watch(allPortsProvider).valueOrNull ?? [],
+                    nearbyPorts: visiblePorts,
                     userPosition: _currentPosition,
                   ),
                 if (mapState.showTracks)
@@ -223,6 +261,49 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                           ),
                         ),
                       ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+          // At low zoom the ports layer is suppressed; tell the user why.
+          if (mapState.showPorts && mapState.zoom < kMinPortsZoom)
+            Positioned(
+              bottom: 24,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.navy.withValues(alpha: 0.6),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.glassBorder,
+                          width: 0.5,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.zoom_in,
+                              size: 16, color: AppColors.cyan),
+                          const SizedBox(width: 8),
+                          Text(
+                            AppLocalizations.of(context)!.portsZoomInHint,
+                            style: TextStyle(
+                                color: context.txtPrimary, fontSize: 13),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

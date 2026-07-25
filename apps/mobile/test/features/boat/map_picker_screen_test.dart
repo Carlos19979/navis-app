@@ -49,7 +49,7 @@ void main() {
         showNameField: showNameField,
       ),
       overrides: [
-        allPortsProvider.overrideWith((ref) async => ports),
+        visiblePortsProvider.overrideWith((ref, bbox) async => ports),
       ],
     );
   }
@@ -157,7 +157,7 @@ void main() {
             ),
           ),
           overrides: [
-            allPortsProvider.overrideWith((ref) async => <Port>[]),
+            visiblePortsProvider.overrideWith((ref, bbox) async => <Port>[]),
           ],
         ),
       );

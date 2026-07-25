@@ -69,7 +69,8 @@ void main() {
         const TripRecordingScreen(boatId: 'boat-1'),
         overrides: [
           tripRecordingProvider.overrideWith((ref) => notifier),
-          allPortsProvider.overrideWith((ref) async => []),
+          visiblePortsProvider.overrideWith((ref, bbox) async => []),
+          nearbyPortsProvider.overrideWith((ref, params) async => []),
         ],
       ),
     );

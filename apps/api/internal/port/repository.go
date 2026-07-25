@@ -159,6 +159,15 @@ type TripTrackRepository interface {
 type NauticalPortRepository interface {
 	GetByID(ctx context.Context, id string) (*domain.Port, error)
 	NearLocation(ctx context.Context, lat, lon, radiusKM float64, cursor string, limit int) ([]domain.Port, string, error)
+	// WithinBBox returns ports whose location falls inside the geographic
+	// bounding box [minLon, minLat, maxLon, maxLat], keyset-paginated by
+	// (name, id).
+	WithinBBox(ctx context.Context, minLon, minLat, maxLon, maxLat float64, cursor string, limit int) ([]domain.Port, string, error)
+	// Search returns ports whose name matches query (case-insensitive,
+	// substring). When nearLat/nearLon are provided results are ordered by
+	// distance to that point (keyset by distance,id); otherwise by name
+	// (keyset by name,id).
+	Search(ctx context.Context, query string, nearLat, nearLon *float64, cursor string, limit int) ([]domain.Port, string, error)
 }
 
 // EventRepository defines persistence operations for events.

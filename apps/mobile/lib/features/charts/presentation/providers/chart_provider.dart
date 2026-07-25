@@ -1,6 +1,17 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
+/// Snapped visible bounding box driving the viewport ports fetch. Kept as a
+/// plain record (not a ports-feature type) so this charts provider stays free
+/// of cross-feature imports; it is structurally compatible with the ports
+/// feature's `PortsBBox`.
+typedef ChartBBox = ({
+  double minLon,
+  double minLat,
+  double maxLon,
+  double maxLat,
+});
+
 class MapState {
   const MapState({
     required this.center,
@@ -9,6 +20,7 @@ class MapState {
     this.showPosition = true,
     this.showTracks = false,
     this.showPorts = true,
+    this.portsBBox,
   });
 
   final LatLng center;
@@ -18,6 +30,10 @@ class MapState {
   final bool showTracks;
   final bool showPorts;
 
+  /// Snapped bounds of the currently visible area; null until the map reports
+  /// its first camera position.
+  final ChartBBox? portsBBox;
+
   MapState copyWith({
     LatLng? center,
     double? zoom,
@@ -25,6 +41,7 @@ class MapState {
     bool? showPosition,
     bool? showTracks,
     bool? showPorts,
+    ChartBBox? portsBBox,
   }) {
     return MapState(
       center: center ?? this.center,
@@ -33,6 +50,7 @@ class MapState {
       showPosition: showPosition ?? this.showPosition,
       showTracks: showTracks ?? this.showTracks,
       showPorts: showPorts ?? this.showPorts,
+      portsBBox: portsBBox ?? this.portsBBox,
     );
   }
 }
@@ -54,6 +72,13 @@ class ChartNotifier extends StateNotifier<MapState> {
 
   void setZoom(double zoom) {
     state = state.copyWith(zoom: zoom);
+  }
+
+  /// Updates the snapped visible bounds, but only when they actually change,
+  /// so panning within a snap-grid cell does not trigger a rebuild/refetch.
+  void setPortsBBox(ChartBBox bbox) {
+    if (state.portsBBox == bbox) return;
+    state = state.copyWith(portsBBox: bbox);
   }
 
   void zoomIn() {
