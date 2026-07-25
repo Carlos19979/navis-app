@@ -4,6 +4,12 @@
 -- OpenStreetMap (ODbL) via Overpass, per-country, deduped and cleaned.
 -- 13823 rows. Public read (RLS ports_select_all). Regenerate: see scripts.
 
+-- PostGIS lives in the `extensions` schema on Supabase and the migration
+-- runner's search_path excludes it, so the unqualified `geography` cast /
+-- ST_MakePoint in the INSERTs below fail with "type geography does not exist".
+-- Put extensions on the path for this migration.
+SET search_path TO public, extensions;
+
 -- Trigram index so name search (ILIKE '%q%') stays fast at this scale.
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 CREATE INDEX IF NOT EXISTS idx_ports_name_trgm
