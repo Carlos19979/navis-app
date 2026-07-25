@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
@@ -14,7 +15,7 @@ import 'package:navis_mobile/features/groups/presentation/providers/group_provid
 import 'package:navis_mobile/features/groups/presentation/widgets/group_card.dart';
 import 'package:navis_mobile/features/profile/data/account_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
-import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
+import 'package:navis_mobile/shared/widgets/join_by_code_sheet.dart';
 import 'package:navis_mobile/shared/widgets/navis_empty_state.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_gradient_fab.dart';
@@ -60,12 +61,11 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
 
   Future<void> _joinByCode() async {
     final l = AppLocalizations.of(context)!;
-    final code = await NavisInputDialog.show(
+    final code = await showJoinByCodeSheet(
       context,
-      title: l.joinByCode,
-      hintText: l.inviteCode,
-      confirmLabel: l.join,
-      uppercase: true,
+      title: l.joinClubTitle,
+      description: l.joinByCodeDescription,
+      hint: l.inviteCode,
     );
     if (code == null || code.isEmpty) return;
     try {
@@ -102,10 +102,20 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
       ),
       actions: _onClubsTab
           ? [
-              IconButton(
-                icon: Icon(Icons.vpn_key_outlined, color: context.txtSecondary),
-                tooltip: l.joinByCode,
-                onPressed: _joinByCode,
+              Padding(
+                padding: const EdgeInsets.only(right: Dimens.spaceSm),
+                child: TextButton.icon(
+                  onPressed: _joinByCode,
+                  icon: const Icon(
+                    Icons.vpn_key_outlined,
+                    size: Dimens.iconSm,
+                    color: AppColors.cyan,
+                  ),
+                  label: Text(
+                    l.joinByCode,
+                    style: const TextStyle(color: AppColors.cyan),
+                  ),
+                ),
               ),
             ]
           : null,
@@ -127,6 +137,8 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
             emptyMessage: l.notInAnyGroup,
             emptyActionLabel: l.createGroup,
             onEmptyAction: _onCreateGroup,
+            emptyJoinLabel: l.joinEmptyCta,
+            onEmptyJoin: _joinByCode,
             onTap: (g) => context.push('/groups/${g.id}'),
           ),
           _GroupList(
@@ -150,6 +162,8 @@ class _GroupList extends ConsumerWidget {
     required this.onTap,
     this.emptyActionLabel,
     this.onEmptyAction,
+    this.emptyJoinLabel,
+    this.onEmptyJoin,
     this.trailingBuilder,
   });
 
@@ -159,6 +173,11 @@ class _GroupList extends ConsumerWidget {
   final void Function(Group) onTap;
   final String? emptyActionLabel;
   final VoidCallback? onEmptyAction;
+
+  /// Optional secondary "join by code" CTA rendered under the empty state, for
+  /// members who were invited rather than creating their own club.
+  final String? emptyJoinLabel;
+  final VoidCallback? onEmptyJoin;
   final Widget Function(Group)? trailingBuilder;
 
   @override
@@ -172,11 +191,33 @@ class _GroupList extends ConsumerWidget {
       ),
       data: (groups) {
         if (groups.isEmpty) {
-          return NavisEmptyState(
+          final empty = NavisEmptyState(
             icon: emptyIcon,
             message: emptyMessage,
             actionLabel: emptyActionLabel,
             onAction: onEmptyAction,
+          );
+          if (emptyJoinLabel == null || onEmptyJoin == null) return empty;
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(child: empty),
+              Padding(
+                padding: const EdgeInsets.only(bottom: Dimens.navClearance),
+                child: TextButton.icon(
+                  onPressed: onEmptyJoin,
+                  icon: const Icon(
+                    Icons.vpn_key_outlined,
+                    size: Dimens.iconSm,
+                    color: AppColors.cyan,
+                  ),
+                  label: Text(
+                    emptyJoinLabel!,
+                    style: const TextStyle(color: AppColors.cyan),
+                  ),
+                ),
+              ),
+            ],
           );
         }
         return RefreshIndicator(
@@ -184,7 +225,12 @@ class _GroupList extends ConsumerWidget {
           backgroundColor: context.dialogSurface,
           onRefresh: () async => ref.invalidate(provider),
           child: ListView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 120),
+            padding: const EdgeInsets.fromLTRB(
+              16,
+              12,
+              16,
+              Dimens.navClearance,
+            ),
             itemCount: groups.length,
             itemBuilder: (context, i) => GroupCard(
               group: groups[i],

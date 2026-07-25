@@ -1704,6 +1704,16 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get joinByCodeDescription =>
+      'Introduce el código de invitación que te compartieron para unirte.';
+
+  @override
+  String get joinClubTitle => 'Unirse a un club';
+
+  @override
+  String get joinEmptyCta => '¿Te han invitado? Únete con un código';
+
+  @override
   String get requestSent => 'Solicitud enviada';
 
   @override
