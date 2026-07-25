@@ -30,7 +30,7 @@ const Color white = Color(0xFFFFFFFF);
 /// Paints the shared full-bleed background: diagonal navy gradient plus a
 /// subtle radial glow centered slightly above the middle behind the mark.
 void _paintBackground(Canvas canvas) {
-  final Rect full = const Rect.fromLTWH(0, 0, kSize, kSize);
+  const Rect full = Rect.fromLTWH(0, 0, kSize, kSize);
 
   // Diagonal gradient top-left -> bottom-right.
   final Paint bg = Paint()
@@ -77,8 +77,8 @@ void _paintSailboat(Canvas canvas) {
     ..strokeWidth = kSize * 0.014
     ..strokeCap = StrokeCap.round;
   canvas.drawLine(
-    Offset(mastX, mastTop - kSize * 0.005),
-    Offset(mastX, sailBottom),
+    const Offset(mastX, mastTop - kSize * 0.005),
+    const Offset(mastX, sailBottom),
     mastPaint,
   );
 
@@ -95,7 +95,7 @@ void _paintSailboat(Canvas canvas) {
       end: Alignment.bottomCenter,
       colors: [white, Color(0xFFE8F4FB)],
     ).createShader(
-      Rect.fromLTWH(mastX, mastTop, kSize * 0.235, sailBottom - mastTop),
+      const Rect.fromLTWH(mastX, mastTop, kSize * 0.235, sailBottom - mastTop),
     );
   canvas.drawPath(mainsail, mainPaint);
 
@@ -111,7 +111,7 @@ void _paintSailboat(Canvas canvas) {
       end: Alignment.bottomCenter,
       colors: [cyanLight, cyan],
     ).createShader(
-      Rect.fromLTWH(
+      const Rect.fromLTWH(
         mastX - kSize * 0.165,
         mastTop,
         kSize * 0.16,
@@ -248,7 +248,7 @@ void _paintCompass(Canvas canvas) {
       colors: [white, cyanLight, cyan],
       stops: [0.0, 0.45, 1.0],
     ).createShader(
-      Rect.fromLTWH(cx - waist, cy - majorLen, waist * 2, majorLen),
+      const Rect.fromLTWH(cx - waist, cy - majorLen, waist * 2, majorLen),
     );
   canvas.drawPath(northSpike, northPaint);
 
