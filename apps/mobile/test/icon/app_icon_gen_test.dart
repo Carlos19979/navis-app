@@ -151,14 +151,20 @@ void _paintSailboat(Canvas canvas) {
   final Path wave1 = Path()
     ..moveTo(cx - kSize * 0.30, waveY1)
     ..cubicTo(
-      cx - kSize * 0.14, waveY1 - kSize * 0.055,
-      cx - kSize * 0.06, waveY1 + kSize * 0.055,
-      cx + kSize * 0.06, waveY1,
+      cx - kSize * 0.14,
+      waveY1 - kSize * 0.055,
+      cx - kSize * 0.06,
+      waveY1 + kSize * 0.055,
+      cx + kSize * 0.06,
+      waveY1,
     )
     ..cubicTo(
-      cx + kSize * 0.16, waveY1 - kSize * 0.045,
-      cx + kSize * 0.22, waveY1 + kSize * 0.02,
-      cx + kSize * 0.30, waveY1 - kSize * 0.01,
+      cx + kSize * 0.16,
+      waveY1 - kSize * 0.045,
+      cx + kSize * 0.22,
+      waveY1 + kSize * 0.02,
+      cx + kSize * 0.30,
+      waveY1 - kSize * 0.01,
     );
   canvas.drawPath(wave1, wavePaint);
 
@@ -171,14 +177,20 @@ void _paintSailboat(Canvas canvas) {
   final Path wave2 = Path()
     ..moveTo(cx - kSize * 0.24, waveY2)
     ..cubicTo(
-      cx - kSize * 0.10, waveY2 - kSize * 0.045,
-      cx - kSize * 0.02, waveY2 + kSize * 0.045,
-      cx + kSize * 0.10, waveY2,
+      cx - kSize * 0.10,
+      waveY2 - kSize * 0.045,
+      cx - kSize * 0.02,
+      waveY2 + kSize * 0.045,
+      cx + kSize * 0.10,
+      waveY2,
     )
     ..cubicTo(
-      cx + kSize * 0.17, waveY2 - kSize * 0.035,
-      cx + kSize * 0.20, waveY2 + kSize * 0.015,
-      cx + kSize * 0.24, waveY2,
+      cx + kSize * 0.17,
+      waveY2 - kSize * 0.035,
+      cx + kSize * 0.20,
+      waveY2 + kSize * 0.015,
+      cx + kSize * 0.24,
+      waveY2,
     );
   canvas.drawPath(wave2, wavePaint2);
 }
@@ -211,8 +223,8 @@ void _paintCompass(Canvas canvas) {
   const double waist = kSize * 0.052; // half-width of star arms at center
 
   // --- Minor (diagonal) 4-point star, drawn first so it sits behind ---
-  final Path minorStar = _fourPointStar(cx, cy, minorLen, waist * 0.72,
-      rotation: math.pi / 4);
+  final Path minorStar =
+      _fourPointStar(cx, cy, minorLen, waist * 0.72, rotation: math.pi / 4);
   canvas.drawPath(minorStar, Paint()..color = cyan.withValues(alpha: 0.85));
 
   // --- Major 4-point star (N/E/S/W) ---
@@ -268,7 +280,8 @@ void _paintCompass(Canvas canvas) {
   canvas.drawPath(westFacet, Paint()..color = white.withValues(alpha: 0.10));
 
   // --- Center hub ---
-  canvas.drawCircle(const Offset(cx, cy), waist * 0.9, Paint()..color = navyDeep);
+  canvas.drawCircle(
+      const Offset(cx, cy), waist * 0.9, Paint()..color = navyDeep);
   canvas.drawCircle(
     const Offset(cx, cy),
     waist * 0.9,
@@ -326,8 +339,8 @@ Future<void> _writeIcon(String name, void Function(Canvas) paint) async {
       await image.toByteData(format: ui.ImageByteFormat.png);
   expect(bytes, isNotNull);
 
-  final Directory outDir =
-      Directory('build/icon_gen')..createSync(recursive: true);
+  final Directory outDir = Directory('build/icon_gen')
+    ..createSync(recursive: true);
   final File out = File('${outDir.path}/$name');
   out.writeAsBytesSync(bytes!.buffer.asUint8List());
   // Sanity: dimensions.

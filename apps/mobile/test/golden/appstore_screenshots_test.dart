@@ -275,10 +275,8 @@ void main() {
       tester,
       const CostAnalyticsScreen(boatId: 'boat-1'),
       overrides: [
-        boatCostAnalyticsProvider('boat-1')
-            .overrideWith((ref) async => cost),
-        boatAnomaliesProvider('boat-1')
-            .overrideWith((ref) async => anomalies),
+        boatCostAnalyticsProvider('boat-1').overrideWith((ref) async => cost),
+        boatAnomaliesProvider('boat-1').overrideWith((ref) async => anomalies),
       ],
     );
     await expectLater(
