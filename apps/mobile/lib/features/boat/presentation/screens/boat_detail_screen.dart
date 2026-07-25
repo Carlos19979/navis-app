@@ -120,6 +120,17 @@ class _BoatDetailView extends ConsumerWidget {
                     ),
                     const SizedBox(height: 10),
                     _ActionTile(
+                      icon: Icons.insights_rounded,
+                      title: l.costTitle,
+                      subtitle: l.costAnalyticsSubtitle,
+                      color: AppColors.cyan,
+                      badge: ref.watch(effectiveTierProvider).canCostAnalytics
+                          ? null
+                          : l.proBadge,
+                      onTap: () => _openCostAnalytics(context, ref, boat),
+                    ),
+                    const SizedBox(height: 10),
+                    _ActionTile(
                       icon: Icons.calendar_month_outlined,
                       title: l.bookingsTitle,
                       subtitle: l.bookingsSubtitle,
@@ -232,6 +243,23 @@ class _BoatDetailView extends ConsumerWidget {
       if (!ok || !context.mounted) return;
     }
     if (context.mounted) unawaited(context.push('/boats/${boat.id}/bookings'));
+  }
+
+  Future<void> _openCostAnalytics(
+    BuildContext context,
+    WidgetRef ref,
+    Boat boat,
+  ) async {
+    final l = AppLocalizations.of(context)!;
+    if (!ref.read(effectiveTierProvider).canCostAnalytics) {
+      final ok = await showPaywall(
+        context,
+        ref,
+        reason: l.paywallReasonCostAnalytics,
+      );
+      if (!ok || !context.mounted) return;
+    }
+    if (context.mounted) unawaited(context.push('/boats/${boat.id}/costs'));
   }
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
@@ -645,6 +673,7 @@ class _ActionTile extends StatelessWidget {
     required this.subtitle,
     required this.color,
     required this.onTap,
+    this.badge,
   });
 
   final IconData icon;
@@ -652,6 +681,9 @@ class _ActionTile extends StatelessWidget {
   final String subtitle;
   final Color color;
   final VoidCallback onTap;
+
+  /// Optional short pill (e.g. "PRO") shown before the chevron.
+  final String? badge;
 
   @override
   Widget build(BuildContext context) {
@@ -700,6 +732,28 @@ class _ActionTile extends StatelessWidget {
               ],
             ),
           ),
+          if (badge != null) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: AppColors.amber.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: AppColors.amber.withValues(alpha: 0.4),
+                  width: 0.5,
+                ),
+              ),
+              child: Text(
+                badge!,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: AppColors.amber,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
+                    ),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
           Icon(
             Icons.chevron_right_rounded,
             color: context.txtSecondary.withValues(alpha: 0.5),
