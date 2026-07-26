@@ -173,14 +173,32 @@ void main() {
         expect(find.text('C'), findsOneWidget);
       });
 
-      testWidgets('displays fallback name when display name is null',
-          (tester) async {
+      testWidgets(
+          'falls back to a name derived from the email, not a generic '
+          'placeholder', (tester) async {
         await tester.pumpWidget(buildProfileScreen(
-          profile: testProfile(displayName: null),
+          profile: testProfile(
+            displayName: null,
+            email: 'carlos.perez@navis.app',
+          ),
         ));
         await tester.pumpAndSettle();
 
-        expect(find.text('Navis User'), findsOneWidget);
+        expect(find.text('Carlos Perez'), findsOneWidget);
+        expect(find.text('Navis User'), findsNothing);
+      });
+
+      testWidgets('avatar initial comes from the resolved name',
+          (tester) async {
+        await tester.pumpWidget(buildProfileScreen(
+          profile: testProfile(
+            displayName: null,
+            email: 'carlos.perez@navis.app',
+          ),
+        ));
+        await tester.pumpAndSettle();
+
+        expect(find.text('C'), findsOneWidget);
       });
 
       testWidgets('displays Profile title in app bar', (tester) async {

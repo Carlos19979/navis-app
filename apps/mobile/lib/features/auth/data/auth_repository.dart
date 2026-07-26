@@ -78,6 +78,18 @@ class AuthRepository {
     await _auth.updateUser(UserAttributes(password: newPassword));
   }
 
+  /// Stores the user's chosen display name in their auth metadata.
+  ///
+  /// Email signup captures no name at all, so without this there is nothing to
+  /// show on the profile but the email. Written under `display_name`, the first
+  /// key [displayNameFromMetadata] looks at, so it wins over anything an OAuth
+  /// provider supplied.
+  Future<void> updateDisplayName(String name) async {
+    await _auth.updateUser(
+      UserAttributes(data: {'display_name': name.trim()}),
+    );
+  }
+
   /// Resends the signup confirmation email.
   Future<void> resendConfirmation(String email) async {
     await _auth.resend(type: OtpType.signup, email: email);

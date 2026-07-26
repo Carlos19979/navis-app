@@ -9,8 +9,8 @@ import 'package:navis_mobile/features/weather/domain/entities/weather.dart';
 import 'package:navis_mobile/features/weather/domain/entities/weather_overview.dart';
 import 'package:navis_mobile/features/weather/presentation/providers/weather_provider.dart';
 import 'package:navis_mobile/features/weather/presentation/screens/weather_screen.dart';
+import 'package:navis_mobile/features/weather/presentation/widgets/daily_forecast_list.dart';
 import 'package:navis_mobile/features/weather/presentation/widgets/hourly_forecast_strip.dart';
-import 'package:navis_mobile/features/weather/presentation/widgets/weekly_day_selector.dart';
 import 'package:navis_mobile/features/weather/presentation/widgets/wind_indicator.dart';
 
 import '../../helpers/geo.dart';
@@ -91,20 +91,48 @@ void main() {
         expect(find.text('18°'), findsWidgets);
       });
 
-      testWidgets('shows hourly forecast strip', (tester) async {
+      testWidgets('shows the daily forecast list', (tester) async {
         await pumpScreen(tester, overrides: [
           weatherOverviewProvider.overrideWith((ref) async => makeOverview()),
         ]);
 
+        expect(find.byType(DailyForecastList), findsOneWidget);
+      });
+
+      testWidgets('days start collapsed, with no hourly strip on screen',
+          (tester) async {
+        await pumpScreen(tester, overrides: [
+          weatherOverviewProvider.overrideWith((ref) async => makeOverview()),
+        ]);
+
+        expect(find.byType(HourlyForecastStrip), findsNothing);
+      });
+
+      testWidgets("tapping today expands the overview's own hours",
+          (tester) async {
+        await pumpScreen(tester, overrides: [
+          weatherOverviewProvider.overrideWith((ref) async => makeOverview()),
+        ]);
+
+        await tester.tap(find.text('Today'));
+        await tester.pumpAndSettle();
+
+        // Bundled with the overview: expanding needs no extra fetch.
         expect(find.byType(HourlyForecastStrip), findsOneWidget);
       });
 
-      testWidgets('shows the weekly day selector', (tester) async {
+      testWidgets('tapping an expanded day collapses it again', (tester) async {
         await pumpScreen(tester, overrides: [
           weatherOverviewProvider.overrideWith((ref) async => makeOverview()),
         ]);
 
-        expect(find.byType(WeeklyDaySelector), findsOneWidget);
+        await tester.tap(find.text('Today'));
+        await tester.pumpAndSettle();
+        expect(find.byType(HourlyForecastStrip), findsOneWidget);
+
+        await tester.tap(find.text('Today'));
+        await tester.pumpAndSettle();
+        expect(find.byType(HourlyForecastStrip), findsNothing);
       });
 
       testWidgets('shows wind indicator, waves and humidity in details card',
@@ -129,7 +157,7 @@ void main() {
         expect(find.text('7-Day Forecast'), findsOneWidget);
       });
 
-      testWidgets('selecting a future day loads that day\'s hourly forecast',
+      testWidgets("expanding a future day loads that day's hourly forecast",
           (tester) async {
         final today = DateTime(2026, 5);
         final tomorrow = DateTime(2026, 5, 2);
@@ -145,13 +173,45 @@ void main() {
           ),
         ]);
 
-        // Tap the second day chip; the single strip re-fetches that day.
-        await tester.ensureVisible(find.byKey(const ValueKey('weather-day-1')));
-        await tester.tap(find.byKey(const ValueKey('weather-day-1')));
+        // Tap tomorrow's row; its hours are fetched and shown in place.
+        final row = find.text('Sat');
+        await tester.ensureVisible(row);
+        await tester.tap(row);
         await tester.pumpAndSettle();
 
-        // The strip now shows tomorrow's 15° hour.
+        expect(find.byType(HourlyForecastStrip), findsOneWidget);
         expect(find.text('15°'), findsWidgets);
+      });
+
+      testWidgets('a day whose hours fail to load offers a retry, inline',
+          (tester) async {
+        final today = DateTime(2026, 5);
+        final tomorrow = DateTime(2026, 5, 2);
+        await pumpScreen(tester, overrides: [
+          weatherOverviewProvider.overrideWith(
+            (ref) async => makeOverview(
+              daily: [makeDaily(today), makeDaily(tomorrow)],
+            ),
+          ),
+          hourlyForDayProvider(tomorrow).overrideWith(
+            (ref) async => throw Exception('boom'),
+          ),
+        ]);
+
+        final row = find.text('Sat');
+        await tester.ensureVisible(row);
+        await tester.tap(row);
+        await tester.pumpAndSettle();
+
+        // A localized reason plus a retry — and no exception text, and no
+        // overflow from dropping a full-page error into a list row.
+        expect(
+          find.textContaining("Couldn't load this day's hours"),
+          findsOneWidget,
+        );
+        expect(find.text('Retry'), findsOneWidget);
+        expect(find.textContaining('boom'), findsNothing);
+        expect(tester.takeException(), isNull);
       });
 
       testWidgets('shows dash for humidity when humidity is null',
@@ -203,7 +263,7 @@ void main() {
         ]);
 
         expect(find.byType(HourlyForecastStrip), findsNothing);
-        expect(find.byType(WeeklyDaySelector), findsNothing);
+        expect(find.byType(DailyForecastList), findsNothing);
         expect(find.byType(RefreshIndicator), findsNothing);
       });
     });
@@ -235,8 +295,13 @@ void main() {
 
         expect(find.text('Something went wrong'), findsOneWidget);
         expect(find.text('Retry'), findsOneWidget);
-        expect(find.textContaining('Network error'), findsOneWidget);
         expect(find.byIcon(Icons.error_outline_rounded), findsOneWidget);
+        // A localized reason, never the raw exception.
+        expect(find.textContaining('Network error'), findsNothing);
+        expect(
+          find.textContaining("We couldn't load the forecast"),
+          findsOneWidget,
+        );
       });
 
       testWidgets('retry reloads and shows data on success', (tester) async {
@@ -414,7 +479,7 @@ void main() {
         ]);
 
         expect(find.text('Forecast data not available.'), findsOneWidget);
-        expect(find.byType(WeeklyDaySelector), findsNothing);
+        expect(find.byType(DailyForecastList), findsNothing);
       });
     });
 

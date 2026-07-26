@@ -51,44 +51,109 @@ class NavisInputDialog {
 
   /// Shows a single-text-field dialog. Returns the trimmed text, or null if
   /// cancelled or left empty.
+  ///
+  /// [initialValue] pre-fills and selects the field, for editing an existing
+  /// value rather than entering a new one.
   static Future<String?> show(
     BuildContext context, {
     required String title,
     String? hintText,
     String? confirmLabel,
     String? cancelLabel,
+    String? initialValue,
     bool uppercase = false,
+    TextCapitalization capitalization = TextCapitalization.none,
   }) async {
-    final l = AppLocalizations.of(context)!;
-    final controller = TextEditingController();
     final result = await showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: ctx.dialogSurface,
-        title: Text(title, style: TextStyle(color: ctx.txtPrimary)),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          textCapitalization: uppercase
-              ? TextCapitalization.characters
-              : TextCapitalization.none,
-          style: TextStyle(color: ctx.txtPrimary),
-          decoration: InputDecoration(hintText: hintText),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(cancelLabel ?? l.cancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.cyan),
-            onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
-            child: Text(confirmLabel ?? l.confirm),
-          ),
-        ],
+      builder: (ctx) => _InputDialog(
+        title: title,
+        hintText: hintText,
+        confirmLabel: confirmLabel,
+        cancelLabel: cancelLabel,
+        initialValue: initialValue,
+        capitalization:
+            uppercase ? TextCapitalization.characters : capitalization,
       ),
     );
     if (result == null || result.isEmpty) return null;
     return result;
+  }
+}
+
+/// The dialog body, stateful purely so the [TextEditingController] has an owner
+/// with a lifecycle. Disposing it after `showDialog` returns is too early — the
+/// route is still animating out and rebuilds the field on the way.
+class _InputDialog extends StatefulWidget {
+  const _InputDialog({
+    required this.title,
+    required this.capitalization,
+    this.hintText,
+    this.confirmLabel,
+    this.cancelLabel,
+    this.initialValue,
+  });
+
+  final String title;
+  final TextCapitalization capitalization;
+  final String? hintText;
+  final String? confirmLabel;
+  final String? cancelLabel;
+  final String? initialValue;
+
+  @override
+  State<_InputDialog> createState() => _InputDialogState();
+}
+
+class _InputDialogState extends State<_InputDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialValue ?? '';
+    _controller = TextEditingController(text: initial);
+    // Pre-select, so editing an existing value starts by replacing it.
+    if (initial.isNotEmpty) {
+      _controller.selection =
+          TextSelection(baseOffset: 0, extentOffset: initial.length);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() => Navigator.of(context).pop(_controller.text.trim());
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+
+    return AlertDialog(
+      backgroundColor: context.dialogSurface,
+      title: Text(widget.title, style: TextStyle(color: context.txtPrimary)),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        textCapitalization: widget.capitalization,
+        style: TextStyle(color: context.txtPrimary),
+        decoration: InputDecoration(hintText: widget.hintText),
+        onSubmitted: (_) => _submit(),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(widget.cancelLabel ?? l.cancel),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: AppColors.cyan),
+          onPressed: _submit,
+          child: Text(widget.confirmLabel ?? l.confirm),
+        ),
+      ],
+    );
   }
 }

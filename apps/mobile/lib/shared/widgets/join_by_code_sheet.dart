@@ -23,6 +23,8 @@ Future<String?> showJoinByCodeSheet(
 }) {
   return showModalBottomSheet<String>(
     context: context,
+    // Above the bottom-nav shell — see the note in showPaywall.
+    useRootNavigator: true,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (_) => _JoinByCodeSheet(

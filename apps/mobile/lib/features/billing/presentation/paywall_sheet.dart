@@ -12,11 +12,16 @@ import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 
-/// Shows the Navis paywall as a modal sheet comparing Plus and Pro. Returns true
-/// if the user ended up on a paid tier.
+/// Identifies the paywall sheet on screen. Tests assert on this rather than the
+/// heading, which varies with the tier on offer.
+const paywallSheetKey = Key('navis-paywall-sheet');
+
+/// Shows the Navis paywall as a modal sheet. Returns true if the user ended up
+/// on a paid tier.
 ///
 /// [reason] is an optional one-line context shown at the top. [requiredTier] is
-/// the tier the gated action needs — its section is shown first and preselected.
+/// the tier the gated action needs: a Pro-only gate offers Pro alone, since Plus
+/// would not unlock what the user just tried to do.
 Future<bool> showPaywall(
   BuildContext context,
   WidgetRef ref, {
@@ -25,6 +30,10 @@ Future<bool> showPaywall(
 }) async {
   final result = await showModalBottomSheet<bool>(
     context: context,
+    // On the root navigator, above the bottom-nav shell. The nav pill lives in
+    // the shell Scaffold *outside* the branch navigators, so a sheet pushed on
+    // a branch navigator draws underneath it and the pill covers its footer.
+    useRootNavigator: true,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (_) => _PaywallSheet(reason: reason, requiredTier: requiredTier),
@@ -81,18 +90,37 @@ class _PaywallSheetState extends ConsumerState<_PaywallSheet> {
   Future<void> _loadPackages() async {
     final packages = await ref.read(billingServiceProvider).allPackages();
     if (!mounted) return;
-    final plus = packages.where((p) => _tierOf(p) == PlanTier.plus).toList();
+    // A Pro-only gate offers Pro only: Plus cannot unlock the action the user
+    // just tried, so listing it is a dead end (and made the sheet announce
+    // itself as "Navis Plus & Pro" when only Pro was on offer).
+    final plus = widget.requiredTier == PlanTier.pro
+        ? const <Package>[]
+        : packages.where((p) => _tierOf(p) == PlanTier.plus).toList();
     final pro = packages.where((p) => _tierOf(p) == PlanTier.pro).toList();
     setState(() {
       _plus = plus;
       _pro = pro;
-      // Preselect the required tier's yearly (or first) package.
+      // Preselect the required tier's first package.
       final preferred = widget.requiredTier == PlanTier.plus ? plus : pro;
-      _selected = (preferred.isNotEmpty ? preferred : (pro + plus)).isEmpty
-          ? null
-          : (preferred.isNotEmpty ? preferred : pro + plus).first;
+      final offered = preferred.isNotEmpty ? preferred : pro + plus;
+      _selected = offered.isEmpty ? null : offered.first;
       _loading = false;
     });
+  }
+
+  /// The sheet's heading: the single tier on offer when that is all there is,
+  /// otherwise the both-tiers title.
+  String _title(AppLocalizations l) {
+    if (_loading) return l.paywallTitle;
+    if (_plus.isEmpty && _pro.isNotEmpty) return l.paywallProName;
+    if (_pro.isEmpty && _plus.isNotEmpty) return l.paywallPlusName;
+    if (_plus.isEmpty && _pro.isEmpty) {
+      // Nothing loaded: still name the tier the action needs.
+      return widget.requiredTier == PlanTier.plus
+          ? l.paywallPlusName
+          : l.paywallProName;
+    }
+    return l.paywallTitle;
   }
 
   Future<void> _subscribe() async {
@@ -151,6 +179,7 @@ class _PaywallSheetState extends ConsumerState<_PaywallSheet> {
     // Show the required tier's section first.
     final proFirst = widget.requiredTier == PlanTier.pro;
     return Container(
+      key: paywallSheetKey,
       decoration: BoxDecoration(
         color: context.dialogSurface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -181,7 +210,7 @@ class _PaywallSheetState extends ConsumerState<_PaywallSheet> {
               ),
             ),
             Text(
-              l.paywallTitle,
+              _title(l),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 24,
@@ -201,7 +230,7 @@ class _PaywallSheetState extends ConsumerState<_PaywallSheet> {
                 padding: EdgeInsets.symmetric(vertical: 24),
                 child: Center(child: CircularProgressIndicator()),
               )
-            else if (_plus.isEmpty && _pro.isEmpty)
+            else if (_plus.isEmpty && _pro.isEmpty) ...[
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 child: Text(
@@ -209,8 +238,18 @@ class _PaywallSheetState extends ConsumerState<_PaywallSheet> {
                   textAlign: TextAlign.center,
                   style: TextStyle(color: context.txtSecondary),
                 ),
-              )
-            else ...[
+              ),
+              // Still offer Restore: a user who already owns a subscription
+              // must not be stranded here just because the store's product
+              // list failed to load.
+              TextButton(
+                onPressed: _busy ? null : _restore,
+                child: Text(
+                  l.restorePurchases,
+                  style: TextStyle(color: context.txtSecondary),
+                ),
+              ),
+            ] else ...[
               for (final tier in proFirst
                   ? [PlanTier.pro, PlanTier.plus]
                   : [PlanTier.plus, PlanTier.pro])
@@ -221,6 +260,9 @@ class _PaywallSheetState extends ConsumerState<_PaywallSheet> {
                     benefits: tier == PlanTier.plus
                         ? _plusBenefits(l)
                         : _proBenefits(l),
+                    // With one tier on offer the heading already names it;
+                    // repeating it on the section is noise.
+                    showName: _plus.isNotEmpty && _pro.isNotEmpty,
                     includesPlusNote: tier == PlanTier.pro && _plus.isNotEmpty,
                     selected: _selected,
                     busy: _busy,
@@ -289,6 +331,7 @@ class _TierSection extends StatelessWidget {
     required this.tier,
     required this.packages,
     required this.benefits,
+    required this.showName,
     required this.includesPlusNote,
     required this.selected,
     required this.busy,
@@ -299,6 +342,11 @@ class _TierSection extends StatelessWidget {
   final PlanTier tier;
   final List<Package> packages;
   final List<(IconData, String)> benefits;
+
+  /// Whether to head the section with the tier's name. False when it is the
+  /// only tier shown, because the sheet title already names it.
+  final bool showName;
+
   final bool includesPlusNote;
   final Package? selected;
   final bool busy;
@@ -320,15 +368,17 @@ class _TierSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            name,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: context.txtPrimary,
+          if (showName) ...[
+            Text(
+              name,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: context.txtPrimary,
+              ),
             ),
-          ),
-          const SizedBox(height: 10),
+            const SizedBox(height: 10),
+          ],
           if (includesPlusNote) ...[
             Text(
               l.paywallProIncludesPlus,

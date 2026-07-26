@@ -378,6 +378,7 @@ class _MaintenanceTab extends ConsumerWidget {
     final l = AppLocalizations.of(context)!;
     return showModalBottomSheet<void>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: context.dialogSurface,
       builder: (ctx) => Padding(
@@ -464,6 +465,7 @@ class _MaintenanceTab extends ConsumerWidget {
 
     final saved = await showModalBottomSheet<bool>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: context.dialogSurface,
       builder: (ctx) => Padding(
@@ -575,6 +577,7 @@ class _MaintenanceTab extends ConsumerWidget {
 
     final saved = await showModalBottomSheet<bool>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: context.dialogSurface,
       builder: (ctx) => Padding(
@@ -1155,6 +1158,7 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
 
     final saved = await showModalBottomSheet<bool>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: context.dialogSurface,
       builder: (ctx) => Padding(
@@ -1345,6 +1349,7 @@ class _InvoiceFieldState extends ConsumerState<_InvoiceField> {
     final l = AppLocalizations.of(context)!;
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
+      useRootNavigator: true,
       backgroundColor: context.dialogSurface,
       builder: (ctx) => SafeArea(
         child: Column(

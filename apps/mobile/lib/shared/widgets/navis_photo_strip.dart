@@ -69,6 +69,7 @@ class _NavisPhotoStripState extends ConsumerState<NavisPhotoStrip> {
     if (!mounted) return;
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
+      useRootNavigator: true,
       backgroundColor: context.dialogSurface,
       builder: (ctx) => SafeArea(
         child: Column(

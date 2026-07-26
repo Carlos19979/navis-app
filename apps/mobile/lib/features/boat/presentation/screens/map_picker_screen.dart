@@ -8,6 +8,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/features/charts/data/tile_provider.dart';
 import 'package:navis_mobile/features/ports/domain/entities/port.dart';
+import 'package:navis_mobile/features/ports/presentation/controllers/viewport_ports_controller.dart';
 import 'package:navis_mobile/features/ports/presentation/providers/port_provider.dart';
 import 'package:navis_mobile/features/ports/presentation/widgets/port_markers_layer.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -48,8 +49,9 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
   final _nameCtrl = TextEditingController();
   final _mapController = MapController();
 
-  /// Snapped visible bounds driving the viewport ports fetch.
-  PortsBBox? _bbox;
+  /// Viewport ports feed. Publishes its markers as a listenable, so panning
+  /// repaints the marker layer instead of this whole screen.
+  late final ViewportPortsController _ports;
 
   static const _defaultCenter = LatLng(39.57, 2.63);
 
@@ -62,26 +64,30 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
         widget.initialLongitude!,
       );
     }
+    _ports = ViewportPortsController(
+      repository: ref.read(portRepositoryProvider),
+    );
   }
 
   @override
   void dispose() {
+    _ports.dispose();
     _nameCtrl.dispose();
     _mapController.dispose();
     super.dispose();
   }
 
-  void _onPositionChanged(MapCamera camera, bool hasGesture) {
+  /// Called on every camera frame — everything here is a cheap comparison or
+  /// debounced inside the controller.
+  void _onCameraChanged(MapCamera camera) {
     final bounds = camera.visibleBounds;
-    final snapped = snapBBox(
-      minLon: bounds.west,
-      minLat: bounds.south,
-      maxLon: bounds.east,
-      maxLat: bounds.north,
+    _ports.onCameraChanged(
+      west: bounds.west,
+      south: bounds.south,
+      east: bounds.east,
+      north: bounds.north,
+      zoom: camera.zoom,
     );
-    if (snapped != _bbox) {
-      setState(() => _bbox = snapped);
-    }
   }
 
   void _confirm() {
@@ -100,12 +106,6 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
 
     final canConfirm = _selectedPoint != null &&
         (!widget.showNameField || _nameCtrl.text.trim().isNotEmpty);
-
-    // Ports for the visible area (viewport-driven, scales to a global dataset).
-    final bbox = _bbox;
-    final visiblePorts = bbox != null
-        ? ref.watch(visiblePortsProvider(bbox)).valueOrNull ?? const <Port>[]
-        : const <Port>[];
 
     return Scaffold(
       appBar: NavisAppBar(
@@ -130,10 +130,12 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
               mapController: _mapController,
               options: MapOptions(
                 initialCenter: center,
-                initialZoom: _selectedPoint != null ? 14 : 6,
-                onMapReady: () =>
-                    _onPositionChanged(_mapController.camera, false),
-                onPositionChanged: _onPositionChanged,
+                // With nothing selected, open at a regional zoom rather than a
+                // country-wide one: the port markers are the point of this
+                // screen, and the viewport feed needs kMinPortsZoom to fetch.
+                initialZoom: _selectedPoint != null ? 14 : kMinPortsZoom + 1,
+                onMapReady: () => _onCameraChanged(_mapController.camera),
+                onPositionChanged: (position, _) => _onCameraChanged(position),
                 onTap: (_, point) {
                   setState(() {
                     _selectedPoint = point;
@@ -144,16 +146,21 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
               children: [
                 OpenSeaMapTileProvider.baseLayer,
                 OpenSeaMapTileProvider.seamarkLayer,
-                if (visiblePorts.isNotEmpty)
-                  PortMarkersLayer(
-                    ports: visiblePorts,
-                    onPortTap: (port) {
-                      setState(() {
-                        _selectedPoint = LatLng(port.lat, port.lon);
-                        _nameCtrl.text = port.name;
-                      });
-                    },
-                  ),
+                ValueListenableBuilder<List<Port>>(
+                  valueListenable: _ports,
+                  builder: (context, ports, _) {
+                    if (ports.isEmpty) return const SizedBox.shrink();
+                    return PortMarkersLayer(
+                      ports: ports,
+                      onPortTap: (port) {
+                        setState(() {
+                          _selectedPoint = LatLng(port.lat, port.lon);
+                          _nameCtrl.text = port.name;
+                        });
+                      },
+                    );
+                  },
+                ),
                 if (_selectedPoint != null)
                   MarkerLayer(
                     markers: [

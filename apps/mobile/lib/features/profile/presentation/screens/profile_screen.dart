@@ -20,6 +20,8 @@ import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
+import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
+import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -65,9 +67,7 @@ class ProfileScreen extends ConsumerWidget {
                     radius: 48,
                     backgroundColor: AppColors.darkSurfaceElevated,
                     child: Text(
-                      (profile.displayName ?? profile.email)
-                          .substring(0, 1)
-                          .toUpperCase(),
+                      profile.initial,
                       style: Theme.of(context).textTheme.displaySmall?.copyWith(
                             color: AppColors.cyan,
                             fontWeight: FontWeight.w700,
@@ -83,13 +83,10 @@ class ProfileScreen extends ConsumerWidget {
 
                 const SizedBox(height: 16),
 
-                Text(
-                  profile.displayName ?? l.navisUser,
-                  style: Theme.of(context)
-                      .textTheme
-                      .headlineMedium
-                      ?.copyWith(fontWeight: FontWeight.w700),
-                ).animate().fadeIn(
+                // The user's own name — resolved from their metadata, or from
+                // their email when signup never captured one. Tappable so they
+                // can set or correct it.
+                _EditableName(profile: profile).animate().fadeIn(
                       duration: 400.ms,
                       delay: 100.ms,
                     ),
@@ -299,6 +296,77 @@ class ProfileScreen extends ConsumerWidget {
             child: Text(l.logout),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// The profile name, with a tap-to-edit affordance.
+///
+/// Email signup never captures a name, so for most users the name shown is
+/// derived from their email until they set one here — which is also the only
+/// place they can correct whatever their identity provider supplied.
+class _EditableName extends ConsumerWidget {
+  const _EditableName({required this.profile});
+
+  final UserProfile profile;
+
+  Future<void> _edit(BuildContext context, WidgetRef ref) async {
+    final l = AppLocalizations.of(context)!;
+    final name = await NavisInputDialog.show(
+      context,
+      title: l.editNameTitle,
+      hintText: l.yourName,
+      initialValue: profile.displayName ?? profile.resolvedName,
+      capitalization: TextCapitalization.words,
+    );
+    if (name == null || !context.mounted) return;
+    try {
+      await ref.read(authProvider.notifier).updateDisplayName(name);
+    } catch (_) {
+      if (context.mounted) NavisSnackbar.error(context, l.somethingWentWrong);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
+
+    return Semantics(
+      button: true,
+      label: l.editNameTitle,
+      child: InkWell(
+        onTap: () => _edit(context, ref),
+        borderRadius: BorderRadius.circular(Dimens.radiusMd),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: Dimens.spaceSm,
+            vertical: 2,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Text(
+                  profile.resolvedName,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context)
+                      .textTheme
+                      .headlineMedium
+                      ?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+              const SizedBox(width: Dimens.spaceXs),
+              Icon(
+                Icons.edit_outlined,
+                size: Dimens.iconSm,
+                color: context.txtSecondary.withValues(alpha: 0.7),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

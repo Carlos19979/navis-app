@@ -437,6 +437,9 @@
   "locationAccessNeeded": "Location access is needed\nfor weather data.",
   "sevenDayForecast": "7-Day Forecast",
   "forecastNotAvailable": "Forecast data not available.",
+  "planCheckFailed": "We couldn't check your plan. Check your connection and try again.",
+  "weatherLoadFailed": "We couldn't load the forecast. Check your connection and try again.",
+  "hourlyLoadFailed": "Couldn't load this day's hours.",
   "memberSince": "Member since {date}",
   "@memberSince": {
     "placeholders": {
@@ -498,6 +501,8 @@
   "failedToUpdateTrip": "Failed to update trip",
   "somethingWentWrong": "Something went wrong",
   "navisUser": "Navis User",
+  "editNameTitle": "Your name",
+  "yourName": "How should we call you?",
   "previousMonth": "Previous month",
   "nextMonth": "Next month",
   "nearbyPorts": "Nearby Ports",

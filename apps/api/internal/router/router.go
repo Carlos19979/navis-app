@@ -47,7 +47,12 @@ func New(
 	r.Use(middleware.Recovery(logger))
 	r.Use(middleware.SecurityHeaders)
 	r.Use(middleware.CORS(allowedOrigins))
-	r.Use(middleware.RateLimit(100, time.Minute))
+	// Global per-IP guard. Sized for a real session, not a single screen: an
+	// app in use hits /me, /boats, weather and the map feed together, and the
+	// bucket is shared across all of them, so a limit tuned to one screen
+	// silently 429s the others (that is how a busy chart map broke the weather
+	// tab). Abuse-shaped traffic is still cut off well below this.
+	r.Use(middleware.RateLimit(300, time.Minute))
 	r.Use(middleware.MaxBodyBytes)
 	r.Use(middleware.Logging(logger))
 

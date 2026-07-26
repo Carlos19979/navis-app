@@ -8,8 +8,8 @@ import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/weather/domain/entities/weather_overview.dart';
 import 'package:navis_mobile/features/weather/presentation/providers/weather_provider.dart';
+import 'package:navis_mobile/features/weather/presentation/widgets/daily_forecast_list.dart';
 import 'package:navis_mobile/features/weather/presentation/widgets/weather_visuals.dart';
-import 'package:navis_mobile/features/weather/presentation/widgets/weekly_day_selector.dart';
 import 'package:navis_mobile/features/weather/presentation/widgets/wind_indicator.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
@@ -34,9 +34,15 @@ class WeatherScreen extends ConsumerWidget {
       body: GradientBackground(
         child: overview.when(
           loading: () => const NavisLoading(),
+          // A localized reason, not the exception: users cannot act on a
+          // DioException string, and it is not ours to put on screen.
           error: (error, stack) => NavisErrorWidget(
-            message: error.toString(),
-            onRetry: () => ref.invalidate(weatherOverviewProvider),
+            message: l.weatherLoadFailed,
+            onRetry: () {
+              // Re-acquire GPS too: a stale/denied fix is a common cause here.
+              ref.invalidate(positionProvider);
+              ref.invalidate(weatherOverviewProvider);
+            },
           ),
           data: (data) {
             if (data == null) {
@@ -150,7 +156,8 @@ class _OverviewBody extends StatelessWidget {
           ),
           const SizedBox(height: 24),
 
-          // Day selector + a single hourly strip for the selected day.
+          // The week as a list of days; tapping one opens its hourly detail
+          // in place.
           Padding(
             padding: const EdgeInsets.only(left: 4, bottom: 12),
             child: Text(
@@ -162,7 +169,10 @@ class _OverviewBody extends StatelessWidget {
             ),
           ),
           if (overview.daily.isNotEmpty)
-            WeeklyDaySelector(overview: overview).animate().fadeIn(
+            DailyForecastList(
+              days: overview.daily,
+              todayHours: overview.hourly,
+            ).animate().fadeIn(
                   delay: 300.ms,
                   duration: 500.ms,
                 )

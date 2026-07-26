@@ -178,12 +178,44 @@ final liveTierProvider = StateProvider<PlanTier>((ref) => PlanTier.free);
 
 /// The effective tier: the higher of the server account plan and the live RC
 /// mirror. This is what the UI gates on (via its capability getters).
+///
+/// Note this reads `valueOrNull`, so it is **free while the account is still
+/// loading or after a failed fetch**. Do not open a paywall straight off this
+/// value — a paid user would be shown one because a request had not landed yet.
+/// Gate through [resolveTier] instead, which waits for the real answer.
 final effectiveTierProvider = Provider<PlanTier>((ref) {
   final account = ref.watch(accountProvider).valueOrNull;
   final serverTier = PlanTier.fromName(account?.plan);
   final live = ref.watch(liveTierProvider);
   return serverTier.index >= live.index ? serverTier : live;
 });
+
+/// Whether the account behind [effectiveTierProvider] has actually been
+/// answered. False while `/me` is in flight or after it failed — the two cases
+/// where the tier reads free without meaning it.
+final tierIsResolvedProvider = Provider<bool>(
+  (ref) => ref.watch(accountProvider).hasValue,
+);
+
+/// Resolves the user's real tier, awaiting the account when it has not landed
+/// yet. Returns null when the plan genuinely cannot be determined (offline, or
+/// the request failed), which callers should treat as "don't know" — not as
+/// free, and so not as grounds for a paywall.
+///
+/// This is what a gated action should call. Reading [effectiveTierProvider]
+/// directly is fine for *display* (a badge, a lock icon), where being briefly
+/// wrong costs nothing.
+Future<PlanTier?> resolveTier(WidgetRef ref) async {
+  final live = ref.read(liveTierProvider);
+  // A live RevenueCat entitlement is proof on its own; no need to wait.
+  if (live != PlanTier.free) return live;
+  try {
+    final account = await ref.read(accountProvider.future);
+    return PlanTier.fromName(account.plan);
+  } catch (_) {
+    return null;
+  }
+}
 
 /// Backward-compatible "is top tier" flag (Pro). Prefer gating on the specific
 /// capability via [effectiveTierProvider] (e.g. `.canCostAnalytics`).

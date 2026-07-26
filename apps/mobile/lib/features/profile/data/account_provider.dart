@@ -94,8 +94,13 @@ class Account {
   /// Anchor watch: drop an anchor position + swing radius and get a drift alarm.
   final bool anchorAlarm;
 
-  /// Display label for the plan.
-  String get planLabel => isPro ? 'Pro' : 'Free';
+  /// Display label for the plan. Reads [plan] rather than [isPro] so a Plus
+  /// subscriber is not labelled "Free".
+  String get planLabel => switch (plan) {
+        'pro' => 'Pro',
+        'plus' => 'Plus',
+        _ => 'Free',
+      };
 }
 
 class AccountRepository {

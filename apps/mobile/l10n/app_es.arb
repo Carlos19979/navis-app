@@ -423,6 +423,9 @@
   "locationAccessNeeded": "Se necesita acceso a la ubicación\npara datos meteorológicos.",
   "sevenDayForecast": "Pronóstico de 7 días",
   "forecastNotAvailable": "Datos de pronóstico no disponibles.",
+  "planCheckFailed": "No hemos podido comprobar tu plan. Revisa tu conexión e inténtalo de nuevo.",
+  "weatherLoadFailed": "No hemos podido cargar el pronóstico. Revisa tu conexión e inténtalo de nuevo.",
+  "hourlyLoadFailed": "No se han podido cargar las horas de este día.",
   "memberSince": "Miembro desde {date}",
   "@memberSince": {
     "placeholders": {
@@ -484,6 +487,8 @@
   "failedToUpdateTrip": "Error al actualizar viaje",
   "somethingWentWrong": "Algo salió mal",
   "navisUser": "Usuario Navis",
+  "editNameTitle": "Tu nombre",
+  "yourName": "¿Cómo te llamamos?",
   "previousMonth": "Mes anterior",
   "nextMonth": "Mes siguiente",
   "nearbyPorts": "Puertos Cercanos",

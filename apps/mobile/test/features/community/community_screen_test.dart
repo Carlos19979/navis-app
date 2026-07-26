@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/features/community/presentation/screens/community_screen.dart';
 import 'package:navis_mobile/features/events/domain/entities/event.dart';
 import 'package:navis_mobile/features/events/presentation/providers/event_provider.dart';
@@ -11,6 +13,7 @@ import 'package:navis_mobile/features/events/presentation/screens/events_screen.
 import 'package:navis_mobile/features/groups/data/repositories/group_repository.dart';
 import 'package:navis_mobile/features/groups/domain/entities/group.dart';
 import 'package:navis_mobile/features/groups/presentation/providers/group_provider.dart';
+import 'package:navis_mobile/features/profile/data/account_provider.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_gradient_fab.dart';
 import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
@@ -36,12 +39,16 @@ void main() {
     List<Event> events = const [],
     Future<List<Group>> Function()? myGroups,
     Future<List<Group>> Function()? discover,
+    Override? accountOverride,
   }) {
     return buildRoutedTestApp(
       const CommunityScreen(),
       spy: spy,
       overrides: [
         ...planOverrides(pro: pro),
+        // Applied after planOverrides so it wins, for the tests that need the
+        // account to be pending or failing.
+        if (accountOverride != null) accountOverride,
         groupRepositoryProvider.overrideWithValue(mockRepo),
         eventsProvider.overrideWith((ref) async => events),
         myGroupsProvider.overrideWith(
@@ -194,6 +201,67 @@ void main() {
 
       expectPaywall(shown: false);
       expect(spy.last, '/groups/new');
+    });
+
+    testWidgets('a Pro user is not shown the paywall while /me is in flight',
+        (tester) async {
+      setPhoneSize(tester);
+      final spy = RouteSpy();
+      // The account request has not landed when the user taps. Reading the tier
+      // synchronously reports free here, which used to paywall a paid user.
+      final account = Completer<Account>();
+      addTearDown(() {
+        if (!account.isCompleted) {
+          account.complete(accountForTier(PlanTier.pro));
+        }
+      });
+      await tester.pumpWidget(
+        buildSubject(
+          spy: spy,
+          accountOverride: accountProvider.overrideWith((_) => account.future),
+        ),
+      );
+      await pumpScreen(tester);
+      await openTab(tester, 'My groups');
+
+      await tester.tap(find.text('Create group'));
+      await tester.pump();
+
+      // Nothing decided yet: no paywall on a maybe.
+      expectPaywall(shown: false);
+
+      account.complete(accountForTier(PlanTier.pro));
+      await pumpScreen(tester);
+
+      expectPaywall(shown: false);
+      expect(spy.last, '/groups/new');
+    });
+
+    testWidgets('an unknown plan asks the user to retry, not to pay',
+        (tester) async {
+      setPhoneSize(tester);
+      final spy = RouteSpy();
+      await tester.pumpWidget(
+        buildSubject(
+          spy: spy,
+          accountOverride: accountProvider.overrideWith(
+            (_) async => throw Exception('offline'),
+          ),
+        ),
+      );
+      await pumpScreen(tester);
+      await openTab(tester, 'My groups');
+
+      await tester.tap(find.text('Create group'));
+      await pumpScreen(tester);
+
+      // A failed plan check is not evidence the user is on Free.
+      expectPaywall(shown: false);
+      expect(spy.locations, isEmpty);
+      expectSnackbar(
+          tester,
+          "We couldn't check your plan. "
+          'Check your connection and try again.');
     });
   });
 

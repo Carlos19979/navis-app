@@ -17,6 +17,7 @@ import 'package:navis_mobile/features/charts/presentation/widgets/map_controls.d
 import 'package:navis_mobile/features/charts/presentation/widgets/position_indicator.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
 import 'package:navis_mobile/features/ports/domain/entities/port.dart';
+import 'package:navis_mobile/features/ports/presentation/controllers/viewport_ports_controller.dart';
 import 'package:navis_mobile/features/ports/presentation/providers/port_provider.dart';
 import 'package:navis_mobile/features/ports/presentation/widgets/port_info_sheet.dart';
 import 'package:navis_mobile/features/ports/presentation/widgets/port_markers_layer.dart';
@@ -33,10 +34,34 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
   LatLng? _currentPosition;
   bool _locationDenied = false;
 
+  /// Viewport ports feed. Owns its own debounce and memo, and publishes the
+  /// markers as a listenable so panning repaints the marker layer only — never
+  /// the whole screen (see [ViewportPortsController]).
+  late final ViewportPortsController _ports;
+
+  /// Live camera zoom, whole steps only — the granularity the readout and the
+  /// "zoom in for ports" hint actually show, so a pan notifies at most once per
+  /// zoom step instead of once per frame.
+  final ValueNotifier<double> _liveZoom = ValueNotifier<double>(0);
+
   @override
   void initState() {
     super.initState();
+    final state = ref.read(chartProvider);
+    _liveZoom.value = state.zoom.roundToDouble();
+    _ports = ViewportPortsController(
+      repository: ref.read(portRepositoryProvider),
+      enabled: state.showPorts,
+    );
     _getCurrentPosition();
+  }
+
+  @override
+  void dispose() {
+    _ports.dispose();
+    _liveZoom.dispose();
+    _mapController.dispose();
+    super.dispose();
   }
 
   Future<void> _getCurrentPosition() async {
@@ -66,25 +91,53 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
     }
   }
 
-  // Seed the viewport ports fetch as soon as the map is laid out, so ports
-  // appear on the initial view without waiting for a pan.
-  void _seedPortsBBox() {
-    final bounds = _mapController.camera.visibleBounds;
-    ref.read(chartProvider.notifier).setPortsBBox(
-          snapBBox(
-            minLon: bounds.west,
-            minLat: bounds.south,
-            maxLon: bounds.east,
-            maxLat: bounds.north,
-          ),
-        );
+  /// Feeds the camera to the ports controller and the zoom readout. Called on
+  /// every frame of a pan, so everything here is either a cheap comparison or
+  /// debounced downstream — no provider writes, no setState.
+  void _onCameraChanged(MapCamera camera) {
+    final bounds = camera.visibleBounds;
+    _ports.onCameraChanged(
+      west: bounds.west,
+      south: bounds.south,
+      east: bounds.east,
+      north: bounds.north,
+      zoom: camera.zoom,
+    );
+    final stepped = camera.zoom.roundToDouble();
+    if (_liveZoom.value != stepped) _liveZoom.value = stepped;
+  }
+
+  /// Persists the resting camera so reopening the tab returns to it. Only the
+  /// settled events land here — never the per-frame move stream.
+  void _onMapEvent(MapEvent event) {
+    final settled = switch (event) {
+      MapEventMoveEnd() => true,
+      MapEventFlingAnimationEnd() => true,
+      MapEventDoubleTapZoomEnd() => true,
+      MapEventRotateEnd() => true,
+      MapEventScrollWheelZoom() => true,
+      // A programmatic move (zoom buttons, centre-on-GPS) is already a single
+      // discrete jump, so it settles immediately.
+      MapEventMove(source: MapEventSource.mapController) => true,
+      _ => false,
+    };
+    if (!settled) return;
+    ref
+        .read(chartProvider.notifier)
+        .settleCamera(event.camera.center, event.camera.zoom);
   }
 
   void _centerOnGps() {
     if (_currentPosition != null) {
-      ref.read(chartProvider.notifier).centerOnPosition(_currentPosition!);
       _mapController.move(_currentPosition!, 14);
     }
+  }
+
+  void _zoomBy(double delta) {
+    final camera = _mapController.camera;
+    final target = (camera.zoom + delta).clamp(3.0, 18.0);
+    if (target == camera.zoom) return;
+    _mapController.move(camera.center, target);
   }
 
   @override
@@ -92,16 +145,12 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
     final mapState = ref.watch(chartProvider);
     final boatsAsync = ref.watch(boatsProvider);
 
-    // Fetch ports for the visible area, but only once zoomed in enough to
-    // bound it — at low zoom the box would be too large (and the server
-    // rejects it). Render from the async value directly so there is no
-    // spinner while a new box loads.
-    final bbox = mapState.portsBBox;
-    final portsActive =
-        mapState.showPorts && mapState.zoom >= kMinPortsZoom && bbox != null;
-    final visiblePorts = portsActive
-        ? ref.watch(visiblePortsProvider(bbox)).valueOrNull ?? const <Port>[]
-        : const <Port>[];
+    // Keep the ports layer in step with its toggle. ref.listen (not a build-time
+    // call) so the controller is never mutated mid-build.
+    ref.listen<bool>(
+      chartProvider.select((s) => s.showPorts),
+      (_, next) => _ports.setEnabled(next),
+    );
 
     return Scaffold(
       body: Stack(
@@ -114,41 +163,25 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                 initialZoom: mapState.zoom,
                 minZoom: 3,
                 maxZoom: 18,
-                onMapReady: _seedPortsBBox,
-                onPositionChanged: (position, hasGesture) {
-                  final notifier = ref.read(chartProvider.notifier);
-                  if (hasGesture) {
-                    notifier.setCenter(position.center);
-                    notifier.setZoom(position.zoom);
-                  }
-                  // Drive the viewport ports fetch. setPortsBBox no-ops unless
-                  // the snapped box changed, so panning within a grid cell
-                  // neither rebuilds nor refetches.
-                  final bounds = position.visibleBounds;
-                  notifier.setPortsBBox(
-                    snapBBox(
-                      minLon: bounds.west,
-                      minLat: bounds.south,
-                      maxLon: bounds.east,
-                      maxLat: bounds.north,
-                    ),
-                  );
-                },
+                // Seed the feed as soon as the map is laid out, so ports show
+                // on the initial view without waiting for a pan.
+                onMapReady: () => _onCameraChanged(_mapController.camera),
+                onPositionChanged: (position, _) => _onCameraChanged(position),
+                onMapEvent: _onMapEvent,
               ),
               children: [
                 OpenSeaMapTileProvider.baseLayer,
                 if (mapState.showSeamarks) OpenSeaMapTileProvider.seamarkLayer,
-                if (mapState.showPorts && visiblePorts.isNotEmpty)
-                  PortMarkersLayer(
-                    ports: visiblePorts,
-                    userPosition: _currentPosition,
-                  ),
+                _ViewportPortMarkers(
+                  ports: _ports,
+                  userPosition: _currentPosition,
+                ),
                 if (_currentPosition != null && mapState.showPosition)
                   PositionIndicator(position: _currentPosition!),
                 if (boatsAsync case AsyncData(:final value))
                   _HomePortMarkers(
                     boats: value,
-                    nearbyPorts: visiblePorts,
+                    ports: _ports,
                     userPosition: _currentPosition,
                   ),
                 if (mapState.showTracks)
@@ -252,12 +285,17 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Text(
-                          'z${mapState.zoom.toStringAsFixed(0)}',
-                          style: TextStyle(
-                            color:
-                                AppColors.textSecondary.withValues(alpha: 0.7),
-                            fontSize: 11,
+                        // Listens to the live zoom directly, so a pinch
+                        // repaints this label and nothing else.
+                        ValueListenableBuilder<double>(
+                          valueListenable: _liveZoom,
+                          builder: (context, zoom, _) => Text(
+                            'z${zoom.toStringAsFixed(0)}',
+                            style: TextStyle(
+                              color: AppColors.textSecondary
+                                  .withValues(alpha: 0.7),
+                              fontSize: 11,
+                            ),
                           ),
                         ),
                       ],
@@ -267,64 +305,59 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
               ),
             ),
 
-          // At low zoom the ports layer is suppressed; tell the user why.
-          if (mapState.showPorts && mapState.zoom < kMinPortsZoom)
-            Positioned(
-              bottom: 24,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.navy.withValues(alpha: 0.6),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppColors.glassBorder,
-                          width: 0.5,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.zoom_in,
-                              size: 16, color: AppColors.cyan),
-                          const SizedBox(width: 8),
-                          Text(
-                            AppLocalizations.of(context)!.portsZoomInHint,
-                            style: TextStyle(
-                                color: context.txtPrimary, fontSize: 13),
+          // Zoomed too far out to fetch a viewport: say so rather than leaving
+          // the user wondering. Whatever was already loaded stays drawn.
+          if (mapState.showPorts)
+            ValueListenableBuilder<double>(
+              valueListenable: _liveZoom,
+              builder: (context, zoom, _) {
+                if (zoom >= kMinPortsZoom) return const SizedBox.shrink();
+                return Positioned(
+                  bottom: 24,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
                           ),
-                        ],
+                          decoration: BoxDecoration(
+                            color: AppColors.navy.withValues(alpha: 0.6),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppColors.glassBorder,
+                              width: 0.5,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.zoom_in,
+                                  size: 16, color: AppColors.cyan),
+                              const SizedBox(width: 8),
+                              Text(
+                                AppLocalizations.of(context)!.portsZoomInHint,
+                                style: TextStyle(
+                                    color: context.txtPrimary, fontSize: 13),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
 
           MapControls(
-            onZoomIn: () {
-              ref.read(chartProvider.notifier).zoomIn();
-              _mapController.move(
-                _mapController.camera.center,
-                _mapController.camera.zoom + 1,
-              );
-            },
-            onZoomOut: () {
-              ref.read(chartProvider.notifier).zoomOut();
-              _mapController.move(
-                _mapController.camera.center,
-                _mapController.camera.zoom - 1,
-              );
-            },
+            onZoomIn: () => _zoomBy(1),
+            onZoomOut: () => _zoomBy(-1),
             onCenterGps: _centerOnGps,
             onToggleLayers: () {
               ref.read(chartProvider.notifier).toggleSeamarks();
@@ -337,6 +370,26 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// The ports marker layer, wired to the viewport feed. Rebuilding is scoped to
+/// this widget so new markers never rebuild the map screen around them.
+class _ViewportPortMarkers extends StatelessWidget {
+  const _ViewportPortMarkers({required this.ports, this.userPosition});
+
+  final ViewportPortsController ports;
+  final LatLng? userPosition;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<List<Port>>(
+      valueListenable: ports,
+      builder: (context, value, _) {
+        if (value.isEmpty) return const SizedBox.shrink();
+        return PortMarkersLayer(ports: value, userPosition: userPosition);
+      },
     );
   }
 }
@@ -378,16 +431,20 @@ class _TripTracksLayer extends ConsumerWidget {
 class _HomePortMarkers extends StatelessWidget {
   const _HomePortMarkers({
     required this.boats,
-    required this.nearbyPorts,
+    required this.ports,
     this.userPosition,
   });
 
   final List<Boat> boats;
-  final List<Port> nearbyPorts;
+
+  /// Read on tap only, to look up the port a home-port pin sits on. Not
+  /// listened to: these pins come from the boats, so a new viewport must not
+  /// rebuild them.
+  final ViewportPortsController ports;
   final LatLng? userPosition;
 
   Port? _findMatchingPort(double lat, double lon) {
-    for (final port in nearbyPorts) {
+    for (final port in ports.value) {
       final dLat = (port.lat - lat).abs();
       final dLon = (port.lon - lon).abs();
       if (dLat < 0.01 && dLon < 0.01) return port;

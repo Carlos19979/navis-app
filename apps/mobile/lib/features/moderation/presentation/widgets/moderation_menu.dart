@@ -77,6 +77,7 @@ class ModerationMenuButton extends ConsumerWidget {
 
     final reason = await showModalBottomSheet<String>(
       context: context,
+      useRootNavigator: true,
       backgroundColor: context.dialogSurface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),

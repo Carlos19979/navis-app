@@ -13,6 +13,12 @@ const (
 	// maxLimit caps page size API-wide. Handlers and services share this cap
 	// (previously 50 in services vs 100 here — reconciled to 50).
 	maxLimit = 50
+	// MaxViewportLimit is the page-size ceiling for map-viewport listings (the
+	// ports bbox feed), deliberately above maxLimit. Paging a viewport is worse
+	// than useless: the client cannot draw a partial screen, so every pan would
+	// fan out into a serial burst of round-trips — which is what made the chart
+	// map stutter and burn through the per-IP rate limit.
+	MaxViewportLimit = 400
 )
 
 // ParseCursor extracts the opaque cursor and a clamped limit from query
@@ -20,6 +26,14 @@ const (
 // with DecodeKeysetTime/Text and treat undecodable (legacy or corrupt)
 // cursors as "start from the first page".
 func ParseCursor(r *http.Request) (cursor string, limit int) {
+	return ParseCursorTo(r, maxLimit)
+}
+
+// ParseCursorTo is ParseCursor with a caller-chosen page-size ceiling, for the
+// few listings whose client cannot usefully paginate. The map's ports feed is
+// the case this exists for: a viewport must arrive in ONE request, because
+// walking cursor pages turns every pan into a serial burst of round-trips.
+func ParseCursorTo(r *http.Request, max int) (cursor string, limit int) {
 	cursor = r.URL.Query().Get("cursor")
 
 	limit = defaultLimit
@@ -29,17 +43,30 @@ func ParseCursor(r *http.Request) (cursor string, limit int) {
 		}
 	}
 
-	return cursor, ClampLimit(limit)
+	return cursor, ClampLimitTo(limit, max)
 }
 
 // ClampLimit normalizes a page size into [1, maxLimit], defaulting when zero
 // or negative.
 func ClampLimit(limit int) int {
+	return ClampLimitTo(limit, maxLimit)
+}
+
+// ClampLimitTo normalizes a page size into [1, max], defaulting when zero or
+// negative. max is itself clamped to maxLimit's role as the API-wide default —
+// callers pass a higher ceiling deliberately (see ParseCursorTo).
+func ClampLimitTo(limit, max int) int {
+	if max <= 0 {
+		max = maxLimit
+	}
 	if limit <= 0 {
+		if defaultLimit > max {
+			return max
+		}
 		return defaultLimit
 	}
-	if limit > maxLimit {
-		return maxLimit
+	if limit > max {
+		return max
 	}
 	return limit
 }

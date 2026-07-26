@@ -110,6 +110,7 @@ class _PortSelectorFieldState extends State<PortSelectorField> {
   Future<void> _openSearch() async {
     final port = await showModalBottomSheet<Port>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => _PortSearchSheet(

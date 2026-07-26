@@ -102,6 +102,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   /// Resends the signup confirmation email.
+  /// Saves the user's display name and refreshes the session user so anything
+  /// reading it (the profile header, the avatar initial) updates immediately.
+  Future<void> updateDisplayName(String name) async {
+    await _repository.updateDisplayName(name);
+    final user = _repository.currentUser;
+    if (user != null) state = AuthState.authenticated(user);
+  }
+
   Future<void> resendConfirmationEmail() async {
     final email = state.pendingEmail;
     if (email == null) return;
