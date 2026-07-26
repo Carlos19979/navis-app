@@ -209,6 +209,8 @@ type GroupRepository interface {
 	GetByInviteCode(ctx context.Context, userID, code string) (*domain.Group, error)
 	List(ctx context.Context, userID, cursor string, limit int) ([]domain.Group, string, error)
 	ListPublic(ctx context.Context, userID, cursor string, limit int) ([]domain.Group, string, error)
+	// SearchPublic filters ListPublic by a name match.
+	SearchPublic(ctx context.Context, userID, query, cursor string, limit int) ([]domain.Group, string, error)
 	Update(ctx context.Context, userID string, group *domain.Group) (*domain.Group, error)
 	Delete(ctx context.Context, userID, id string) error
 }

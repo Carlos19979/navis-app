@@ -101,6 +101,7 @@
   "paywallReasonCostAnalytics": "Unlock cost intelligence with Navis Pro",
   "costAnalyticsSubtitle": "Fuel spend, €/NM, cost trends and anomalies",
   "proBadge": "PRO",
+  "plusBadge": "PLUS",
   "status": "Status",
   "total": "Total",
   "passportTitle": "Boat passport",
@@ -114,7 +115,19 @@
   "paywallReasonPassport": "Export your boat passport with Navis Pro",
   "bookingsTitle": "Bookings",
   "bookingsSubtitle": "Shared calendar for your boat",
-  "bookingAdd": "Book a day",
+  "bookingAdd": "Book",
+  "bookingRangeHint": "From departure to arrival. Same day for a day out.",
+  "bookingDeparture": "Departure",
+  "bookingArrival": "Arrival",
+  "bookingDepartureDate": "Departure date",
+  "bookingDepartureTime": "Departure time",
+  "bookingArrivalDate": "Arrival date",
+  "bookingArrivalTime": "Arrival time",
+  "bookingEndBeforeStart": "Arrival must be after departure",
+  "bookingOverlapDetail": "Already booked: {range}",
+  "@bookingOverlapDetail": {
+    "placeholders": { "range": { "type": "String" } }
+  },
   "bookingsEmpty": "No bookings yet",
   "bookingsEmptyDescription": "Reserve boat days so co-owners and crew know who has it when.",
   "bookingPurposeHint": "Purpose (optional)",
@@ -122,17 +135,14 @@
   "bookingDeleteConfirm": "This booking will be removed.",
   "bookingYou": "You",
   "bookingCrew": "Crew",
-  "bookingStartTime": "Start time",
-  "bookingEndTime": "End time",
   "bookingOverlapsBadge": "Overlaps another booking",
-"bookingOverlapTitle": "Overlaps another booking",
-  "bookingOverlapMessage": "This time overlaps an existing booking for this boat. Book anyway?",
+  "bookingOverlapTitle": "Overlaps another booking",
+  "bookingOverlapMessage": "These dates overlap an existing booking for this boat. Book anyway?",
   "bookingBookAnyway": "Book anyway",
   "bookingsViewCalendar": "Calendar view",
   "bookingsViewList": "List view",
   "bookingPrevMonth": "Previous month",
   "bookingNextMonth": "Next month",
-  "bookingAddOnDay": "Book this day",
   "bookingsNoneOnDay": "No bookings on this day",
   "splitTitle": "Split expense",
   "splitEqually": "Split equally",
@@ -235,6 +245,7 @@
   "recording": "Recording...",
   "totalTrips": "Total Trips",
   "tripStatistics": "Trip Statistics",
+  "tripStatisticsSubtitle": "Distance, engine hours and ports",
   "totalDistanceNm": "NM sailed",
   "totalHoursAtSea": "Hours at sea",
   "portsVisited": "Ports visited",
@@ -402,6 +413,7 @@
   "saveTrip": "Save Trip",
   "notLoggedIn": "Not logged in",
   "helpAndSupport": "Help & Support",
+  "contactByEmail": "Email us",
   "aboutNavis": "About Navis",
   "close": "Close",
   "privacyPolicy": "Privacy Policy",
@@ -615,7 +627,7 @@
   "leaveSharedBoat": "Leave shared boat",
   "leaveSharedBoatSubtitle": "Stop having access",
   "couldNotGetCode": "Could not get the code",
-  "shareBoatExplainer": "Share this code. Whoever enters it will see the boat. Turn on \"can record trips\" below to grant editor permission.",
+  "shareBoatExplainer": "Share this code. Whoever enters it joins as a viewer; grant them more from \"Crew and permissions\".",
   "shareBoatMessage": "Join my boat \"{name}\" on Navis with the code: {code}",
   "@shareBoatMessage": {
     "placeholders": {
@@ -623,6 +635,20 @@
         "type": "String"
       },
       "code": {
+        "type": "String"
+      }
+    }
+  },
+  "shareBoatMessageWithLink": "Join my boat \"{name}\" on Navis.\n\nCode: {code}\nOpen in Navis: {link}",
+  "@shareBoatMessageWithLink": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      },
+      "link": {
         "type": "String"
       }
     }
@@ -728,6 +754,8 @@
 "expensesPrevPeriod": "Previous",
 "expensesNextPeriod": "Next",
 "expensesNoneInPeriod": "No expenses in this period",
+  "expensesSelectPeriod": "Select period",
+  "expensesPeriodWholeYear": "Whole year",
   "categoryLabel": "Category",
   "customCategory": "Custom category",
   "customCategoryHint": "Or type your own",
@@ -825,6 +853,18 @@
   "permManageMaintenance": "Manage maintenance",
   "permViewDocuments": "View documents",
   "permManageDocuments": "Manage documents",
+  "permBlockedTitle": "Action unavailable",
+  "permBlockedAskOwner": "Ask the boat owner to grant you this permission.",
+  "permBlockedRecordTrips": "You cannot record trips on this boat.",
+  "permBlockedViewDocuments": "You cannot see this boat's documents.",
+  "permBlockedManageDocuments": "You cannot add or edit this boat's documents.",
+  "permBlockedManageMaintenance": "You cannot manage this boat's maintenance.",
+  "permBlockedManageExpenses": "You cannot manage this boat's expenses.",
+  "permCheckFailed": "Your permissions on this boat could not be checked.",
+  "myPermissionsTitle": "What you can do",
+  "boatCrewTitle": "Crew and permissions",
+  "boatCrewSubtitle": "Who has access and what they can do",
+  "boatCrewExplainer": "Everyone who joined with your code. Grant each of them only what they need.",
   "maintenanceTab": "Maintenance",
   "expensesTab": "Expenses",
   "newMaintenance": "New maintenance",
@@ -926,6 +966,7 @@
   "exportDataReady": "Export ready to share",
   "exportDataFailed": "Could not export your data. Try again.",
   "anchorAlarmTitle": "Anchor watch",
+  "anchorWatchSubtitle": "Drift alarm while anchored",
   "anchorDropHere": "Drop anchor here",
   "anchorDisarm": "Stop watch",
   "anchorRadius": "Radius",
@@ -943,7 +984,7 @@
   "anchorNoFix": "Waiting for a GPS fix — try again in a moment.",
   "anchorResumed": "Anchor watch resumed",
   "anchorTripActiveBlock": "Stop the trip recording before starting an anchor watch.",
-  "paywallReasonAnchor": "Unlock the anchor watch with Navis Pro",
+  "paywallReasonAnchor": "Unlock the anchor watch with Navis Plus",
   "proBenefitAnchor": "Anchor watch: a loud alarm if your boat drags",
   "expenseLitersLabel": "Liters (optional)",
   "pricePerLiterValue": "{value} €/L",
@@ -969,5 +1010,18 @@
   "moderationBlockTitle": "Block this user?",
   "moderationBlockMessage": "You won't see their content, and it disappears from Discover.",
   "moderationBlockDone": "User blocked.",
-  "moderationFailed": "Couldn't complete that. Please try again."
+  "moderationFailed": "Couldn't complete that. Please try again.",
+  "searchGroups": "Search clubs by name…",
+  "clearSearch": "Clear search",
+  "groupSearchTypeMore": "Type at least 2 letters",
+  "noGroupsFound": "No clubs match that name.",
+  "groupSearchError": "Couldn't search clubs",
+  "checklistPromptQuestion": "Do you want to go through the safety checklist before setting sail?",
+  "rememberMyChoice": "Remember my choice",
+  "reviewChecklist": "Review checklist",
+  "skipChecklist": "Skip",
+  "preTripChecklistSetting": "Checklist before setting sail",
+  "preTripChecklistAsks": "You'll be asked when a trip starts",
+  "preTripChecklistAlways": "It always opens before recording",
+  "preTripChecklistSkipped": "Skipped — turn on to be asked again"
 }

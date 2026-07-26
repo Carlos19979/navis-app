@@ -548,6 +548,12 @@ abstract class AppLocalizations {
   /// **'PRO'**
   String get proBadge;
 
+  /// No description provided for @plusBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'PLUS'**
+  String get plusBadge;
+
   /// No description provided for @status.
   ///
   /// In en, this message translates to:
@@ -629,8 +635,62 @@ abstract class AppLocalizations {
   /// No description provided for @bookingAdd.
   ///
   /// In en, this message translates to:
-  /// **'Book a day'**
+  /// **'Book'**
   String get bookingAdd;
+
+  /// No description provided for @bookingRangeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'From departure to arrival. Same day for a day out.'**
+  String get bookingRangeHint;
+
+  /// No description provided for @bookingDeparture.
+  ///
+  /// In en, this message translates to:
+  /// **'Departure'**
+  String get bookingDeparture;
+
+  /// No description provided for @bookingArrival.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrival'**
+  String get bookingArrival;
+
+  /// No description provided for @bookingDepartureDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Departure date'**
+  String get bookingDepartureDate;
+
+  /// No description provided for @bookingDepartureTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Departure time'**
+  String get bookingDepartureTime;
+
+  /// No description provided for @bookingArrivalDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrival date'**
+  String get bookingArrivalDate;
+
+  /// No description provided for @bookingArrivalTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrival time'**
+  String get bookingArrivalTime;
+
+  /// No description provided for @bookingEndBeforeStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrival must be after departure'**
+  String get bookingEndBeforeStart;
+
+  /// No description provided for @bookingOverlapDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Already booked: {range}'**
+  String bookingOverlapDetail(String range);
 
   /// No description provided for @bookingsEmpty.
   ///
@@ -674,18 +734,6 @@ abstract class AppLocalizations {
   /// **'Crew'**
   String get bookingCrew;
 
-  /// No description provided for @bookingStartTime.
-  ///
-  /// In en, this message translates to:
-  /// **'Start time'**
-  String get bookingStartTime;
-
-  /// No description provided for @bookingEndTime.
-  ///
-  /// In en, this message translates to:
-  /// **'End time'**
-  String get bookingEndTime;
-
   /// No description provided for @bookingOverlapsBadge.
   ///
   /// In en, this message translates to:
@@ -701,7 +749,7 @@ abstract class AppLocalizations {
   /// No description provided for @bookingOverlapMessage.
   ///
   /// In en, this message translates to:
-  /// **'This time overlaps an existing booking for this boat. Book anyway?'**
+  /// **'These dates overlap an existing booking for this boat. Book anyway?'**
   String get bookingOverlapMessage;
 
   /// No description provided for @bookingBookAnyway.
@@ -733,12 +781,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Next month'**
   String get bookingNextMonth;
-
-  /// No description provided for @bookingAddOnDay.
-  ///
-  /// In en, this message translates to:
-  /// **'Book this day'**
-  String get bookingAddOnDay;
 
   /// No description provided for @bookingsNoneOnDay.
   ///
@@ -1189,6 +1231,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Trip Statistics'**
   String get tripStatistics;
+
+  /// No description provided for @tripStatisticsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance, engine hours and ports'**
+  String get tripStatisticsSubtitle;
 
   /// No description provided for @totalDistanceNm.
   ///
@@ -2023,6 +2071,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Help & Support'**
   String get helpAndSupport;
+
+  /// No description provided for @contactByEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email us'**
+  String get contactByEmail;
 
   /// No description provided for @aboutNavis.
   ///
@@ -3137,7 +3191,7 @@ abstract class AppLocalizations {
   /// No description provided for @shareBoatExplainer.
   ///
   /// In en, this message translates to:
-  /// **'Share this code. Whoever enters it will see the boat. Turn on \"can record trips\" below to grant editor permission.'**
+  /// **'Share this code. Whoever enters it joins as a viewer; grant them more from \"Crew and permissions\".'**
   String get shareBoatExplainer;
 
   /// No description provided for @shareBoatMessage.
@@ -3145,6 +3199,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Join my boat \"{name}\" on Navis with the code: {code}'**
   String shareBoatMessage(String name, String code);
+
+  /// No description provided for @shareBoatMessageWithLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Join my boat \"{name}\" on Navis.\n\nCode: {code}\nOpen in Navis: {link}'**
+  String shareBoatMessageWithLink(String name, String code, String link);
 
   /// No description provided for @withAccess.
   ///
@@ -3541,6 +3601,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No expenses in this period'**
   String get expensesNoneInPeriod;
+
+  /// No description provided for @expensesSelectPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Select period'**
+  String get expensesSelectPeriod;
+
+  /// No description provided for @expensesPeriodWholeYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Whole year'**
+  String get expensesPeriodWholeYear;
 
   /// No description provided for @categoryLabel.
   ///
@@ -4082,6 +4154,78 @@ abstract class AppLocalizations {
   /// **'Manage documents'**
   String get permManageDocuments;
 
+  /// No description provided for @permBlockedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Action unavailable'**
+  String get permBlockedTitle;
+
+  /// No description provided for @permBlockedAskOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask the boat owner to grant you this permission.'**
+  String get permBlockedAskOwner;
+
+  /// No description provided for @permBlockedRecordTrips.
+  ///
+  /// In en, this message translates to:
+  /// **'You cannot record trips on this boat.'**
+  String get permBlockedRecordTrips;
+
+  /// No description provided for @permBlockedViewDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'You cannot see this boat\'s documents.'**
+  String get permBlockedViewDocuments;
+
+  /// No description provided for @permBlockedManageDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'You cannot add or edit this boat\'s documents.'**
+  String get permBlockedManageDocuments;
+
+  /// No description provided for @permBlockedManageMaintenance.
+  ///
+  /// In en, this message translates to:
+  /// **'You cannot manage this boat\'s maintenance.'**
+  String get permBlockedManageMaintenance;
+
+  /// No description provided for @permBlockedManageExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'You cannot manage this boat\'s expenses.'**
+  String get permBlockedManageExpenses;
+
+  /// No description provided for @permCheckFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Your permissions on this boat could not be checked.'**
+  String get permCheckFailed;
+
+  /// No description provided for @myPermissionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What you can do'**
+  String get myPermissionsTitle;
+
+  /// No description provided for @boatCrewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Crew and permissions'**
+  String get boatCrewTitle;
+
+  /// No description provided for @boatCrewSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Who has access and what they can do'**
+  String get boatCrewSubtitle;
+
+  /// No description provided for @boatCrewExplainer.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone who joined with your code. Grant each of them only what they need.'**
+  String get boatCrewExplainer;
+
   /// No description provided for @maintenanceTab.
   ///
   /// In en, this message translates to:
@@ -4418,6 +4562,12 @@ abstract class AppLocalizations {
   /// **'Anchor watch'**
   String get anchorAlarmTitle;
 
+  /// No description provided for @anchorWatchSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drift alarm while anchored'**
+  String get anchorWatchSubtitle;
+
   /// No description provided for @anchorDropHere.
   ///
   /// In en, this message translates to:
@@ -4523,7 +4673,7 @@ abstract class AppLocalizations {
   /// No description provided for @paywallReasonAnchor.
   ///
   /// In en, this message translates to:
-  /// **'Unlock the anchor watch with Navis Pro'**
+  /// **'Unlock the anchor watch with Navis Plus'**
   String get paywallReasonAnchor;
 
   /// No description provided for @proBenefitAnchor.
@@ -4627,6 +4777,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t complete that. Please try again.'**
   String get moderationFailed;
+
+  /// No description provided for @searchGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Search clubs by name…'**
+  String get searchGroups;
+
+  /// No description provided for @clearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get clearSearch;
+
+  /// No description provided for @groupSearchTypeMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Type at least 2 letters'**
+  String get groupSearchTypeMore;
+
+  /// No description provided for @noGroupsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No clubs match that name.'**
+  String get noGroupsFound;
+
+  /// No description provided for @groupSearchError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t search clubs'**
+  String get groupSearchError;
+
+  /// No description provided for @checklistPromptQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to go through the safety checklist before setting sail?'**
+  String get checklistPromptQuestion;
+
+  /// No description provided for @rememberMyChoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Remember my choice'**
+  String get rememberMyChoice;
+
+  /// No description provided for @reviewChecklist.
+  ///
+  /// In en, this message translates to:
+  /// **'Review checklist'**
+  String get reviewChecklist;
+
+  /// No description provided for @skipChecklist.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get skipChecklist;
+
+  /// No description provided for @preTripChecklistSetting.
+  ///
+  /// In en, this message translates to:
+  /// **'Checklist before setting sail'**
+  String get preTripChecklistSetting;
+
+  /// No description provided for @preTripChecklistAsks.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll be asked when a trip starts'**
+  String get preTripChecklistAsks;
+
+  /// No description provided for @preTripChecklistAlways.
+  ///
+  /// In en, this message translates to:
+  /// **'It always opens before recording'**
+  String get preTripChecklistAlways;
+
+  /// No description provided for @preTripChecklistSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped — turn on to be asked again'**
+  String get preTripChecklistSkipped;
 }
 
 class _AppLocalizationsDelegate

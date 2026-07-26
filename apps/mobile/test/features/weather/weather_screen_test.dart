@@ -264,7 +264,32 @@ void main() {
 
         expect(find.byType(HourlyForecastStrip), findsNothing);
         expect(find.byType(DailyForecastList), findsNothing);
-        expect(find.byType(RefreshIndicator), findsNothing);
+      });
+
+      testWidgets('can still be pulled to refresh, to retry after Settings',
+          (tester) async {
+        // Without this the state is a dead end: the user grants the permission
+        // in Settings, comes back, and has no way to ask again.
+        var count = 0;
+        await pumpScreen(tester, overrides: [
+          weatherOverviewProvider.overrideWith((ref) async {
+            count++;
+            return null;
+          }),
+        ]);
+
+        expect(find.byType(RefreshIndicator), findsOneWidget);
+        expect(count, 1);
+
+        await tester.drag(
+          find.byType(SingleChildScrollView),
+          const Offset(0, 400),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(seconds: 1));
+        await tester.pump(const Duration(milliseconds: 50));
+
+        expect(count, greaterThan(1));
       });
     });
 

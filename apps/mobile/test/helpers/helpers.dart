@@ -4,6 +4,7 @@ library;
 export 'async_states.dart';
 export 'billing.dart';
 export 'geo.dart';
+export 'lifecycle.dart';
 export 'map_noise.dart';
 export 'offline.dart';
 export 'plan.dart';

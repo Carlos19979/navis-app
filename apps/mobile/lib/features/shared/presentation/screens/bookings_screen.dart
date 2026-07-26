@@ -9,6 +9,7 @@ import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/boat/data/boat_share_repository.dart';
 import 'package:navis_mobile/features/shared/data/shared_repository.dart';
+import 'package:navis_mobile/features/shared/presentation/widgets/booking_form_sheet.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
@@ -205,14 +206,6 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
                     padding: const EdgeInsets.only(bottom: Dimens.spaceSm),
                     child: card(b),
                   ),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  onPressed: () => _addBooking(preselectedDate: _selectedDay),
-                  icon: const Icon(Icons.add, size: Dimens.iconSm),
-                  label: Text(l.bookingAddOnDay),
-                ),
-              ),
               const SizedBox(height: Dimens.navClearance),
             ],
           );
@@ -221,85 +214,15 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
     );
   }
 
-  /// Creates a booking. With [preselectedDate] (the calendar day shortcut)
-  /// the date picker is skipped; the time pickers, purpose dialog and the
-  /// overlap confirm/force flow stay identical.
-  Future<void> _addBooking({DateTime? preselectedDate}) async {
-    final l = AppLocalizations.of(context)!;
-    final now = DateTime.now();
-    final day = preselectedDate ??
-        await showDatePicker(
-          context: context,
-          initialDate: now,
-          firstDate: now.subtract(const Duration(days: 1)),
-          lastDate: now.add(const Duration(days: 365)),
-        );
-    if (day == null || !mounted) return;
-
-    // Time slot: start and end time.
-    final startT = await showTimePicker(
-      context: context,
-      initialTime: const TimeOfDay(hour: 8, minute: 0),
-      helpText: l.bookingStartTime,
-    );
-    if (startT == null || !mounted) return;
-    final endT = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay(hour: (startT.hour + 4).clamp(0, 23), minute: 0),
-      helpText: l.bookingEndTime,
-    );
-    if (endT == null || !mounted) return;
-
-    final start =
-        DateTime(day.year, day.month, day.day, startT.hour, startT.minute);
-    var end = DateTime(day.year, day.month, day.day, endT.hour, endT.minute);
-    if (!end.isAfter(start)) {
-      // End not after start → treat as next-day end so the range is valid.
-      end = end.add(const Duration(days: 1));
-    }
-
-    final purpose = await NavisInputDialog.show(
-      context,
-      title: l.bookingAdd,
-      hintText: l.bookingPurposeHint,
-      confirmLabel: l.save,
-    );
-    if (purpose == null || !mounted) return;
-
-    // The API is the overlap authority (it sees bookings this client hasn't
-    // loaded yet — two members booking at once). On 409 the user can still
-    // confirm and force it: overlaps are advisory on a shared boat.
-    final repo = ref.read(sharedRepositoryProvider);
-    try {
-      try {
-        await repo.createBooking(
-          widget.boatId,
-          startsAt: start,
-          endsAt: end,
-          purpose: purpose,
-        );
-      } on BookingOverlapException {
-        if (!mounted) return;
-        final proceed = await NavisConfirmDialog.show(
-          context,
-          title: l.bookingOverlapTitle,
-          message: l.bookingOverlapMessage,
-          confirmLabel: l.bookingBookAnyway,
-        );
-        if (!proceed) return;
-        await repo.createBooking(
-          widget.boatId,
-          startsAt: start,
-          endsAt: end,
-          purpose: purpose,
-          force: true,
-        );
-      }
-      ref.invalidate(boatBookingsProvider(widget.boatId));
-    } catch (_) {
-      if (mounted) NavisSnackbar.error(context, l.somethingWentWrong);
-    }
-  }
+  /// The single booking entry point: the range form sheet. It owns the whole
+  /// create flow (validation, the API overlap confirm/force retry and the
+  /// provider invalidation). The calendar only prefills the day it is sitting
+  /// on — a one-day booking is then just two time taps.
+  Future<void> _addBooking() => showBookingFormSheet(
+        context,
+        boatId: widget.boatId,
+        initialDay: _showCalendar ? _selectedDay : null,
+      );
 }
 
 /// Hand-rolled month grid: header with prev/next chevrons, localized weekday
@@ -426,6 +349,9 @@ class _DayCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final locale = Localizations.localeOf(context).toString();
+    // Any booking touching this day paints it as taken, so a multi-day range
+    // reads as one continuous block across the grid.
+    final occupied = info.mine || info.others;
     return Semantics(
       button: true,
       selected: selected,
@@ -437,7 +363,11 @@ class _DayCell extends StatelessWidget {
           key: ValueKey('calendar-day-${day.day}'),
           margin: const EdgeInsets.all(2),
           decoration: BoxDecoration(
-            color: selected ? AppColors.cyan.withValues(alpha: 0.18) : null,
+            color: selected
+                ? AppColors.cyan.withValues(alpha: 0.18)
+                : occupied
+                    ? AppColors.cyan.withValues(alpha: 0.07)
+                    : null,
             borderRadius: BorderRadius.circular(Dimens.radiusSm),
             // Amber ring: two bookings overlap on this day.
             border: info.overlap
@@ -520,6 +450,11 @@ class _BookingCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
+    final start = booking.startsAt.toLocal();
+    final end = booking.endsAt.toLocal();
+    // A single-day slot fits one line; a range spells out both ends so nobody
+    // has to guess which day the boat comes back.
+    final singleDay = DateUtils.isSameDay(start, end);
     return NavisCard(
       child: Row(
         children: [
@@ -537,15 +472,20 @@ class _BookingCard extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '${NavisDateUtils.formatDate(booking.startsAt)}  '
-                  '${NavisDateUtils.formatTime(booking.startsAt)}–'
-                  '${NavisDateUtils.formatTime(booking.endsAt)}',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: context.txtPrimary,
-                  ),
-                ),
+                if (singleDay)
+                  Text(
+                    '${NavisDateUtils.formatDate(start)}  '
+                    '${NavisDateUtils.formatTime(start)}–'
+                    '${NavisDateUtils.formatTime(end)}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: context.txtPrimary,
+                    ),
+                  )
+                else ...[
+                  _RangeEnd(label: l.bookingDeparture, value: start),
+                  _RangeEnd(label: l.bookingArrival, value: end),
+                ],
                 Text(
                   booking.purpose != null && booking.purpose!.isNotEmpty
                       ? '$bookerName · ${booking.purpose!}'
@@ -601,6 +541,39 @@ class _BookingCard extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// One labelled end of a multi-day booking: "Departure  02 May 2026 09:00".
+class _RangeEnd extends StatelessWidget {
+  const _RangeEnd({required this.label, required this.value});
+
+  final String label;
+  final DateTime value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 70,
+          child: Text(
+            label,
+            style: TextStyle(fontSize: 12, color: context.txtSecondary),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            NavisDateUtils.formatDateTime(value),
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: context.txtPrimary,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

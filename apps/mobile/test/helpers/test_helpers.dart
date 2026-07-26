@@ -22,6 +22,7 @@ import 'package:navis_mobile/features/weather/domain/entities/hourly_weather.dar
 import 'package:navis_mobile/features/weather/domain/entities/weather.dart';
 import 'package:navis_mobile/features/weather/domain/entities/weather_overview.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
+import 'package:navis_mobile/features/boat/presentation/providers/boat_permissions_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/profile/presentation/providers/profile_provider.dart';
 
@@ -37,9 +38,21 @@ final _defaultBoatOverride = boatProvider.overrideWith(
   ),
 );
 
+/// Default effective-permissions override. Screens gate write actions on
+/// [boatPermissionsProvider] and **fail closed**, so without this every test
+/// would render a padlock instead of the action under test. Matches the owned
+/// boat from [_defaultBoatOverride]; override per test to check the blocked
+/// paths.
+final _defaultBoatPermissionsOverride = boatPermissionsProvider.overrideWith(
+  (ref, id) async => const BoatPermissions.all(),
+);
+
 /// Overrides applied by every test app builder ([buildTestApp],
 /// [buildTestAppWithScaffold] and `buildRoutedTestApp` in router.dart).
-final defaultTestOverrides = <Override>[_defaultBoatOverride];
+final defaultTestOverrides = <Override>[
+  _defaultBoatOverride,
+  _defaultBoatPermissionsOverride,
+];
 
 Widget buildTestApp(
   Widget child, {

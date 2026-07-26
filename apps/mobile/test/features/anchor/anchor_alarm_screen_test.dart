@@ -105,7 +105,11 @@ void main() {
     ));
     await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.text('Unlock the anchor watch with Navis Pro'), findsOneWidget);
+    // The anchor watch is a Plus+ capability; the reason used to name Pro.
+    expect(
+      find.text('Unlock the anchor watch with Navis Plus'),
+      findsOneWidget,
+    );
     expect(find.text('Drop anchor here'), findsNothing);
   });
 }

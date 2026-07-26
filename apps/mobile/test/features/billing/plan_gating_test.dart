@@ -54,7 +54,10 @@ void main() {
         ),
       ];
 
-  group('maintenance insights gating', () {
+  // Cost intelligence is reached from the boat's detail screen. It used to have
+  // a second entry point in the maintenance screen's app bar, which was removed
+  // as duplication — the gating itself is unchanged.
+  group('cost intelligence gating', () {
     Future<RouteSpy> pumpAndTapInsights(
       WidgetTester tester, {
       required bool pro,
@@ -63,14 +66,26 @@ void main() {
       final spy = RouteSpy();
       await tester.pumpWidget(
         buildRoutedTestApp(
-          const MaintenanceScreen(boatId: 'boat-1'),
+          const BoatDetailScreen(boatId: 'boat-1'),
           spy: spy,
-          overrides: maintenanceOverrides(pro: pro),
+          overrides: [
+            ...planOverrides(pro: pro),
+            boatReadinessProvider.overrideWith(
+              (ref, id) async => makeReadiness(),
+            ),
+          ],
         ),
       );
       await pumpScreen(tester);
 
-      await tester.tap(find.byIcon(Icons.insights_rounded));
+      await tester.scrollUntilVisible(
+        find.text('Cost intelligence'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pump();
+
+      await tester.tap(find.text('Cost intelligence'));
       await pumpScreen(tester);
       return spy;
     }

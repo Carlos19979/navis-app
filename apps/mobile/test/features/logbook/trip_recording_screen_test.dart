@@ -1,9 +1,14 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:navis_mobile/core/error/exceptions.dart';
+import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
+import 'package:navis_mobile/features/boat/presentation/providers/boat_permissions_provider.dart';
+import 'package:navis_mobile/features/boat/presentation/widgets/permission_gate.dart';
 import 'package:navis_mobile/features/logbook/domain/entities/trip.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/trip_recording_provider.dart';
 import 'package:navis_mobile/features/logbook/presentation/screens/trip_recording_screen.dart';
@@ -60,7 +65,10 @@ void main() {
     );
   }
 
-  Future<void> pumpRecordingScreen(WidgetTester tester) async {
+  Future<void> pumpRecordingScreen(
+    WidgetTester tester, {
+    BoatPermissions permissions = const BoatPermissions.all(),
+  }) async {
     setPhoneSize(tester);
     installTileNoiseFilter();
     installFakeGeo();
@@ -71,6 +79,7 @@ void main() {
           tripRecordingProvider.overrideWith((ref) => notifier),
           overridePorts(),
           nearbyPortsProvider.overrideWith((ref, params) async => []),
+          boatPermissionsProvider.overrideWith((ref, id) async => permissions),
         ],
       ),
     );
@@ -239,6 +248,112 @@ void main() {
 
       expect(find.textContaining('Failed to save trip'), findsOneWidget);
       expect(find.byType(TripRecordingScreen), findsOneWidget);
+
+      await drain(tester);
+    });
+
+    testWidgets(
+        'a 403 on save says the owner has not granted the permission, '
+        'not DioException', (tester) async {
+      notifier = _FakeTripRecordingNotifier(recordingState());
+      when(() => notifier.complete(any())).thenAnswer(
+        (_) async => throw DioException(
+          requestOptions: RequestOptions(path: '/api/v1/trips'),
+          error: const ServerException(message: 'FORBIDDEN', statusCode: 403),
+        ),
+      );
+
+      await pumpRecordingScreen(tester);
+      await openStopDialog(tester);
+
+      await tester.tap(find.text('Save Trip'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(
+        find.textContaining('You cannot record trips on this boat.'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Failed to save trip'), findsNothing);
+      expect(find.textContaining('DioException'), findsNothing);
+
+      await drain(tester);
+    });
+  });
+
+  group('TripRecordingScreen can_record_trips gate', () {
+    testWidgets(
+        'without the permission the start control is replaced by the '
+        'blocked card', (tester) async {
+      notifier = _FakeTripRecordingNotifier(TripRecordingState.initial);
+
+      await pumpRecordingScreen(
+        tester,
+        permissions: const BoatPermissions.none(),
+      );
+
+      expect(find.byIcon(Icons.play_arrow), findsNothing);
+      expect(find.byType(BlockedActionCard), findsOneWidget);
+      expect(
+          find.text('You cannot record trips on this boat.'), findsOneWidget);
+
+      await drain(tester);
+    });
+
+    testWidgets('a recording already in progress keeps its controls',
+        (tester) async {
+      // The permission was checked when it started; a slow or failed lookup
+      // must not strip the controls from an active recording.
+      notifier = _FakeTripRecordingNotifier(recordingState());
+
+      await pumpRecordingScreen(
+        tester,
+        permissions: const BoatPermissions.none(),
+      );
+
+      expect(find.byIcon(Icons.stop), findsOneWidget);
+      expect(find.byType(BlockedActionCard), findsNothing);
+
+      await drain(tester);
+    });
+
+    testWidgets('start is not attempted without the permission',
+        (tester) async {
+      notifier = _FakeTripRecordingNotifier(TripRecordingState.initial);
+      stubStart(RecordingStartResult.started);
+
+      // autoStart would normally begin recording on the first frame.
+      setPhoneSize(tester);
+      installTileNoiseFilter();
+      installFakeGeo();
+      await tester.pumpWidget(
+        buildRoutedTestApp(
+          const TripRecordingScreen(boatId: 'boat-1', autoStart: true),
+          overrides: [
+            tripRecordingProvider.overrideWith((ref) => notifier),
+            overridePorts(),
+            nearbyPortsProvider.overrideWith((ref, params) async => []),
+            boatPermissionsProvider.overrideWith(
+              (ref, id) async => const BoatPermissions.none(),
+            ),
+          ],
+        ),
+      );
+      await pumpScreen(tester);
+
+      // Not a single GPS fix taken, and the user is told why.
+      verifyNever(
+        () => notifier.start(
+          boatId: any(named: 'boatId'),
+          tripId: any(named: 'tripId'),
+          isRegatta: any(named: 'isRegatta'),
+          departurePort: any(named: 'departurePort'),
+        ),
+      );
+      expect(
+        find.textContaining('You cannot record trips on this boat.'),
+        findsWidgets,
+      );
 
       await drain(tester);
     });

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/core/config/checklist_preference.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/regattas/data/repositories/regatta_repository.dart';
 import 'package:navis_mobile/features/regattas/domain/entities/regatta.dart';
@@ -28,6 +30,13 @@ import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 ///   the checklist as acknowledged and begins recording the regatta's trip.
 /// - Boat ([boatId] set, [tripId] null): a local checklist shown before
 ///   starting a solo trip recording. Items are not persisted.
+///
+/// In boat mode this screen is also the gate for starting a trip: it is the
+/// single entry point every caller uses (`/boats/:id/precheck`), so it is where
+/// [PreTripChecklistMode] is honoured. Before build 5 the checklist was
+/// mandatory on every trip; now it either asks once ("Review checklist" /
+/// "Skip"), opens straight away, or steps aside, depending on the remembered
+/// choice. The choice can be reset from Settings.
 class PreTripChecklistScreen extends ConsumerStatefulWidget {
   const PreTripChecklistScreen({
     this.tripId,
@@ -57,7 +66,61 @@ class _PreTripChecklistScreenState
   bool _busy = false;
   int _localCounter = 0;
 
+  /// Boat mode only: whether the checklist itself may be shown. Until the
+  /// remembered choice is read (and the prompt answered) the body stays empty,
+  /// so someone who skips never sees the list flash by.
+  bool _checklistOpen = false;
+
   bool get _isLocal => widget.tripId == null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_isLocal) {
+      // Needs a frame: it reads localizations and may show a dialog.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _openLocalChecklist();
+      });
+    }
+  }
+
+  /// Applies the remembered [PreTripChecklistMode] on entering the boat-mode
+  /// screen: open the checklist, skip to recording, or ask.
+  Future<void> _openLocalChecklist() async {
+    switch (ref.read(preTripChecklistModeProvider)) {
+      case PreTripChecklistMode.review:
+        setState(() => _checklistOpen = true);
+      case PreTripChecklistMode.skip:
+        _startSoloTrip();
+      case PreTripChecklistMode.ask:
+        final answer = await _askAboutChecklist();
+        if (!mounted) return;
+        if (answer == null) {
+          // Dismissed: they did not decide to sail, so do not start a trip.
+          if (context.canPop()) context.pop();
+          return;
+        }
+        if (answer.remember) {
+          ref.read(preTripChecklistModeProvider.notifier).set(
+                answer.review
+                    ? PreTripChecklistMode.review
+                    : PreTripChecklistMode.skip,
+              );
+        }
+        if (answer.review) {
+          setState(() => _checklistOpen = true);
+        } else {
+          _startSoloTrip();
+        }
+    }
+  }
+
+  Future<({bool review, bool remember})?> _askAboutChecklist() {
+    return showDialog<({bool review, bool remember})>(
+      context: context,
+      builder: (_) => const _ChecklistPromptDialog(),
+    );
+  }
 
   RegattaRepository get _repo => ref.read(regattaRepositoryProvider);
 
@@ -197,11 +260,12 @@ class _PreTripChecklistScreenState
         title: l.safetyChecklist,
         showBack: true,
         actions: [
-          IconButton(
-            icon: Icon(Icons.add, color: context.txtPrimary),
-            tooltip: l.addItem,
-            onPressed: _addItem,
-          ),
+          if (!_isLocal || _checklistOpen)
+            IconButton(
+              icon: Icon(Icons.add, color: context.txtPrimary),
+              tooltip: l.addItem,
+              onPressed: _addItem,
+            ),
         ],
       ),
       body: GradientBackground(
@@ -211,6 +275,8 @@ class _PreTripChecklistScreenState
   }
 
   Widget _buildLocal() {
+    // Waiting on the remembered choice / the prompt: nothing to show yet.
+    if (!_checklistOpen) return const SizedBox.shrink();
     _items ??= _defaultItems();
     return _content(
       items: _items!,
@@ -312,6 +378,69 @@ class _PreTripChecklistScreenState
               ),
             ],
           ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Asked once when a trip starts: review the safety checklist or skip it.
+///
+/// Returns `(review, remember)`, or null when dismissed. [remember] persists
+/// the answer as the new [PreTripChecklistMode] so the question is not repeated
+/// on every trip.
+class _ChecklistPromptDialog extends StatefulWidget {
+  const _ChecklistPromptDialog();
+
+  @override
+  State<_ChecklistPromptDialog> createState() => _ChecklistPromptDialogState();
+}
+
+class _ChecklistPromptDialogState extends State<_ChecklistPromptDialog> {
+  bool _remember = false;
+
+  void _answer({required bool review}) {
+    Navigator.of(context).pop((review: review, remember: _remember));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return AlertDialog(
+      backgroundColor: context.dialogSurface,
+      title:
+          Text(l.safetyChecklist, style: TextStyle(color: context.txtPrimary)),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l.checklistPromptQuestion,
+            style: TextStyle(color: context.txtSecondary),
+          ),
+          const SizedBox(height: Dimens.spaceSm),
+          CheckboxListTile(
+            value: _remember,
+            onChanged: (v) => setState(() => _remember = v ?? false),
+            activeColor: AppColors.cyan,
+            contentPadding: EdgeInsets.zero,
+            controlAffinity: ListTileControlAffinity.leading,
+            title: Text(
+              l.rememberMyChoice,
+              style: TextStyle(color: context.txtSecondary, fontSize: 13),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => _answer(review: false),
+          child: Text(l.skipChecklist),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: AppColors.cyan),
+          onPressed: () => _answer(review: true),
+          child: Text(l.reviewChecklist),
         ),
       ],
     );

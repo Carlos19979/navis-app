@@ -20,10 +20,10 @@ type boatService interface {
 	List(ctx context.Context, userID, cursor string, limit int) ([]domain.Boat, string, error)
 	Update(ctx context.Context, userID string, boat *domain.Boat) (*domain.Boat, error)
 	Delete(ctx context.Context, userID, id string) error
-	Permissions(ctx context.Context, userID, boatID string) (domain.BoatPermissions, bool, error)
+	EffectivePermissions(ctx context.Context, userID, boatID string) (domain.BoatPermissions, error)
 	ShareCode(ctx context.Context, userID, boatID string) (string, error)
-	JoinByCode(ctx context.Context, userID, code string) (*domain.Boat, error)
-	ListShared(ctx context.Context, userID string) ([]domain.Boat, error)
+	JoinByCode(ctx context.Context, userID, code string) (*domain.SharedBoat, error)
+	ListShared(ctx context.Context, userID string) ([]domain.SharedBoat, error)
 	ListMembers(ctx context.Context, userID, boatID string) ([]domain.BoatMember, error)
 	RemoveMember(ctx context.Context, ownerID, boatID, memberUserID string) error
 	SetMemberPermissions(ctx context.Context, ownerID, boatID, memberUserID string, p domain.BoatPermissions) error
@@ -59,7 +59,7 @@ func (h *BoatHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	JSON(w, http.StatusCreated, dto.BoatResponseFromDomain(created))
+	JSON(w, http.StatusCreated, dto.OwnedBoatResponseFromDomain(created))
 }
 
 // GetByID handles GET /boats/{id}.
@@ -77,11 +77,35 @@ func (h *BoatHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := dto.BoatResponseFromDomain(boat)
-	resp.IsOwner = boat.UserID == userID
-	perms, _, _ := h.svc.Permissions(r.Context(), userID, id)
-	resp.Permissions = dto.BoatPermissionsResponseFromDomain(perms)
-	JSON(w, http.StatusOK, resp)
+	// The client gates its UI on these flags, so a failed lookup must surface as
+	// an error rather than as "you may do nothing".
+	perms, err := h.svc.EffectivePermissions(r.Context(), userID, id)
+	if err != nil {
+		MapDomainError(w, err)
+		return
+	}
+
+	JSON(w, http.StatusOK, dto.BoatResponseFromDomain(boat, userID, perms))
+}
+
+// Permissions handles GET /boats/{id}/permissions — the caller's effective
+// permission set on the boat. Its own endpoint (rather than only the field on
+// the boat detail) so screens that hold just a boat id — documents,
+// maintenance, expenses — can resolve and cache it without refetching the boat.
+func (h *BoatHandler) Permissions(w http.ResponseWriter, r *http.Request) {
+	userID, ok := requireUserID(w, r)
+	if !ok {
+		return
+	}
+
+	id := chi.URLParam(r, "id")
+	perms, err := h.svc.EffectivePermissions(r.Context(), userID, id)
+	if err != nil {
+		MapDomainError(w, err)
+		return
+	}
+
+	JSON(w, http.StatusOK, dto.BoatEffectivePermissionsResponseFromDomain(id, perms))
 }
 
 // List handles GET /boats.
@@ -98,7 +122,7 @@ func (h *BoatHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	JSONWithMeta(w, http.StatusOK, dto.BoatListResponseFromDomain(boats), metaFromCursor(nextCursor))
+	JSONWithMeta(w, http.StatusOK, dto.OwnedBoatListResponseFromDomain(boats), metaFromCursor(nextCursor))
 }
 
 // Update handles PUT /boats/{id}.
@@ -129,7 +153,7 @@ func (h *BoatHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	JSON(w, http.StatusOK, dto.BoatResponseFromDomain(updated))
+	JSON(w, http.StatusOK, dto.OwnedBoatResponseFromDomain(updated))
 }
 
 // Delete handles DELETE /boats/{id}.

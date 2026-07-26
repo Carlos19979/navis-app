@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 	"github.com/Carlos19979/navis-app/apps/api/internal/port"
@@ -131,6 +132,30 @@ func (s *GroupService) ListPublic(ctx context.Context, userID, cursor string, li
 	}
 	groups = s.filterBlocked(ctx, userID, groups)
 	return groups, next, nil
+}
+
+// SearchPublic returns discoverable public groups whose name matches query,
+// under the same blocked-owner filter as ListPublic.
+//
+// It shares minSearchQueryLen with the port search: one character would turn
+// into a `%a%` scan of every public group. The length is counted in runes, so a
+// single accented character (two bytes) is still one character.
+func (s *GroupService) SearchPublic(ctx context.Context, userID, query, cursor string, limit int) ([]domain.Group, string, error) {
+	limit = pagination.ClampLimit(limit)
+
+	query = strings.TrimSpace(query)
+	if len([]rune(query)) < minSearchQueryLen {
+		return nil, "", &domain.ValidationError{
+			Field:   "q",
+			Message: "search query must be at least 2 characters",
+		}
+	}
+
+	groups, next, err := s.groupRepo.SearchPublic(ctx, userID, query, cursor, limit)
+	if err != nil {
+		return nil, "", fmt.Errorf("searching public groups for %q: %w", query, err)
+	}
+	return s.filterBlocked(ctx, userID, groups), next, nil
 }
 
 // filterBlocked drops groups owned by users the viewer has blocked. Errors

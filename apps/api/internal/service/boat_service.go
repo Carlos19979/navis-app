@@ -135,9 +135,28 @@ func (s *BoatService) GetAccessible(ctx context.Context, userID, id string) (*do
 	return boat, nil
 }
 
-// ListShared returns boats shared with the user.
-func (s *BoatService) ListShared(ctx context.Context, userID string) ([]domain.Boat, error) {
-	return s.repo.ListShared(ctx, userID)
+// ListShared returns boats shared with the user, each with the caller's
+// effective permissions on it.
+//
+// Permissions are resolved per boat rather than in the list query: this list is
+// the handful of boats a user has been invited to (it is not paginated for that
+// reason), and keeping the resolution in GetPermissions means the owner /
+// member / no-access rules live in exactly one place.
+func (s *BoatService) ListShared(ctx context.Context, userID string) ([]domain.SharedBoat, error) {
+	boats, err := s.repo.ListShared(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("listing shared boats: %w", err)
+	}
+
+	out := make([]domain.SharedBoat, 0, len(boats))
+	for i := range boats {
+		perms, _, err := s.repo.GetPermissions(ctx, userID, boats[i].ID)
+		if err != nil {
+			return nil, fmt.Errorf("listing shared boats: %w", err)
+		}
+		out = append(out, domain.SharedBoat{Boat: boats[i], Permissions: perms})
+	}
+	return out, nil
 }
 
 // ShareCode returns (creating if needed) the boat's invite code. Owner only.
@@ -153,14 +172,21 @@ func (s *BoatService) ShareCode(ctx context.Context, userID, boatID string) (str
 	return code, nil
 }
 
-// JoinByCode adds the user as a shared member of the boat for the code.
-func (s *BoatService) JoinByCode(ctx context.Context, userID, code string) (*domain.Boat, error) {
+// JoinByCode adds the user as a shared member of the boat for the code. It
+// returns the boat together with the permissions the new membership carries:
+// members join as viewers, so the client can say so straight away instead of
+// letting the user record a whole trip and hit a 403 on save.
+func (s *BoatService) JoinByCode(ctx context.Context, userID, code string) (*domain.SharedBoat, error) {
 	boatID, ownerID, err := s.repo.GetIDByShareCode(ctx, code)
 	if err != nil {
 		return nil, fmt.Errorf("joining boat: %w", err)
 	}
 	if ownerID == userID {
-		return s.repo.GetByID(ctx, userID, boatID) // already the owner
+		boat, err := s.repo.GetByID(ctx, userID, boatID) // already the owner
+		if err != nil {
+			return nil, fmt.Errorf("joining boat: %w", err)
+		}
+		return &domain.SharedBoat{Boat: *boat, Permissions: domain.OwnerPermissions()}, nil
 	}
 	if err := s.repo.AddMember(ctx, boatID, userID, "viewer"); err != nil {
 		return nil, fmt.Errorf("joining boat: %w", err)
@@ -173,7 +199,16 @@ func (s *BoatService) JoinByCode(ctx context.Context, userID, code string) (*dom
 			fmt.Sprintf("%s se ha unido a tu barco", name),
 			"boat", boatID)
 	}
-	return s.repo.GetByIDAccessible(ctx, userID, boatID)
+
+	boat, err := s.repo.GetByIDAccessible(ctx, userID, boatID)
+	if err != nil {
+		return nil, fmt.Errorf("joining boat: %w", err)
+	}
+	perms, _, err := s.repo.GetPermissions(ctx, userID, boatID)
+	if err != nil {
+		return nil, fmt.Errorf("joining boat: %w", err)
+	}
+	return &domain.SharedBoat{Boat: *boat, Permissions: perms}, nil
 }
 
 // ListMembers returns a boat's shared members. Owner only.
@@ -204,9 +239,22 @@ func (s *BoatService) SetMemberPermissions(ctx context.Context, ownerID, boatID,
 	return s.repo.SetPermissions(ctx, ownerID, boatID, memberUserID, p)
 }
 
-// Permissions resolves a user's permission set for a boat (access=false if none).
-func (s *BoatService) Permissions(ctx context.Context, userID, boatID string) (domain.BoatPermissions, bool, error) {
-	return s.repo.GetPermissions(ctx, userID, boatID)
+// EffectivePermissions resolves what the user is allowed to do on a boat. It is
+// the read side of the flags the write paths enforce (trips, documents,
+// maintenance, expenses), so a client can disable a blocked action up front
+// instead of letting the user do the work and fail with a 403 on save.
+//
+// A caller with no access at all gets ErrBoatNotFound rather than an empty
+// permission set: this endpoint must not double as a probe for boat ids.
+func (s *BoatService) EffectivePermissions(ctx context.Context, userID, boatID string) (domain.BoatPermissions, error) {
+	perms, hasAccess, err := s.repo.GetPermissions(ctx, userID, boatID)
+	if err != nil {
+		return domain.BoatPermissions{}, fmt.Errorf("getting permissions for boat %s: %w", boatID, err)
+	}
+	if !hasAccess {
+		return domain.BoatPermissions{}, fmt.Errorf("getting permissions for boat %s: %w", boatID, domain.ErrBoatNotFound)
+	}
+	return perms, nil
 }
 
 // Leave removes the user's own membership of a shared boat.

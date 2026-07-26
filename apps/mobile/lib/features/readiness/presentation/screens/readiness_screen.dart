@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/readiness/data/readiness_repository.dart';
 import 'package:navis_mobile/features/readiness/presentation/providers/readiness_provider.dart';
+import 'package:navis_mobile/features/readiness/presentation/readiness_links.dart';
 import 'package:navis_mobile/features/readiness/presentation/widgets/readiness_card.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
@@ -38,7 +40,7 @@ class ReadinessScreen extends ConsumerWidget {
             _Header(readiness: r),
             const SizedBox(height: Dimens.spaceLg),
             for (final c in r.categories) ...[
-              _CategoryRow(category: c),
+              _CategoryRow(category: c, boatId: boatId),
               const SizedBox(height: Dimens.spaceSm),
             ],
             if (r.attention.isNotEmpty) ...[
@@ -52,7 +54,7 @@ class ReadinessScreen extends ConsumerWidget {
               ),
               const SizedBox(height: Dimens.spaceSm),
               for (final item in r.attention) ...[
-                _AttentionRow(item: item),
+                _AttentionRow(item: item, boatId: boatId),
                 const SizedBox(height: Dimens.spaceSm),
               ],
             ],
@@ -101,9 +103,10 @@ class _Header extends StatelessWidget {
 }
 
 class _CategoryRow extends StatelessWidget {
-  const _CategoryRow({required this.category});
+  const _CategoryRow({required this.category, required this.boatId});
 
   final ReadinessCategory category;
+  final String boatId;
 
   @override
   Widget build(BuildContext context) {
@@ -115,35 +118,26 @@ class _CategoryRow extends StatelessWidget {
       'maintenance' => l.readinessCatMaintenance,
       _ => category.key,
     };
-    return NavisCard(
-      child: Row(
-        children: [
-          Icon(icon, color: color, size: 22),
-          const SizedBox(width: Dimens.spaceMd),
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: context.txtPrimary,
-              ),
-            ),
-          ),
-          Text(
-            l.readinessOkOfTotal(category.ok, category.total),
-            style: TextStyle(fontSize: 13, color: context.txtSecondary),
-          ),
-        ],
+    final route = readinessRoute(boatId: boatId, category: category.key);
+    return _RowCard(
+      route: route,
+      leading: Icon(icon, color: color, size: Dimens.iconMd),
+      title: label,
+      // Short trailing text ("2/3 OK"): it stays on the same line, and the
+      // title keeps whatever is left instead of being squeezed.
+      trailing: Text(
+        l.readinessOkOfTotal(category.ok, category.total),
+        style: TextStyle(fontSize: 13, color: context.txtSecondary),
       ),
     );
   }
 }
 
 class _AttentionRow extends StatelessWidget {
-  const _AttentionRow({required this.item});
+  const _AttentionRow({required this.item, required this.boatId});
 
   final ReadinessItem item;
+  final String boatId;
 
   @override
   Widget build(BuildContext context) {
@@ -151,33 +145,97 @@ class _AttentionRow extends StatelessWidget {
     final color = item.status == ReadinessStatus.notReady
         ? AppColors.red
         : AppColors.amber;
-    return NavisCard(
+    final route = readinessRoute(
+      boatId: boatId,
+      category: item.category,
+      ref: item.ref,
+    );
+    // The status text can be a whole sentence ("set up a maintenance plan"), so
+    // it goes UNDER the label instead of competing with it for the same line:
+    // side by side, a long status left the label so little width that it broke
+    // mid-word ("Mainten/ance").
+    return _RowCard(
+      route: route,
       borderColor: color.withValues(alpha: 0.4),
+      leading: Icon(Icons.circle, color: color, size: 10),
+      title: item.label.isNotEmpty ? item.label : _refLabel(l, item.ref),
+      subtitle: Text(
+        _daysLabel(l, item),
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
+    );
+  }
+}
+
+/// One readiness line: leading dot/icon, a title that always gets the width it
+/// needs, an optional subtitle under it, and an optional short trailing widget.
+/// When [route] is non-null the whole card opens it.
+class _RowCard extends StatelessWidget {
+  const _RowCard({
+    required this.leading,
+    required this.title,
+    this.subtitle,
+    this.trailing,
+    this.route,
+    this.borderColor,
+  });
+
+  final Widget leading;
+  final String title;
+  final Widget? subtitle;
+  final Widget? trailing;
+  final String? route;
+  final Color? borderColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final route = this.route;
+    final card = NavisCard(
+      borderColor: borderColor,
+      onTap: route == null ? null : () => context.push(route),
       child: Row(
         children: [
-          Icon(Icons.circle, color: color, size: 10),
+          leading,
           const SizedBox(width: Dimens.spaceMd),
           Expanded(
-            child: Text(
-              item.label.isNotEmpty ? item.label : _refLabel(l, item.ref),
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: context.txtPrimary,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: context.txtPrimary,
+                  ),
+                ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 2),
+                  subtitle!,
+                ],
+              ],
             ),
           ),
-          Text(
-            _daysLabel(l, item),
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: color,
+          if (trailing != null) ...[
+            const SizedBox(width: Dimens.spaceSm),
+            trailing!,
+          ],
+          if (route != null) ...[
+            const SizedBox(width: Dimens.spaceXs),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: context.txtSecondary,
+              size: Dimens.iconMd,
             ),
-          ),
+          ],
         ],
       ),
     );
+    return route == null ? card : Semantics(button: true, child: card);
   }
 }
 

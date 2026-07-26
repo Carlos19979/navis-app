@@ -22,6 +22,7 @@ type mockBoatRepo struct {
 	countFn          func(ctx context.Context, userID string) (int, error)
 	getAccessibleFn  func(ctx context.Context, userID, id string) (*domain.Boat, error)
 	shareCodeFn      func(ctx context.Context, code string) (string, string, error)
+	listSharedFn     func(ctx context.Context, userID string) ([]domain.Boat, error)
 }
 
 func (m *mockBoatRepo) Create(ctx context.Context, boat *domain.Boat) (*domain.Boat, error) {
@@ -548,7 +549,10 @@ func (m *mockBoatRepo) GetByIDAccessible(ctx context.Context, userID, id string)
 func (m *mockBoatRepo) HasAccess(_ context.Context, _, _ string) (bool, error) {
 	return true, nil
 }
-func (m *mockBoatRepo) ListShared(_ context.Context, _ string) ([]domain.Boat, error) {
+func (m *mockBoatRepo) ListShared(ctx context.Context, userID string) ([]domain.Boat, error) {
+	if m.listSharedFn != nil {
+		return m.listSharedFn(ctx, userID)
+	}
 	return nil, nil
 }
 func (m *mockBoatRepo) EnsureShareCode(_ context.Context, _, _, candidate string) (string, error) {

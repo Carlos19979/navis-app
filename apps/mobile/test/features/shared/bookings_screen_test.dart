@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/boat/data/boat_share_repository.dart';
 import 'package:navis_mobile/features/shared/data/shared_repository.dart';
 import 'package:navis_mobile/features/shared/presentation/screens/bookings_screen.dart';
@@ -121,14 +122,9 @@ void main() {
   });
 
   group('BookingsScreen create flow', () {
-    Future<void> tapOk(WidgetTester tester) async {
-      await tester.tap(find.text('OK'));
-      await pumpScreen(tester);
-    }
-
     testWidgets(
-        'creates a booking through date, time pickers and purpose dialog',
-        (tester) async {
+        'the FAB is the only entry point and opens the range form on the '
+        'selected day', (tester) async {
       setPhoneSize(tester);
       when(() => mockRepo.createBooking(
             any(),
@@ -140,18 +136,14 @@ void main() {
       await tester.pumpWidget(buildSubject());
       await pumpScreen(tester);
 
-      // Empty state CTA and FAB both say "Book a day": use the FAB.
-      await tester.tap(find.byTooltip('Book a day'));
+      // Empty state CTA and FAB both say "Book": use the FAB.
+      await tester.tap(find.byTooltip('Book'));
       await pumpScreen(tester);
 
-      // Date picker (defaults to today) -> OK.
-      await tapOk(tester);
-      // Start time picker (08:00) -> OK.
-      await tapOk(tester);
-      // End time picker (12:00) -> OK.
-      await tapOk(tester);
+      // The range form: departure and arrival, both prefilled with today.
+      expect(find.text('Departure'), findsOneWidget);
+      expect(find.text('Arrival'), findsOneWidget);
 
-      // Purpose dialog.
       await tester.enterText(find.byType(TextField).last, 'Fishing');
       await tester.tap(find.text('Save'));
       await pumpScreen(tester);
@@ -163,141 +155,30 @@ void main() {
             endsAt: captureAny(named: 'endsAt'),
             purpose: captureAny(named: 'purpose'),
           )).captured;
-      final start = captured[0] as DateTime;
-      final end = captured[1] as DateTime;
-      expect(start, DateTime(now.year, now.month, now.day, 8));
-      expect(end, DateTime(now.year, now.month, now.day, 12));
+      // Default same-day slot on the calendar's selected day (today).
+      expect(captured[0], DateTime(now.year, now.month, now.day, 9));
+      expect(captured[1], DateTime(now.year, now.month, now.day, 18));
       expect(captured[2], 'Fishing');
     });
 
-    testWidgets('end at or before start rolls the end to the next day',
+    testWidgets('a multi-day booking spells out departure and arrival',
         (tester) async {
       setPhoneSize(tester);
-      when(() => mockRepo.createBooking(
-            any(),
-            startsAt: any(named: 'startsAt'),
-            endsAt: any(named: 'endsAt'),
-            purpose: any(named: 'purpose'),
-          )).thenAnswer((_) async {});
-
-      await tester.pumpWidget(buildSubject());
-      await pumpScreen(tester);
-
-      await tester.tap(find.byTooltip('Book a day'));
-      await pumpScreen(tester);
-
-      // Date -> OK, start 08:00 -> OK.
-      await tapOk(tester);
-      await tapOk(tester);
-
-      // End time: switch to text input and set 07:00 AM (before start).
-      await tester.tap(find.byIcon(Icons.keyboard_outlined));
-      await pumpScreen(tester);
-      await tester.enterText(find.byType(TextField).at(0), '7');
-      await tester.enterText(find.byType(TextField).at(1), '00');
-      await tester.tap(find.text('AM'));
-      await pumpScreen(tester);
-      await tapOk(tester);
-
-      await tester.enterText(find.byType(TextField).last, 'Overnight');
-      await tester.tap(find.text('Save'));
-      await pumpScreen(tester);
-
       final now = DateTime.now();
-      final captured = verify(() => mockRepo.createBooking(
-            boatId,
-            startsAt: captureAny(named: 'startsAt'),
-            endsAt: captureAny(named: 'endsAt'),
-            purpose: captureAny(named: 'purpose'),
-          )).captured;
-      final start = captured[0] as DateTime;
-      final end = captured[1] as DateTime;
-      expect(start, DateTime(now.year, now.month, now.day, 8));
-      // 07:00 <= 08:00 start: the booking rolls over to 07:00 the next day.
-      expect(
-        end,
-        DateTime(now.year, now.month, now.day, 7).add(const Duration(days: 1)),
+      final start = DateTime(now.year, now.month, now.day, 9);
+      final end = start.add(const Duration(days: 2, hours: 9));
+
+      await tester.pumpWidget(
+        buildSubject(
+          bookings: [makeBooking(startsAt: start, endsAt: end)],
+        ),
       );
-    });
-
-    testWidgets('API overlap (409) + cancel aborts without forcing',
-        (tester) async {
-      setPhoneSize(tester);
-      // The API is the overlap authority now: the unforced create throws.
-      when(() => mockRepo.createBooking(
-            any(),
-            startsAt: any(named: 'startsAt'),
-            endsAt: any(named: 'endsAt'),
-            purpose: any(named: 'purpose'),
-          )).thenThrow(const BookingOverlapException());
-
-      await tester.pumpWidget(buildSubject());
       await pumpScreen(tester);
 
-      await tester.tap(find.byTooltip('Book a day'));
-      await pumpScreen(tester);
-      await tapOk(tester); // date: today
-      await tapOk(tester); // start 08:00
-      await tapOk(tester); // end 12:00
-
-      await tester.enterText(find.byType(TextField).last, 'Race day');
-      await tester.tap(find.text('Save'));
-      await pumpScreen(tester);
-
-      expect(find.text('Overlaps another booking'), findsOneWidget);
-
-      await tester.tap(find.text('Cancel'));
-      await pumpScreen(tester);
-
-      verifyNever(() => mockRepo.createBooking(
-            any(),
-            startsAt: any(named: 'startsAt'),
-            endsAt: any(named: 'endsAt'),
-            purpose: any(named: 'purpose'),
-            force: true,
-          ));
-    });
-
-    testWidgets('API overlap (409) + book-anyway retries with force',
-        (tester) async {
-      setPhoneSize(tester);
-      when(() => mockRepo.createBooking(
-            any(),
-            startsAt: any(named: 'startsAt'),
-            endsAt: any(named: 'endsAt'),
-            purpose: any(named: 'purpose'),
-          )).thenThrow(const BookingOverlapException());
-      when(() => mockRepo.createBooking(
-            any(),
-            startsAt: any(named: 'startsAt'),
-            endsAt: any(named: 'endsAt'),
-            purpose: any(named: 'purpose'),
-            force: true,
-          )).thenAnswer((_) async {});
-
-      await tester.pumpWidget(buildSubject());
-      await pumpScreen(tester);
-
-      await tester.tap(find.byTooltip('Book a day'));
-      await pumpScreen(tester);
-      await tapOk(tester);
-      await tapOk(tester);
-      await tapOk(tester);
-
-      await tester.enterText(find.byType(TextField).last, 'Race day');
-      await tester.tap(find.text('Save'));
-      await pumpScreen(tester);
-
-      await tester.tap(find.text('Book anyway'));
-      await pumpScreen(tester);
-
-      verify(() => mockRepo.createBooking(
-            boatId,
-            startsAt: any(named: 'startsAt'),
-            endsAt: any(named: 'endsAt'),
-            purpose: 'Race day',
-            force: true,
-          )).called(1);
+      expect(find.text('Departure'), findsOneWidget);
+      expect(find.text('Arrival'), findsOneWidget);
+      expect(find.text(NavisDateUtils.formatDateTime(start)), findsOneWidget);
+      expect(find.text(NavisDateUtils.formatDateTime(end)), findsOneWidget);
     });
 
     testWidgets('overlapping bookings carry the amber badge in the list',

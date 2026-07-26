@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
+import 'package:navis_mobile/shared/widgets/navis_pulse_budget.dart';
 
 class NavisLoading extends StatefulWidget {
   const NavisLoading({super.key, this.message});
@@ -23,7 +24,13 @@ class _NavisLoadingState extends State<NavisLoading>
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
-    )..repeat(reverse: true);
+    )..repeat(
+        reverse: true,
+        // Normally this widget disappears when the data arrives; the bound is
+        // the stall guard so a request that never returns cannot animate for
+        // the rest of the session. Ends back at scale 1.0.
+        count: PulseBudget.reverseHalves(PulseBudget.loadingStall),
+      );
     _scaleAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
@@ -41,30 +48,34 @@ class _NavisLoadingState extends State<NavisLoading>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          AnimatedBuilder(
-            animation: _scaleAnimation,
-            builder: (context, child) => Transform.scale(
-              scale: _scaleAnimation.value,
-              child: child,
-            ),
-            child: Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                gradient: AppColors.cyanGradient,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.cyan.withValues(alpha: 0.3),
-                    blurRadius: 20,
-                    spreadRadius: 2,
-                  ),
-                ],
+          // Isolated so the pulse does not repaint (and invalidate the blur
+          // of) whatever chrome the spinner is sitting on.
+          RepaintBoundary(
+            child: AnimatedBuilder(
+              animation: _scaleAnimation,
+              builder: (context, child) => Transform.scale(
+                scale: _scaleAnimation.value,
+                child: child,
               ),
-              child: const Icon(
-                Icons.sailing_rounded,
-                color: Colors.white,
-                size: 32,
+              child: Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  gradient: AppColors.cyanGradient,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.cyan.withValues(alpha: 0.3),
+                      blurRadius: 20,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.sailing_rounded,
+                  color: Colors.white,
+                  size: 32,
+                ),
               ),
             ),
           ),

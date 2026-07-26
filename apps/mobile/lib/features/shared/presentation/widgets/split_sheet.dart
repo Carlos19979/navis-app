@@ -6,6 +6,10 @@ import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/data/boat_share_repository.dart';
+import 'package:navis_mobile/features/boat/data/permission_errors.dart';
+import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
+import 'package:navis_mobile/features/boat/presentation/providers/boat_permissions_provider.dart';
+import 'package:navis_mobile/features/boat/presentation/widgets/permission_gate.dart';
 import 'package:navis_mobile/features/shared/data/shared_repository.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
@@ -65,6 +69,10 @@ class _SplitSheetState extends ConsumerState<_SplitSheet> {
   bool _loading = true;
   bool _busy = false;
 
+  /// Fails closed: the editor is only built once the server confirms
+  /// can_manage_expenses, which is what it enforces on save.
+  bool _canManage = false;
+
   @override
   void initState() {
     super.initState();
@@ -82,6 +90,19 @@ class _SplitSheetState extends ConsumerState<_SplitSheet> {
   Future<void> _load() async {
     final repo = ref.read(sharedRepositoryProvider);
     try {
+      final permissions =
+          await ref.read(boatPermissionsProvider(widget.boatId).future);
+      if (!mounted) return;
+      if (!BoatPermissionArea.manageExpenses.isGrantedIn(permissions)) {
+        setState(() {
+          _canManage = false;
+          _loading = false;
+        });
+        return;
+      }
+      // boatMembersProvider is autoDispose, so this one-shot read in a modal
+      // asks the server rather than replaying a cache from app start — members
+      // who joined since then are included.
       final members = await ref.read(boatMembersProvider(widget.boatId).future);
       final existing = await repo.listSplits(widget.boatId, widget.expenseId);
       if (!mounted) return;
@@ -107,6 +128,7 @@ class _SplitSheetState extends ConsumerState<_SplitSheet> {
       if (mounted) {
         setState(() {
           _people = people;
+          _canManage = true;
           _loading = false;
         });
       }
@@ -146,10 +168,20 @@ class _SplitSheetState extends ConsumerState<_SplitSheet> {
           (boatId: widget.boatId, expenseId: widget.expenseId)));
       ref.invalidate(boatSplitSummaryProvider(widget.boatId));
       if (mounted) Navigator.of(context).pop();
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         setState(() => _busy = false);
-        NavisSnackbar.error(context, l.somethingWentWrong);
+        // Safety net: revoked while the sheet was open.
+        if (isPermissionDeniedError(e)) {
+          showPermissionDenied(
+            context,
+            ref,
+            boatId: widget.boatId,
+            area: BoatPermissionArea.manageExpenses,
+          );
+        } else {
+          NavisSnackbar.error(context, l.somethingWentWrong);
+        }
       }
     }
   }
@@ -189,6 +221,14 @@ class _SplitSheetState extends ConsumerState<_SplitSheet> {
             const Padding(
               padding: EdgeInsets.all(24),
               child: Center(child: CircularProgressIndicator()),
+            )
+          else if (!_canManage)
+            // Blocked before anything is typed: the API guards expense_splits
+            // with can_manage_expenses, and a 403 on save would throw away the
+            // whole split.
+            BlockedActionCard(
+              reason: permissionReason(l, BoatPermissionArea.manageExpenses),
+              compact: true,
             )
           else ...[
             Align(

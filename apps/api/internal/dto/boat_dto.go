@@ -126,8 +126,32 @@ func BoatPermissionsResponseFromDomain(p domain.BoatPermissions) BoatPermissions
 	}
 }
 
-// BoatResponseFromDomain builds a BoatResponse from a domain Boat.
-func BoatResponseFromDomain(b *domain.Boat) *BoatResponse {
+// BoatEffectivePermissionsResponse is the caller's own permission set on a boat,
+// as served by GET /boats/{id}/permissions. It exists so a client can gate the
+// UI before the user does any work: the same flags are enforced on the write
+// paths, where a denial arrives as a 403 on save.
+//
+// Callers with no access get 404, so a 200 always describes real access.
+// Ownership is not repeated here — it belongs to the boat resource
+// (BoatResponse.IsOwner).
+type BoatEffectivePermissionsResponse struct {
+	BoatID      string                  `json:"boat_id"`
+	Permissions BoatPermissionsResponse `json:"permissions"`
+}
+
+// BoatEffectivePermissionsResponseFromDomain builds the permissions response for
+// a boat.
+func BoatEffectivePermissionsResponseFromDomain(boatID string, p domain.BoatPermissions) BoatEffectivePermissionsResponse {
+	return BoatEffectivePermissionsResponse{
+		BoatID:      boatID,
+		Permissions: BoatPermissionsResponseFromDomain(p),
+	}
+}
+
+// BoatResponseFromDomain builds a BoatResponse for a given viewer. IsOwner and
+// Permissions are always filled from viewerID and perms — never left at their
+// zero value, which would tell the client the user may do nothing.
+func BoatResponseFromDomain(b *domain.Boat, viewerID string, perms domain.BoatPermissions) *BoatResponse {
 	return &BoatResponse{
 		ID:           b.ID,
 		Name:         b.Name,
@@ -140,16 +164,41 @@ func BoatResponseFromDomain(b *domain.Boat) *BoatResponse {
 		PhotoURL:     b.PhotoURL,
 		PhotoURLs:    emptyIfNil(b.PhotoURLs),
 		EngineHours:  b.EngineHours,
+		IsOwner:      b.UserID == viewerID,
+		Permissions:  BoatPermissionsResponseFromDomain(perms),
 		CreatedAt:    b.CreatedAt,
 		UpdatedAt:    b.UpdatedAt,
 	}
 }
 
-// BoatListResponseFromDomain converts a slice of domain boats to response DTOs.
-func BoatListResponseFromDomain(boats []domain.Boat) []BoatResponse {
+// OwnedBoatResponseFromDomain builds the response for a boat the caller owns
+// (the owner-scoped paths: create, update, list). Owners hold every permission,
+// so no lookup is needed.
+func OwnedBoatResponseFromDomain(b *domain.Boat) *BoatResponse {
+	return BoatResponseFromDomain(b, b.UserID, domain.OwnerPermissions())
+}
+
+// OwnedBoatListResponseFromDomain converts a slice of boats the caller owns to
+// response DTOs.
+func OwnedBoatListResponseFromDomain(boats []domain.Boat) []BoatResponse {
 	out := make([]BoatResponse, len(boats))
 	for i := range boats {
-		out[i] = *BoatResponseFromDomain(&boats[i])
+		out[i] = *OwnedBoatResponseFromDomain(&boats[i])
+	}
+	return out
+}
+
+// SharedBoatResponseFromDomain builds the response for a boat reached through a
+// membership, carrying that membership's permissions.
+func SharedBoatResponseFromDomain(s *domain.SharedBoat, viewerID string) *BoatResponse {
+	return BoatResponseFromDomain(&s.Boat, viewerID, s.Permissions)
+}
+
+// SharedBoatListResponseFromDomain converts shared boats to response DTOs.
+func SharedBoatListResponseFromDomain(shared []domain.SharedBoat, viewerID string) []BoatResponse {
+	out := make([]BoatResponse, len(shared))
+	for i := range shared {
+		out[i] = *SharedBoatResponseFromDomain(&shared[i], viewerID)
 	}
 	return out
 }

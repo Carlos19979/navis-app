@@ -2,7 +2,17 @@ import 'package:flutter/material.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
+import 'package:navis_mobile/shared/widgets/navis_pulse_budget.dart';
 
+/// List skeleton with a travelling highlight.
+///
+/// The loop stops the moment the data arrives, because the caller replaces
+/// this widget with the loaded list; [PulseBudget.loadingStall] only bounds
+/// the case of a request that never comes back. Per frame the only thing
+/// rebuilt is the sweeping gradient of each row — the skeleton bars inside are
+/// built once and handed to [AnimatedBuilder] as its `child` — and the whole
+/// group sits behind a [RepaintBoundary] so it does not invalidate the blurred
+/// app bar or nav bar above it.
 class NavisShimmer extends StatefulWidget {
   const NavisShimmer({
     super.key,
@@ -30,7 +40,7 @@ class _NavisShimmerState extends State<NavisShimmer>
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
-    )..repeat();
+    )..repeat(count: PulseBudget.loadingStall);
     _animation = Tween<double>(begin: -1, end: 2).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOutSine),
     );
@@ -44,25 +54,22 @@ class _NavisShimmerState extends State<NavisShimmer>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, _) {
-        return Padding(
-          padding: widget.padding,
-          child: Column(
-            children: List.generate(
-              widget.itemCount,
-              (index) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _ShimmerItem(
-                  height: widget.itemHeight,
-                  animationValue: _animation.value,
-                ),
+    return RepaintBoundary(
+      child: Padding(
+        padding: widget.padding,
+        child: Column(
+          children: List.generate(
+            widget.itemCount,
+            (index) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _ShimmerItem(
+                height: widget.itemHeight,
+                animation: _animation,
               ),
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }
@@ -70,33 +77,17 @@ class _NavisShimmerState extends State<NavisShimmer>
 class _ShimmerItem extends StatelessWidget {
   const _ShimmerItem({
     required this.height,
-    required this.animationValue,
+    required this.animation,
   });
 
   final double height;
-  final double animationValue;
+  final Animation<double> animation;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: height,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: LinearGradient(
-          begin: Alignment(animationValue - 1, 0),
-          end: Alignment(animationValue, 0),
-          colors: [
-            context.glassBg,
-            AppColors.glassHighlight,
-            context.glassBg,
-          ],
-        ),
-        border: Border.all(
-          color: context.glassBorderColor,
-          width: 0.5,
-        ),
-      ),
-      padding: const EdgeInsets.all(16),
+    return AnimatedBuilder(
+      animation: animation,
+      // Static skeleton: built once per layout, reused every frame.
       child: Row(
         children: [
           Container(
@@ -135,6 +126,29 @@ class _ShimmerItem extends StatelessWidget {
           ),
         ],
       ),
+      builder: (context, child) {
+        return Container(
+          height: height,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: LinearGradient(
+              begin: Alignment(animation.value - 1, 0),
+              end: Alignment(animation.value, 0),
+              colors: [
+                context.glassBg,
+                AppColors.glassHighlight,
+                context.glassBg,
+              ],
+            ),
+            border: Border.all(
+              color: context.glassBorderColor,
+              width: 0.5,
+            ),
+          ),
+          padding: const EdgeInsets.all(16),
+          child: child,
+        );
+      },
     );
   }
 }

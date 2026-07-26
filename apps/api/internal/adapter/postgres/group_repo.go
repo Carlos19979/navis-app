@@ -124,11 +124,50 @@ func (r *GroupRepo) List(ctx context.Context, userID, cursor string, limit int) 
 	return r.listWhere(ctx, userID, membership, cursor, limit)
 }
 
+// discoverableGroups matches the public groups the viewer ($1) has not actively
+// joined — the set both discovery listing and discovery search draw from.
+const discoverableGroups = `g.visibility = 'public'
+	AND NOT EXISTS (SELECT 1 FROM group_members m WHERE m.group_id = g.id AND m.user_id = $1 AND m.status = 'active')`
+
 // ListPublic returns public groups the user has not yet actively joined.
 func (r *GroupRepo) ListPublic(ctx context.Context, userID, cursor string, limit int) ([]domain.Group, string, error) {
-	condition := `g.visibility = 'public'
-		AND NOT EXISTS (SELECT 1 FROM group_members m WHERE m.group_id = g.id AND m.user_id = $1 AND m.status = 'active')`
-	return r.listWhere(ctx, userID, condition, cursor, limit)
+	return r.listWhere(ctx, userID, discoverableGroups, cursor, limit)
+}
+
+// SearchPublic returns discoverable public groups whose name matches query
+// (case-insensitive substring, like the port search). The service guarantees a
+// non-trivial query, so the ILIKE pattern is never a bare `%%` scan.
+//
+// Ordering stays (created_at, id) DESC like the other group lists, so a cursor
+// from ListPublic and one from here mean the same thing.
+func (r *GroupRepo) SearchPublic(ctx context.Context, userID, query, cursor string, limit int) ([]domain.Group, string, error) {
+	pattern := "%" + query + "%"
+
+	var (
+		rows pgx.Rows
+		err  error
+	)
+
+	if cursorTime, cursorID, ok := pagination.DecodeKeysetTime(cursor); ok {
+		q := `SELECT ` + groupSelectBase + ` FROM groups g
+			WHERE ` + discoverableGroups + ` AND g.name ILIKE $2
+				AND (g.created_at, g.id) < ($3, $4)
+			ORDER BY g.created_at DESC, g.id DESC
+			LIMIT $5`
+		rows, err = r.pool.Query(ctx, q, userID, pattern, cursorTime, cursorID, limit+1)
+	} else {
+		q := `SELECT ` + groupSelectBase + ` FROM groups g
+			WHERE ` + discoverableGroups + ` AND g.name ILIKE $2
+			ORDER BY g.created_at DESC, g.id DESC
+			LIMIT $3`
+		rows, err = r.pool.Query(ctx, q, userID, pattern, limit+1)
+	}
+	if err != nil {
+		return nil, "", fmt.Errorf("searching public groups: %w", err)
+	}
+	defer rows.Close()
+
+	return groupPage(rows, limit)
 }
 
 // listWhere runs a cursor-paginated group query with the given WHERE condition.
@@ -157,6 +196,12 @@ func (r *GroupRepo) listWhere(ctx context.Context, userID, condition, cursor str
 	}
 	defer rows.Close()
 
+	return groupPage(rows, limit)
+}
+
+// groupPage scans one keyset page of groups. Queries fetch limit+1 rows, so an
+// extra row means there is a next page and its (created_at, id) cursor.
+func groupPage(rows pgx.Rows, limit int) ([]domain.Group, string, error) {
 	groups, err := scanGroups(rows)
 	if err != nil {
 		return nil, "", fmt.Errorf("scanning groups: %w", err)

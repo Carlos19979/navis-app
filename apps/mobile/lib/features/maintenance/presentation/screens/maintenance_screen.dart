@@ -3,23 +3,24 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:navis_mobile/core/network/storage_service.dart';
 import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
-import 'package:intl/intl.dart';
 
 import 'package:navis_mobile/features/shared/data/shared_repository.dart';
 import 'package:navis_mobile/features/shared/presentation/widgets/split_sheet.dart';
 import 'package:navis_mobile/core/network/supabase_client.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
-import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
+import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
+import 'package:navis_mobile/features/boat/presentation/providers/boat_permissions_provider.dart';
+import 'package:navis_mobile/features/boat/presentation/widgets/permission_gate.dart';
 import 'package:navis_mobile/features/maintenance/data/maintenance_models.dart';
 import 'package:navis_mobile/features/maintenance/data/maintenance_repository.dart';
+import 'package:navis_mobile/features/maintenance/presentation/widgets/expense_period_picker.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
@@ -67,22 +68,9 @@ class MaintenanceScreen extends ConsumerWidget {
         appBar: NavisAppBar(
           title: l.maintenanceAndExpenses,
           showBack: true,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.insights_rounded),
-              tooltip: l.costTitle,
-              onPressed: () async {
-                if (!ref.read(effectiveTierProvider).canCostAnalytics) {
-                  final ok = await showPaywall(context, ref,
-                      reason: l.paywallReasonCostAnalytics);
-                  if (!ok || !context.mounted) return;
-                }
-                if (context.mounted) {
-                  unawaited(context.push('/boats/$boatId/costs'));
-                }
-              },
-            ),
-          ],
+          // No cost-intelligence shortcut here: it is a section of the boat's
+          // detail screen, where everything about the boat now lives. Two
+          // entry points to one screen was duplication.
           bottom: TabBar(
             tabs: [
               Tab(text: l.maintenanceTab),
@@ -176,13 +164,13 @@ class _MaintenanceTab extends ConsumerWidget {
   const _MaintenanceTab({required this.boatId});
   final String boatId;
 
-  bool _canEdit(WidgetRef ref) =>
-      ref
-          .watch(boatProvider(boatId))
-          .valueOrNull
-          ?.permissions
-          .canManageMaintenance ??
-      true;
+  /// Fail-closed: reads the permissions endpoint, not the (cacheable, possibly
+  /// stale) boat entity, and treats loading/error as "not granted". Assuming
+  /// "allowed" while we do not know is what let a member fill in a whole form
+  /// and only then lose it to a 403 on save.
+  bool _canEdit(WidgetRef ref) => ref
+      .watch(boatPermissionsProvider(boatId))
+      .grants(BoatPermissionArea.manageMaintenance);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -206,6 +194,20 @@ class _MaintenanceTab extends ConsumerWidget {
             return ListView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
               children: [
+                // A read-only member gets the padlock and the reason, not a
+                // screen that is silently missing its buttons.
+                if (!canEdit) ...[
+                  BlockedActionCard(
+                    reason: permissionReason(
+                      l,
+                      BoatPermissionArea.manageMaintenance,
+                    ),
+                    compact: true,
+                    onRetry: () =>
+                        ref.invalidate(boatPermissionsProvider(boatId)),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 _sectionHeader(context, l.maintenancePlanTitle),
                 if (canEdit) _SuggestedChips(boatId: boatId, tasks: tasks),
                 if (tasks.isEmpty)
@@ -803,9 +805,6 @@ class _SuggestedChips extends ConsumerWidget {
   }
 }
 
-/// Whether the expenses ledger groups by month or by year.
-enum _ExpensePeriod { month, year }
-
 class _ExpensesTab extends ConsumerStatefulWidget {
   const _ExpensesTab({required this.boatId});
   final String boatId;
@@ -815,9 +814,9 @@ class _ExpensesTab extends ConsumerStatefulWidget {
 }
 
 class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
-  _ExpensePeriod _period = _ExpensePeriod.month;
-  // First day of the selected month (month mode) / any day of the year.
-  DateTime _anchor = DateTime(DateTime.now().year, DateTime.now().month);
+  // The month (or whole year) the ledger is showing. One value instead of an
+  // enum plus a loose anchor DateTime kept consistent by hand.
+  ExpensePeriod _period = ExpensePeriod.current();
   // null = all categories.
   String? _category;
 
@@ -825,9 +824,7 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
 
   bool _inScope(Expense e) {
     if (_category != null && e.category != _category) return false;
-    final d = e.incurredOn;
-    if (d.year != _anchor.year) return false;
-    return _period == _ExpensePeriod.year || d.month == _anchor.month;
+    return _period.contains(e.incurredOn);
   }
 
   @override
@@ -837,11 +834,8 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
     final splits =
         ref.watch(boatSplitSummaryProvider(boatId)).valueOrNull ?? const {};
     final canManage = ref
-            .watch(boatProvider(boatId))
-            .valueOrNull
-            ?.permissions
-            .canManageExpenses ??
-        true;
+        .watch(boatPermissionsProvider(boatId))
+        .grants(BoatPermissionArea.manageExpenses);
 
     return Stack(
       children: [
@@ -883,6 +877,15 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
       children: [
+        // Blocked with a reason before any work is done, not a 403 on save.
+        if (!canManage) ...[
+          BlockedActionCard(
+            reason: permissionReason(l, BoatPermissionArea.manageExpenses),
+            compact: true,
+            onRetry: () => ref.invalidate(boatPermissionsProvider(boatId)),
+          ),
+          const SizedBox(height: 12),
+        ],
         _periodBar(l),
         const SizedBox(height: 12),
         if (categories.isNotEmpty) _categoryChips(l, categories),
@@ -897,7 +900,7 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
               message: l.expensesNoneInPeriod,
             ),
           )
-        else if (_period == _ExpensePeriod.year)
+        else if (_period.isWholeYear)
           ..._monthBreakdown(context, l, scoped)
         else
           for (final e in scoped)
@@ -906,47 +909,21 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
     );
   }
 
-  /// Month/Year toggle + a ‹ period › navigator.
+  /// The period control: one tap opens the month/year picker.
+  ///
+  /// Replaces the Month/Year segmented toggle plus `‹ ›` arrows, which needed
+  /// one tap per step — twelve to reach the same month a year back.
   Widget _periodBar(AppLocalizations l) {
-    final label = _period == _ExpensePeriod.month
-        ? DateFormat.yMMMM().format(_anchor)
-        : _anchor.year.toString();
     return Row(
       children: [
-        SegmentedButton<_ExpensePeriod>(
-          segments: [
-            ButtonSegment(
-              value: _ExpensePeriod.month,
-              label: Text(l.expensesPeriodMonth),
-            ),
-            ButtonSegment(
-              value: _ExpensePeriod.year,
-              label: Text(l.expensesPeriodYear),
-            ),
-          ],
-          selected: {_period},
-          showSelectedIcon: false,
-          onSelectionChanged: (s) => setState(() => _period = s.first),
+        ExpensePeriodSelector(
+          period: _period,
+          onChanged: (p) => setState(() => _period = p),
         ),
         const Spacer(),
-        IconButton(
-          icon: const Icon(Icons.chevron_left),
-          tooltip: l.expensesPrevPeriod,
-          onPressed: () => setState(() => _anchor = _shift(-1)),
-        ),
-        Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-        IconButton(
-          icon: const Icon(Icons.chevron_right),
-          tooltip: l.expensesNextPeriod,
-          onPressed: () => setState(() => _anchor = _shift(1)),
-        ),
       ],
     );
   }
-
-  DateTime _shift(int by) => _period == _ExpensePeriod.month
-      ? DateTime(_anchor.year, _anchor.month + by)
-      : DateTime(_anchor.year + by, _anchor.month);
 
   Widget _categoryChips(AppLocalizations l, List<String> categories) {
     return Wrap(
@@ -1001,13 +978,12 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
         NavisCard(
           margin: const EdgeInsets.only(bottom: 12),
           onTap: () => setState(() {
-            _anchor = DateTime(_anchor.year, m);
-            _period = _ExpensePeriod.month;
+            _period = _period.withMonth(m);
           }),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(DateFormat.MMMM().format(DateTime(_anchor.year, m)),
+              Text(expenseMonthName(context, _period.year, m),
                   style: TextStyle(
                       color: context.txtPrimary, fontWeight: FontWeight.w600)),
               Text('${byMonth[m]!.toStringAsFixed(0)} €',

@@ -1,4 +1,6 @@
 // ignore_for_file: lines_longer_than_80_chars
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,7 +14,9 @@ import 'package:navis_mobile/features/documents/domain/repositories/document_rep
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
+import 'package:navis_mobile/features/boat/presentation/providers/boat_permissions_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
+import 'package:navis_mobile/features/boat/presentation/widgets/permission_gate.dart';
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
 import 'package:navis_mobile/features/documents/presentation/screens/document_list_screen.dart';
 
@@ -24,8 +28,13 @@ class FakeRoute extends Fake implements Route<dynamic> {}
 
 /// Pump enough frames for async providers and initial animations
 /// without pumpAndSettle (flutter_animate has repeating animations).
+///
+/// Three rounds, because the screen resolves in stages: permissions first
+/// (the document list is not even requested without can_view_documents), then
+/// the documents, then the cards' entrance animation.
 Future<void> pumpScreen(WidgetTester tester) async {
   await tester.pump();
+  await tester.pump(const Duration(seconds: 1));
   await tester.pump(const Duration(seconds: 1));
 }
 
@@ -77,6 +86,9 @@ void main() {
   Widget buildSubject({
     List<Document> docs = const [],
     bool useError = false,
+    // null = never resolves, i.e. the loading window (must fail closed).
+    BoatPermissions? permissions = const BoatPermissions.all(),
+    void Function()? onDocumentsRequested,
   }) {
     final router = GoRouter(
       initialLocation: '/boats/$boatId/documents',
@@ -113,8 +125,16 @@ void main() {
             lengthMeters: 10,
           ),
         ),
+        // This screen fails closed, so an owner's full permission set has to be
+        // stated for the read/write affordances to exist at all.
+        boatPermissionsProvider.overrideWith(
+          (ref, id) => permissions == null
+              ? Completer<BoatPermissions>().future
+              : Future.value(permissions),
+        ),
         boatDocumentsProvider.overrideWith(
           (ref, id) async {
+            onDocumentsRequested?.call();
             if (useError) {
               throw Exception('Failed to load documents');
             }
@@ -366,31 +386,55 @@ void main() {
       expect(find.text('Safety Certificate'), findsOneWidget);
     });
 
-    testWidgets('FAB is hidden when the member cannot manage documents',
-        (tester) async {
+    testWidgets(
+        'read-only member: no FAB and the list says why documents cannot be '
+        'managed', (tester) async {
       await setPhoneSize(tester);
       await tester.pumpWidget(
-        buildTestApp(
-          const DocumentListScreen(boatId: boatId),
-          overrides: [
-            boatDocumentsProvider.overrideWith((ref, id) async => testDocs),
-            boatProvider.overrideWith(
-              (ref, id) async => Boat(
-                id: id,
-                name: 'Test Boat',
-                registration: 'TEST-1',
-                type: 'sailboat',
-                lengthMeters: 10,
-                isOwner: false,
-                permissions: const BoatPermissions(canManageDocuments: false),
-              ),
-            ),
-          ],
+        buildSubject(
+          docs: testDocs,
+          permissions:
+              const BoatPermissions.none().copyWith(canViewDocuments: true),
         ),
       );
       await pumpScreen(tester);
 
       expect(find.byType(FloatingActionButton), findsNothing);
+      expect(find.byType(BlockedActionCard), findsOneWidget);
+      // The list is still readable — only the write actions are gated.
+      expect(find.byType(DocumentCard), findsNWidgets(4));
+    });
+
+    testWidgets('without can_view_documents the list is not even requested',
+        (tester) async {
+      await setPhoneSize(tester);
+      var listRequested = false;
+      await tester.pumpWidget(
+        buildSubject(
+          docs: testDocs,
+          permissions: const BoatPermissions.none(),
+          onDocumentsRequested: () => listRequested = true,
+        ),
+      );
+      await pumpScreen(tester);
+
+      expect(find.byType(BlockedActionCard), findsOneWidget);
+      expect(find.byType(DocumentCard), findsNothing);
+      expect(listRequested, isFalse);
+    });
+
+    testWidgets('while permissions are unknown nothing is offered',
+        (tester) async {
+      await setPhoneSize(tester);
+      await tester.pumpWidget(
+        buildSubject(docs: testDocs, permissions: null),
+      );
+      await pumpScreen(tester);
+
+      expect(find.byType(FloatingActionButton), findsNothing);
+      expect(find.byType(DocumentCard), findsNothing);
+      // Not blocked either: nothing is claimed until the server answers.
+      expect(find.byType(BlockedActionCard), findsNothing);
     });
 
     testWidgets('shows multiple expired documents correctly', (tester) async {

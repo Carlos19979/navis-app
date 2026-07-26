@@ -217,6 +217,20 @@ class ProfileScreen extends ConsumerWidget {
                       _ProfileTile(
                         icon: Icons.help_outline,
                         title: l.helpAndSupport,
+                        onTap: () =>
+                            _launchExternal(context, navisSupportPageUri()),
+                      ),
+                      Divider(
+                        height: 1,
+                        color: context.glassBorderColor.withValues(alpha: 0.3),
+                        indent: 56,
+                      ),
+                      // Secondary route to the same place: the support page
+                      // already lists this address, but writing an email must
+                      // still work when the page cannot be opened.
+                      _ProfileTile(
+                        icon: Icons.mail_outline_rounded,
+                        title: l.contactByEmail,
                         onTap: () => _launchExternal(
                           context,
                           Uri(scheme: 'mailto', path: Env.supportEmail),
@@ -379,6 +393,14 @@ Future<void> _openManageSubscription(
   if (uri == null || !context.mounted) return;
   await _launchExternal(context, uri);
 }
+
+/// The support page the API serves at `/support` — the same URL registered in
+/// App Store Connect.
+///
+/// Help & Support used to open a bare `mailto:`, which gives no answers, no
+/// FAQs and nothing at all to a user without a mail account configured. The
+/// page carries the contact address itself, so email stays reachable.
+Uri navisSupportPageUri() => Uri.parse('${Env.apiUrl}/support');
 
 Future<void> _launchExternal(BuildContext context, Uri uri) async {
   final l = AppLocalizations.of(context)!;

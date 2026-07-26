@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
+import 'package:navis_mobile/core/lifecycle/resume_refresh.dart';
 import 'package:navis_mobile/features/weather/data/repositories/weather_repository.dart';
 import 'package:navis_mobile/features/weather/domain/entities/hourly_weather.dart';
 import 'package:navis_mobile/features/weather/domain/entities/weather.dart';
@@ -32,7 +33,13 @@ Future<Position?> _getPosition() async {
   }
 }
 
-final positionProvider = FutureProvider<Position?>((ref) => _getPosition());
+/// The current fix. Re-acquired when the app comes back to the foreground:
+/// the boat has usually moved while the phone was in a pocket, and everything
+/// on the weather screen hangs off this.
+final positionProvider = FutureProvider<Position?>((ref) {
+  ref.refreshOnAppResume(minInterval: ResumeRefresh.location);
+  return _getPosition();
+});
 
 final currentWeatherProvider = FutureProvider<Weather?>((ref) async {
   final position = await ref.watch(positionProvider.future);
@@ -48,7 +55,11 @@ final forecastProvider = FutureProvider<List<Weather>>((ref) async {
   return repository.getForecast(position.latitude, position.longitude);
 });
 
+/// What the weather screen renders. Refreshed on foreground return so the
+/// forecast is not the one from whenever the tab was first opened; users were
+/// having to pull-to-refresh every single time.
 final weatherOverviewProvider = FutureProvider<WeatherOverview?>((ref) async {
+  ref.refreshOnAppResume(minInterval: ResumeRefresh.forecast);
   final position = await ref.watch(positionProvider.future);
   if (position == null) return null;
   final repository = ref.read(weatherRepositoryProvider);

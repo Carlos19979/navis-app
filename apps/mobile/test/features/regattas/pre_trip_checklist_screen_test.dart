@@ -1,9 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:navis_mobile/core/config/settings_service.dart';
 import 'package:navis_mobile/features/regattas/data/repositories/regatta_repository.dart';
 import 'package:navis_mobile/features/regattas/domain/entities/regatta.dart';
 import 'package:navis_mobile/features/regattas/presentation/providers/regatta_provider.dart';
@@ -17,6 +20,7 @@ class _MockRegattaRepository extends Mock implements RegattaRepository {}
 
 void main() {
   setUpAll(() {
+    TestWidgetsFlutterBinding.ensureInitialized();
     registerFallbackValue(FakeRoute());
   });
 
@@ -28,6 +32,16 @@ void main() {
   setUp(() {
     mockRepo = _MockRegattaRepository();
   });
+
+  /// Overrides the settings store with a prefs instance holding [mode] as the
+  /// remembered pre-trip checklist choice (null = nothing remembered yet).
+  Future<Override> checklistMode(String? mode) async {
+    SharedPreferences.setMockInitialValues(
+      mode == null ? {} : {'settings_pretrip_checklist': mode},
+    );
+    final prefs = await SharedPreferences.getInstance();
+    return sharedPreferencesProvider.overrideWithValue(prefs);
+  }
 
   ChecklistItem makeItem({
     String id = 'c1',
@@ -44,17 +58,26 @@ void main() {
   }
 
   group('PreTripChecklistScreen local mode', () {
-    Widget buildLocal({RouteSpy? spy, String? departurePort}) {
+    /// Boat mode with the checklist set to always open, which is what the old
+    /// mandatory behaviour looked like.
+    Future<Widget> buildLocal({
+      RouteSpy? spy,
+      String? departurePort,
+      String? mode = 'review',
+    }) async {
       return buildRoutedTestApp(
         PreTripChecklistScreen(boatId: 'b1', departurePort: departurePort),
         spy: spy,
-        overrides: [regattaRepositoryProvider.overrideWithValue(mockRepo)],
+        overrides: [
+          regattaRepositoryProvider.overrideWithValue(mockRepo),
+          await checklistMode(mode),
+        ],
       );
     }
 
     testWidgets('shows the 10 default safety items', (tester) async {
       setPhoneSize(tester);
-      await tester.pumpWidget(buildLocal());
+      await tester.pumpWidget(await buildLocal());
       await pumpScreen(tester);
 
       expect(find.byType(Checkbox), findsNWidgets(10));
@@ -66,7 +89,7 @@ void main() {
 
     testWidgets('adds a custom item through the dialog', (tester) async {
       setPhoneSize(tester);
-      await tester.pumpWidget(buildLocal());
+      await tester.pumpWidget(await buildLocal());
       await pumpScreen(tester);
 
       await tester.tap(find.byIcon(Icons.add));
@@ -81,7 +104,7 @@ void main() {
 
     testWidgets('removes an item locally', (tester) async {
       setPhoneSize(tester);
-      await tester.pumpWidget(buildLocal());
+      await tester.pumpWidget(await buildLocal());
       await pumpScreen(tester);
 
       await tester.tap(find.byTooltip('Delete').first);
@@ -97,7 +120,7 @@ void main() {
     testWidgets('Start Trip opens recording with autostart', (tester) async {
       setPhoneSize(tester);
       final spy = RouteSpy();
-      await tester.pumpWidget(buildLocal(spy: spy));
+      await tester.pumpWidget(await buildLocal(spy: spy));
       await pumpScreen(tester);
 
       await tester.tap(find.text('Start Trip'));
@@ -111,7 +134,7 @@ void main() {
       setPhoneSize(tester);
       final spy = RouteSpy();
       await tester.pumpWidget(
-        buildLocal(spy: spy, departurePort: 'Port Nou'),
+        await buildLocal(spy: spy, departurePort: 'Port Nou'),
       );
       await pumpScreen(tester);
 
@@ -119,6 +142,119 @@ void main() {
       await pumpScreen(tester);
 
       expect(spy.last, '/boats/b1/record?autostart=true&port=Port%20Nou');
+    });
+  });
+
+  group('PreTripChecklistScreen optional checklist prompt', () {
+    Future<Widget> buildLocal({
+      RouteSpy? spy,
+      String? mode,
+      SharedPreferences? prefs,
+    }) async {
+      return buildRoutedTestApp(
+        const PreTripChecklistScreen(boatId: 'b1'),
+        spy: spy,
+        overrides: [
+          regattaRepositoryProvider.overrideWithValue(mockRepo),
+          if (prefs != null)
+            sharedPreferencesProvider.overrideWithValue(prefs)
+          else
+            await checklistMode(mode),
+        ],
+      );
+    }
+
+    testWidgets('with nothing remembered it asks instead of forcing it',
+        (tester) async {
+      setPhoneSize(tester);
+      final spy = RouteSpy();
+      await tester.pumpWidget(await buildLocal(spy: spy));
+      await pumpScreen(tester);
+
+      expect(find.text('Review checklist'), findsOneWidget);
+      expect(find.text('Skip'), findsOneWidget);
+      // Nothing decided yet: no checklist, no trip.
+      expect(find.text('Lifejackets for the whole crew'), findsNothing);
+      expect(spy.locations, isEmpty);
+    });
+
+    testWidgets('Review checklist opens the checklist', (tester) async {
+      setPhoneSize(tester);
+      final spy = RouteSpy();
+      await tester.pumpWidget(await buildLocal(spy: spy));
+      await pumpScreen(tester);
+
+      await tester.tap(find.text('Review checklist'));
+      await pumpScreen(tester);
+
+      expect(find.byType(Checkbox), findsNWidgets(10));
+      expect(spy.locations, isEmpty);
+    });
+
+    testWidgets('Skip starts recording without the checklist', (tester) async {
+      setPhoneSize(tester);
+      final spy = RouteSpy();
+      await tester.pumpWidget(await buildLocal(spy: spy));
+      await pumpScreen(tester);
+
+      await tester.tap(find.text('Skip'));
+      await pumpScreen(tester);
+
+      expect(spy.last, '/boats/b1/record?autostart=true');
+      expect(find.byType(Checkbox), findsNothing);
+    });
+
+    testWidgets('remembering Skip persists the choice', (tester) async {
+      setPhoneSize(tester);
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      await tester.pumpWidget(await buildLocal(prefs: prefs));
+      await pumpScreen(tester);
+
+      await tester.tap(find.text('Remember my choice'));
+      await pumpScreen(tester);
+      await tester.tap(find.text('Skip'));
+      await pumpScreen(tester);
+
+      expect(prefs.getString('settings_pretrip_checklist'), 'skip');
+    });
+
+    testWidgets('not remembering leaves the question for the next trip',
+        (tester) async {
+      setPhoneSize(tester);
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      await tester.pumpWidget(await buildLocal(prefs: prefs));
+      await pumpScreen(tester);
+
+      await tester.tap(find.text('Skip'));
+      await pumpScreen(tester);
+
+      expect(prefs.getString('settings_pretrip_checklist'), isNull);
+    });
+
+    testWidgets('a remembered Skip does not ask again and starts the trip',
+        (tester) async {
+      setPhoneSize(tester);
+      final spy = RouteSpy();
+      await tester.pumpWidget(await buildLocal(spy: spy, mode: 'skip'));
+      await pumpScreen(tester);
+
+      expect(find.text('Review checklist'), findsNothing);
+      expect(find.byType(Checkbox), findsNothing);
+      expect(spy.last, '/boats/b1/record?autostart=true');
+    });
+
+    testWidgets('a remembered Review opens the checklist without asking',
+        (tester) async {
+      setPhoneSize(tester);
+      final spy = RouteSpy();
+      await tester.pumpWidget(await buildLocal(spy: spy, mode: 'review'));
+      await pumpScreen(tester);
+
+      expect(find.text('Review checklist'), findsNothing);
+      expect(find.byType(Checkbox), findsNWidgets(10));
+      expect(spy.locations, isEmpty);
     });
   });
 

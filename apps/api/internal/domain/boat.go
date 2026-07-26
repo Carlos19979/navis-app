@@ -61,3 +61,11 @@ type BoatMember struct {
 	Name        string
 	Permissions BoatPermissions
 }
+
+// SharedBoat is a boat the user reaches through a membership, paired with what
+// that membership lets them do. The list screen needs both together: without
+// the permissions it can only find out an action is forbidden by attempting it.
+type SharedBoat struct {
+	Boat        Boat
+	Permissions BoatPermissions
+}
