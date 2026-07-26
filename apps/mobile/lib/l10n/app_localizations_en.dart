@@ -1094,6 +1094,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forecastNotAvailable => 'Forecast data not available.';
 
   @override
+  String get planCheckFailed =>
+      'We couldn\'t check your plan. Check your connection and try again.';
+
+  @override
+  String get weatherLoadFailed =>
+      'We couldn\'t load the forecast. Check your connection and try again.';
+
+  @override
+  String get hourlyLoadFailed => 'Couldn\'t load this day\'s hours.';
+
+  @override
   String memberSince(String date) {
     return 'Member since $date';
   }
@@ -1258,6 +1269,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get navisUser => 'Navis User';
+
+  @override
+  String get editNameTitle => 'Your name';
+
+  @override
+  String get yourName => 'How should we call you?';
 
   @override
   String get previousMonth => 'Previous month';

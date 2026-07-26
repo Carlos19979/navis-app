@@ -5,6 +5,8 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/Carlos19979/navis-app/apps/api/pkg/pagination"
+
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 )
 
@@ -43,16 +45,26 @@ func TestPortService_WithinBBox_ClampsLimit(t *testing.T) {
 	}
 	svc := NewPortService(repo)
 
-	// A page size above the API cap (50) must be clamped before the repo call.
-	ports, _, err := svc.WithinBBox(context.Background(), 2.0, 39.0, 3.0, 40.0, "", 500)
+	// The viewport feed pages up to MaxViewportLimit (a whole viewport has to
+	// arrive in one request), and anything above that is still clamped.
+	ports, _, err := svc.WithinBBox(context.Background(), 2.0, 39.0, 3.0, 40.0, "", 5000)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if gotLimit != 50 {
-		t.Errorf("limit = %d, want 50 (clamped)", gotLimit)
+	if gotLimit != pagination.MaxViewportLimit {
+		t.Errorf("limit = %d, want %d (clamped)", gotLimit, pagination.MaxViewportLimit)
 	}
 	if len(ports) != 1 {
 		t.Errorf("ports = %d, want 1", len(ports))
+	}
+
+	// A viewport-sized page passes through untouched: this is the request the
+	// map actually makes, and splitting it would reintroduce per-pan paging.
+	if _, _, err := svc.WithinBBox(context.Background(), 2.0, 39.0, 3.0, 40.0, "", 300); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if gotLimit != 300 {
+		t.Errorf("limit = %d, want 300 (unclamped)", gotLimit)
 	}
 }
 

@@ -1,30 +1,74 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
+import 'package:navis_mobile/core/theme/motion.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/weather/domain/entities/daily_weather.dart';
+import 'package:navis_mobile/features/weather/domain/entities/hourly_weather.dart';
+import 'package:navis_mobile/features/weather/presentation/providers/weather_provider.dart';
+import 'package:navis_mobile/features/weather/presentation/widgets/hourly_forecast_strip.dart';
 import 'package:navis_mobile/features/weather/presentation/widgets/weather_visuals.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
+import 'package:navis_mobile/shared/widgets/navis_inline_error.dart';
+import 'package:navis_mobile/shared/widgets/navis_loading.dart';
 
-/// A vertical list of daily forecasts with temperature range bars (iOS-style).
-class DailyForecastList extends StatelessWidget {
-  const DailyForecastList({super.key, required this.days, this.onDayTap});
+/// The week's forecast as a vertical list of days with temperature range bars,
+/// where tapping a day expands its hourly detail in place (iOS-style).
+///
+/// One day is open at a time. Today's hours come bundled with the overview;
+/// later days are fetched on demand the first time they are opened, and cached
+/// by [hourlyForDayProvider] so reopening one is instant.
+class DailyForecastList extends ConsumerStatefulWidget {
+  const DailyForecastList({
+    super.key,
+    required this.days,
+    this.todayHours = const [],
+    this.initiallyExpanded,
+  });
 
   final List<DailyWeather> days;
-  final void Function(DailyWeather day)? onDayTap;
+
+  /// Hours for day 0, already loaded as part of the weather overview.
+  final List<HourlyWeather> todayHours;
+
+  /// Index of the day open on first build. Null means all collapsed.
+  final int? initiallyExpanded;
+
+  @override
+  ConsumerState<DailyForecastList> createState() => _DailyForecastListState();
+}
+
+class _DailyForecastListState extends ConsumerState<DailyForecastList> {
+  int? _expanded;
+
+  @override
+  void initState() {
+    super.initState();
+    _expanded = widget.initiallyExpanded;
+  }
+
+  void _toggle(int index) {
+    setState(() => _expanded = _expanded == index ? null : index);
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Global temperature span for normalizing the range bars.
+    final days = widget.days;
+    if (days.isEmpty) return const SizedBox.shrink();
+
+    // Temperature span across the whole week, so every range bar is drawn on
+    // the same scale and the days are comparable at a glance.
     var globalMin = days.first.temperatureMin;
     var globalMax = days.first.temperatureMax;
-    for (final d in days) {
-      globalMin = math.min(globalMin, d.temperatureMin);
-      globalMax = math.max(globalMax, d.temperatureMax);
+    for (final day in days) {
+      globalMin = math.min(globalMin, day.temperatureMin);
+      globalMax = math.max(globalMax, day.temperatureMax);
     }
 
     return NavisCard(
@@ -42,9 +86,23 @@ class DailyForecastList extends StatelessWidget {
             _DailyRow(
               day: days[i],
               isToday: i == 0,
+              expanded: _expanded == i,
               globalMin: globalMin,
               globalMax: globalMax,
-              onTap: onDayTap,
+              onTap: () => _toggle(i),
+            ),
+            // AnimatedSize gives the accordion its open/close motion without a
+            // separate controller per row.
+            AnimatedSize(
+              duration: Motion.base,
+              curve: Motion.curve,
+              alignment: Alignment.topCenter,
+              child: _expanded == i
+                  ? _DayHours(
+                      day: days[i],
+                      isToday: i == 0,
+                      todayHours: widget.todayHours)
+                  : const SizedBox(width: double.infinity),
             ),
           ],
         ],
@@ -53,20 +111,99 @@ class DailyForecastList extends StatelessWidget {
   }
 }
 
-class _DailyRow extends StatelessWidget {
-  const _DailyRow({
+/// The expanded day's hourly detail. Today reuses the hours already bundled in
+/// the overview; any other day is fetched on demand.
+class _DayHours extends ConsumerWidget {
+  const _DayHours({
     required this.day,
     required this.isToday,
-    required this.globalMin,
-    required this.globalMax,
-    this.onTap,
+    required this.todayHours,
   });
 
   final DailyWeather day;
   final bool isToday;
+  final List<HourlyWeather> todayHours;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
+
+    if (isToday) {
+      return _wrap(
+        todayHours.isEmpty
+            ? _Message(text: l.forecastNotAvailable)
+            : HourlyForecastStrip(hours: todayHours, embedded: true),
+      );
+    }
+
+    final provider = hourlyForDayProvider(day.date);
+    return _wrap(
+      switch (ref.watch(provider)) {
+        AsyncLoading() => const Padding(
+            padding: EdgeInsets.symmetric(vertical: Dimens.spaceXl),
+            child: NavisLoading(),
+          ),
+        // The reason is deliberately generic and localized: a raw exception
+        // string is neither meaningful to the user nor safe to render in a
+        // fixed-height slot.
+        AsyncError() => NavisInlineError(
+            message: l.hourlyLoadFailed,
+            onRetry: () => ref.invalidate(provider),
+          ),
+        // A future day starts at 00:00, so nothing here is "now".
+        AsyncValue(hasValue: true, :final value?) => value.isEmpty
+            ? _Message(text: l.forecastNotAvailable)
+            : HourlyForecastStrip(
+                hours: value,
+                embedded: true,
+                nowLabelled: false,
+              ),
+        _ => const SizedBox.shrink(),
+      },
+    );
+  }
+
+  Widget _wrap(Widget child) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 2, bottom: Dimens.spaceSm),
+      child: child,
+    );
+  }
+}
+
+class _Message extends StatelessWidget {
+  const _Message({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: Dimens.spaceLg,
+        vertical: Dimens.spaceMd,
+      ),
+      child: Text(text, style: TextStyle(color: context.txtSecondary)),
+    );
+  }
+}
+
+class _DailyRow extends StatelessWidget {
+  const _DailyRow({
+    required this.day,
+    required this.isToday,
+    required this.expanded,
+    required this.globalMin,
+    required this.globalMax,
+    required this.onTap,
+  });
+
+  final DailyWeather day;
+  final bool isToday;
+  final bool expanded;
   final double globalMin;
   final double globalMax;
-  final void Function(DailyWeather day)? onTap;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -82,80 +219,92 @@ class _DailyRow extends StatelessWidget {
         ? l.today
         : toBeginningOfSentenceCase(DateFormat.E(locale).format(day.date));
 
-    return InkWell(
-      onTap: onTap == null ? null : () => onTap!(day),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 44,
-              child: Text(
-                label,
+    return Semantics(
+      button: true,
+      expanded: expanded,
+      label: label,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 44,
+                child: Text(
+                  label,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ),
+              Icon(condition.icon, color: condition.color, size: 22),
+              const SizedBox(width: 10),
+              SizedBox(
+                width: 58,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _MiniStat(
+                      icon: Icons.air_rounded,
+                      value: '${day.windSpeed.round()}kt',
+                      color: windColor(day.windSpeed),
+                    ),
+                    if (day.waveHeight != null) ...[
+                      const SizedBox(height: 2),
+                      _MiniStat(
+                        icon: Icons.waves_rounded,
+                        value: '${day.waveHeight!.toStringAsFixed(1)}m',
+                        color: waveColor(day.waveHeight!),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '${day.temperatureMin.round()}°',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: primary,
+                      color: secondary,
                       fontWeight: FontWeight.w600,
                     ),
               ),
-            ),
-            Icon(condition.icon, color: condition.color, size: 22),
-            const SizedBox(width: 10),
-            SizedBox(
-              width: 58,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _MiniStat(
-                    icon: Icons.air_rounded,
-                    value: '${day.windSpeed.round()}kt',
-                    color: windColor(day.windSpeed),
-                  ),
-                  if (day.waveHeight != null) ...[
-                    const SizedBox(height: 2),
-                    _MiniStat(
-                      icon: Icons.waves_rounded,
-                      value: '${day.waveHeight!.toStringAsFixed(1)}m',
-                      color: waveColor(day.waveHeight!),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _TempRangeBar(
+                  min: day.temperatureMin,
+                  max: day.temperatureMax,
+                  globalMin: globalMin,
+                  globalMax: globalMax,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '${day.temperatureMax.round()}°',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: primary,
+                      fontWeight: FontWeight.w700,
                     ),
-                  ],
-                ],
               ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              '${day.temperatureMin.round()}°',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: secondary,
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _TempRangeBar(
-                min: day.temperatureMin,
-                max: day.temperatureMax,
-                globalMin: globalMin,
-                globalMax: globalMax,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              '${day.temperatureMax.round()}°',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: primary,
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-            if (onTap != null) ...[
               const SizedBox(width: 4),
-              Icon(
-                Icons.chevron_right_rounded,
-                size: 18,
-                color: secondary.withValues(alpha: 0.6),
+              // Rotates to point down when the day is open, so the row reads as
+              // a disclosure rather than a link to somewhere else.
+              AnimatedRotation(
+                turns: expanded ? 0.25 : 0,
+                duration: Motion.fast,
+                curve: Motion.curve,
+                child: Icon(
+                  Icons.chevron_right_rounded,
+                  size: 18,
+                  color: expanded
+                      ? AppColors.cyan
+                      : secondary.withValues(alpha: 0.6),
+                ),
               ),
             ],
-          ],
+          ),
         ),
       ),
     );

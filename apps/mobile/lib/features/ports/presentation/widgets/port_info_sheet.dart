@@ -14,6 +14,7 @@ void showPortInfoSheet(
 }) {
   showModalBottomSheet<void>(
     context: context,
+    useRootNavigator: true,
     backgroundColor: AppColors.navy,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),

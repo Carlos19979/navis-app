@@ -195,6 +195,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
   Future<void> _pickScan() async {
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
+      useRootNavigator: true,
       builder: (context) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,

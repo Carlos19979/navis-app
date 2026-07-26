@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:navis_mobile/features/ports/data/repositories/port_repository.dart';
@@ -28,23 +27,22 @@ typedef PortsBBox = ({
   double maxLat,
 });
 
-/// Below this zoom the visible area is too large to fetch ports for; the map
-/// shows none rather than requesting a near-global slice (the server also
-/// rejects boxes wider than 90°).
-const double kMinPortsZoom = 7;
+/// Below this zoom a viewport holds more ports than one page can carry, so the
+/// markers would be an arbitrary (alphabetical) slice of a dense area rather
+/// than a useful picture — and far enough out the server rejects the span.
+///
+/// Zooming out past it stops *fetching*; the markers already drawn stay put
+/// (see `ViewportPortsController`), so zooming back in never shows an empty map.
+/// Keep it low enough that a regional view — what the map and the home-port
+/// picker open on — is inside it.
+const double kMinPortsZoom = 6;
 
 /// Grid, in degrees, the visible bounds snap to so small pans reuse the same
-/// cache key instead of refetching on every frame.
+/// viewport instead of refetching on every frame. Roughly 11 km.
 const double _bboxSnapGrid = 0.1;
 
-/// Hard cap on markers fetched for one viewport, across paginated requests.
-const int _maxVisiblePorts = 300;
-
-/// Max pages walked per viewport (the server caps each page at 50).
-const int _maxPortPages = 6;
-
 /// Snaps raw visible bounds outward to [_bboxSnapGrid] so panning within a
-/// grid cell keeps the same provider key (debounce-by-grid), and clamps to
+/// grid cell keeps the same viewport (debounce-by-grid), and clamps to
 /// valid WGS84 ranges.
 PortsBBox snapBBox({
   required double minLon,
@@ -61,44 +59,6 @@ PortsBBox snapBBox({
     maxLat: ceil(maxLat).clamp(-90.0, 90.0).toDouble(),
   );
 }
-
-/// Ports inside the snapped viewport bounding box. Walks a bounded number of
-/// cursor pages and caps the total markers so a dense area never floods the
-/// map; autoDispose releases stale boxes as the user pans away.
-final visiblePortsProvider =
-    FutureProvider.autoDispose.family<List<Port>, PortsBBox>(
-  (ref, bbox) async {
-    final repository = ref.watch(portRepositoryProvider);
-    final ports = <Port>[];
-    String? cursor;
-
-    for (var page = 0; page < _maxPortPages; page++) {
-      final result = await repository.getWithinBBox(
-        minLon: bbox.minLon,
-        minLat: bbox.minLat,
-        maxLon: bbox.maxLon,
-        maxLat: bbox.maxLat,
-        cursor: cursor,
-      );
-      ports.addAll(result.ports);
-      cursor = result.nextCursor;
-
-      if (cursor == null) break;
-      if (ports.length >= _maxVisiblePorts) {
-        debugPrint(
-          '[ports] viewport truncated at ${ports.length} markers '
-          '(more available for this area)',
-        );
-        break;
-      }
-    }
-
-    if (ports.length > _maxVisiblePorts) {
-      return ports.sublist(0, _maxVisiblePorts);
-    }
-    return ports;
-  },
-);
 
 /// Arguments for [portSearchProvider]: the (already trimmed/debounced) query
 /// and an optional reference point to order results by distance.

@@ -1,17 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
-/// Snapped visible bounding box driving the viewport ports fetch. Kept as a
-/// plain record (not a ports-feature type) so this charts provider stays free
-/// of cross-feature imports; it is structurally compatible with the ports
-/// feature's `PortsBBox`.
-typedef ChartBBox = ({
-  double minLon,
-  double minLat,
-  double maxLon,
-  double maxLat,
-});
-
+/// Chart map state: the layer toggles plus the last *settled* camera.
+///
+/// Deliberately NOT updated while a gesture is in flight. The camera reports a
+/// new position on every frame of a pan or pinch, and pushing that into
+/// provider state rebuilt the whole screen — map layers, overlays and all — 60
+/// times a second, which is what made panning and zooming feel stuck. The live
+/// camera stays local to the screen (a ValueNotifier for the zoom readout, and
+/// the ports controller for the viewport feed); only the resting position is
+/// stored here, so returning to the tab reopens where the user left off.
 class MapState {
   const MapState({
     required this.center,
@@ -20,7 +18,6 @@ class MapState {
     this.showPosition = true,
     this.showTracks = false,
     this.showPorts = true,
-    this.portsBBox,
   });
 
   final LatLng center;
@@ -30,10 +27,6 @@ class MapState {
   final bool showTracks;
   final bool showPorts;
 
-  /// Snapped bounds of the currently visible area; null until the map reports
-  /// its first camera position.
-  final ChartBBox? portsBBox;
-
   MapState copyWith({
     LatLng? center,
     double? zoom,
@@ -41,7 +34,6 @@ class MapState {
     bool? showPosition,
     bool? showTracks,
     bool? showPorts,
-    ChartBBox? portsBBox,
   }) {
     return MapState(
       center: center ?? this.center,
@@ -50,7 +42,6 @@ class MapState {
       showPosition: showPosition ?? this.showPosition,
       showTracks: showTracks ?? this.showTracks,
       showPorts: showPorts ?? this.showPorts,
-      portsBBox: portsBBox ?? this.portsBBox,
     );
   }
 }
@@ -66,31 +57,15 @@ class ChartNotifier extends StateNotifier<MapState> {
           zoom: 10,
         ));
 
-  void setCenter(LatLng center) {
-    state = state.copyWith(center: center);
-  }
-
-  void setZoom(double zoom) {
-    state = state.copyWith(zoom: zoom);
-  }
-
-  /// Updates the snapped visible bounds, but only when they actually change,
-  /// so panning within a snap-grid cell does not trigger a rebuild/refetch.
-  void setPortsBBox(ChartBBox bbox) {
-    if (state.portsBBox == bbox) return;
-    state = state.copyWith(portsBBox: bbox);
-  }
-
-  void zoomIn() {
-    if (state.zoom < 18) {
-      state = state.copyWith(zoom: state.zoom + 1);
+  /// Records where the camera came to rest. Called on gesture *end*, never
+  /// per frame, and it no-ops when nothing moved enough to matter.
+  void settleCamera(LatLng center, double zoom) {
+    if (zoom == state.zoom &&
+        (center.latitude - state.center.latitude).abs() < 1e-6 &&
+        (center.longitude - state.center.longitude).abs() < 1e-6) {
+      return;
     }
-  }
-
-  void zoomOut() {
-    if (state.zoom > 3) {
-      state = state.copyWith(zoom: state.zoom - 1);
-    }
+    state = state.copyWith(center: center, zoom: zoom);
   }
 
   void toggleSeamarks() {

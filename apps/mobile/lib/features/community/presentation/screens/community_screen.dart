@@ -50,7 +50,19 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
 
   Future<void> _onCreateGroup() async {
     final l = AppLocalizations.of(context)!;
-    if (!ref.read(effectiveTierProvider).canCreateGroups) {
+    // Wait for the real plan before gating. Reading the tier synchronously
+    // reports free while /me is in flight or after it failed, which showed a
+    // paywall to users who already had Pro.
+    final tier = await resolveTier(ref);
+    if (!mounted) return;
+    if (tier == null) {
+      // Plan unknown (offline / request failed): say so and let them retry,
+      // rather than implying they need to buy something they may already own.
+      NavisSnackbar.error(context, l.planCheckFailed);
+      ref.invalidate(accountProvider);
+      return;
+    }
+    if (!tier.canCreateGroups) {
       final purchased =
           await showPaywall(context, ref, reason: l.paywallReasonGroups);
       if (!purchased || !mounted) return;

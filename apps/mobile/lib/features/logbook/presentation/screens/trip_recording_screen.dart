@@ -19,6 +19,7 @@ import 'package:navis_mobile/features/logbook/presentation/widgets/navigation_hu
 import 'package:navis_mobile/features/logbook/presentation/widgets/recording_controls.dart';
 import 'package:navis_mobile/features/logbook/presentation/widgets/trip_completion_dialog.dart';
 import 'package:navis_mobile/features/ports/domain/entities/port.dart';
+import 'package:navis_mobile/features/ports/presentation/controllers/viewport_ports_controller.dart';
 import 'package:navis_mobile/features/ports/presentation/providers/port_provider.dart';
 import 'package:navis_mobile/features/ports/presentation/widgets/port_markers_layer.dart';
 import 'package:navis_mobile/features/regattas/presentation/providers/regatta_provider.dart';
@@ -66,8 +67,9 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
   bool _showPorts = true;
   final MapController _mapController = MapController();
 
-  /// Snapped visible bounds driving the viewport ports fetch.
-  PortsBBox? _bbox;
+  /// Viewport ports feed. Publishes its markers as a listenable, so panning
+  /// repaints the marker layer instead of this whole screen.
+  late final ViewportPortsController _ports;
 
   // Incremental polyline cache: only the segments for NEW points are built on
   // rebuild instead of the whole track every frame.
@@ -80,6 +82,10 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _ports = ViewportPortsController(
+      repository: ref.read(portRepositoryProvider),
+      enabled: _showPorts,
+    );
     _acquireInitialPosition();
     // Auto-start when coming from the checklist (regatta trip or solo
     // autostart) unless a recording is already running (resume navigation).
@@ -94,6 +100,7 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _ports.dispose();
     _mapController.dispose();
     super.dispose();
   }
@@ -320,15 +327,17 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
     }
   }
 
-  void _seedPortsBBox() {
-    final bounds = _mapController.camera.visibleBounds;
-    final snapped = snapBBox(
-      minLon: bounds.west,
-      minLat: bounds.south,
-      maxLon: bounds.east,
-      maxLat: bounds.north,
+  /// Called on every camera frame — everything here is a cheap comparison or
+  /// debounced inside the controller.
+  void _onCameraChanged(MapCamera camera) {
+    final bounds = camera.visibleBounds;
+    _ports.onCameraChanged(
+      west: bounds.west,
+      south: bounds.south,
+      east: bounds.east,
+      north: bounds.north,
+      zoom: camera.zoom,
     );
-    if (snapped != _bbox) setState(() => _bbox = snapped);
   }
 
   void _centerOnPosition() {
@@ -393,12 +402,6 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
       },
     );
 
-    // Ports for the visible area (viewport-driven, scales to a global dataset).
-    final bbox = _bbox;
-    final visiblePorts = _showPorts && bbox != null
-        ? ref.watch(visiblePortsProvider(bbox)).valueOrNull ?? const <Port>[]
-        : const <Port>[];
-
     return Scaffold(
       backgroundColor: AppColors.navy,
       body: saving
@@ -426,23 +429,13 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
                       interactionOptions: const InteractionOptions(
                         flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
                       ),
-                      onMapReady: _seedPortsBBox,
+                      onMapReady: () => _onCameraChanged(_mapController.camera),
                       onPositionChanged: (camera, hasGesture) {
-                        final bounds = camera.visibleBounds;
-                        final snapped = snapBBox(
-                          minLon: bounds.west,
-                          minLat: bounds.south,
-                          maxLon: bounds.east,
-                          maxLat: bounds.north,
-                        );
-                        // Only rebuild when the follow flag or the snapped box
-                        // actually changes, not on every pan frame.
-                        final followChanged = hasGesture && _followMode;
-                        if (followChanged || snapped != _bbox) {
-                          setState(() {
-                            if (hasGesture) _followMode = false;
-                            _bbox = snapped;
-                          });
+                        _onCameraChanged(camera);
+                        // The only state worth a rebuild here is dropping out
+                        // of follow mode, and that happens once per gesture.
+                        if (hasGesture && _followMode) {
+                          setState(() => _followMode = false);
                         }
                       },
                     ),
@@ -453,11 +446,16 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
                         PolylineLayer(
                           polylines: _trackPolylines(recording.trackPoints),
                         ),
-                      if (visiblePorts.isNotEmpty)
-                        PortMarkersLayer(
-                          ports: visiblePorts,
-                          userPosition: recording.currentPosition,
-                        ),
+                      ValueListenableBuilder<List<Port>>(
+                        valueListenable: _ports,
+                        builder: (context, ports, _) {
+                          if (ports.isEmpty) return const SizedBox.shrink();
+                          return PortMarkersLayer(
+                            ports: ports,
+                            userPosition: recording.currentPosition,
+                          );
+                        },
+                      ),
                       if (recording.currentPosition != null)
                         PositionIndicator(
                           position: recording.currentPosition!,
@@ -532,9 +530,10 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
                     () => _showSeamarks = !_showSeamarks,
                   ),
                   showSeamarks: _showSeamarks,
-                  onTogglePorts: () => setState(
-                    () => _showPorts = !_showPorts,
-                  ),
+                  onTogglePorts: () {
+                    setState(() => _showPorts = !_showPorts);
+                    _ports.setEnabled(_showPorts);
+                  },
                   showPorts: _showPorts,
                 ),
                 Positioned(

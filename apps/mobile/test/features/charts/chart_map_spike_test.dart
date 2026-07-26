@@ -7,7 +7,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/charts/presentation/screens/chart_screen.dart';
-import 'package:navis_mobile/features/ports/presentation/providers/port_provider.dart';
 
 import '../../helpers/helpers.dart';
 
@@ -70,7 +69,7 @@ void main() {
         const ChartScreen(),
         overrides: [
           boatsProvider.overrideWith(_FakeBoatsNotifier.new),
-          visiblePortsProvider.overrideWith((ref, bbox) async => []),
+          overridePorts(),
         ],
       ),
     );

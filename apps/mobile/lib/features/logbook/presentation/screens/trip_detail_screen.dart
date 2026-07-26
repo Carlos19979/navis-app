@@ -423,6 +423,7 @@ class TripDetailScreen extends ConsumerWidget {
       final trip = value;
       showModalBottomSheet<void>(
         context: context,
+        useRootNavigator: true,
         backgroundColor: context.dialogSurface,
         showDragHandle: true,
         builder: (sheetCtx) => SafeArea(

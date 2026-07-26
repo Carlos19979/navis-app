@@ -305,6 +305,7 @@ class _BoatDetailView extends ConsumerWidget {
 
     await showModalBottomSheet<void>(
       context: context,
+      useRootNavigator: true,
       backgroundColor: context.dialogSurface,
       isScrollControlled: true,
       builder: (ctx) => Padding(

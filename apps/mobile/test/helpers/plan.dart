@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:navis_mobile/features/billing/billing.dart';
+import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
 import 'package:navis_mobile/features/profile/data/account_provider.dart';
 
 /// Builds an [Account] whose capabilities match a subscription [tier], mirroring
@@ -83,10 +84,11 @@ List<Override> planOverrides({
   ];
 }
 
-/// Asserts whether the Navis paywall sheet is on screen.
+/// Asserts whether the Navis paywall sheet is on screen. Keyed rather than
+/// matched on the heading, which names the tier(s) actually on offer.
 void expectPaywall({bool shown = true}) {
   expect(
-    find.text('Navis Plus & Pro'),
+    find.byKey(paywallSheetKey),
     shown ? findsOneWidget : findsNothing,
   );
 }

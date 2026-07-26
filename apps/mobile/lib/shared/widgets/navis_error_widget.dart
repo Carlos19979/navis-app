@@ -19,59 +19,78 @@ class NavisErrorWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: NavisCard(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  color: AppColors.red.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.error_outline_rounded,
-                  size: 36,
-                  color: AppColors.red,
-                ),
-              )
-                  .animate()
-                  .shake(
-                    duration: 600.ms,
-                    hz: 3,
-                    offset: const Offset(2, 0),
-                  )
-                  .fadeIn(duration: 300.ms),
-              const SizedBox(height: 20),
-              Text(
-                AppLocalizations.of(context)!.somethingWentWrong,
-                style: Theme.of(context).textTheme.titleMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: context.txtSecondary,
-                    ),
-              ),
-              if (onRetry != null) ...[
-                const SizedBox(height: 24),
-                NavisButton(
-                  label: AppLocalizations.of(context)!.retry,
-                  icon: Icons.refresh_rounded,
-                  variant: NavisButtonVariant.secondary,
-                  onPressed: onRetry!,
-                ),
-              ],
-            ],
+    // Centred when there is room, scrollable when there is not — so a short
+    // slot or a large text scale scrolls the card instead of overflowing its
+    // bounds and painting text outside it.
+    //
+    // For an error that has to sit inside a card or a list row, reach for
+    // NavisInlineError instead: this one is sized for a full page.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final content = _card(context);
+        if (!constraints.hasBoundedHeight) return Center(child: content);
+        return SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Center(child: content),
           ),
+        );
+      },
+    );
+  }
+
+  Widget _card(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(32),
+      child: NavisCard(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: AppColors.red.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.error_outline_rounded,
+                size: 36,
+                color: AppColors.red,
+              ),
+            )
+                .animate()
+                .shake(
+                  duration: 600.ms,
+                  hz: 3,
+                  offset: const Offset(2, 0),
+                )
+                .fadeIn(duration: 300.ms),
+            const SizedBox(height: 20),
+            Text(
+              AppLocalizations.of(context)!.somethingWentWrong,
+              style: Theme.of(context).textTheme.titleMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: context.txtSecondary,
+                  ),
+            ),
+            if (onRetry != null) ...[
+              const SizedBox(height: 24),
+              NavisButton(
+                label: AppLocalizations.of(context)!.retry,
+                icon: Icons.refresh_rounded,
+                variant: NavisButtonVariant.secondary,
+                onPressed: onRetry!,
+              ),
+            ],
+          ],
         ),
       ),
     );

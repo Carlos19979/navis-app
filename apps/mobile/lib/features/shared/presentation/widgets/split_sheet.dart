@@ -22,6 +22,7 @@ Future<void> showSplitSheet(
 }) {
   return showModalBottomSheet<void>(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     backgroundColor: context.dialogSurface,
     builder: (_) => _SplitSheet(

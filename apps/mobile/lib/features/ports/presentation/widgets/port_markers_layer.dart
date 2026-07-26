@@ -30,47 +30,72 @@ class PortMarkersLayer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MarkerLayer(
-      markers: ports.map((port) {
-        final icon = _iconForType(port.portType);
-        return Marker(
-          point: LatLng(port.lat, port.lon),
-          width: 36,
-          height: 36,
-          child: GestureDetector(
-            onTap: () {
-              if (onPortTap != null) {
-                onPortTap!(port);
-              } else {
-                showPortInfoSheet(
-                  context,
-                  port: port,
-                  userPosition: userPosition,
-                );
-              }
-            },
-            child: Tooltip(
-              message: port.name,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppColors.navy.withValues(alpha: 0.9),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: AppColors.cyan.withValues(alpha: 0.6),
-                    width: 1.5,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.cyan.withValues(alpha: 0.3),
-                      blurRadius: 6,
-                    ),
-                  ],
-                ),
-                child: Icon(icon, color: AppColors.cyan, size: 18),
-              ),
+      markers: [
+        for (final port in ports)
+          Marker(
+            point: LatLng(port.lat, port.lon),
+            width: 36,
+            height: 36,
+            child: _PortMarker(
+              icon: _iconForType(port.portType),
+              label: port.name,
+              onTap: () {
+                if (onPortTap != null) {
+                  onPortTap!(port);
+                } else {
+                  showPortInfoSheet(
+                    context,
+                    port: port,
+                    userPosition: userPosition,
+                  );
+                }
+              },
             ),
           ),
-        );
-      }).toList(),
+      ],
+    );
+  }
+}
+
+/// A single port pin.
+///
+/// Kept deliberately cheap: a viewport can hold hundreds of these, and they are
+/// laid out again on every camera frame. So no [Tooltip] (each one is a
+/// stateful overlay host plus a long-press recognizer — and a hover tooltip is
+/// no use on a touch map, tapping opens the info sheet) and no blurred
+/// [BoxShadow] (a per-marker blur pass is the single most expensive thing you
+/// can put in a map layer). The name still reaches assistive tech via
+/// [Semantics].
+class _PortMarker extends StatelessWidget {
+  const _PortMarker({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: label,
+      child: GestureDetector(
+        onTap: onTap,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: AppColors.navy.withValues(alpha: 0.9),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: AppColors.cyan.withValues(alpha: 0.6),
+              width: 1.5,
+            ),
+          ),
+          child: Icon(icon, color: AppColors.cyan, size: 18),
+        ),
+      ),
     );
   }
 }

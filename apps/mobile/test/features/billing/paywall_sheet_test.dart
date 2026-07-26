@@ -93,7 +93,9 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Subscribe'), findsNothing);
-      expect(find.text('Restore purchases'), findsNothing);
+      // Restore stays available: someone who already owns a subscription must
+      // not be stranded here just because the product list failed to load.
+      expect(find.text('Restore purchases'), findsOneWidget);
     });
 
     testWidgets('renders package tiles with the first one pre-selected',
@@ -234,6 +236,80 @@ void main() {
       expectPaywall();
       expect(result, isNull);
       expectSnackbar(tester, 'No purchases to restore.');
+
+      await drain(tester);
+    });
+  });
+
+  group('PaywallSheet tiers on offer', () {
+    /// Opens the paywall for a gate that requires [requiredTier].
+    Future<void> openFor(WidgetTester tester, PlanTier requiredTier) async {
+      setPhoneSize(tester);
+      await tester.pumpWidget(
+        buildTestApp(
+          Consumer(
+            builder: (context, ref, _) => Scaffold(
+              body: Center(
+                child: ElevatedButton(
+                  onPressed: () => showPaywall(
+                    context,
+                    ref,
+                    requiredTier: requiredTier,
+                  ),
+                  child: const Text('open paywall'),
+                ),
+              ),
+            ),
+          ),
+          overrides: [...planOverrides(), billingOverride(billing)],
+        ),
+      );
+      await tester.tap(find.text('open paywall'));
+      await pumpScreen(tester);
+    }
+
+    testWidgets('a Pro-only gate offers Pro alone and is titled Navis Pro',
+        (tester) async {
+      when(() => billing.allPackages()).thenAnswer((_) async => [
+            makePackage(tier: PlanTier.plus),
+            makePackage(),
+          ]);
+
+      await openFor(tester, PlanTier.pro);
+
+      // Plus cannot unlock a Pro-only action, so it is not offered — and the
+      // heading names only what is on offer.
+      expect(find.text('Navis Pro'), findsOneWidget);
+      expect(find.text('Navis Plus'), findsNothing);
+      expect(find.text('Navis Plus & Pro'), findsNothing);
+
+      await drain(tester);
+    });
+
+    testWidgets('a Plus gate offers both tiers, titled Navis Plus & Pro',
+        (tester) async {
+      when(() => billing.allPackages()).thenAnswer((_) async => [
+            makePackage(tier: PlanTier.plus),
+            makePackage(),
+          ]);
+
+      await openFor(tester, PlanTier.plus);
+
+      // Upgrading past what was asked for is a real choice, so both show.
+      expect(find.text('Navis Plus & Pro'), findsOneWidget);
+      expect(find.text('Navis Plus'), findsOneWidget);
+      expect(find.text('Navis Pro'), findsOneWidget);
+
+      await drain(tester);
+    });
+
+    testWidgets('with nothing to sell, the heading still names the tier needed',
+        (tester) async {
+      when(() => billing.allPackages()).thenAnswer((_) async => const []);
+
+      await openFor(tester, PlanTier.pro);
+
+      expect(find.text('Navis Pro'), findsOneWidget);
 
       await drain(tester);
     });

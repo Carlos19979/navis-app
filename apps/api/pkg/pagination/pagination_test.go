@@ -85,6 +85,35 @@ func TestParseCursor_ClampsLimit(t *testing.T) {
 	}
 }
 
+func TestParseCursorTo_ViewportCeiling(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		query string
+		max   int
+		want  int
+	}{
+		// A viewport-sized page passes through: the map needs its markers in
+		// one request, not spread over cursor pages.
+		{"?limit=300", MaxViewportLimit, 300},
+		{"?limit=400", MaxViewportLimit, MaxViewportLimit},
+		// Above the ceiling it is still clamped — the raise is not a bypass.
+		{"?limit=99999", MaxViewportLimit, MaxViewportLimit},
+		// The default page size is unchanged when no limit is asked for.
+		{"", MaxViewportLimit, 20},
+		// A zero/absurd ceiling falls back to the API-wide cap.
+		{"?limit=300", 0, 50},
+		// A ceiling below the default must not hand back more than it allows.
+		{"", 5, 5},
+	}
+	for _, tt := range tests {
+		r := httptest.NewRequest("GET", "/x"+tt.query, nil)
+		if _, limit := ParseCursorTo(r, tt.max); limit != tt.want {
+			t.Errorf("ParseCursorTo(%q, %d) limit = %d, want %d",
+				tt.query, tt.max, limit, tt.want)
+		}
+	}
+}
+
 func TestParseCursor_PassesCursorThroughVerbatim(t *testing.T) {
 	t.Parallel()
 	opaque := EncodeKeysetTime(time.Now(), "id-1")

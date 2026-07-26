@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:navis_mobile/features/boat/presentation/screens/map_picker_screen.dart';
 import 'package:navis_mobile/features/ports/domain/entities/port.dart';
-import 'package:navis_mobile/features/ports/presentation/providers/port_provider.dart';
 
 import '../../helpers/helpers.dart';
 
@@ -49,7 +48,7 @@ void main() {
         showNameField: showNameField,
       ),
       overrides: [
-        visiblePortsProvider.overrideWith((ref, bbox) async => ports),
+        overridePorts(ports: ports),
       ],
     );
   }
@@ -157,7 +156,7 @@ void main() {
             ),
           ),
           overrides: [
-            visiblePortsProvider.overrideWith((ref, bbox) async => <Port>[]),
+            overridePorts(),
           ],
         ),
       );
@@ -193,7 +192,9 @@ void main() {
       await tester.pumpWidget(buildSubject(showNameField: true, ports: [port]));
       await pumpScreen(tester);
 
-      await tester.tap(find.byTooltip('Port Andratx'));
+      // Port pins carry their name as a semantics label, not a tooltip: a
+      // viewport holds hundreds of them and a Tooltip each was too expensive.
+      await tester.tap(find.bySemanticsLabel('Port Andratx'));
       await pumpScreen(tester);
 
       // Name field is pre-filled with the port name and confirm unlocks.

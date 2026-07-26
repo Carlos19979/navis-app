@@ -96,7 +96,9 @@ func (h *PortHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cursor, limit := pagination.ParseCursor(r)
+	// The viewport feed gets a higher page ceiling than the API default so a
+	// map screen fetches its markers in one request instead of walking pages.
+	cursor, limit := pagination.ParseCursorTo(r, pagination.MaxViewportLimit)
 
 	ports, nextCursor, err := h.svc.WithinBBox(r.Context(), minLon, minLat, maxLon, maxLat, cursor, limit)
 	if err != nil {

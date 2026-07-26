@@ -10,7 +10,6 @@ import 'package:navis_mobile/features/charts/presentation/providers/chart_provid
 import 'package:navis_mobile/features/charts/presentation/screens/chart_screen.dart';
 import 'package:navis_mobile/features/logbook/domain/entities/trip.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
-import 'package:navis_mobile/features/ports/presentation/providers/port_provider.dart';
 
 import '../../helpers/helpers.dart';
 
@@ -63,7 +62,7 @@ void main() {
       buildTestApp(
         const ChartScreen(),
         overrides: [
-          visiblePortsProvider.overrideWith((ref, bbox) async => []),
+          overridePorts(),
           boatsProvider.overrideWith(
             () => _FakeBoatsNotifier(boats ?? [makeBoat()]),
           ),

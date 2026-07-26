@@ -56,8 +56,11 @@ const maxBBoxSpanDeg = 90.0
 // WithinBBox returns ports inside the geographic bounding box
 // [minLon, minLat, maxLon, maxLat], keyset-paginated by (name, id). It clamps
 // the page size and validates the box before hitting the repository.
+//
+// The page ceiling is [pagination.MaxViewportLimit], not the API-wide default:
+// a map viewport has to arrive in a single request (see that constant).
 func (s *PortService) WithinBBox(ctx context.Context, minLon, minLat, maxLon, maxLat float64, cursor string, limit int) ([]domain.Port, string, error) {
-	limit = pagination.ClampLimit(limit)
+	limit = pagination.ClampLimitTo(limit, pagination.MaxViewportLimit)
 
 	if err := validateBBox(minLon, minLat, maxLon, maxLat); err != nil {
 		return nil, "", err
