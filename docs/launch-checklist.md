@@ -66,12 +66,13 @@ este documento es solo el índice de progreso. Actualizado: 2026-07-15.
       Sign in with Apple + Google, SMTP de Resend como sender.
   - [x] Redirect `navis://login-callback` — verificado en el dashboard de
         `navis-prod` (2026-07-27): está en Redirect URLs, es la única.
-  - [ ] **Site URL sigue en `http://localhost:3000`.** No rompe el flujo actual
-        (la recuperación pasa un `redirect_to` explícito que sí está permitido),
-        pero es el destino de reserva cuando un redirect NO está en la lista, y
-        Supabase lo expone como `{{ .SiteURL }}` en las plantillas de correo.
-        Debería apuntar a la API, que ya sirve páginas públicas:
-        `https://navis-app-production.up.railway.app`.
+  - [x] Site URL — corregido (2026-07-27). Estaba en `http://localhost:3000`,
+        que es el destino de reserva de cualquier redirect NO listado y además
+        Supabase lo inyecta en las plantillas de correo como `{{ .SiteURL }}`.
+        Ahora apunta a `https://navis-app-production.up.railway.app/support`:
+        se eligió `/support` y no la raíz porque la raíz de la API devuelve 404,
+        y esta página ya está registrada como Support URL en App Store Connect,
+        así que quien caiga ahí encuentra algo útil.
 
 ### 5. Railway (Go API)
 - [ ] Proyecto en **región UE**, servicio con root dir `apps/api`.
