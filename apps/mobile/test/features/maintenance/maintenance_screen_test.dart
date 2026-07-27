@@ -7,7 +7,8 @@ import 'package:mocktail/mocktail.dart';
 
 import 'package:navis_mobile/core/network/storage_service.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
-import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
+import 'package:navis_mobile/features/boat/presentation/providers/boat_permissions_provider.dart';
+import 'package:navis_mobile/features/boat/presentation/widgets/permission_gate.dart';
 import 'package:navis_mobile/features/maintenance/data/maintenance_models.dart';
 import 'package:navis_mobile/features/maintenance/data/maintenance_repository.dart';
 import 'package:navis_mobile/features/maintenance/presentation/screens/maintenance_screen.dart';
@@ -16,6 +17,8 @@ import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_gradient_fab.dart';
 import 'package:navis_mobile/shared/widgets/navis_photo_strip.dart';
 import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
+
+import 'package:navis_mobile/features/maintenance/presentation/widgets/expense_period_picker.dart';
 
 import '../../helpers/helpers.dart';
 
@@ -73,14 +76,8 @@ void main() {
         ),
         boatSplitSummaryProvider.overrideWith((ref, id) async => splits),
         if (!canManage)
-          boatProvider.overrideWith(
-            (ref, id) async => makeBoat(id: id).copyWith(
-              isOwner: false,
-              permissions: const BoatPermissions(
-                canManageMaintenance: false,
-                canManageExpenses: false,
-              ),
-            ),
+          boatPermissionsProvider.overrideWith(
+            (ref, id) async => const BoatPermissions.none(),
           ),
       ],
     );
@@ -246,6 +243,9 @@ void main() {
       expect(find.byType(NavisGradientFab), findsNothing);
       expect(find.byTooltip('Record service'), findsNothing);
       expect(find.text('Suggested'), findsNothing);
+      // Blocked with a reason, not silently stripped of its buttons.
+      expect(find.byType(BlockedActionCard), findsOneWidget);
+      expect(find.text('Action unavailable'), findsOneWidget);
     });
 
     testWidgets('canManageExpenses=false hides the expenses FAB',
@@ -261,6 +261,9 @@ void main() {
       await openExpensesTab(tester);
 
       expect(find.byType(NavisGradientFab), findsNothing);
+      expect(find.byType(BlockedActionCard), findsOneWidget);
+      // Splitting writes expense_splits, guarded by the same flag.
+      expect(find.byTooltip('Split expense'), findsNothing);
 
       await drain(tester);
       await tester.pump(const Duration(seconds: 5));
@@ -529,9 +532,12 @@ void main() {
       await pumpScreen(tester);
       await openExpensesTab(tester);
 
-      // Switch to Year mode.
-      await tester.tap(find.text('Year'));
-      await tester.pump(const Duration(milliseconds: 400));
+      // Year mode is reached through the period picker now: the Month/Year
+      // segmented toggle was replaced by one tappable label.
+      await tester.tap(find.byType(ExpensePeriodSelector));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Whole year'));
+      await tester.pumpAndSettle();
 
       // March subtotal = 160, August = 40, year total = 200.
       expect(find.text('160 €'), findsOneWidget);
@@ -617,7 +623,7 @@ void main() {
       await tester.pump(const Duration(seconds: 5));
     });
 
-    testWidgets('prev-month chevron moves out of the current month',
+    testWidgets('picking another month drops this month\'s expense',
         (tester) async {
       setPhoneSize(tester);
       await tester.pumpWidget(
@@ -632,9 +638,14 @@ void main() {
       // Shows in both the card and the period-total row.
       expect(find.text('120 €'), findsNWidgets(2));
 
-      // Step back one month → this month's expense drops out.
-      await tester.tap(find.byIcon(Icons.chevron_left));
-      await tester.pump(const Duration(milliseconds: 400));
+      // Jump to a different month through the picker (the ‹ › chevrons were
+      // replaced: reaching last summer took twelve taps).
+      await tester.tap(find.byType(ExpensePeriodSelector));
+      await tester.pumpAndSettle();
+      final otherMonth = thisMonth.month == 1 ? 'Feb' : 'Jan';
+      await tester.tap(find.text(otherMonth));
+      await tester.pumpAndSettle();
+
       expect(find.text('No expenses in this period'), findsOneWidget);
       expect(find.text('120 €'), findsNothing);
 

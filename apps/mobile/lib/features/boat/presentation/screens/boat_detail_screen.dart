@@ -17,7 +17,11 @@ import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/passport/presentation/passport_export.dart';
 import 'package:navis_mobile/features/readiness/presentation/widgets/readiness_card.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
+import 'package:navis_mobile/features/boat/presentation/providers/boat_permissions_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
+import 'package:navis_mobile/features/boat/presentation/widgets/boat_members_sheet.dart';
+import 'package:navis_mobile/features/boat/presentation/widgets/permission_gate.dart';
+import 'package:navis_mobile/features/logbook/presentation/providers/trip_recording_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/boat/presentation/boat_type_label.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
@@ -28,6 +32,7 @@ import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
 import 'package:navis_mobile/shared/widgets/navis_photo_strip.dart';
 import 'package:navis_mobile/shared/widgets/navis_photo_viewer.dart';
+import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 
 class BoatDetailScreen extends ConsumerWidget {
   const BoatDetailScreen({super.key, required this.boatId});
@@ -110,6 +115,16 @@ class _BoatDetailView extends ConsumerWidget {
                       onTap: () => context.push('/boats/${boat.id}/trips'),
                     ),
                     const SizedBox(height: 10),
+                    // Trip statistics used to hang off the logbook's app bar
+                    // only. Everything about the boat is reachable from here.
+                    _ActionTile(
+                      icon: Icons.query_stats_rounded,
+                      title: l.tripStatistics,
+                      subtitle: l.tripStatisticsSubtitle,
+                      color: AppColors.green,
+                      onTap: () => context.push('/boats/${boat.id}/stats'),
+                    ),
+                    const SizedBox(height: 10),
                     _ActionTile(
                       icon: Icons.build_outlined,
                       title: l.maintenanceAndExpenses,
@@ -139,6 +154,17 @@ class _BoatDetailView extends ConsumerWidget {
                     ),
                     const SizedBox(height: 10),
                     _ActionTile(
+                      icon: Icons.anchor_rounded,
+                      title: l.anchorAlarmTitle,
+                      subtitle: l.anchorWatchSubtitle,
+                      color: AppColors.amber,
+                      badge: ref.watch(effectiveTierProvider).canAnchorAlarm
+                          ? null
+                          : l.plusBadge,
+                      onTap: () => _openAnchorWatch(context, ref, boat),
+                    ),
+                    const SizedBox(height: 10),
+                    _ActionTile(
                       icon: Icons.workspace_premium_outlined,
                       title: l.passportExport,
                       subtitle: l.passportTitle,
@@ -146,8 +172,23 @@ class _BoatDetailView extends ConsumerWidget {
                       onTap: () => exportBoatPassport(context, ref, boat),
                     ),
                     const SizedBox(height: 10),
+                    // Crew management lives here, with the rest of the boat's
+                    // sections, and only for the owner: nobody else can grant
+                    // a permission.
                     _ActionTile(
-                      icon: Icons.people_outline,
+                      icon: Icons.groups_outlined,
+                      title: l.boatCrewTitle,
+                      subtitle: l.boatCrewSubtitle,
+                      color: AppColors.green,
+                      onTap: () => showBoatMembersSheet(
+                        context,
+                        boatId: boat.id,
+                        onShare: () => _shareBoat(context, ref, boat),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    _ActionTile(
+                      icon: Icons.ios_share_rounded,
                       title: l.shareBoat,
                       subtitle: l.shareBoatSubtitle,
                       color: AppColors.cyan,
@@ -186,8 +227,18 @@ class _BoatDetailView extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    if (boat.permissions.canViewDocuments) ...[
-                      _ActionTile(
+                    // What the owner has actually granted, spelled out. A
+                    // member had no way of knowing before hitting a 403.
+                    _MyPermissionsCard(boatId: boat.id),
+                    const SizedBox(height: 10),
+                    // Documents are readable only with can_view_documents; the
+                    // gate shows the padlock and the reason instead of a tile
+                    // that answers 403.
+                    BoatPermissionGate(
+                      boatId: boat.id,
+                      area: BoatPermissionArea.viewDocuments,
+                      compact: true,
+                      child: _ActionTile(
                         icon: Icons.description_outlined,
                         title: l.documents,
                         subtitle: l.certificates,
@@ -195,14 +246,22 @@ class _BoatDetailView extends ConsumerWidget {
                         onTap: () =>
                             context.push('/boats/${boat.id}/documents'),
                       ),
-                      const SizedBox(height: 10),
-                    ],
+                    ),
+                    const SizedBox(height: 10),
                     _ActionTile(
                       icon: Icons.route_outlined,
                       title: l.logbook,
                       subtitle: l.tripHistory,
                       color: AppColors.green,
                       onTap: () => context.push('/boats/${boat.id}/trips'),
+                    ),
+                    const SizedBox(height: 10),
+                    _ActionTile(
+                      icon: Icons.query_stats_rounded,
+                      title: l.tripStatistics,
+                      subtitle: l.tripStatisticsSubtitle,
+                      color: AppColors.green,
+                      onTap: () => context.push('/boats/${boat.id}/stats'),
                     ),
                     const SizedBox(height: 10),
                     _ActionTile(
@@ -243,6 +302,37 @@ class _BoatDetailView extends ConsumerWidget {
       if (!ok || !context.mounted) return;
     }
     if (context.mounted) unawaited(context.push('/boats/${boat.id}/bookings'));
+  }
+
+  /// Opens the anchor watch (Plus+).
+  ///
+  /// This used to hang off a chip in the boats list, which was removed because
+  /// it only appeared when the user had exactly one boat. That left the anchor
+  /// watch with **no** entry point at all, so it lives here now with the rest
+  /// of the boat's sections.
+  ///
+  /// Blocked while a trip is recording: both drive the GPS stream, and running
+  /// them together is what the original guard existed to prevent.
+  Future<void> _openAnchorWatch(
+    BuildContext context,
+    WidgetRef ref,
+    Boat boat,
+  ) async {
+    final l = AppLocalizations.of(context)!;
+    if (ref.read(tripRecordingProvider).isActive) {
+      NavisSnackbar.info(context, l.anchorTripActiveBlock);
+      return;
+    }
+    if (!ref.read(effectiveTierProvider).canAnchorAlarm) {
+      final ok = await showPaywall(
+        context,
+        ref,
+        reason: l.paywallReasonAnchor,
+        requiredTier: PlanTier.plus,
+      );
+      if (!ok || !context.mounted) return;
+    }
+    if (context.mounted) unawaited(context.push('/boats/${boat.id}/anchor'));
   }
 
   Future<void> _openCostAnalytics(
@@ -366,49 +456,55 @@ class _BoatDetailView extends ConsumerWidget {
                   child: FilledButton.icon(
                     style:
                         FilledButton.styleFrom(backgroundColor: AppColors.cyan),
-                    onPressed: () =>
-                        Share.share(l.shareBoatMessage(boat.name, code)),
-                    icon: const Icon(Icons.share, size: 18),
+                    onPressed: () => _shareCodeNatively(ctx, boat, code),
+                    icon: const Icon(Icons.ios_share_rounded, size: 18),
                     label: Text(l.share),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 18),
-            Text(l.withAccess,
-                style: TextStyle(
-                    color: context.txtPrimary, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 8),
-            Consumer(
-              builder: (context, ref, _) {
-                final membersAsync = ref.watch(boatMembersProvider(boat.id));
-                return membersAsync.when(
-                  loading: () => const Padding(
-                    padding: EdgeInsets.all(8),
-                    child: LinearProgressIndicator(),
-                  ),
-                  error: (e, _) => Text(l.errorWithMessage(e.toString()),
-                      style: TextStyle(color: context.txtSecondary)),
-                  data: (members) {
-                    if (members.isEmpty) {
-                      return Text(l.notSharedYet,
-                          style: TextStyle(color: context.txtSecondary));
-                    }
-                    return Column(
-                      children: [
-                        for (final m in members)
-                          _MemberPermissionsTile(boatId: boat.id, member: m),
-                      ],
-                    );
-                  },
-                );
-              },
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  showBoatMembersSheet(context, boatId: boat.id);
+                },
+                icon: const Icon(Icons.groups_outlined, size: 18),
+                label: Text(l.boatCrewTitle),
+              ),
             ),
           ],
         ),
       ),
     );
   }
+
+  /// Hands the code to the OS share sheet — WhatsApp, Telegram, Mail, whatever
+  /// the sender uses — instead of only copying it to the clipboard.
+  ///
+  /// `sharePositionOrigin` is required on iPad, where the sheet is a popover
+  /// anchored to the button that opened it.
+  Future<void> _shareCodeNatively(
+    BuildContext context,
+    Boat boat,
+    String code,
+  ) async {
+    final l = AppLocalizations.of(context)!;
+    final box = context.findRenderObject() as RenderBox?;
+    await Share.share(
+      l.shareBoatMessageWithLink(boat.name, code, _joinLink(code)),
+      subject: l.shareBoat,
+      sharePositionOrigin: box != null && box.hasSize
+          ? box.localToGlobal(Offset.zero) & box.size
+          : null,
+    );
+  }
+
+  /// Deep link that opens the app straight on the join flow with the code
+  /// pre-filled. The code stays in the message body so it also works by hand.
+  String _joinLink(String code) => 'navis://join?code=$code';
 
   Future<void> _leaveBoat(
       BuildContext context, WidgetRef ref, Boat boat) async {
@@ -765,89 +861,109 @@ class _ActionTile extends StatelessWidget {
   }
 }
 
-/// A shared member with a per-permission toggle editor (owner-facing).
-class _MemberPermissionsTile extends ConsumerStatefulWidget {
-  const _MemberPermissionsTile({required this.boatId, required this.member});
+/// The member's own permission set, spelled out area by area.
+///
+/// Fails closed while it loads: nothing is claimed as granted until the server
+/// says so.
+class _MyPermissionsCard extends ConsumerWidget {
+  const _MyPermissionsCard({required this.boatId});
 
   final String boatId;
-  final BoatMember member;
 
   @override
-  ConsumerState<_MemberPermissionsTile> createState() =>
-      _MemberPermissionsTileState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
+    final permissions = ref.watch(boatPermissionsProvider(boatId));
 
-class _MemberPermissionsTileState
-    extends ConsumerState<_MemberPermissionsTile> {
-  late BoatPermissions _perms = widget.member.permissions;
-
-  Future<void> _update(BoatPermissions next) async {
-    setState(() => _perms = next);
-    await ref
-        .read(boatShareRepositoryProvider)
-        .setMemberPermissions(widget.boatId, widget.member.userId, next);
-    ref.invalidate(boatMembersProvider(widget.boatId));
-  }
-
-  Widget _toggle(
-      String label, bool value, BoatPermissions Function(bool) apply) {
-    return SwitchListTile(
-      contentPadding: EdgeInsets.zero,
-      dense: true,
-      visualDensity: VisualDensity.compact,
-      activeThumbColor: AppColors.cyan,
-      title: Text(label,
-          style: TextStyle(color: context.txtPrimary, fontSize: 13)),
-      value: value,
-      onChanged: (v) => _update(apply(v)),
+    return NavisCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l.myPermissionsTitle,
+            style: TextStyle(
+              color: context.txtPrimary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 10),
+          switch (permissions) {
+            AsyncData(:final value) => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final area in BoatPermissionArea.values)
+                    _PermissionRow(
+                      label: _areaLabel(l, area),
+                      granted: area.isGrantedIn(value),
+                    ),
+                  const SizedBox(height: 6),
+                  Text(
+                    l.permBlockedAskOwner,
+                    style: TextStyle(color: context.txtSecondary, fontSize: 12),
+                  ),
+                ],
+              ),
+            AsyncError() => Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      l.permCheckFailed,
+                      style:
+                          TextStyle(color: context.txtSecondary, fontSize: 13),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () =>
+                        ref.invalidate(boatPermissionsProvider(boatId)),
+                    child: Text(l.retry),
+                  ),
+                ],
+              ),
+            _ => const Padding(
+                padding: EdgeInsets.symmetric(vertical: 4),
+                child: LinearProgressIndicator(),
+              ),
+          },
+        ],
+      ),
     );
   }
 
+  static String _areaLabel(AppLocalizations l, BoatPermissionArea area) =>
+      switch (area) {
+        BoatPermissionArea.recordTrips => l.permRecordTrips,
+        BoatPermissionArea.viewDocuments => l.permViewDocuments,
+        BoatPermissionArea.manageDocuments => l.permManageDocuments,
+        BoatPermissionArea.manageMaintenance => l.permManageMaintenance,
+        BoatPermissionArea.manageExpenses => l.permManageExpenses,
+      };
+}
+
+class _PermissionRow extends StatelessWidget {
+  const _PermissionRow({required this.label, required this.granted});
+
+  final String label;
+  final bool granted;
+
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
-    final granted = [
-      _perms.canRecordTrips,
-      _perms.canManageExpenses,
-      _perms.canManageMaintenance,
-      _perms.canViewDocuments,
-      _perms.canManageDocuments,
-    ].where((e) => e).length;
-
-    return Theme(
-      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-      child: ExpansionTile(
-        tilePadding: EdgeInsets.zero,
-        childrenPadding: const EdgeInsets.only(left: 8, bottom: 8),
-        leading: const Icon(Icons.person_outline),
-        title: Text(widget.member.name,
-            style: TextStyle(color: context.txtPrimary)),
-        subtitle: Text(l.permissionsCount(granted),
-            style: TextStyle(color: context.txtSecondary, fontSize: 12)),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
         children: [
-          _toggle(l.permRecordTrips, _perms.canRecordTrips,
-              (v) => _perms.copyWith(canRecordTrips: v)),
-          _toggle(l.permManageExpenses, _perms.canManageExpenses,
-              (v) => _perms.copyWith(canManageExpenses: v)),
-          _toggle(l.permManageMaintenance, _perms.canManageMaintenance,
-              (v) => _perms.copyWith(canManageMaintenance: v)),
-          _toggle(l.permViewDocuments, _perms.canViewDocuments,
-              (v) => _perms.copyWith(canViewDocuments: v)),
-          _toggle(l.permManageDocuments, _perms.canManageDocuments,
-              (v) => _perms.copyWith(canManageDocuments: v)),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton.icon(
-              onPressed: () async {
-                await ref
-                    .read(boatShareRepositoryProvider)
-                    .removeMember(widget.boatId, widget.member.userId);
-                ref.invalidate(boatMembersProvider(widget.boatId));
-              },
-              icon: const Icon(Icons.remove_circle_outline,
-                  color: AppColors.red, size: 18),
-              label: Text(AppLocalizations.of(context)!.removeAccess,
-                  style: const TextStyle(color: AppColors.red)),
+          Icon(
+            granted ? Icons.check_circle_rounded : Icons.lock_outline_rounded,
+            size: 16,
+            color: granted ? AppColors.green : AppColors.amber,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: granted ? context.txtPrimary : context.txtSecondary,
+                fontSize: 13,
+              ),
             ),
           ),
         ],

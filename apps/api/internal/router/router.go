@@ -137,6 +137,10 @@ func New(
 				r.Delete("/", boatH.Delete)
 				r.Put("/share-code", boatH.ShareCode)
 				r.Post("/leave", boatH.Leave)
+				// What the caller may do on this boat. Read before the write
+				// paths enforce it, so a blocked action can be shown as
+				// blocked instead of failing with a 403 on save.
+				r.Get("/permissions", boatH.Permissions)
 				r.Route("/members", func(r chi.Router) {
 					r.Get("/", boatH.ListMembers)
 					r.Put("/{userId}/permissions", boatH.SetMemberPermissions)

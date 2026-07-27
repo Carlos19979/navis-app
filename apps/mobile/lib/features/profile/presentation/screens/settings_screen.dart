@@ -5,6 +5,7 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/core/config/checklist_preference.dart';
 import 'package:navis_mobile/core/config/settings_service.dart';
 import 'package:navis_mobile/core/database/local_database.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
@@ -29,6 +30,7 @@ class SettingsScreen extends ConsumerWidget {
     final locale = ref.watch(localeProvider);
     final expiryAlerts = ref.watch(expiryAlertsProvider);
     final eventReminders = ref.watch(eventRemindersProvider);
+    final checklistMode = ref.watch(preTripChecklistModeProvider);
 
     final languageLabel = switch (locale?.languageCode) {
       'es' => 'Español',
@@ -189,6 +191,37 @@ class SettingsScreen extends ConsumerWidget {
                       activeThumbColor: AppColors.cyan,
                       onChanged: (value) {
                         ref.read(eventRemindersProvider.notifier).set(value);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              // The way back for anyone who chose "skip" (and remembered it)
+              // when starting a trip: without this the pre-trip checklist would
+              // be gone for good.
+              NavisCard(
+                padding: EdgeInsets.zero,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _SectionHeader(label: l.safetyChecklist.toUpperCase()),
+                    SwitchListTile(
+                      title: Text(l.preTripChecklistSetting),
+                      subtitle: Text(switch (checklistMode) {
+                        PreTripChecklistMode.ask => l.preTripChecklistAsks,
+                        PreTripChecklistMode.review => l.preTripChecklistAlways,
+                        PreTripChecklistMode.skip => l.preTripChecklistSkipped,
+                      }),
+                      value: checklistMode != PreTripChecklistMode.skip,
+                      activeTrackColor: AppColors.cyan.withValues(alpha: 0.5),
+                      activeThumbColor: AppColors.cyan,
+                      onChanged: (value) {
+                        ref.read(preTripChecklistModeProvider.notifier).set(
+                              value
+                                  ? PreTripChecklistMode.ask
+                                  : PreTripChecklistMode.skip,
+                            );
                       },
                     ),
                   ],

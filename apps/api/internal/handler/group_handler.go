@@ -17,6 +17,7 @@ type groupService interface {
 	GetByID(ctx context.Context, userID, id string) (*domain.Group, error)
 	List(ctx context.Context, userID, cursor string, limit int) ([]domain.Group, string, error)
 	ListPublic(ctx context.Context, userID, cursor string, limit int) ([]domain.Group, string, error)
+	SearchPublic(ctx context.Context, userID, query, cursor string, limit int) ([]domain.Group, string, error)
 	Update(ctx context.Context, userID string, group *domain.Group) (*domain.Group, error)
 	Delete(ctx context.Context, userID, id string) error
 	RequestJoin(ctx context.Context, userID, groupID string) (*domain.Group, error)
@@ -60,7 +61,11 @@ func (h *GroupHandler) Create(w http.ResponseWriter, r *http.Request) {
 	JSON(w, http.StatusCreated, dto.GroupResponseFromDomain(created))
 }
 
-// List handles GET /groups. With ?discover=true it lists joinable public groups.
+// List handles GET /groups — the groups the user belongs to.
+//
+// With ?discover=true it lists joinable public groups instead, and adding
+// ?q=<text> narrows those to a name match (same shape as the port search:
+// GET /ports?q=). Both discovery modes share one response and cursor format.
 func (h *GroupHandler) List(w http.ResponseWriter, r *http.Request) {
 	userID, ok := requireUserID(w, r)
 	if !ok {
@@ -72,6 +77,11 @@ func (h *GroupHandler) List(w http.ResponseWriter, r *http.Request) {
 	listFn := h.svc.List
 	if r.URL.Query().Get("discover") == "true" {
 		listFn = h.svc.ListPublic
+		if q := r.URL.Query().Get("q"); q != "" {
+			listFn = func(ctx context.Context, userID, cursor string, limit int) ([]domain.Group, string, error) {
+				return h.svc.SearchPublic(ctx, userID, q, cursor, limit)
+			}
+		}
 	}
 
 	groups, nextCursor, err := listFn(r.Context(), userID, cursor, limit)

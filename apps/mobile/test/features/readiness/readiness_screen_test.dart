@@ -7,10 +7,20 @@ import 'package:navis_mobile/features/readiness/presentation/providers/readiness
 import 'package:navis_mobile/features/readiness/presentation/screens/readiness_screen.dart';
 
 import '../../helpers/helpers.dart';
+import '../../helpers/text_layout.dart';
 
 void main() {
   Widget buildSubject(Readiness readiness) => buildTestApp(
         const ReadinessScreen(boatId: 'boat-1'),
+        overrides: [
+          boatReadinessProvider.overrideWith((ref, id) async => readiness),
+        ],
+      );
+
+  Widget buildRoutedSubject(Readiness readiness, RouteSpy spy) =>
+      buildRoutedTestApp(
+        const ReadinessScreen(boatId: 'boat-1'),
+        spy: spy,
         overrides: [
           boatReadinessProvider.overrideWith((ref, id) async => readiness),
         ],
@@ -265,6 +275,181 @@ void main() {
       await pumpScreen(tester);
 
       expect(find.text('Needs attention'), findsNothing);
+    });
+  });
+
+  group('layout on a narrow phone', () {
+    // The reported bug: "Mantenimiento" rendered as "Mantenimi/ento" because
+    // the long status text next to it took the whole row.
+    testWidgets('a long status does not squeeze the item label',
+        (tester) async {
+      setNarrowPhoneSize(tester);
+      await tester.pumpWidget(
+        buildSubject(
+          makeReadiness(
+            categories: const [],
+            attention: const [
+              ReadinessItem(
+                category: 'maintenance',
+                ref: 'engine_service',
+                status: ReadinessStatus.attention,
+                days: 0,
+                reason: 'no_plan',
+              ),
+            ],
+          ),
+        ),
+      );
+      await pumpScreen(tester);
+
+      expect(tester.takeException(), isNull);
+      expectFullyLaidOut(tester, find.text('Maintenance'));
+      expectFullyLaidOut(tester, find.text('set up a maintenance plan'));
+    });
+
+    testWidgets('category rows keep their label intact', (tester) async {
+      setNarrowPhoneSize(tester);
+      await tester.pumpWidget(
+        buildSubject(
+          makeReadiness(
+            categories: const [
+              ReadinessCategory(
+                key: 'safety_gear',
+                status: ReadinessStatus.attention,
+                total: 2,
+                expired: 0,
+                critical: 0,
+                warning: 1,
+                ok: 1,
+              ),
+            ],
+            attention: const [],
+          ),
+        ),
+      );
+      await pumpScreen(tester);
+
+      expect(tester.takeException(), isNull);
+      expectFullyLaidOut(tester, find.text('1/2 OK'));
+    });
+  });
+
+  group('deep links', () {
+    testWidgets('a maintenance warning opens the maintenance screen',
+        (tester) async {
+      setPhoneSize(tester);
+      final spy = RouteSpy();
+      await tester.pumpWidget(
+        buildRoutedSubject(
+          makeReadiness(
+            categories: const [],
+            attention: const [
+              ReadinessItem(
+                category: 'maintenance',
+                ref: 'engine_service',
+                label: 'Oil change',
+                status: ReadinessStatus.attention,
+                days: 0,
+                reason: 'no_plan',
+              ),
+            ],
+          ),
+          spy,
+        ),
+      );
+      await pumpScreen(tester);
+
+      await tester.tap(find.text('Oil change'));
+      await pumpScreen(tester);
+
+      expect(spy.last, '/boats/boat-1/maintenance');
+    });
+
+    testWidgets('a document warning opens the documents screen',
+        (tester) async {
+      setPhoneSize(tester);
+      final spy = RouteSpy();
+      await tester.pumpWidget(
+        buildRoutedSubject(
+          makeReadiness(
+            categories: const [],
+            attention: const [
+              ReadinessItem(
+                category: 'documents',
+                ref: 'insurance_rc',
+                label: 'Insurance',
+                status: ReadinessStatus.notReady,
+                days: -5,
+              ),
+            ],
+          ),
+          spy,
+        ),
+      );
+      await pumpScreen(tester);
+
+      await tester.tap(find.text('Insurance'));
+      await pumpScreen(tester);
+
+      expect(spy.last, '/boats/boat-1/documents');
+    });
+
+    testWidgets('a safety-gear warning opens the documents screen',
+        (tester) async {
+      setPhoneSize(tester);
+      final spy = RouteSpy();
+      await tester.pumpWidget(
+        buildRoutedSubject(
+          makeReadiness(
+            categories: const [],
+            attention: const [
+              ReadinessItem(
+                category: 'safety_gear',
+                ref: 'life_raft',
+                status: ReadinessStatus.attention,
+                days: 20,
+              ),
+            ],
+          ),
+          spy,
+        ),
+      );
+      await pumpScreen(tester);
+
+      await tester.tap(find.text('Life raft'));
+      await pumpScreen(tester);
+
+      expect(spy.last, '/boats/boat-1/documents');
+    });
+
+    testWidgets('category rows open their own screen', (tester) async {
+      setPhoneSize(tester);
+      final spy = RouteSpy();
+      await tester.pumpWidget(
+        buildRoutedSubject(
+          makeReadiness(
+            categories: const [
+              ReadinessCategory(
+                key: 'maintenance',
+                status: ReadinessStatus.ready,
+                total: 1,
+                expired: 0,
+                critical: 0,
+                warning: 0,
+                ok: 1,
+              ),
+            ],
+            attention: const [],
+          ),
+          spy,
+        ),
+      );
+      await pumpScreen(tester);
+
+      await tester.tap(find.text('Maintenance'));
+      await pumpScreen(tester);
+
+      expect(spy.last, '/boats/boat-1/maintenance');
     });
   });
 }

@@ -11,10 +11,16 @@ class GroupRepository {
 
   final ApiClient _apiClient;
 
+  /// Lists groups. With [discover] it returns joinable public groups instead of
+  /// the user's own, and adding [query] narrows those to a name match — the
+  /// same shape as the port search (`GET /groups?discover=true&q=`). The server
+  /// rejects a [query] shorter than two characters, so callers must not send
+  /// one (see `groupSearchMinChars`).
   Future<PaginatedResponse<Group>> getGroups({
     String? cursor,
     int limit = 20,
     bool discover = false,
+    String? query,
   }) async {
     final response = await _apiClient.get<Map<String, dynamic>>(
       '/api/v1/groups',
@@ -22,6 +28,7 @@ class GroupRepository {
         'limit': limit,
         if (cursor != null) 'cursor': cursor,
         if (discover) 'discover': true,
+        if (discover && query != null && query.isNotEmpty) 'q': query,
       },
     );
     final envelope = response.data!;

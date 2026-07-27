@@ -32,12 +32,12 @@ func (h *BoatHandler) Join(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	boat, err := h.svc.JoinByCode(r.Context(), userID, req.Code)
+	joined, err := h.svc.JoinByCode(r.Context(), userID, req.Code)
 	if err != nil {
 		MapDomainError(w, err)
 		return
 	}
-	JSON(w, http.StatusOK, dto.BoatResponseFromDomain(boat))
+	JSON(w, http.StatusOK, dto.SharedBoatResponseFromDomain(joined, userID))
 }
 
 // ListShared handles GET /boats/shared — boats shared with the user.
@@ -46,12 +46,12 @@ func (h *BoatHandler) ListShared(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	boats, err := h.svc.ListShared(r.Context(), userID)
+	shared, err := h.svc.ListShared(r.Context(), userID)
 	if err != nil {
 		MapDomainError(w, err)
 		return
 	}
-	JSON(w, http.StatusOK, dto.BoatListResponseFromDomain(boats))
+	JSON(w, http.StatusOK, dto.SharedBoatListResponseFromDomain(shared, userID))
 }
 
 // ListMembers handles GET /boats/{id}/members — owner sees shared members.

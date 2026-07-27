@@ -239,7 +239,7 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
                 children: [
                   ReadinessCard(boatId: boats.first.id),
                   const SizedBox(height: 12),
-                  _BoatCard(boat: boats.first, index: 0, focus: true),
+                  _BoatCard(boat: boats.first, index: 0),
                 ],
               ),
             );
@@ -327,37 +327,10 @@ class _BoatCard extends ConsumerWidget {
   const _BoatCard({
     required this.boat,
     required this.index,
-    this.focus = false,
   });
 
   final Boat boat;
   final int index;
-
-  /// Single-boat home: render as the boat's overview (adds a Maintenance
-  /// quick action + a "manage boat" link, and drops the whole-card tap since
-  /// the actions are all inline).
-  final bool focus;
-
-  /// Opens the anchor watch (Pro). Blocks when a trip is recording — both drive
-  /// the GPS stream — and shows the paywall for Free users.
-  Future<void> _openAnchorWatch(
-    BuildContext context,
-    WidgetRef ref,
-    String boatId,
-  ) async {
-    final l = AppLocalizations.of(context)!;
-    if (ref.read(tripRecordingProvider).isActive) {
-      NavisSnackbar.info(context, l.anchorTripActiveBlock);
-      return;
-    }
-    if (!ref.read(effectiveTierProvider).canAnchorAlarm) {
-      final ok = await showPaywall(context, ref,
-          reason: l.paywallReasonAnchor, requiredTier: PlanTier.plus);
-      if (!ok || !context.mounted) return;
-    }
-    if (!context.mounted) return;
-    unawaited(context.push('/boats/$boatId/anchor'));
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -368,7 +341,9 @@ class _BoatCard extends ConsumerWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: NavisCard(
         padding: EdgeInsets.zero,
-        onTap: focus ? null : () => context.push('/boats/${boat.id}'),
+        // Always tappable, single boat or many: no hunting for a "manage boat"
+        // link in the corner.
+        onTap: () => context.push('/boats/${boat.id}'),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -396,40 +371,47 @@ class _BoatCard extends ConsumerWidget {
                 ],
               ),
             ),
-            // Document status badges
+            // Document status badges. Tapping them opens the documents they
+            // are warning about, instead of the boat detail.
             if (summaryAsync case AsyncData(:final value))
               if (value.total > 0)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                  child: Wrap(
-                    spacing: 6,
-                    runSpacing: 4,
-                    children: [
-                      if (value.expired > 0)
-                        _StatusBadge(
-                          count: value.expired,
-                          label: l.expired,
-                          color: AppColors.red,
-                        ),
-                      if (value.critical > 0)
-                        _StatusBadge(
-                          count: value.critical,
-                          label: l.critical,
-                          color: AppColors.red,
-                        ),
-                      if (value.warning > 0)
-                        _StatusBadge(
-                          count: value.warning,
-                          label: l.warning,
-                          color: AppColors.amber,
-                        ),
-                      if (value.ok > 0)
-                        _StatusBadge(
-                          count: value.ok,
-                          label: l.valid,
-                          color: AppColors.green,
-                        ),
-                    ],
+                  child: GestureDetector(
+                    onTap: () => context.push('/boats/${boat.id}/documents'),
+                    child: Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        // Worst status first: what needs doing leads, and if
+                        // the row wraps it is the "all good" badge that drops
+                        // to the second line.
+                        if (value.expired > 0)
+                          _StatusBadge(
+                            count: value.expired,
+                            label: l.expired,
+                            color: AppColors.red,
+                          ),
+                        if (value.critical > 0)
+                          _StatusBadge(
+                            count: value.critical,
+                            label: l.critical,
+                            color: AppColors.red,
+                          ),
+                        if (value.warning > 0)
+                          _StatusBadge(
+                            count: value.warning,
+                            label: l.warning,
+                            color: AppColors.amber,
+                          ),
+                        if (value.ok > 0)
+                          _StatusBadge(
+                            count: value.ok,
+                            label: l.valid,
+                            color: AppColors.green,
+                          ),
+                      ],
+                    ),
                   ),
                 ),
             // Action buttons
@@ -438,67 +420,23 @@ class _BoatCard extends ConsumerWidget {
               child: Row(
                 children: [
                   Expanded(
-                    child: NavisButton(
+                    child: _CardAction(
                       label: l.documents,
                       icon: Icons.description_outlined,
-                      variant: NavisButtonVariant.secondary,
-                      compact: true,
-                      onPressed: () =>
-                          context.push('/boats/${boat.id}/documents'),
+                      onTap: () => context.push('/boats/${boat.id}/documents'),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: Dimens.spaceSm),
                   Expanded(
-                    child: NavisButton(
+                    child: _CardAction(
                       label: l.logbook,
                       icon: Icons.route_outlined,
-                      variant: NavisButtonVariant.secondary,
-                      compact: true,
-                      onPressed: () => context.push('/boats/${boat.id}/trips'),
+                      onTap: () => context.push('/boats/${boat.id}/trips'),
                     ),
                   ),
                 ],
               ),
             ),
-            // Single-boat overview: surface Maintenance + a manage link.
-            if (focus) ...[
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: NavisButton(
-                        label: l.maintenanceTab,
-                        icon: Icons.build_outlined,
-                        variant: NavisButtonVariant.secondary,
-                        compact: true,
-                        onPressed: () =>
-                            context.push('/boats/${boat.id}/maintenance'),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: NavisButton(
-                        label: l.anchorAlarmTitle,
-                        icon: Icons.anchor_outlined,
-                        variant: NavisButtonVariant.secondary,
-                        compact: true,
-                        onPressed: () =>
-                            _openAnchorWatch(context, ref, boat.id),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton.icon(
-                  onPressed: () => context.push('/boats/${boat.id}'),
-                  icon: const Icon(Icons.tune, size: 18),
-                  label: Text(l.manageBoat),
-                ),
-              ),
-            ],
           ],
         ),
       ),
@@ -541,13 +479,75 @@ class _InfoChip extends StatelessWidget {
         children: [
           Icon(icon, size: 14, color: context.txtSecondary),
           const SizedBox(width: 4),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: context.txtSecondary,
-                ),
+          // Flexible + ellipsis: a long home port shortens its own chip
+          // instead of overflowing the card.
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: context.txtSecondary,
+                  ),
+            ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Half-width action inside a boat card, styled like a secondary [NavisButton]
+/// but with room for its label: the shared button reserves 24 px of padding on
+/// each side, which at half a card's width truncated "Documents" to "Docume…".
+class _CardAction extends StatelessWidget {
+  const _CardAction({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: label,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          height: Dimens.minTouchTarget,
+          padding: const EdgeInsets.symmetric(horizontal: Dimens.spaceSm),
+          decoration: BoxDecoration(
+            color: context.glassBg,
+            borderRadius: BorderRadius.circular(Dimens.radiusLg),
+            border: Border.all(color: context.glassBorderColor),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: Dimens.iconSm, color: AppColors.cyan),
+              const SizedBox(width: Dimens.spaceXs),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.cyan,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -647,5 +647,59 @@ void main() {
         expect(find.byType(ListView), findsOneWidget);
       });
     });
+
+    // The pre-trip checklist is optional now, and the answer is remembered, so
+    // Settings is the way back for anyone who chose to skip it for good.
+    group('pre-trip checklist', () {
+      Future<void> openSettings(WidgetTester tester) async {
+        await tester.pumpWidget(buildSettingsScreenWithPrefs());
+        await tester.pumpAndSettle();
+        await tester.scrollUntilVisible(
+          find.text('Checklist before setting sail'),
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.pumpAndSettle();
+      }
+
+      testWidgets('shows that the trip start asks by default', (tester) async {
+        setPhoneSize(tester);
+        await openSettings(tester);
+
+        expect(
+          find.text("You'll be asked when a trip starts"),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('turning it off persists the skip choice', (tester) async {
+        setPhoneSize(tester);
+        await openSettings(tester);
+
+        await tester.tap(find.text('Checklist before setting sail'));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text('Skipped — turn on to be asked again'),
+          findsOneWidget,
+        );
+        final prefs = await SharedPreferences.getInstance();
+        expect(prefs.getString('settings_pretrip_checklist'), 'skip');
+      });
+
+      testWidgets('turning it back on asks again on the next trip',
+          (tester) async {
+        setPhoneSize(tester);
+        await openSettings(tester);
+
+        await tester.tap(find.text('Checklist before setting sail'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Checklist before setting sail'));
+        await tester.pumpAndSettle();
+
+        final prefs = await SharedPreferences.getInstance();
+        expect(prefs.getString('settings_pretrip_checklist'), 'ask');
+      });
+    });
   });
 }

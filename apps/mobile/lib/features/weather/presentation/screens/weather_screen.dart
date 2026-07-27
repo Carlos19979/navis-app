@@ -19,6 +19,14 @@ import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
 
+/// Re-acquires the fix as well as the forecast. A stale or wrong location is
+/// the most common reason the weather looks wrong, or does not load at all, so
+/// every manual refresh path goes through here.
+void _refresh(WidgetRef ref) {
+  ref.invalidate(positionProvider);
+  ref.invalidate(weatherOverviewProvider);
+}
+
 class WeatherScreen extends ConsumerWidget {
   const WeatherScreen({super.key});
 
@@ -38,28 +46,19 @@ class WeatherScreen extends ConsumerWidget {
           // DioException string, and it is not ours to put on screen.
           error: (error, stack) => NavisErrorWidget(
             message: l.weatherLoadFailed,
-            onRetry: () {
-              // Re-acquire GPS too: a stale/denied fix is a common cause here.
-              ref.invalidate(positionProvider);
-              ref.invalidate(weatherOverviewProvider);
-            },
+            onRetry: () => _refresh(ref),
           ),
-          data: (data) {
-            if (data == null) {
-              return _LocationDenied(message: l.locationAccessNeeded);
-            }
-            return RefreshIndicator(
-              color: AppColors.cyan,
-              backgroundColor: context.dialogSurface,
-              onRefresh: () async {
-                // Re-acquire GPS too, not just the weather, so a stale or
-                // wrong location actually updates.
-                ref.invalidate(positionProvider);
-                ref.invalidate(weatherOverviewProvider);
-              },
-              child: _OverviewBody(overview: data),
-            );
-          },
+          // Pull-to-refresh on both loaded and no-location: the no-location
+          // state is exactly where the user needs a way to try again after
+          // granting the permission in Settings. Both children scroll.
+          data: (data) => RefreshIndicator(
+            color: AppColors.cyan,
+            backgroundColor: context.dialogSurface,
+            onRefresh: () async => _refresh(ref),
+            child: data == null
+                ? _LocationDenied(message: l.locationAccessNeeded)
+                : _OverviewBody(overview: data),
+          ),
         ),
       ),
     );
@@ -317,6 +316,20 @@ class _LocationDenied extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Scrollable even though it fits, so the pull-to-refresh above it has a
+    // gesture to work with.
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: _body(context),
+        ),
+      ),
+    );
+  }
+
+  Widget _body(BuildContext context) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),

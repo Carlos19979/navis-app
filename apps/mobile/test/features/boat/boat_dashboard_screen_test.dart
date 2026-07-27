@@ -12,6 +12,7 @@ import 'package:navis_mobile/features/documents/presentation/providers/document_
 import 'package:navis_mobile/features/weather/presentation/providers/weather_provider.dart';
 
 import '../../helpers/helpers.dart';
+import '../../helpers/text_layout.dart';
 
 class MockBoatRepository extends Mock implements BoatRepository {}
 
@@ -221,16 +222,111 @@ void main() {
       expect(find.text('Add Boat'), findsOneWidget);
     });
 
-    testWidgets('single boat renders the boat overview (focus mode)',
+    testWidgets(
+        'single boat drops the maintenance/anchor chips and the manage link',
         (tester) async {
       setPhoneSize(tester);
       await tester.pumpWidget(buildSubject(boats: [makeBoat()]));
       await pumpScreen(tester);
 
-      // Focus mode surfaces the Maintenance action and a manage-boat link
-      // that the multi-boat card does not.
-      expect(find.text('Manage boat'), findsOneWidget);
-      expect(find.text('Maintenance'), findsOneWidget);
+      // The card is the same one the list renders: only Documents + Logbook.
+      expect(find.text('Manage boat'), findsNothing);
+      expect(find.text('Maintenance'), findsNothing);
+      expect(find.text('Anchor watch'), findsNothing);
+      expect(find.text('Documents'), findsOneWidget);
+      expect(find.text('Logbook'), findsOneWidget);
+    });
+
+    testWidgets('single boat card navigates to detail from anywhere',
+        (tester) async {
+      setPhoneSize(tester);
+      final spy = RouteSpy();
+      await tester.pumpWidget(buildSubject(boats: [makeBoat()], spy: spy));
+      await pumpScreen(tester);
+
+      // Same gesture as with several boats: tap the card, not a corner link.
+      await tester.tap(find.text('Luna Azul'));
+      await pumpScreen(tester);
+
+      expect(spy.last, '/boats/boat-1');
+    });
+
+    testWidgets('single boat card navigates to detail from the info chips',
+        (tester) async {
+      setPhoneSize(tester);
+      final spy = RouteSpy();
+      await tester.pumpWidget(buildSubject(boats: [makeBoat()], spy: spy));
+      await pumpScreen(tester);
+
+      await tester.tap(find.text('12.5 m'));
+      await pumpScreen(tester);
+
+      expect(spy.last, '/boats/boat-1');
+    });
+
+    testWidgets('document badges navigate to the documents screen',
+        (tester) async {
+      setPhoneSize(tester);
+      final spy = RouteSpy();
+      await tester.pumpWidget(
+        buildRoutedTestApp(
+          const BoatDashboardScreen(),
+          spy: spy,
+          overrides: [
+            boatsProvider.overrideWith(() => FakeBoatsNotifier([makeBoat()])),
+            currentWeatherProvider.overrideWith((ref) async => null),
+            boatDocumentSummaryProvider.overrideWith(
+              (ref, boatId) async => const DocumentSummary(
+                total: 2,
+                expired: 1,
+                ok: 1,
+              ),
+            ),
+          ],
+        ),
+      );
+      await pumpScreen(tester);
+
+      await tester.tap(find.text('1 Expired'));
+      await pumpScreen(tester);
+
+      expect(spy.last, '/boats/boat-1/documents');
+    });
+
+    testWidgets('card actions leave room for their label on a narrow phone',
+        (tester) async {
+      setNarrowPhoneSize(tester);
+      await tester.pumpWidget(buildSubject(boats: testBoats));
+      await pumpScreen(tester);
+
+      expect(tester.takeException(), isNull);
+      // Regression: the shared compact button reserved 24 px of padding a side,
+      // which at half a card's width truncated "Documents" to "Docume…".
+      for (final label in ['Documents', 'Logbook']) {
+        final text = find.text(label).first;
+        expectRoomForLabel(
+          tester,
+          text,
+          find.ancestor(of: text, matching: find.byType(GestureDetector)).first,
+        );
+      }
+    });
+
+    testWidgets('a long home port shortens its chip instead of overflowing',
+        (tester) async {
+      setNarrowPhoneSize(tester);
+      await tester.pumpWidget(
+        buildSubject(
+          boats: [
+            makeBoat(
+              homePort: 'Puerto Deportivo de Sant Carles de la Rapita',
+            ),
+          ],
+        ),
+      );
+      await pumpScreen(tester);
+
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets('empty state Add Boat button navigates', (tester) async {

@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
+import 'package:navis_mobile/shared/widgets/navis_pulse_budget.dart';
 
 class NavisEmptyState extends StatelessWidget {
   const NavisEmptyState({
@@ -32,32 +33,42 @@ class NavisEmptyState extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              ExcludeSemantics(
-                child: Container(
-                  width: 88,
-                  height: 88,
-                  decoration: BoxDecoration(
-                    color: context.glassBg,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: context.glassBorderColor,
+              // The float is decorative: it plays a couple of times to catch
+              // the eye and then rests, instead of repainting for as long as
+              // the screen is open.
+              RepaintBoundary(
+                child: ExcludeSemantics(
+                  child: Container(
+                    width: 88,
+                    height: 88,
+                    decoration: BoxDecoration(
+                      color: context.glassBg,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: context.glassBorderColor,
+                      ),
                     ),
-                  ),
-                  child: Icon(
-                    icon,
-                    size: 40,
-                    color: context.txtSecondary.withValues(alpha: 0.6),
-                  ),
-                )
-                    .animate(
-                      onPlay: (controller) => controller.repeat(reverse: true),
-                    )
-                    .moveY(
-                      begin: 0,
-                      end: -6,
-                      duration: 2000.ms,
-                      curve: Curves.easeInOut,
+                    child: Icon(
+                      icon,
+                      size: 40,
+                      color: context.txtSecondary.withValues(alpha: 0.6),
                     ),
+                  )
+                      .animate(
+                        onPlay: (controller) => controller.repeat(
+                          reverse: true,
+                          count: PulseBudget.reverseHalves(
+                            PulseBudget.decorative,
+                          ),
+                        ),
+                      )
+                      .moveY(
+                        begin: 0,
+                        end: -6,
+                        duration: 2000.ms,
+                        curve: Curves.easeInOut,
+                      ),
+                ),
               ),
               const SizedBox(height: 24),
               Text(

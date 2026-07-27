@@ -10,6 +10,10 @@ import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/features/boat/data/permission_errors.dart';
+import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
+import 'package:navis_mobile/features/boat/presentation/providers/boat_permissions_provider.dart';
+import 'package:navis_mobile/features/boat/presentation/widgets/permission_gate.dart';
 import 'package:navis_mobile/features/charts/data/tile_provider.dart';
 import 'package:navis_mobile/features/charts/presentation/widgets/map_controls.dart';
 import 'package:navis_mobile/features/charts/presentation/widgets/position_indicator.dart';
@@ -89,6 +93,8 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
     _acquireInitialPosition();
     // Auto-start when coming from the checklist (regatta trip or solo
     // autostart) unless a recording is already running (resume navigation).
+    // _startRecording checks can_record_trips first, so an autostart for a
+    // member without the permission stops before any GPS fix is taken.
     final alreadyActive = ref.read(tripRecordingProvider).isActive;
     if (!alreadyActive && (widget.tripId != null || widget.autoStart)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -127,6 +133,18 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
 
   Future<void> _startRecording() async {
     final l = AppLocalizations.of(context)!;
+
+    // Before anything else: the trip is only accepted on save if the owner
+    // granted can_record_trips. Checking here means a blocked member finds out
+    // now rather than after sailing for four hours.
+    final allowed = await ensureBoatPermission(
+      context,
+      ref,
+      boatId: widget.boatId,
+      area: BoatPermissionArea.recordTrips,
+    );
+    if (!allowed || !mounted) return;
+
     final result = await ref.read(tripRecordingProvider.notifier).start(
           boatId: widget.boatId,
           tripId: widget.tripId,
@@ -317,13 +335,27 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
         context.pop();
       }
     } catch (e) {
-      if (mounted) {
+      if (!mounted) return;
+      // Safety net. The check on start should make this unreachable, but a
+      // permission revoked mid-trip must not surface as
+      // "DioException … FORBIDDEN": the recording is still on screen, so the
+      // message has to say what happened and who can fix it.
+      if (isPermissionDeniedError(e)) {
+        showPermissionDenied(
+          context,
+          ref,
+          boatId: widget.boatId,
+          area: BoatPermissionArea.recordTrips,
+        );
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text(
                   '${AppLocalizations.of(context)!.failedToSaveTrip}: $e')),
         );
       }
+      // complete() left the recording paused, so the track is still there and
+      // the controls are usable again — nothing to reset here.
     }
   }
 
@@ -389,6 +421,13 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
     final isActive = recording.isActive;
     final saving = recording.status == RecordingStatus.saving;
     final center = recording.currentPosition ?? _defaultCenter;
+    // Fails closed: the start button is only offered once the server has
+    // confirmed can_record_trips. A recording already in progress keeps its
+    // controls — the permission was checked when it started.
+    final canRecord = isActive ||
+        ref
+            .watch(boatPermissionsProvider(widget.boatId))
+            .grants(BoatPermissionArea.recordTrips);
 
     // Follow the boat as fixes arrive without rebuilding on every field.
     ref.listen<LatLng?>(
@@ -536,27 +575,40 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
                   },
                   showPorts: _showPorts,
                 ),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: MediaQuery.of(context).padding.bottom + 24,
-                  child: RecordingControls(
-                    status: switch (recording.status) {
-                      RecordingStatus.recording => TripStatus.recording,
-                      RecordingStatus.paused => TripStatus.paused,
-                      _ => TripStatus.completed,
-                    },
-                    onStart: _startRecording,
-                    onPause: ref.read(tripRecordingProvider.notifier).pause,
-                    onResume: () {
-                      ref.read(tripRecordingProvider.notifier).resume();
-                      setState(() => _followMode = true);
-                      HapticFeedback.lightImpact();
-                    },
-                    onStop: _stopRecording,
-                    onCancel: _cancelRecording,
+                if (!canRecord)
+                  Positioned(
+                    left: 16,
+                    right: 16,
+                    bottom: MediaQuery.of(context).padding.bottom + 24,
+                    child: BoatPermissionGate(
+                      boatId: widget.boatId,
+                      area: BoatPermissionArea.recordTrips,
+                      compact: true,
+                      child: const SizedBox.shrink(),
+                    ),
+                  )
+                else
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: MediaQuery.of(context).padding.bottom + 24,
+                    child: RecordingControls(
+                      status: switch (recording.status) {
+                        RecordingStatus.recording => TripStatus.recording,
+                        RecordingStatus.paused => TripStatus.paused,
+                        _ => TripStatus.completed,
+                      },
+                      onStart: _startRecording,
+                      onPause: ref.read(tripRecordingProvider.notifier).pause,
+                      onResume: () {
+                        ref.read(tripRecordingProvider.notifier).resume();
+                        setState(() => _followMode = true);
+                        HapticFeedback.lightImpact();
+                      },
+                      onStop: _stopRecording,
+                      onCancel: _cancelRecording,
+                    ),
                   ),
-                ),
               ],
             ),
     );

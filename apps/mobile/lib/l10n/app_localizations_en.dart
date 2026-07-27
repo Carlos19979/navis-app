@@ -250,6 +250,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proBadge => 'PRO';
 
   @override
+  String get plusBadge => 'PLUS';
+
+  @override
   String get status => 'Status';
 
   @override
@@ -290,7 +293,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bookingsSubtitle => 'Shared calendar for your boat';
 
   @override
-  String get bookingAdd => 'Book a day';
+  String get bookingAdd => 'Book';
+
+  @override
+  String get bookingRangeHint =>
+      'From departure to arrival. Same day for a day out.';
+
+  @override
+  String get bookingDeparture => 'Departure';
+
+  @override
+  String get bookingArrival => 'Arrival';
+
+  @override
+  String get bookingDepartureDate => 'Departure date';
+
+  @override
+  String get bookingDepartureTime => 'Departure time';
+
+  @override
+  String get bookingArrivalDate => 'Arrival date';
+
+  @override
+  String get bookingArrivalTime => 'Arrival time';
+
+  @override
+  String get bookingEndBeforeStart => 'Arrival must be after departure';
+
+  @override
+  String bookingOverlapDetail(String range) {
+    return 'Already booked: $range';
+  }
 
   @override
   String get bookingsEmpty => 'No bookings yet';
@@ -315,12 +348,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bookingCrew => 'Crew';
 
   @override
-  String get bookingStartTime => 'Start time';
-
-  @override
-  String get bookingEndTime => 'End time';
-
-  @override
   String get bookingOverlapsBadge => 'Overlaps another booking';
 
   @override
@@ -328,7 +355,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bookingOverlapMessage =>
-      'This time overlaps an existing booking for this boat. Book anyway?';
+      'These dates overlap an existing booking for this boat. Book anyway?';
 
   @override
   String get bookingBookAnyway => 'Book anyway';
@@ -344,9 +371,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bookingNextMonth => 'Next month';
-
-  @override
-  String get bookingAddOnDay => 'Book this day';
 
   @override
   String get bookingsNoneOnDay => 'No bookings on this day';
@@ -591,6 +615,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripStatistics => 'Trip Statistics';
+
+  @override
+  String get tripStatisticsSubtitle => 'Distance, engine hours and ports';
 
   @override
   String get totalDistanceNm => 'NM sailed';
@@ -1022,6 +1049,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpAndSupport => 'Help & Support';
+
+  @override
+  String get contactByEmail => 'Email us';
 
   @override
   String get aboutNavis => 'About Navis';
@@ -1606,11 +1636,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shareBoatExplainer =>
-      'Share this code. Whoever enters it will see the boat. Turn on \"can record trips\" below to grant editor permission.';
+      'Share this code. Whoever enters it joins as a viewer; grant them more from \"Crew and permissions\".';
 
   @override
   String shareBoatMessage(String name, String code) {
     return 'Join my boat \"$name\" on Navis with the code: $code';
+  }
+
+  @override
+  String shareBoatMessageWithLink(String name, String code, String link) {
+    return 'Join my boat \"$name\" on Navis.\n\nCode: $code\nOpen in Navis: $link';
   }
 
   @override
@@ -1826,6 +1861,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get expensesNoneInPeriod => 'No expenses in this period';
+
+  @override
+  String get expensesSelectPeriod => 'Select period';
+
+  @override
+  String get expensesPeriodWholeYear => 'Whole year';
 
   @override
   String get categoryLabel => 'Category';
@@ -2112,6 +2153,49 @@ class AppLocalizationsEn extends AppLocalizations {
   String get permManageDocuments => 'Manage documents';
 
   @override
+  String get permBlockedTitle => 'Action unavailable';
+
+  @override
+  String get permBlockedAskOwner =>
+      'Ask the boat owner to grant you this permission.';
+
+  @override
+  String get permBlockedRecordTrips => 'You cannot record trips on this boat.';
+
+  @override
+  String get permBlockedViewDocuments =>
+      'You cannot see this boat\'s documents.';
+
+  @override
+  String get permBlockedManageDocuments =>
+      'You cannot add or edit this boat\'s documents.';
+
+  @override
+  String get permBlockedManageMaintenance =>
+      'You cannot manage this boat\'s maintenance.';
+
+  @override
+  String get permBlockedManageExpenses =>
+      'You cannot manage this boat\'s expenses.';
+
+  @override
+  String get permCheckFailed =>
+      'Your permissions on this boat could not be checked.';
+
+  @override
+  String get myPermissionsTitle => 'What you can do';
+
+  @override
+  String get boatCrewTitle => 'Crew and permissions';
+
+  @override
+  String get boatCrewSubtitle => 'Who has access and what they can do';
+
+  @override
+  String get boatCrewExplainer =>
+      'Everyone who joined with your code. Grant each of them only what they need.';
+
+  @override
   String get maintenanceTab => 'Maintenance';
 
   @override
@@ -2299,6 +2383,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get anchorAlarmTitle => 'Anchor watch';
 
   @override
+  String get anchorWatchSubtitle => 'Drift alarm while anchored';
+
+  @override
   String get anchorDropHere => 'Drop anchor here';
 
   @override
@@ -2355,7 +2442,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Stop the trip recording before starting an anchor watch.';
 
   @override
-  String get paywallReasonAnchor => 'Unlock the anchor watch with Navis Pro';
+  String get paywallReasonAnchor => 'Unlock the anchor watch with Navis Plus';
 
   @override
   String get proBenefitAnchor =>
@@ -2413,4 +2500,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moderationFailed => 'Couldn\'t complete that. Please try again.';
+
+  @override
+  String get searchGroups => 'Search clubs by name…';
+
+  @override
+  String get clearSearch => 'Clear search';
+
+  @override
+  String get groupSearchTypeMore => 'Type at least 2 letters';
+
+  @override
+  String get noGroupsFound => 'No clubs match that name.';
+
+  @override
+  String get groupSearchError => 'Couldn\'t search clubs';
+
+  @override
+  String get checklistPromptQuestion =>
+      'Do you want to go through the safety checklist before setting sail?';
+
+  @override
+  String get rememberMyChoice => 'Remember my choice';
+
+  @override
+  String get reviewChecklist => 'Review checklist';
+
+  @override
+  String get skipChecklist => 'Skip';
+
+  @override
+  String get preTripChecklistSetting => 'Checklist before setting sail';
+
+  @override
+  String get preTripChecklistAsks => 'You\'ll be asked when a trip starts';
+
+  @override
+  String get preTripChecklistAlways => 'It always opens before recording';
+
+  @override
+  String get preTripChecklistSkipped => 'Skipped — turn on to be asked again';
 }

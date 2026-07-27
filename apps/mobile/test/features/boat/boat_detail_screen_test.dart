@@ -111,6 +111,10 @@ void main() {
                   path: 'record',
                   builder: (_, __) => const Scaffold(body: Text('Record Page')),
                 ),
+                GoRoute(
+                  path: 'stats',
+                  builder: (_, __) => const Scaffold(body: Text('Stats Page')),
+                ),
               ],
             ),
           ],
@@ -284,6 +288,33 @@ void main() {
 
       expect(find.text('Logbook'), findsOneWidget);
       expect(find.text('Trip history and statistics'), findsOneWidget);
+    });
+
+    testWidgets('shows Trip Statistics action tile', (tester) async {
+      await setPhoneSize(tester);
+      await tester.pumpWidget(buildSubject());
+      await pumpScreen(tester);
+
+      expect(find.text('Trip Statistics'), findsOneWidget);
+    });
+
+    testWidgets('Trip Statistics tile navigates to the stats page',
+        (tester) async {
+      await setPhoneSize(tester);
+      await tester.pumpWidget(buildSubject());
+      await pumpScreen(tester);
+
+      await tester.scrollUntilVisible(
+        find.text('Trip Statistics'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pump();
+
+      await tester.tap(find.text('Trip Statistics'));
+      await pumpScreen(tester);
+
+      expect(find.text('Stats Page'), findsOneWidget);
     });
 
     testWidgets('shows Edit Boat action tile', (tester) async {

@@ -295,7 +295,7 @@ void main() {
             boatProvider.overrideWith(
               (ref, id) async => makeBoat(id: id).copyWith(
                 isOwner: false,
-                permissions: const BoatPermissions(canRecordTrips: false),
+                permissions: const BoatPermissions.none(),
               ),
             ),
           ],

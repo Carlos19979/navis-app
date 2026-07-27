@@ -18,6 +18,7 @@ type mockGroupRepo struct {
 	getByInviteCodeFn func(ctx context.Context, userID, code string) (*domain.Group, error)
 	listFn            func(ctx context.Context, userID, cursor string, limit int) ([]domain.Group, string, error)
 	listPublicFn      func(ctx context.Context, userID, cursor string, limit int) ([]domain.Group, string, error)
+	searchPublicFn    func(ctx context.Context, userID, query, cursor string, limit int) ([]domain.Group, string, error)
 	updateFn          func(ctx context.Context, userID string, g *domain.Group) (*domain.Group, error)
 	deleteFn          func(ctx context.Context, userID, id string) error
 }
@@ -40,6 +41,10 @@ func (m *mockGroupRepo) List(ctx context.Context, userID, cursor string, limit i
 
 func (m *mockGroupRepo) ListPublic(ctx context.Context, userID, cursor string, limit int) ([]domain.Group, string, error) {
 	return m.listPublicFn(ctx, userID, cursor, limit)
+}
+
+func (m *mockGroupRepo) SearchPublic(ctx context.Context, userID, query, cursor string, limit int) ([]domain.Group, string, error) {
+	return m.searchPublicFn(ctx, userID, query, cursor, limit)
 }
 
 func (m *mockGroupRepo) Update(ctx context.Context, userID string, g *domain.Group) (*domain.Group, error) {

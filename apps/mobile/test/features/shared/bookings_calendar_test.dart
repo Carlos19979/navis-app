@@ -189,8 +189,74 @@ void main() {
       expect(find.text('No bookings on this day'), findsOneWidget);
     });
 
-    testWidgets(
-        'the day shortcut skips the date picker and pre-fills the tapped day',
+    testWidgets('a multi-day booking marks every day it crosses',
+        (tester) async {
+      setPhoneSize(tester);
+      // 10th 09:00 -> 12th 18:00 of the current month: three days taken.
+      await tester.pumpWidget(
+        buildSubject(bookings: [
+          makeBooking(
+            startsAt: DateTime(now.year, now.month, 10, 9),
+            endsAt: DateTime(now.year, now.month, 12, 18),
+          ),
+        ]),
+      );
+      await pumpScreen(tester);
+
+      for (final d in [10, 11, 12]) {
+        expect(
+          find.byKey(ValueKey('calendar-day-$d-mine')),
+          findsOneWidget,
+          reason: 'day $d is inside the range',
+        );
+      }
+      // The days either side stay free.
+      expect(find.byKey(const ValueKey('calendar-day-9-mine')), findsNothing);
+      expect(find.byKey(const ValueKey('calendar-day-13-mine')), findsNothing);
+    });
+
+    testWidgets('a range ending at midnight does not take the next day',
+        (tester) async {
+      setPhoneSize(tester);
+      // Half-open range, same rule as the API's overlap check: ends_at is
+      // exclusive, so an 11th 00:00 arrival leaves the 11th free.
+      await tester.pumpWidget(
+        buildSubject(bookings: [
+          makeBooking(
+            startsAt: DateTime(now.year, now.month, 10, 9),
+            endsAt: DateTime(now.year, now.month, 11),
+          ),
+        ]),
+      );
+      await pumpScreen(tester);
+
+      expect(
+          find.byKey(const ValueKey('calendar-day-10-mine')), findsOneWidget);
+      expect(find.byKey(const ValueKey('calendar-day-11-mine')), findsNothing);
+    });
+
+    testWidgets('the calendar is read-only: no second booking button',
+        (tester) async {
+      setPhoneSize(tester);
+      await tester.pumpWidget(buildSubject(bookings: [bookingOn(today)]));
+      await pumpScreen(tester);
+
+      await tester.tap(find.byKey(ValueKey('calendar-day-${otherDay.day}')));
+      await pumpScreen(tester);
+
+      // The old per-day shortcut is gone; the FAB is the only entry point.
+      expect(find.text('Book this day'), findsNothing);
+      expect(find.byTooltip('Book'), findsOneWidget);
+
+      verifyNever(() => mockRepo.createBooking(
+            any(),
+            startsAt: any(named: 'startsAt'),
+            endsAt: any(named: 'endsAt'),
+            purpose: any(named: 'purpose'),
+          ));
+    });
+
+    testWidgets('the FAB prefills the day the calendar is sitting on',
         (tester) async {
       setPhoneSize(tester);
       when(() => mockRepo.createBooking(
@@ -206,16 +272,7 @@ void main() {
       await tester.tap(find.byKey(ValueKey('calendar-day-${otherDay.day}')));
       await pumpScreen(tester);
 
-      await tester.tap(find.text('Book this day'));
-      await pumpScreen(tester);
-
-      // No date picker: the flow starts directly at the start-time picker.
-      expect(find.text('Start time'), findsOneWidget);
-
-      // Start 08:00 -> OK, end 12:00 -> OK.
-      await tester.tap(find.text('OK'));
-      await pumpScreen(tester);
-      await tester.tap(find.text('OK'));
+      await tester.tap(find.byTooltip('Book'));
       await pumpScreen(tester);
 
       await tester.enterText(find.byType(TextField).last, 'From calendar');
@@ -228,13 +285,14 @@ void main() {
             endsAt: captureAny(named: 'endsAt'),
             purpose: captureAny(named: 'purpose'),
           )).captured;
+      // Same-day default slot on the selected day.
       expect(
         captured[0],
-        DateTime(otherDay.year, otherDay.month, otherDay.day, 8),
+        DateTime(otherDay.year, otherDay.month, otherDay.day, 9),
       );
       expect(
         captured[1],
-        DateTime(otherDay.year, otherDay.month, otherDay.day, 12),
+        DateTime(otherDay.year, otherDay.month, otherDay.day, 18),
       );
       expect(captured[2], 'From calendar');
     });

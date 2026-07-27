@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/logbook/domain/entities/trip.dart';
+import 'package:navis_mobile/shared/widgets/navis_pulse_budget.dart';
 
 /// Control labels sit directly over the map, so a soft dark shadow keeps white
 /// text legible on both light and dark tiles.
@@ -131,7 +132,14 @@ class _StartButtonState extends State<_StartButton>
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
-    )..repeat(reverse: true);
+    )..repeat(
+        // Bounded: this glow sits on top of the map, so every frame of it
+        // repainted map tiles and invalidated the blurred overlays around it.
+        // A few breaths point at the button; after that the static cyan glow
+        // is enough.
+        reverse: true,
+        count: PulseBudget.reverseHalves(PulseBudget.urgent),
+      );
     _pulseAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
@@ -153,33 +161,35 @@ class _StartButtonState extends State<_StartButton>
       child: AnimatedScale(
         scale: _pressed ? 0.92 : 1.0,
         duration: const Duration(milliseconds: 100),
-        child: AnimatedBuilder(
-          animation: _pulseAnimation,
-          builder: (context, child) {
-            return Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: AppColors.cyanGradient,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.cyan.withValues(
-                      alpha: 0.25 + (_pulseAnimation.value * 0.25),
+        child: RepaintBoundary(
+          child: AnimatedBuilder(
+            animation: _pulseAnimation,
+            builder: (context, child) {
+              return Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: AppColors.cyanGradient,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.cyan.withValues(
+                        alpha: 0.25 + (_pulseAnimation.value * 0.25),
+                      ),
+                      blurRadius: 16 + (_pulseAnimation.value * 8),
+                      spreadRadius: 2 + (_pulseAnimation.value * 4),
                     ),
-                    blurRadius: 16 + (_pulseAnimation.value * 8),
-                    spreadRadius: 2 + (_pulseAnimation.value * 4),
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.play_arrow,
-                size: 36,
-                color: Colors.white,
-                semanticLabel: 'Start recording',
-              ),
-            );
-          },
+                  ],
+                ),
+                child: const Icon(
+                  Icons.play_arrow,
+                  size: 36,
+                  color: Colors.white,
+                  semanticLabel: 'Start recording',
+                ),
+              );
+            },
+          ),
         ),
       ),
     );

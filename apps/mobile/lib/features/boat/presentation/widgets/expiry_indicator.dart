@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
+import 'package:navis_mobile/shared/widgets/navis_pulse_budget.dart';
 
 class ExpiryIndicator extends StatelessWidget {
   const ExpiryIndicator({super.key, required this.expiryDate, this.size = 12});
@@ -53,21 +54,25 @@ class ExpiryIndicator extends StatelessWidget {
     );
 
     if (_shouldPulse) {
-      indicator = indicator
-          .animate(onPlay: (controller) => controller.repeat(reverse: true))
-          .scale(
-            begin: const Offset(1.0, 1.0),
-            end: const Offset(1.12, 1.12),
-            duration: 800.ms,
-            curve: Curves.easeInOut,
-          )
-          .then()
-          .scale(
-            begin: const Offset(1.12, 1.12),
-            end: const Offset(1.0, 1.0),
-            duration: 800.ms,
-            curve: Curves.easeInOut,
-          );
+      // Expiry is worth a pulse, but a bounded one: `repeat()` with no count
+      // repaints at 60 fps for as long as the screen is open and invalidates
+      // the layers underneath on every frame. A few there-and-back cycles say
+      // the same thing, and the red icon stays after they end.
+      indicator = RepaintBoundary(
+        child: indicator
+            .animate(
+              onPlay: (controller) => controller.repeat(
+                reverse: true,
+                count: PulseBudget.reverseHalves(PulseBudget.urgent),
+              ),
+            )
+            .scale(
+              begin: const Offset(1.0, 1.0),
+              end: const Offset(1.12, 1.12),
+              duration: 800.ms,
+              curve: Curves.easeInOut,
+            ),
+      );
     }
 
     return indicator;

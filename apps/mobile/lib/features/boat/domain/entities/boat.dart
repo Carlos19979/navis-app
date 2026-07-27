@@ -15,7 +15,7 @@ class Boat {
     this.engineHours = 0,
     this.ownerId,
     this.isOwner = true,
-    this.permissions = const BoatPermissions(),
+    this.permissions = const BoatPermissions.all(),
     this.createdAt,
     this.updatedAt,
   });
@@ -35,6 +35,12 @@ class Boat {
   final double engineHours;
   final String? ownerId;
   final bool isOwner;
+
+  /// What the current user may do on this boat. Defaults to
+  /// [BoatPermissions.all] to match the `isOwner = true` default: a boat built
+  /// locally (a create form, an offline row) is the user's own. For a *shared*
+  /// boat, gate actions on `boatPermissionsProvider` instead of this field —
+  /// it is authoritative and fails closed while it resolves.
   final BoatPermissions permissions;
   final DateTime? createdAt;
   final DateTime? updatedAt;

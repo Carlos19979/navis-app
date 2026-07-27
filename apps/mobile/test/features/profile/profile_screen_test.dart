@@ -52,6 +52,16 @@ class MockAuthNotifier extends StateNotifier<AuthState>
 
 class FakeRoute extends Fake implements Route<dynamic> {}
 
+/// Scrolls the logout button into view before tapping it: with the support
+/// page and the email fallback the menu is taller than the test viewport.
+Future<void> tapLogout(WidgetTester tester) async {
+  final button = find.text('Log Out');
+  await tester.ensureVisible(button);
+  await tester.pumpAndSettle();
+  await tester.tap(button);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   late MockAuthNotifier mockAuthNotifier;
   late MockAuthRepository mockAuthRepository;
@@ -244,6 +254,23 @@ void main() {
         expect(find.byIcon(Icons.help_outline), findsOneWidget);
       });
 
+      testWidgets('Help & Support points at the API support page, not mailto',
+          (tester) async {
+        final uri = navisSupportPageUri();
+
+        expect(uri.path, '/support');
+        expect(uri.scheme, anyOf('http', 'https'));
+        expect(uri.scheme, isNot('mailto'));
+      });
+
+      testWidgets('keeps email as a secondary support route', (tester) async {
+        await tester.pumpWidget(buildProfileScreen());
+        await tester.pumpAndSettle();
+
+        expect(find.text('Email us'), findsOneWidget);
+        expect(find.byIcon(Icons.mail_outline_rounded), findsOneWidget);
+      });
+
       testWidgets('displays About Navis menu item', (tester) async {
         await tester.pumpWidget(buildProfileScreen());
         await tester.pumpAndSettle();
@@ -256,10 +283,11 @@ void main() {
         await tester.pumpWidget(buildProfileScreen());
         await tester.pumpAndSettle();
 
-        // Each _ProfileTile has a chevron_right icon
+        // Each _ProfileTile has a chevron_right icon: Settings, Help &
+        // Support, Email us, About Navis.
         expect(
           find.byIcon(Icons.chevron_right),
-          findsNWidgets(3),
+          findsNWidgets(4),
         );
       });
     });
@@ -277,8 +305,7 @@ void main() {
         await tester.pumpWidget(buildProfileScreen());
         await tester.pumpAndSettle();
 
-        await tester.tap(find.text('Log Out'));
-        await tester.pumpAndSettle();
+        await tapLogout(tester);
 
         expect(
           find.text('Are you sure you want to log out?'),
@@ -293,8 +320,7 @@ void main() {
         await tester.pumpWidget(buildProfileScreen());
         await tester.pumpAndSettle();
 
-        await tester.tap(find.text('Log Out'));
-        await tester.pumpAndSettle();
+        await tapLogout(tester);
 
         await tester.tap(find.text('Cancel'));
         await tester.pumpAndSettle();
@@ -312,8 +338,7 @@ void main() {
         await tester.pumpAndSettle();
 
         // Tap the logout button on the screen
-        await tester.tap(find.text('Log Out'));
-        await tester.pumpAndSettle();
+        await tapLogout(tester);
 
         final dialogLogout = find.descendant(
           of: find.byType(AlertDialog),

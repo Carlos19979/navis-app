@@ -16,12 +16,13 @@ class BoatModel {
     this.engineHours = 0,
     this.ownerId,
     this.isOwner = true,
-    this.permissions = const BoatPermissions(),
+    this.permissions = const BoatPermissions.all(),
     this.createdAt,
     this.updatedAt,
   });
 
   factory BoatModel.fromJson(Map<String, dynamic> json) {
+    final isOwner = json['is_owner'] as bool? ?? true;
     return BoatModel(
       id: json['id'] as String,
       name: json['name'] as String,
@@ -35,11 +36,15 @@ class BoatModel {
       photoUrls: (json['photo_urls'] as List?)?.cast<String>() ?? const [],
       engineHours: (json['engine_hours'] as num?)?.toDouble() ?? 0,
       ownerId: json['owner_id'] as String?,
-      isOwner: json['is_owner'] as bool? ?? true,
+      isOwner: isOwner,
+      // No permissions object (a row cached before the field existed): the
+      // owner holds everything, a member holds nothing until we can ask.
       permissions: json['permissions'] is Map<String, dynamic>
           ? BoatPermissions.fromJson(
               json['permissions'] as Map<String, dynamic>)
-          : const BoatPermissions(),
+          : (isOwner
+              ? const BoatPermissions.all()
+              : const BoatPermissions.none()),
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,

@@ -10,6 +10,10 @@ import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
+import 'package:navis_mobile/features/boat/data/permission_errors.dart';
+import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
+import 'package:navis_mobile/features/boat/presentation/providers/boat_permissions_provider.dart';
+import 'package:navis_mobile/features/boat/presentation/widgets/permission_gate.dart';
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
 import 'package:navis_mobile/features/documents/presentation/widgets/document_status_badge.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
@@ -35,36 +39,12 @@ class DocumentDetailScreen extends ConsumerWidget {
         appBar: NavisAppBar(
           title: l.documentDetails,
           showBack: true,
+          // Edit / renew / delete all need can_manage_documents on the
+          // document's boat. The boat id only exists once the document has
+          // loaded, so the actions resolve with it and stay hidden until then.
           actions: [
-            IconButton(
-              icon: const Icon(Icons.edit_outlined),
-              tooltip: l.editDocument,
-              onPressed: () {
-                final doc = ref.read(documentProvider(documentId)).valueOrNull;
-                if (doc != null) {
-                  context.push(
-                    '/documents/$documentId/edit?boatId=${doc.boatId}',
-                  );
-                }
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.autorenew, color: AppColors.cyan),
-              tooltip: l.renewDocument,
-              onPressed: () {
-                final doc = ref.read(documentProvider(documentId)).valueOrNull;
-                if (doc != null) {
-                  context.push(
-                    '/documents/$documentId/edit?boatId=${doc.boatId}&renew=true',
-                  );
-                }
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete_outlined, color: AppColors.red),
-              tooltip: l.delete,
-              onPressed: () => _confirmDelete(context, ref),
-            ),
+            if (docAsync.valueOrNull?.boatId case final boatId?)
+              _DocumentActions(documentId: documentId, boatId: boatId),
           ],
         ),
         body: SafeArea(
@@ -376,9 +356,53 @@ class DocumentDetailScreen extends ConsumerWidget {
       ),
     );
   }
+}
 
-  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
+/// Edit / renew / delete, shown only to someone who may manage the boat's
+/// documents. A read-only member used to see all three and get a 403.
+class _DocumentActions extends ConsumerWidget {
+  const _DocumentActions({required this.documentId, required this.boatId});
+
+  final String documentId;
+  final String boatId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
+    final canManage = ref
+        .watch(boatPermissionsProvider(boatId))
+        .grants(BoatPermissionArea.manageDocuments);
+    if (!canManage) return const SizedBox.shrink();
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.edit_outlined),
+          tooltip: l.editDocument,
+          onPressed: () =>
+              context.push('/documents/$documentId/edit?boatId=$boatId'),
+        ),
+        IconButton(
+          icon: const Icon(Icons.autorenew, color: AppColors.cyan),
+          tooltip: l.renewDocument,
+          onPressed: () => context
+              .push('/documents/$documentId/edit?boatId=$boatId&renew=true'),
+        ),
+        IconButton(
+          icon: const Icon(Icons.delete_outlined, color: AppColors.red),
+          tooltip: l.delete,
+          onPressed: () => _confirmDelete(context, ref, l),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _confirmDelete(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l,
+  ) async {
     final confirmed = await NavisConfirmDialog.show(
       context,
       title: l.deleteDocument,
@@ -388,8 +412,7 @@ class DocumentDetailScreen extends ConsumerWidget {
     );
     if (!confirmed) return;
     try {
-      final repo = ref.read(documentRepositoryProvider);
-      await repo.deleteDocument(documentId);
+      await ref.read(documentRepositoryProvider).deleteDocument(documentId);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l.documentDeleted)),
@@ -397,7 +420,16 @@ class DocumentDetailScreen extends ConsumerWidget {
         context.pop();
       }
     } catch (e) {
-      if (context.mounted) {
+      if (!context.mounted) return;
+      // Safety net: revoked while the screen was open.
+      if (isPermissionDeniedError(e)) {
+        showPermissionDenied(
+          context,
+          ref,
+          boatId: boatId,
+          area: BoatPermissionArea.manageDocuments,
+        );
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l.failedToDelete)),
         );
