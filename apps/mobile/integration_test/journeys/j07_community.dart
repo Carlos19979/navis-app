@@ -116,7 +116,12 @@ void j07Community() {
     await pumpFor(tester, const Duration(seconds: 2));
     await tester.tap(find.byType(FlutterMap).first, warnIfMissed: false);
     await pumpFor(tester, const Duration(milliseconds: 600));
-    final portName = find.byType(TextField);
+    // Screen-scoped: the Community screen underneath keeps its Discover search
+    // field in the tree, and an unscoped TextField finder can pick that one.
+    final portName = find.descendant(
+      of: find.byType(MapPickerScreen),
+      matching: find.byType(TextField),
+    );
     await pumpUntilFound(tester, portName);
     await enterTextChecked(tester, portName, 'Palma E2E');
     await tapUntilGone(
