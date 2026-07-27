@@ -38,7 +38,16 @@ file_size_limit = "50MiB"
 [auth]
 enabled = true
 site_url = "http://127.0.0.1:3000"
-additional_redirect_urls = ["https://127.0.0.1:3000"]
+# `navis://login-callback` is the deep link the app passes as `redirect_to` for
+# password recovery and for OAuth. GoTrue does NOT reject an unlisted redirect —
+# it silently falls back to `site_url`, so the symptom is an email link that
+# opens a web page instead of the app. It has to be allow-listed here for the
+# local stack, and in the dashboard (Authentication → URL Configuration) for
+# every deployed project.
+additional_redirect_urls = [
+  "https://127.0.0.1:3000",
+  "navis://login-callback",
+]
 jwt_expiry = 3600
 enable_refresh_token_rotation = true
 refresh_token_reuse_interval = 10
