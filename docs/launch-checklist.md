@@ -64,6 +64,15 @@ este documento es solo el índice de progreso. Actualizado: 2026-07-15.
       privado, RLS de `sent_notifications`, índices de paginación.
 - [ ] Auth: confirmaciones de email ON, redirect `navis://login-callback`,
       Sign in with Apple + Google, SMTP de Resend como sender.
+  - [x] Redirect `navis://login-callback` — verificado en el dashboard de
+        `navis-prod` (2026-07-27): está en Redirect URLs, es la única.
+  - [x] Site URL — corregido (2026-07-27). Estaba en `http://localhost:3000`,
+        que es el destino de reserva de cualquier redirect NO listado y además
+        Supabase lo inyecta en las plantillas de correo como `{{ .SiteURL }}`.
+        Ahora apunta a `https://navis-app-production.up.railway.app/support`:
+        se eligió `/support` y no la raíz porque la raíz de la API devuelve 404,
+        y esta página ya está registrada como Support URL en App Store Connect,
+        así que quien caiga ahí encuentra algo útil.
 
 ### 5. Railway (Go API)
 - [ ] Proyecto en **región UE**, servicio con root dir `apps/api`.
