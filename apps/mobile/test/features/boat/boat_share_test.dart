@@ -177,13 +177,11 @@ void main() {
     await drain(tester);
   });
 
-  // SKIPPED — this one fails against today's code, and it is the production
-  // code that is wrong, not the test. `_shareCodeNatively` awaits
-  // `Share.share(...)` with no try/catch and is launched fire-and-forget from
-  // `onPressed`, so a platform that cannot share (no receiving app, cancelled
-  // intent on some OEMs) escapes as an uncaught async error. Wrap the
-  // `Share.share` call in try/catch in boat_detail_screen.dart and delete this
-  // `skip:` to turn it into a regression test.
+  // Was written skipped because it caught a real bug: `_shareCodeNatively`
+  // awaited `Share.share(...)` with no try/catch, fire-and-forget from
+  // `onPressed`, so a platform that cannot share (no receiving app, an intent
+  // the OEM cancels) escaped as an uncaught async error. The try/catch is now
+  // in place, so this runs as a regression test.
   testWidgets(
       'a failing share sheet leaves the user on the sheet, not on a '
       'crash', (tester) async {
@@ -205,7 +203,5 @@ void main() {
     expect(find.text(shareCode), findsOneWidget);
 
     await drain(tester);
-    // Unskip together with the try/catch: Share.share() currently lets the
-    // PlatformException escape as an uncaught async error.
-  }, skip: true);
+  });
 }

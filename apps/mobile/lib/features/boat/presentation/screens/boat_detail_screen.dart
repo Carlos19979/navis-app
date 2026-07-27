@@ -486,6 +486,12 @@ class _BoatDetailView extends ConsumerWidget {
   ///
   /// `sharePositionOrigin` is required on iPad, where the sheet is a popover
   /// anchored to the button that opened it.
+  ///
+  /// Failures are swallowed on purpose. This is called fire-and-forget from
+  /// `onPressed`, so an escaping `PlatformException` would surface as an
+  /// uncaught async error — and a platform that cannot open the sheet (no app
+  /// able to receive the text, an intent the OEM cancels) is not a reason to
+  /// crash. The code stays on screen, so the owner can still use Copy.
   Future<void> _shareCodeNatively(
     BuildContext context,
     Boat boat,
@@ -493,13 +499,17 @@ class _BoatDetailView extends ConsumerWidget {
   ) async {
     final l = AppLocalizations.of(context)!;
     final box = context.findRenderObject() as RenderBox?;
-    await Share.share(
-      l.shareBoatMessageWithLink(boat.name, code, _joinLink(code)),
-      subject: l.shareBoat,
-      sharePositionOrigin: box != null && box.hasSize
-          ? box.localToGlobal(Offset.zero) & box.size
-          : null,
-    );
+    try {
+      await Share.share(
+        l.shareBoatMessageWithLink(boat.name, code, _joinLink(code)),
+        subject: l.shareBoat,
+        sharePositionOrigin: box != null && box.hasSize
+            ? box.localToGlobal(Offset.zero) & box.size
+            : null,
+      );
+    } on Exception catch (error) {
+      debugPrint('share sheet unavailable: $error');
+    }
   }
 
   /// Deep link that opens the app straight on the join flow with the code
