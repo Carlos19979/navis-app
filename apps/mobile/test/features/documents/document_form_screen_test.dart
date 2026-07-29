@@ -231,6 +231,70 @@ void main() {
       expect(chipFor(tester, '45 days').selected, isTrue);
     });
 
+    // The build-5 request: a custom threshold had no way out. Tap still
+    // selects; long-press is what removes one.
+    testWidgets('long-pressing a custom alert deletes it after confirming',
+        (tester) async {
+      setPhoneSize(tester);
+      await tester.pumpWidget(buildSubject());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Custom'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).last, '100');
+      await tester.tap(find.text('Confirm'));
+      await tester.pumpAndSettle();
+      expect(chipFor(tester, '100 days').selected, isTrue);
+
+      await tester.longPress(find.text('100 days'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Delete alert'), findsOneWidget);
+      await tester.tap(find.widgetWithText(TextButton, 'Delete'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('100 days'), findsNothing);
+      // The defaults are untouched.
+      expect(chipFor(tester, '30 days').selected, isTrue);
+    });
+
+    testWidgets('cancelling the confirmation keeps the custom alert',
+        (tester) async {
+      setPhoneSize(tester);
+      await tester.pumpWidget(buildSubject());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Custom'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).last, '100');
+      await tester.tap(find.text('Confirm'));
+      await tester.pumpAndSettle();
+
+      await tester.longPress(find.text('100 days'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(chipFor(tester, '100 days').selected, isTrue);
+    });
+
+    testWidgets('a preset alert cannot be deleted, and says so',
+        (tester) async {
+      setPhoneSize(tester);
+      await tester.pumpWidget(buildSubject());
+      await tester.pumpAndSettle();
+
+      await tester.longPress(find.text('30 days'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Delete alert'), findsNothing);
+      expect(
+        find.textContaining("Default alerts can't be deleted"),
+        findsOneWidget,
+      );
+      expect(find.text('30 days'), findsOneWidget);
+    });
+
     testWidgets('custom chip rejects non-numeric input with a snackbar',
         (tester) async {
       setPhoneSize(tester);

@@ -2540,4 +2540,97 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get preTripChecklistSkipped => 'Skipped — turn on to be asked again';
+
+  @override
+  String get shareFailedCopied =>
+      'Sharing isn\'t available. The text is on your clipboard.';
+
+  @override
+  String get shareTripLink => 'Share link';
+
+  @override
+  String get shareTripLinkSubtitle => 'Web page with the trip\'s map';
+
+  @override
+  String get shareTripSummary => 'Share summary';
+
+  @override
+  String get shareTripSummarySubtitle => 'Text with the trip\'s figures';
+
+  @override
+  String get shareLinkFailed => 'The link couldn\'t be created';
+
+  @override
+  String get madeWithNavis => 'Made with Navis';
+
+  @override
+  String get tripReadOnly =>
+      'Read-only trip: only whoever recorded it, or the boat\'s owner, can change it.';
+
+  @override
+  String get tripDeleteForbidden =>
+      'You don\'t have permission to delete this trip. Ask the boat\'s owner.';
+
+  @override
+  String get tripAlreadyDeleted => 'This trip no longer exists';
+
+  @override
+  String get alertChipLongPressToDelete => 'Long-press to delete';
+
+  @override
+  String get alertChipDeleteHint =>
+      'Long-press an alert you added to delete it.';
+
+  @override
+  String get alertChipDeleteTitle => 'Delete alert';
+
+  @override
+  String alertChipDeleteConfirm(int days) {
+    return 'Remove the $days-day alert from this document?';
+  }
+
+  @override
+  String get alertChipPresetNotRemovable =>
+      'Default alerts can\'t be deleted — tap to turn one off.';
+
+  @override
+  String joinBoatInviteConfirm(String code) {
+    return 'You\'ve been invited to a boat with the code $code. Join it?';
+  }
+
+  @override
+  String get locationServicesOff =>
+      'Location is turned off on this device.\nTurn it on to see the forecast where you are.';
+
+  @override
+  String get locationNoFixYet =>
+      'We couldn\'t get your position.\nOut in the open it usually takes a few seconds.';
+
+  @override
+  String get wholeYear => 'Whole year';
+
+  @override
+  String statsHoursAndTrips(String hours, int trips) {
+    String _temp0 = intl.Intl.pluralLogic(
+      trips,
+      locale: localeName,
+      other: '$trips trips',
+      one: '$trips trip',
+    );
+    return '$hours h at sea · $_temp0';
+  }
+
+  @override
+  String get statsAvgTrip => 'Average trip';
+
+  @override
+  String get statsLongestTrip => 'Longest trip';
+
+  @override
+  String get statsLitresPerNm => 'Fuel per mile';
+
+  @override
+  String statsMorePorts(int count) {
+    return '+$count more';
+  }
 }

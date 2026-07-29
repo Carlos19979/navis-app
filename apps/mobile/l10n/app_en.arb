@@ -1023,5 +1023,60 @@
   "preTripChecklistSetting": "Checklist before setting sail",
   "preTripChecklistAsks": "You'll be asked when a trip starts",
   "preTripChecklistAlways": "It always opens before recording",
-  "preTripChecklistSkipped": "Skipped — turn on to be asked again"
+  "preTripChecklistSkipped": "Skipped — turn on to be asked again",
+  "shareFailedCopied": "Sharing isn't available. The text is on your clipboard.",
+  "shareTripLink": "Share link",
+  "shareTripLinkSubtitle": "Web page with the trip's map",
+  "shareTripSummary": "Share summary",
+  "shareTripSummarySubtitle": "Text with the trip's figures",
+  "shareLinkFailed": "The link couldn't be created",
+  "madeWithNavis": "Made with Navis",
+  "tripReadOnly": "Read-only trip: only whoever recorded it, or the boat's owner, can change it.",
+  "tripDeleteForbidden": "You don't have permission to delete this trip. Ask the boat's owner.",
+  "tripAlreadyDeleted": "This trip no longer exists",
+  "alertChipLongPressToDelete": "Long-press to delete",
+  "alertChipDeleteHint": "Long-press an alert you added to delete it.",
+  "alertChipDeleteTitle": "Delete alert",
+  "alertChipDeleteConfirm": "Remove the {days}-day alert from this document?",
+  "@alertChipDeleteConfirm": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "alertChipPresetNotRemovable": "Default alerts can't be deleted — tap to turn one off.",
+  "joinBoatInviteConfirm": "You've been invited to a boat with the code {code}. Join it?",
+  "@joinBoatInviteConfirm": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "locationServicesOff": "Location is turned off on this device.\nTurn it on to see the forecast where you are.",
+  "locationNoFixYet": "We couldn't get your position.\nOut in the open it usually takes a few seconds.",
+  "wholeYear": "Whole year",
+  "statsHoursAndTrips": "{hours} h at sea · {trips, plural, one{{trips} trip} other{{trips} trips}}",
+  "@statsHoursAndTrips": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      },
+      "trips": {
+        "type": "int"
+      }
+    }
+  },
+  "statsAvgTrip": "Average trip",
+  "statsLongestTrip": "Longest trip",
+  "statsLitresPerNm": "Fuel per mile",
+  "statsMorePorts": "+{count} more",
+  "@statsMorePorts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

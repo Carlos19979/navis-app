@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/core/deeplinks/join_deep_link.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
@@ -26,6 +27,7 @@ import 'package:navis_mobile/shared/widgets/join_by_code_sheet.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
+import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_empty_state.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
@@ -159,6 +161,12 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
       hint: l.inviteCode,
     );
     if (code == null || code.isEmpty) return;
+    await _joinWithCode(code);
+  }
+
+  /// Joins the boat behind [code], reporting the outcome either way.
+  Future<void> _joinWithCode(String code) async {
+    final l = AppLocalizations.of(context)!;
     try {
       await ref.read(boatShareRepositoryProvider).joinBoat(code);
       ref.invalidate(sharedBoatsProvider);
@@ -172,10 +180,59 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
     }
   }
 
+  /// The invite code currently being handled, so a rebuild does not offer the
+  /// same one twice.
+  String? _handlingInvite;
+
+  /// Handles a pending invite code after the current frame.
+  ///
+  /// Deferred on purpose: it is picked up during build, and clearing the
+  /// provider or pushing a dialog mid-build is not allowed.
+  void _scheduleInvite(String code) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(_acceptInvite(code));
+    });
+  }
+
+  /// An invite link opened the app. Confirm before acting: a tap on a link is
+  /// not consent to hand your account to whoever sent it, and the boat's name
+  /// is not known until the join goes through.
+  Future<void> _acceptInvite(String code) async {
+    final l = AppLocalizations.of(context)!;
+    // Cleared first, so a refused or failed invite is not offered again on the
+    // next rebuild.
+    ref.read(pendingJoinCodeProvider.notifier).state = null;
+    final confirmed = await NavisConfirmDialog.show(
+      context,
+      title: l.joinBoat,
+      message: l.joinBoatInviteConfirm(code),
+      confirmLabel: l.join,
+    );
+    if (!confirmed || !mounted) {
+      _handlingInvite = null;
+      return;
+    }
+    await _joinWithCode(code);
+    _handlingInvite = null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final boatsAsync = ref.watch(boatsProvider);
     ref.watch(accountProvider); // warm the plan for FAB gating
+    // An invite code from a link the app was opened with. This screen is the
+    // first authenticated thing the user sees, which is why it consumes it.
+    // `fireImmediately` matters: the link can land before this screen exists
+    // (cold start, or the user was on another tab), and a plain listener only
+    // hears changes that happen while it is mounted.
+    // Watched, not listened to: the link can land before this screen exists
+    // (cold start, or the user was on another tab), and a listener only hears
+    // changes that happen while it is mounted.
+    final pending = ref.watch(pendingJoinCodeProvider);
+    if (pending != null && pending != _handlingInvite) {
+      _handlingInvite = pending;
+      _scheduleInvite(pending);
+    }
     final l = AppLocalizations.of(context)!;
 
     return Scaffold(

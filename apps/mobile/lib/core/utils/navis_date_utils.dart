@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart' show Locale;
 import 'package:intl/intl.dart';
 
 /// Expiry status buckets, aligned with the server's computed
@@ -6,6 +7,16 @@ enum DocExpiryStatus { expired, critical, warning, ok }
 
 class NavisDateUtils {
   NavisDateUtils._();
+
+  /// Makes [locale] the default for every `DateFormat` built without one —
+  /// which is all four formatters below, and therefore most dates in the app.
+  ///
+  /// Called from the app root with the locale MaterialApp resolved. Without it
+  /// `Intl.defaultLocale` stays null, `DateFormat` falls back to en_US, and the
+  /// app shows "28 Jul 2027" and "July 2026" while running in Spanish.
+  static void useLocale(Locale locale) {
+    Intl.defaultLocale = locale.toLanguageTag();
+  }
 
   /// Canonical expiry thresholds — the single source of truth, aligned with the
   /// server's `documents.status` trigger (critical < 30 days, warning < 90 days)

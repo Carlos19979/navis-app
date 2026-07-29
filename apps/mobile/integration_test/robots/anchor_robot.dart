@@ -10,22 +10,20 @@ class AnchorRobot {
 
   final WidgetTester tester;
 
-  /// Opens the anchor watch from the focus dashboard (Pro button).
-  Future<void> open() async {
-    await tapUntil(
-      tester,
-      find.text('Anchor watch'),
-      find.text('Drop anchor here'),
-    );
-    await pumpFor(tester, const Duration(milliseconds: 500));
-  }
+  /// Marker for the anchor-watch screen, used by the caller that opens it.
+  ///
+  /// There is no `open()` here any more: the dashboard chip that used to launch
+  /// the watch was removed (it only ever showed with exactly one boat), so the
+  /// single entry point is the boat detail hub — `BoatRobot.openTile('Anchor
+  /// watch', AnchorRobot.screenMarker)`.
+  static Finder get screenMarker => find.text('Drop anchor here');
 
   /// Drops the anchor at the current fix; the controls switch to the armed
   /// ledger (a 'Stop watch' button appears).
   Future<void> dropAnchor() async {
     await tapUntil(
       tester,
-      find.text('Drop anchor here'),
+      screenMarker,
       find.text('Stop watch'),
     );
     await pumpFor(tester, const Duration(milliseconds: 500));
@@ -50,7 +48,7 @@ class AnchorRobot {
     await tapUntil(
       tester,
       find.text('Stop watch'),
-      find.text('Drop anchor here'),
+      screenMarker,
     );
     await pumpFor(tester, const Duration(milliseconds: 500));
   }

@@ -8,6 +8,7 @@ import 'package:navis_mobile/features/boat/data/boat_share_repository.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
+import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 
 /// Crew and permissions management, owner-facing.
@@ -33,6 +34,11 @@ Future<void> showBoatMembersSheet(
 
 class _BoatMembersSheet extends ConsumerWidget {
   const _BoatMembersSheet({required this.boatId, this.onShare});
+
+  /// Floor for the content area while the crew loads, so the sheet is already
+  /// about the size it will end up being before it finishes sliding in. A
+  /// minimum rather than a fixed height: the skeleton must not be squeezed.
+  static const _contentMinHeight = 128.0;
 
   final String boatId;
   final VoidCallback? onShare;
@@ -77,13 +83,22 @@ class _BoatMembersSheet extends ConsumerWidget {
             Flexible(
               child: SingleChildScrollView(
                 child: membersAsync.when(
-                  loading: () => const Padding(
-                    padding: EdgeInsets.all(Dimens.spaceSm),
-                    child: LinearProgressIndicator(),
+                  // Same height as a couple of rows, so the sheet does not
+                  // resize when the crew arrives. A thin progress bar made it
+                  // open short and then jump taller mid-animation — the flash
+                  // that made this feel broken.
+                  loading: () => ConstrainedBox(
+                    constraints:
+                        const BoxConstraints(minHeight: _contentMinHeight),
+                    child: const NavisShimmer(
+                      itemCount: 2,
+                      padding: EdgeInsets.symmetric(vertical: 6),
+                    ),
                   ),
                   error: (e, _) => Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      const SizedBox(height: Dimens.spaceSm),
                       Text(
                         l.somethingWentWrong,
                         style: TextStyle(color: context.txtSecondary),

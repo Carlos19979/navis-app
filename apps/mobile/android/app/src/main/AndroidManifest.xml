@@ -40,6 +40,16 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="navis" android:host="login-callback"/>
             </intent-filter>
+            <!-- Boat invite links. The /join web page redirects here, and the
+                 scheme also works when pasted by hand. Without this filter the
+                 invite simply did nothing on Android: only login-callback was
+                 registered. -->
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="navis" android:host="join"/>
+            </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

@@ -26,6 +26,7 @@ type tripService interface {
 	Delete(ctx context.Context, userID, id string) error
 	AddTrackPoints(ctx context.Context, userID string, tracks []domain.TripTrack) error
 	GetTrackPoints(ctx context.Context, userID, tripID string) ([]domain.TripTrack, error)
+	GetByIDWithAccess(ctx context.Context, userID, id string) (*domain.Trip, bool, error)
 	Share(ctx context.Context, userID, tripID string) (string, error)
 	Unshare(ctx context.Context, userID, tripID string) error
 	PublicByToken(ctx context.Context, token string) (*domain.Trip, []domain.TripTrack, error)
@@ -85,13 +86,15 @@ func (h *TripHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := chi.URLParam(r, "id")
-	trip, err := h.svc.GetByID(r.Context(), userID, id)
+	trip, canManage, err := h.svc.GetByIDWithAccess(r.Context(), userID, id)
 	if err != nil {
 		MapDomainError(w, err)
 		return
 	}
 
-	JSON(w, http.StatusOK, dto.TripResponseFromDomain(trip))
+	resp := dto.TripResponseFromDomain(trip)
+	resp.CanManage = canManage
+	JSON(w, http.StatusOK, resp)
 }
 
 // List handles GET /boats/{boatId}/trips.

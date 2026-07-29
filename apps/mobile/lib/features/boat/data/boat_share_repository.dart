@@ -111,6 +111,18 @@ final sharedBoatsProvider = FutureProvider<List<Boat>>((ref) async {
   return ref.read(boatShareRepositoryProvider).listShared();
 });
 
+/// The boat's invite code, fetched (and created on first use) by the API.
+///
+/// A provider rather than a bare `await` before opening the share sheet: doing
+/// it inline left the tap with no feedback for as long as the round trip took,
+/// and then the sheet appeared already-populated after a visible pause. Here
+/// the sheet opens at once and shows the code arriving.
+final boatShareCodeProvider =
+    FutureProvider.autoDispose.family<String, String>((ref, boatId) async {
+  ref.watch(sessionUserIdProvider);
+  return ref.read(boatShareRepositoryProvider).shareCode(boatId);
+});
+
 /// The boat's crew, owner-facing. **autoDispose on purpose:** joining happens
 /// on someone *else's* device, so nothing in the owner's app can invalidate a
 /// long-lived cache — the owner kept seeing "not shared with anyone yet" after

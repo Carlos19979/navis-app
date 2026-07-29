@@ -4855,6 +4855,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Skipped — turn on to be asked again'**
   String get preTripChecklistSkipped;
+
+  /// No description provided for @shareFailedCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing isn\'t available. The text is on your clipboard.'**
+  String get shareFailedCopied;
+
+  /// No description provided for @shareTripLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Share link'**
+  String get shareTripLink;
+
+  /// No description provided for @shareTripLinkSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Web page with the trip\'s map'**
+  String get shareTripLinkSubtitle;
+
+  /// No description provided for @shareTripSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Share summary'**
+  String get shareTripSummary;
+
+  /// No description provided for @shareTripSummarySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Text with the trip\'s figures'**
+  String get shareTripSummarySubtitle;
+
+  /// No description provided for @shareLinkFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The link couldn\'t be created'**
+  String get shareLinkFailed;
+
+  /// No description provided for @madeWithNavis.
+  ///
+  /// In en, this message translates to:
+  /// **'Made with Navis'**
+  String get madeWithNavis;
+
+  /// No description provided for @tripReadOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Read-only trip: only whoever recorded it, or the boat\'s owner, can change it.'**
+  String get tripReadOnly;
+
+  /// No description provided for @tripDeleteForbidden.
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have permission to delete this trip. Ask the boat\'s owner.'**
+  String get tripDeleteForbidden;
+
+  /// No description provided for @tripAlreadyDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'This trip no longer exists'**
+  String get tripAlreadyDeleted;
+
+  /// No description provided for @alertChipLongPressToDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-press to delete'**
+  String get alertChipLongPressToDelete;
+
+  /// No description provided for @alertChipDeleteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-press an alert you added to delete it.'**
+  String get alertChipDeleteHint;
+
+  /// No description provided for @alertChipDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete alert'**
+  String get alertChipDeleteTitle;
+
+  /// No description provided for @alertChipDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the {days}-day alert from this document?'**
+  String alertChipDeleteConfirm(int days);
+
+  /// No description provided for @alertChipPresetNotRemovable.
+  ///
+  /// In en, this message translates to:
+  /// **'Default alerts can\'t be deleted — tap to turn one off.'**
+  String get alertChipPresetNotRemovable;
+
+  /// No description provided for @joinBoatInviteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve been invited to a boat with the code {code}. Join it?'**
+  String joinBoatInviteConfirm(String code);
+
+  /// No description provided for @locationServicesOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Location is turned off on this device.\nTurn it on to see the forecast where you are.'**
+  String get locationServicesOff;
+
+  /// No description provided for @locationNoFixYet.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t get your position.\nOut in the open it usually takes a few seconds.'**
+  String get locationNoFixYet;
+
+  /// No description provided for @wholeYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Whole year'**
+  String get wholeYear;
+
+  /// No description provided for @statsHoursAndTrips.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h at sea · {trips, plural, one{{trips} trip} other{{trips} trips}}'**
+  String statsHoursAndTrips(String hours, int trips);
+
+  /// No description provided for @statsAvgTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Average trip'**
+  String get statsAvgTrip;
+
+  /// No description provided for @statsLongestTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Longest trip'**
+  String get statsLongestTrip;
+
+  /// No description provided for @statsLitresPerNm.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel per mile'**
+  String get statsLitresPerNm;
+
+  /// No description provided for @statsMorePorts.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} more'**
+  String statsMorePorts(int count);
 }
 
 class _AppLocalizationsDelegate

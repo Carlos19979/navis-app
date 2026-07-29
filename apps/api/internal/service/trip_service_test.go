@@ -330,7 +330,7 @@ func TestTripService_Update_Success(t *testing.T) {
 	updatedTrip.DeparturePort = "Barcelona"
 
 	tripRepo := &mockTripRepo{
-		getByIDFn: func(_ context.Context, _, _ string) (*domain.Trip, error) {
+		getByIDUnscopedFn: func(_ context.Context, _ string) (*domain.Trip, error) {
 			return existingTrip, nil
 		},
 		updateFn: func(_ context.Context, _ string, tr *domain.Trip) (*domain.Trip, error) {
@@ -374,7 +374,7 @@ func TestTripService_Update_NotFound(t *testing.T) {
 
 	trip := newTestTrip()
 	tripRepo := &mockTripRepo{
-		getByIDFn: func(_ context.Context, _, _ string) (*domain.Trip, error) {
+		getByIDUnscopedFn: func(_ context.Context, _ string) (*domain.Trip, error) {
 			return nil, domain.ErrTripNotFound
 		},
 	}
@@ -398,7 +398,7 @@ func TestTripService_Update_BlocksCompletedTrip(t *testing.T) {
 
 	trip := newTestTrip()
 	tripRepo := &mockTripRepo{
-		getByIDFn: func(_ context.Context, _, _ string) (*domain.Trip, error) {
+		getByIDUnscopedFn: func(_ context.Context, _ string) (*domain.Trip, error) {
 			return completedTrip, nil
 		},
 	}
@@ -616,10 +616,165 @@ func TestTripService_Complete_CalculatesDuration(t *testing.T) {
 
 // --- Delete tests ---
 
+// A crew member deleting somebody else's trip used to get "trip not found",
+// because the delete was scoped to the caller's user_id and silently matched
+// zero rows. It must say "forbidden": the trip is there, the permission is not.
+func TestTripService_Delete_OtherMembersTripIsForbidden(t *testing.T) {
+	t.Parallel()
+
+	skipperTrip := newTestTrip()
+	skipperTrip.UserID = "owner-1"
+	deleteCalled := false
+	tripRepo := &mockTripRepo{
+		getByIDUnscopedFn: func(_ context.Context, _ string) (*domain.Trip, error) {
+			return skipperTrip, nil
+		},
+		deleteFn: func(_ context.Context, _, _ string) error {
+			deleteCalled = true
+			return nil
+		},
+	}
+	boatRepo := &mockBoatRepo{
+		getAccessibleFn: func(_ context.Context, _, id string) (*domain.Boat, error) {
+			return &domain.Boat{ID: id, UserID: "owner-1"}, nil
+		},
+	}
+	svc := NewTripService(tripRepo, &mockTripTrackRepo{}, boatRepo, nil)
+
+	err := svc.Delete(context.Background(), "crew-2", "trip-1")
+	if !errors.Is(err, domain.ErrForbidden) {
+		t.Fatalf("expected ErrForbidden, got %v", err)
+	}
+	if errors.Is(err, domain.ErrTripNotFound) {
+		t.Error("a permission problem must not be reported as a missing trip")
+	}
+	if deleteCalled {
+		t.Error("expected no delete to be attempted")
+	}
+}
+
+// The boat's owner owns the logbook: they may remove a crew member's entry.
+// This was also broken — the DELETE matched on the caller's user_id.
+func TestTripService_Delete_BoatOwnerDeletesMemberTrip(t *testing.T) {
+	t.Parallel()
+
+	memberTrip := newTestTrip()
+	memberTrip.UserID = "crew-2"
+	var scopedTo string
+	tripRepo := &mockTripRepo{
+		getByIDUnscopedFn: func(_ context.Context, _ string) (*domain.Trip, error) {
+			return memberTrip, nil
+		},
+		deleteFn: func(_ context.Context, userID, _ string) error {
+			scopedTo = userID
+			return nil
+		},
+	}
+	boatRepo := &mockBoatRepo{
+		getAccessibleFn: func(_ context.Context, _, id string) (*domain.Boat, error) {
+			return &domain.Boat{ID: id, UserID: "owner-1"}, nil
+		},
+	}
+	svc := NewTripService(tripRepo, &mockTripTrackRepo{}, boatRepo, nil)
+
+	if err := svc.Delete(context.Background(), "owner-1", "trip-1"); err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if scopedTo != "crew-2" {
+		t.Errorf("delete must be scoped to the trip's author, got %q", scopedTo)
+	}
+}
+
+// Someone with no access to the boat at all learns nothing: not found.
+func TestTripService_Delete_NoBoatAccessIsNotFound(t *testing.T) {
+	t.Parallel()
+
+	tripRepo := &mockTripRepo{
+		getByIDUnscopedFn: func(_ context.Context, _ string) (*domain.Trip, error) {
+			return newTestTrip(), nil
+		},
+	}
+	boatRepo := &mockBoatRepo{
+		getAccessibleFn: func(_ context.Context, _, _ string) (*domain.Boat, error) {
+			return nil, domain.ErrBoatNotFound
+		},
+	}
+	svc := NewTripService(tripRepo, &mockTripTrackRepo{}, boatRepo, nil)
+
+	err := svc.Delete(context.Background(), "stranger", "trip-1")
+	if !errors.Is(err, domain.ErrTripNotFound) {
+		t.Fatalf("expected ErrTripNotFound, got %v", err)
+	}
+}
+
+// What the client uses to decide whether to offer edit/delete/share at all.
+func TestTripService_GetByIDWithAccess_ReportsWhoMayManage(t *testing.T) {
+	t.Parallel()
+
+	trip := newTestTrip()
+	trip.UserID = "crew-2"
+	tripRepo := &mockTripRepo{
+		getByIDUnscopedFn: func(_ context.Context, _ string) (*domain.Trip, error) {
+			return trip, nil
+		},
+	}
+	boatRepo := &mockBoatRepo{
+		getAccessibleFn: func(_ context.Context, _, id string) (*domain.Boat, error) {
+			return &domain.Boat{ID: id, UserID: "owner-1"}, nil
+		},
+	}
+	svc := NewTripService(tripRepo, &mockTripTrackRepo{}, boatRepo, nil)
+
+	for _, tc := range []struct {
+		caller string
+		want   bool
+	}{
+		{"crew-2", true},  // author
+		{"owner-1", true}, // boat owner
+		{"crew-3", false}, // another member of the same boat
+	} {
+		_, canManage, err := svc.GetByIDWithAccess(context.Background(), tc.caller, "trip-1")
+		if err != nil {
+			t.Fatalf("%s: expected no error, got %v", tc.caller, err)
+		}
+		if canManage != tc.want {
+			t.Errorf("%s: canManage = %v, want %v", tc.caller, canManage, tc.want)
+		}
+	}
+}
+
+// Sharing writes to the trip, so it follows the same rule as delete: a viewer
+// asking for a public link got "not found", which looked like a broken feature.
+func TestTripService_Share_OtherMembersTripIsForbidden(t *testing.T) {
+	t.Parallel()
+
+	skipperTrip := newTestTrip()
+	skipperTrip.UserID = "owner-1"
+	tripRepo := &mockTripRepo{
+		getByIDUnscopedFn: func(_ context.Context, _ string) (*domain.Trip, error) {
+			return skipperTrip, nil
+		},
+	}
+	boatRepo := &mockBoatRepo{
+		getAccessibleFn: func(_ context.Context, _, id string) (*domain.Boat, error) {
+			return &domain.Boat{ID: id, UserID: "owner-1"}, nil
+		},
+	}
+	svc := NewTripService(tripRepo, &mockTripTrackRepo{}, boatRepo, nil)
+
+	_, err := svc.Share(context.Background(), "crew-2", "trip-1")
+	if !errors.Is(err, domain.ErrForbidden) {
+		t.Fatalf("expected ErrForbidden, got %v", err)
+	}
+}
+
 func TestTripService_Delete_Success(t *testing.T) {
 	t.Parallel()
 
 	tripRepo := &mockTripRepo{
+		getByIDUnscopedFn: func(_ context.Context, _ string) (*domain.Trip, error) {
+			return newTestTrip(), nil
+		},
 		deleteFn: func(_ context.Context, _, _ string) error {
 			return nil
 		},
@@ -637,6 +792,9 @@ func TestTripService_Delete_NotFound(t *testing.T) {
 	t.Parallel()
 
 	tripRepo := &mockTripRepo{
+		getByIDUnscopedFn: func(_ context.Context, _ string) (*domain.Trip, error) {
+			return nil, domain.ErrTripNotFound
+		},
 		deleteFn: func(_ context.Context, _, _ string) error {
 			return domain.ErrTripNotFound
 		},

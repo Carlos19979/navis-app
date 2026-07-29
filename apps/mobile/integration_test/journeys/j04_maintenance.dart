@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:navis_mobile/features/readiness/presentation/widgets/readiness_card.dart';
@@ -6,11 +5,16 @@ import 'package:navis_mobile/features/readiness/presentation/widgets/readiness_c
 import '../helpers/bootstrap.dart';
 import '../helpers/pumping.dart';
 import '../robots/boat_robot.dart';
+import '../robots/booking_robot.dart';
 import '../robots/maintenance_robot.dart';
 import '../robots/nav_robot.dart';
 
 /// J04 — Maintenance, cost analytics, readiness, bookings: data entered in
 /// one feature must show up in the others (Pro plan set in J02).
+///
+/// Everything about the boat is reached from the detail hub now: the dashboard
+/// card only offers Documents and Logbook, and Cost intelligence lost its
+/// shortcut from the Maintenance app bar.
 void j04Maintenance() {
   testWidgets('j04 maintenance/costs/readiness/bookings flow', (tester) async {
     await bootstrapApp(tester);
@@ -18,40 +22,48 @@ void j04Maintenance() {
     await pumpFor(tester, const Duration(seconds: 1));
     final boat = BoatRobot(tester);
     final maint = MaintenanceRobot(tester);
+    final booking = BookingRobot(tester);
     final nav = NavRobot(tester);
 
-    // Focus dashboard → Maintenance.
-    await tapUntil(
-      tester,
-      find.text('Maintenance'),
-      find.byTooltip('Record service'),
-    );
-    await pumpFor(tester, const Duration(milliseconds: 500));
+    // Boat detail hub → Maintenance & expenses.
+    await boat.openDetail('Aurora');
+    final maintenanceMarker = find.byTooltip('Record service');
+    await boat.openTile('Maintenance & expenses', maintenanceMarker);
 
     // One-off service with a cost + a recurring task.
     await maint.recordService(type: 'Oil change', cost: '120');
     await pumpUntilFound(tester, find.textContaining('Oil change'));
     await maint.addTask(name: 'Antifouling', months: '18');
 
-    // Cost analytics (Pro): the recorded 120 € must appear.
-    await tapUntil(
-      tester,
-      find.byIcon(Icons.insights_rounded),
-      find.text('Cost intelligence'),
-    );
+    // Cost intelligence (Pro) hangs off the hub, not off the Maintenance app bar
+    // (its Icons.insights_rounded action was removed on purpose). The 120 € just
+    // recorded must appear — asserted before the expense below, while it is
+    // still the only spend.
+    await boat.backToHub(maintenanceMarker);
+    await boat.openTile('Cost intelligence', find.text('Total spend'));
     await pumpFor(tester, const Duration(seconds: 1));
     await pumpUntilFound(tester, find.textContaining('120'));
-    await nav.back();
+    await boat.backToHub(find.text('Total spend'));
 
-    // Expenses ledger (round #52): add an expense, then exercise the
-    // month/year selector + category filter.
+    // Expenses ledger: add an expense, then exercise the period picker and the
+    // category filter.
+    await boat.openTile('Maintenance & expenses', maintenanceMarker);
     await maint.openExpensesTab();
     // Fuel expense with litres → cost intelligence can derive €/L.
     await maint.addExpense(amount: '75', liters: '50');
     await maint.checkExpensesPeriods();
+    await boat.backToHub(maintenanceMarker);
+
+    // Bookings (Pro, shared-boat coordination): a range booking, then a second
+    // one on the same default slot — the API answers 409 and 'Book anyway'
+    // forces it through.
+    await boat.openTile('Bookings', BookingRobot.screenMarker);
+    await booking.create('E2E outing');
+    await booking.createExpectingOverlap('Overlap outing');
+    await boat.backToHub(BookingRobot.screenMarker);
 
     // Readiness from the dashboard card: reflects the documents from J03.
-    await nav.back();
+    await boat.closeDetail();
     await nav.home();
     await tapUntil(
       tester,
@@ -60,63 +72,5 @@ void j04Maintenance() {
     );
     await pumpFor(tester, const Duration(seconds: 1));
     await nav.back();
-
-    // Bookings (Pro, shared-boat coordination): create one via the pickers.
-    await boat.openDetail('Aurora');
-    await boat.openTile('Bookings', find.byType(FloatingActionButton));
-    await pumpFor(tester, const Duration(milliseconds: 500));
-    await tapUntil(
-      tester,
-      find.byType(FloatingActionButton),
-      find.text('OK'),
-    );
-    // Date → start time → end time, then the purpose dialog.
-    for (var i = 0; i < 3; i++) {
-      await pumpUntilFound(tester, find.text('OK'));
-      await tester.tap(find.text('OK').last);
-      await pumpFor(tester, const Duration(milliseconds: 600));
-    }
-    final purposeField = find.byType(TextField);
-    await pumpUntilFound(tester, purposeField);
-    await tester.enterText(purposeField.last, 'E2E outing');
-    await tester.pump(const Duration(milliseconds: 200));
-    final saveBtn = find.descendant(
-      of: find.byType(AlertDialog),
-      matching: find.text('Save'),
-    );
-    if (saveBtn.evaluate().isNotEmpty) {
-      await tester.tap(saveBtn.last);
-    }
-    await pumpFor(tester, const Duration(seconds: 1));
-    await pumpUntilFound(tester, find.textContaining('E2E outing'));
-
-    // Round #46: a second booking on the same default slot overlaps the
-    // first; the API returns 409 → 'Book anyway' forces it.
-    await tapUntil(
-      tester,
-      find.byType(FloatingActionButton),
-      find.text('OK'),
-    );
-    for (var i = 0; i < 3; i++) {
-      await pumpUntilFound(tester, find.text('OK'));
-      await tester.tap(find.text('OK').last);
-      await pumpFor(tester, const Duration(milliseconds: 600));
-    }
-    final purpose2 = find.byType(TextField);
-    await pumpUntilFound(tester, purpose2);
-    await tester.enterText(purpose2.last, 'Overlap outing');
-    await tester.pump(const Duration(milliseconds: 200));
-    final save2 = find.descendant(
-      of: find.byType(AlertDialog),
-      matching: find.text('Save'),
-    );
-    await tester.tap(save2.last);
-    await pumpFor(tester, const Duration(seconds: 1));
-
-    // The overlap confirmation → force the booking.
-    await pumpUntilFound(tester, find.text('Book anyway'));
-    await tester.tap(find.text('Book anyway'));
-    await pumpFor(tester, const Duration(seconds: 1));
-    await pumpUntilFound(tester, find.textContaining('Overlap outing'));
   });
 }

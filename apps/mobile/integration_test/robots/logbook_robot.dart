@@ -11,25 +11,31 @@ class LogbookRobot {
 
   final WidgetTester tester;
 
-  /// From the logbook: FAB → pre-trip checklist (local mode) → start solo
-  /// trip. Ticks the first checklist item on the way (exercises the toggle).
+  /// From the logbook: FAB → the checklist prompt → the checklist itself →
+  /// start the solo trip. Ticks the first checklist item on the way (exercises
+  /// the toggle).
+  ///
+  /// The checklist is no longer a mandatory step: starting a trip asks 'Review
+  /// checklist' / 'Skip' first. This robot always reviews — that is the path with
+  /// something to assert — and deliberately leaves 'Remember my choice'
+  /// unticked, because ticking it persists the answer in SharedPreferences and
+  /// every later run on this simulator would skip the prompt (and, having chosen
+  /// review, the question) for good.
   Future<void> startTripViaChecklist() async {
-    await tapUntil(
-      tester,
-      find.byType(FloatingActionButton),
-      find.widgetWithText(NavisButton, 'Start Trip'),
-    );
+    final startTrip = find.widgetWithText(NavisButton, 'Start Trip');
+    final review = find.text('Review checklist');
+
+    await tapUntil(tester, find.byType(FloatingActionButton), review);
+    await pumpFor(tester, const Duration(milliseconds: 400));
+    await tapUntil(tester, review, startTrip);
     await pumpFor(tester, const Duration(milliseconds: 500));
+
     final checkbox = find.byType(Checkbox);
     if (checkbox.evaluate().isNotEmpty) {
       await tester.tap(checkbox.first);
       await tester.pump(const Duration(milliseconds: 300));
     }
-    await tapUntil(
-      tester,
-      find.widgetWithText(NavisButton, 'Start Trip'),
-      find.byType(TripRecordingScreen),
-    );
+    await tapUntil(tester, startTrip, find.byType(TripRecordingScreen));
     await pumpFor(tester, const Duration(seconds: 1));
   }
 

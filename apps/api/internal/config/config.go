@@ -9,6 +9,10 @@ import (
 
 // devDatabaseURL is the local-development default. It must never be used in
 // production — Validate rejects it there.
+//
+// default, and Validate() refuses to boot production with it.
+//
+//nolint:gosec // G101: not a credential. It is Supabase's published local
 const devDatabaseURL = "postgres://postgres:postgres@localhost:54322/postgres?sslmode=disable"
 
 // Config holds the application configuration loaded from environment variables.
@@ -29,6 +33,12 @@ type Config struct {
 	// in the Authorization header of webhook requests. Required in production;
 	// requests are rejected with 401 when empty.
 	RevenueCatWebhookSecret string
+	// AppStoreURL / PlayStoreURL are the download links offered by the /join
+	// invite page when the app is not installed. Empty until the app is
+	// published — the page then shows the code and says so, instead of linking
+	// to a listing that does not exist yet.
+	AppStoreURL  string
+	PlayStoreURL string
 }
 
 // Load reads configuration from environment variables, applying defaults
@@ -54,6 +64,8 @@ func Load() *Config {
 		SentryDSN:              getEnv("SENTRY_DSN", ""),
 
 		RevenueCatWebhookSecret: getEnv("REVENUECAT_WEBHOOK_SECRET", ""),
+		AppStoreURL:             getEnv("APP_STORE_URL", ""),
+		PlayStoreURL:            getEnv("PLAY_STORE_URL", ""),
 	}
 }
 

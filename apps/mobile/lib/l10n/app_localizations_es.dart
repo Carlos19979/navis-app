@@ -2565,4 +2565,97 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get preTripChecklistSkipped =>
       'Se salta; actívalo para que vuelva a preguntar';
+
+  @override
+  String get shareFailedCopied =>
+      'No se pudo abrir el menú de compartir. El texto está en el portapapeles.';
+
+  @override
+  String get shareTripLink => 'Compartir enlace';
+
+  @override
+  String get shareTripLinkSubtitle => 'Página web con el mapa del viaje';
+
+  @override
+  String get shareTripSummary => 'Compartir resumen';
+
+  @override
+  String get shareTripSummarySubtitle => 'Texto con los datos del viaje';
+
+  @override
+  String get shareLinkFailed => 'No se pudo crear el enlace';
+
+  @override
+  String get madeWithNavis => 'Hecho con Navis';
+
+  @override
+  String get tripReadOnly =>
+      'Viaje de solo lectura: solo quien lo registró o el propietario del barco puede modificarlo.';
+
+  @override
+  String get tripDeleteForbidden =>
+      'No tienes permiso para borrar este viaje. Pídelo al propietario del barco.';
+
+  @override
+  String get tripAlreadyDeleted => 'Este viaje ya no existe';
+
+  @override
+  String get alertChipLongPressToDelete => 'Mantén pulsado para eliminar';
+
+  @override
+  String get alertChipDeleteHint =>
+      'Mantén pulsada una alerta que hayas añadido para eliminarla.';
+
+  @override
+  String get alertChipDeleteTitle => 'Eliminar alerta';
+
+  @override
+  String alertChipDeleteConfirm(int days) {
+    return '¿Quitar la alerta de $days días de este documento?';
+  }
+
+  @override
+  String get alertChipPresetNotRemovable =>
+      'Las alertas por defecto no se pueden eliminar; toca para desactivarla.';
+
+  @override
+  String joinBoatInviteConfirm(String code) {
+    return 'Te han invitado a un barco con el código $code. ¿Te unes?';
+  }
+
+  @override
+  String get locationServicesOff =>
+      'La ubicación está desactivada en el dispositivo.\nActívala para ver la previsión donde estás.';
+
+  @override
+  String get locationNoFixYet =>
+      'No hemos podido obtener tu posición.\nAl aire libre suele tardar unos segundos.';
+
+  @override
+  String get wholeYear => 'Todo el año';
+
+  @override
+  String statsHoursAndTrips(String hours, int trips) {
+    String _temp0 = intl.Intl.pluralLogic(
+      trips,
+      locale: localeName,
+      other: '$trips viajes',
+      one: '$trips viaje',
+    );
+    return '$hours h en el mar · $_temp0';
+  }
+
+  @override
+  String get statsAvgTrip => 'Viaje medio';
+
+  @override
+  String get statsLongestTrip => 'Viaje más largo';
+
+  @override
+  String get statsLitresPerNm => 'Combustible por milla';
+
+  @override
+  String statsMorePorts(int count) {
+    return '+$count más';
+  }
 }

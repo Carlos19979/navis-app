@@ -403,8 +403,10 @@ void main() {
       await tester.tap(find.byTooltip('Share trip'));
       await pumpFrames(tester);
 
-      expect(find.text('Compartir enlace'), findsOneWidget);
-      expect(find.text('Compartir resumen'), findsOneWidget);
+      // Localized now: these were the last two hard-coded Spanish strings on
+      // the screen, and tests run in English.
+      expect(find.text('Share link'), findsOneWidget);
+      expect(find.text('Share summary'), findsOneWidget);
     });
 
     testWidgets('edit action navigates to the trip edit route', (tester) async {

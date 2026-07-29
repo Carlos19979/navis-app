@@ -20,6 +20,7 @@ import 'package:navis_mobile/shared/widgets/join_by_code_sheet.dart';
 import 'package:navis_mobile/shared/widgets/navis_empty_state.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_gradient_fab.dart';
+import 'package:navis_mobile/shared/widgets/navis_plan_badge.dart';
 import 'package:navis_mobile/shared/widgets/navis_scaffold.dart';
 import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
@@ -133,11 +134,17 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
               ),
             ]
           : null,
+      // Creating a club is Pro. Marked before the tap, like the paid rows on
+      // the boat screen, instead of only finding out via the paywall.
       floatingActionButton: _onClubsTab
-          ? NavisGradientFab(
-              icon: Icons.add,
-              onPressed: _onCreateGroup,
-              tooltip: l.createGroup,
+          ? NavisPlanBadged(
+              label: l.proBadge,
+              show: !ref.watch(effectiveTierProvider).canCreateGroups,
+              child: NavisGradientFab(
+                icon: Icons.add,
+                onPressed: _onCreateGroup,
+                tooltip: l.createGroup,
+              ),
             )
           : null,
       safeAreaBottom: false,

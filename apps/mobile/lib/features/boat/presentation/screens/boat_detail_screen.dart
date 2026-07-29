@@ -1,7 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
@@ -9,10 +8,12 @@ import 'dart:async';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
 import 'package:navis_mobile/features/boat/data/boat_share_repository.dart';
+import 'package:navis_mobile/features/boat/domain/boat_join_link.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/passport/presentation/passport_export.dart';
 import 'package:navis_mobile/features/readiness/presentation/widgets/readiness_card.dart';
@@ -31,6 +32,8 @@ import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
 import 'package:navis_mobile/shared/widgets/navis_photo_strip.dart';
+import 'package:navis_mobile/shared/widgets/navis_plan_badge.dart';
+import 'package:navis_mobile/shared/utils/native_share.dart';
 import 'package:navis_mobile/shared/widgets/navis_photo_viewer.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 
@@ -150,6 +153,10 @@ class _BoatDetailView extends ConsumerWidget {
                       title: l.bookingsTitle,
                       subtitle: l.bookingsSubtitle,
                       color: AppColors.cyan,
+                      badge:
+                          ref.watch(effectiveTierProvider).canSharedCoordination
+                              ? null
+                              : l.proBadge,
                       onTap: () => _openBookings(context, ref, boat),
                     ),
                     const SizedBox(height: 10),
@@ -169,6 +176,9 @@ class _BoatDetailView extends ConsumerWidget {
                       title: l.passportExport,
                       subtitle: l.passportTitle,
                       color: AppColors.green,
+                      badge: ref.watch(effectiveTierProvider).canExportPassport
+                          ? null
+                          : l.proBadge,
                       onTap: () => exportBoatPassport(context, ref, boat),
                     ),
                     const SizedBox(height: 10),
@@ -380,25 +390,54 @@ class _BoatDetailView extends ConsumerWidget {
 
   Future<void> _shareBoat(
       BuildContext context, WidgetRef ref, Boat boat) async {
-    final l = AppLocalizations.of(context)!;
-    final messenger = ScaffoldMessenger.of(context);
-    String code;
-    try {
-      code = await ref.read(boatShareRepositoryProvider).shareCode(boat.id);
-    } catch (_) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l.couldNotGetCode)),
-      );
-      return;
-    }
-    if (!context.mounted) return;
-
     await showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
       backgroundColor: context.dialogSurface,
       isScrollControlled: true,
-      builder: (ctx) => Padding(
+      builder: (_) => _ShareBoatSheet(boat: boat),
+    );
+  }
+
+  Future<void> _leaveBoat(
+      BuildContext context, WidgetRef ref, Boat boat) async {
+    final l = AppLocalizations.of(context)!;
+    final confirmed = await NavisConfirmDialog.show(
+      context,
+      title: l.leaveBoat,
+      message: l.leaveBoatConfirm(boat.name),
+      confirmLabel: l.leave,
+      destructive: true,
+    );
+    if (!confirmed) return;
+    await ref.read(boatShareRepositoryProvider).leaveBoat(boat.id);
+    ref.invalidate(sharedBoatsProvider);
+    if (context.mounted) context.go('/boats');
+  }
+}
+
+/// The invite-code sheet: the code, copy, and the OS share sheet.
+///
+/// A widget rather than an inline builder so the code can load *inside* it.
+/// The old version awaited the request first, which meant a tap that did
+/// nothing for a moment and then a sheet that snapped in fully formed.
+class _ShareBoatSheet extends ConsumerWidget {
+  const _ShareBoatSheet({required this.boat});
+
+  final Boat boat;
+
+  /// Height of the code panel, fixed so the sheet does not resize when the
+  /// code arrives — a sheet that grows mid-animation is the "flash" users see.
+  static const _codePanelHeight = 62.0;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
+    final codeAsync = ref.watch(boatShareCodeProvider(boat.id));
+    final code = codeAsync.valueOrNull;
+
+    return SafeArea(
+      child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -415,24 +454,42 @@ class _BoatDetailView extends ConsumerWidget {
               style: TextStyle(color: context.txtSecondary, fontSize: 13),
             ),
             const SizedBox(height: 16),
-            Container(
+            SizedBox(
+              height: _codePanelHeight,
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              decoration: BoxDecoration(
-                color: AppColors.cyan.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                    color: AppColors.cyan.withValues(alpha: 0.4), width: 0.5),
-              ),
-              child: Center(
-                child: Text(
-                  code,
-                  style: const TextStyle(
-                    color: AppColors.cyan,
-                    fontSize: 26,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 4,
-                  ),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: AppColors.cyan.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                      color: AppColors.cyan.withValues(alpha: 0.4), width: 0.5),
+                ),
+                child: Center(
+                  child: switch (codeAsync) {
+                    AsyncData(:final value) => Text(
+                        value,
+                        style: const TextStyle(
+                          color: AppColors.cyan,
+                          fontSize: 26,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 4,
+                        ),
+                      ),
+                    AsyncError() => TextButton.icon(
+                        onPressed: () =>
+                            ref.invalidate(boatShareCodeProvider(boat.id)),
+                        icon: const Icon(Icons.refresh, size: Dimens.iconSm),
+                        label: Text(l.couldNotGetCode),
+                      ),
+                    _ => const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.cyan,
+                        ),
+                      ),
+                  },
                 ),
               ),
             ),
@@ -441,24 +498,38 @@ class _BoatDetailView extends ConsumerWidget {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: code));
-                      messenger.showSnackBar(
-                        SnackBar(content: Text(l.codeCopied)),
-                      );
-                    },
+                    onPressed: code == null
+                        ? null
+                        : () {
+                            Clipboard.setData(ClipboardData(text: code));
+                            NavisSnackbar.success(context, l.codeCopied);
+                          },
                     icon: const Icon(Icons.copy, size: 18),
                     label: Text(l.copy),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: FilledButton.icon(
-                    style:
-                        FilledButton.styleFrom(backgroundColor: AppColors.cyan),
-                    onPressed: () => _shareCodeNatively(ctx, boat, code),
-                    icon: const Icon(Icons.ios_share_rounded, size: 18),
-                    label: Text(l.share),
+                  child: Builder(
+                    // Its own context so the share popover is anchored to the
+                    // button, which is what iOS wants as the source rect.
+                    builder: (buttonCtx) => FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.cyan),
+                      onPressed: code == null
+                          ? null
+                          : () => shareNavisText(
+                                buttonCtx,
+                                text: l.shareBoatMessageWithLink(
+                                  boat.name,
+                                  code,
+                                  boatJoinLink(code),
+                                ),
+                                subject: l.shareBoat,
+                              ),
+                      icon: const Icon(Icons.ios_share_rounded, size: 18),
+                      label: Text(l.share),
+                    ),
                   ),
                 ),
               ],
@@ -468,8 +539,9 @@ class _BoatDetailView extends ConsumerWidget {
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
                 onPressed: () {
-                  Navigator.of(ctx).pop();
-                  showBoatMembersSheet(context, boatId: boat.id);
+                  final navigator = Navigator.of(context);
+                  navigator.pop();
+                  showBoatMembersSheet(navigator.context, boatId: boat.id);
                 },
                 icon: const Icon(Icons.groups_outlined, size: 18),
                 label: Text(l.boatCrewTitle),
@@ -479,47 +551,6 @@ class _BoatDetailView extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  /// Hands the code to the OS share sheet — WhatsApp, Telegram, Mail, whatever
-  /// the sender uses — instead of only copying it to the clipboard.
-  ///
-  /// `sharePositionOrigin` is required on iPad, where the sheet is a popover
-  /// anchored to the button that opened it.
-  Future<void> _shareCodeNatively(
-    BuildContext context,
-    Boat boat,
-    String code,
-  ) async {
-    final l = AppLocalizations.of(context)!;
-    final box = context.findRenderObject() as RenderBox?;
-    await Share.share(
-      l.shareBoatMessageWithLink(boat.name, code, _joinLink(code)),
-      subject: l.shareBoat,
-      sharePositionOrigin: box != null && box.hasSize
-          ? box.localToGlobal(Offset.zero) & box.size
-          : null,
-    );
-  }
-
-  /// Deep link that opens the app straight on the join flow with the code
-  /// pre-filled. The code stays in the message body so it also works by hand.
-  String _joinLink(String code) => 'navis://join?code=$code';
-
-  Future<void> _leaveBoat(
-      BuildContext context, WidgetRef ref, Boat boat) async {
-    final l = AppLocalizations.of(context)!;
-    final confirmed = await NavisConfirmDialog.show(
-      context,
-      title: l.leaveBoat,
-      message: l.leaveBoatConfirm(boat.name),
-      confirmLabel: l.leave,
-      destructive: true,
-    );
-    if (!confirmed) return;
-    await ref.read(boatShareRepositoryProvider).leaveBoat(boat.id);
-    ref.invalidate(sharedBoatsProvider);
-    if (context.mounted) context.go('/boats');
   }
 }
 
@@ -830,25 +861,7 @@ class _ActionTile extends StatelessWidget {
             ),
           ),
           if (badge != null) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: AppColors.amber.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: AppColors.amber.withValues(alpha: 0.4),
-                  width: 0.5,
-                ),
-              ),
-              child: Text(
-                badge!,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: AppColors.amber,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.5,
-                    ),
-              ),
-            ),
+            NavisPlanBadge(label: badge!),
             const SizedBox(width: 8),
           ],
           Icon(

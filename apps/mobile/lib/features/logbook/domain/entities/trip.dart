@@ -4,6 +4,8 @@ class Trip {
     required this.boatId,
     required this.departurePort,
     required this.departureTime,
+    this.ownerId,
+    this.canManage,
     this.arrivalPort,
     this.arrivalTime,
     this.distanceNm,
@@ -27,6 +29,15 @@ class Trip {
   final String boatId;
   final String departurePort;
   final DateTime departureTime;
+
+  /// Who recorded it. On a shared boat the logbook holds every member's trips,
+  /// and only the author (or the boat's owner) may edit or delete one.
+  final String? ownerId;
+
+  /// Whether this user may edit, delete or share the trip, as answered by the
+  /// server. Null when unknown (list payloads, cached rows, an older API): the
+  /// UI then keeps offering the actions and relies on the server's answer.
+  final bool? canManage;
   final String? arrivalPort;
   final DateTime? arrivalTime;
   final double? distanceNm;
@@ -55,6 +66,8 @@ class Trip {
     String? boatId,
     String? departurePort,
     DateTime? departureTime,
+    String? ownerId,
+    bool? canManage,
     String? arrivalPort,
     DateTime? arrivalTime,
     double? distanceNm,
@@ -78,6 +91,8 @@ class Trip {
       boatId: boatId ?? this.boatId,
       departurePort: departurePort ?? this.departurePort,
       departureTime: departureTime ?? this.departureTime,
+      ownerId: ownerId ?? this.ownerId,
+      canManage: canManage ?? this.canManage,
       arrivalPort: arrivalPort ?? this.arrivalPort,
       arrivalTime: arrivalTime ?? this.arrivalTime,
       distanceNm: distanceNm ?? this.distanceNm,

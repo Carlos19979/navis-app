@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart';
 
+import 'package:navis_mobile/features/maintenance/presentation/widgets/expense_period_picker.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_text_field.dart';
 
@@ -74,16 +76,37 @@ class MaintenanceRobot {
     await pumpFor(tester, const Duration(milliseconds: 500));
   }
 
-  /// Round #52: exercises the Month/Year period selector and a category
-  /// filter on the expenses ledger.
+  /// Exercises the period picker and a category filter on the expenses ledger.
+  ///
+  /// The Month/Year segmented toggle with `‹ ›` arrows is gone: the period is now
+  /// one pill that opens a month/year picker (ExpensePeriodSelector). The pill
+  /// carries the *localized* period label ('July 2026'), so it is located by its
+  /// widget type, not by text.
   Future<void> checkExpensesPeriods() async {
     await pumpUntilFound(tester, find.text('Period total'));
-    // Year view → per-month subtotals; then back to Month.
-    await tester.tap(find.text('Year'));
+    final selector = find.byType(ExpensePeriodSelector);
+
+    // Whole year → per-month subtotals.
+    await tapUntil(tester, selector, find.text('Select period'));
     await pumpFor(tester, const Duration(milliseconds: 400));
+    await tapUntilGone(
+      tester,
+      find.text('Whole year'),
+      find.byType(AlertDialog),
+    );
     await pumpUntilFound(tester, find.text('Period total'));
-    await tester.tap(find.text('Month'));
+
+    // Back to the current month, picked from the dialog's month grid.
+    await tapUntil(tester, selector, find.text('Select period'));
     await pumpFor(tester, const Duration(milliseconds: 400));
+    final thisMonth = DateFormat.MMM('en').format(DateTime.now());
+    await tapUntilGone(
+      tester,
+      find.widgetWithText(ChoiceChip, thisMonth),
+      find.byType(AlertDialog),
+    );
+    await pumpUntilFound(tester, find.text('Period total'));
+
     // Filter to Fuel (the category addExpense uses), then back to All.
     final fuel = find.widgetWithText(FilterChip, 'Fuel');
     if (fuel.evaluate().isNotEmpty) {

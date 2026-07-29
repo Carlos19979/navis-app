@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -364,19 +366,35 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
             runSpacing: 8,
             children: [
               for (final days in _alertDayOptions)
-                FilterChip(
-                  label: Text(l.alertChipDays(days)),
-                  selected: _selectedAlertDays.contains(days),
-                  onSelected: (selected) {
-                    setState(() {
-                      if (selected) {
-                        _selectedAlertDays.add(days);
-                      } else {
-                        _selectedAlertDays.remove(days);
-                      }
-                    });
-                    field.didChange(_selectedAlertDays);
-                  },
+                // Tap selects, long-press removes — but only the thresholds
+                // the user added themselves. A custom "100 days" chip had no
+                // way out: deselecting left it sitting in the row forever.
+                GestureDetector(
+                  onLongPress: () => _removeCustomAlertDay(field, days),
+                  // No `tooltip:` on the chip: a Chip with a tooltip wraps
+                  // itself in a Tooltip, which claims the long press for
+                  // itself and the delete never fires. The affordance is
+                  // spelled out in the hint below the row instead, and here
+                  // for screen readers.
+                  child: Semantics(
+                    hint: _alertDayPresets.contains(days)
+                        ? null
+                        : l.alertChipLongPressToDelete,
+                    child: FilterChip(
+                      label: Text(l.alertChipDays(days)),
+                      selected: _selectedAlertDays.contains(days),
+                      onSelected: (selected) {
+                        setState(() {
+                          if (selected) {
+                            _selectedAlertDays.add(days);
+                          } else {
+                            _selectedAlertDays.remove(days);
+                          }
+                        });
+                        field.didChange(_selectedAlertDays);
+                      },
+                    ),
+                  ),
                 ),
               ActionChip(
                 avatar: const Icon(Icons.add, size: 18),
@@ -385,6 +403,13 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
               ),
             ],
           ),
+          if (_extraAlertDays.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              l.alertChipDeleteHint,
+              style: TextStyle(color: context.txtSecondary, fontSize: 12),
+            ),
+          ],
           if (field.hasError) ...[
             const SizedBox(height: 6),
             Text(
@@ -398,6 +423,39 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
         ],
       ),
     );
+  }
+
+  /// Long-press handler for an alert-day chip.
+  ///
+  /// The four presets (30/15/7/1) are the app's defaults and stay put — they
+  /// are switched off by tapping. Anything the user typed in can be removed
+  /// for good, after confirming, because a wrong number is otherwise permanent.
+  Future<void> _removeCustomAlertDay(
+    FormFieldState<Set<int>> field,
+    int days,
+  ) async {
+    final l = AppLocalizations.of(context)!;
+    if (_alertDayPresets.contains(days)) {
+      // Fire-and-forget, like the rest of the app's feedback: awaiting the
+      // haptic channel means waiting for a platform reply before the UI reacts.
+      unawaited(HapticFeedback.selectionClick());
+      NavisSnackbar.info(context, l.alertChipPresetNotRemovable);
+      return;
+    }
+    unawaited(HapticFeedback.mediumImpact());
+    final confirmed = await NavisConfirmDialog.show(
+      context,
+      title: l.alertChipDeleteTitle,
+      message: l.alertChipDeleteConfirm(days),
+      confirmLabel: l.delete,
+      destructive: true,
+    );
+    if (!confirmed || !mounted) return;
+    setState(() {
+      _extraAlertDays.remove(days);
+      _selectedAlertDays.remove(days);
+    });
+    field.didChange(_selectedAlertDays);
   }
 
   Future<void> _addCustomAlertDay(FormFieldState<Set<int>> field) async {

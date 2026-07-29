@@ -103,8 +103,12 @@ type TripResponse struct {
 	Photos               []string          `json:"photos"`
 	Status               domain.TripStatus `json:"status"`
 	ShareToken           *string           `json:"share_token"`
-	CreatedAt            time.Time         `json:"created_at"`
-	UpdatedAt            time.Time         `json:"updated_at"`
+	// CanManage tells the client whether this caller may edit, delete or share
+	// the trip: its author, or the boat's owner. Only set on the single-trip
+	// endpoint, where the client decides which actions to show.
+	CanManage bool      `json:"can_manage"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // TripResponseFromDomain builds a TripResponse from a domain Trip.
