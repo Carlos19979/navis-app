@@ -37,67 +37,108 @@ func New() *Client {
 	}
 }
 
+// A JSON number series from Open-Meteo can contain `null` — for a step the
+// model has no value for (the edges of a range, variables a location has no
+// data for). Decoding those into `[]float64` fails the *whole* payload, so a
+// single null anywhere turned the entire forecast into a 502 and an error
+// screen in the app. Pointers decode nulls natively; the accessors below then
+// treat a missing step as missing instead of pretending it is zero.
+type nullableFloats []*float64
+
+// ptr returns the value at i, or nil when the step is missing or out of range.
+func (s nullableFloats) ptr(i int) *float64 {
+	if i < 0 || i >= len(s) {
+		return nil
+	}
+	return s[i]
+}
+
+// at is ptr with 0 for a missing step, for the fields whose response type
+// cannot express "absent".
+func (s nullableFloats) at(i int) float64 {
+	if v := s.ptr(i); v != nil {
+		return *v
+	}
+	return 0
+}
+
+type nullableInts []*int
+
+func (s nullableInts) ptr(i int) *int {
+	if i < 0 || i >= len(s) {
+		return nil
+	}
+	return s[i]
+}
+
+func (s nullableInts) at(i int) int {
+	if v := s.ptr(i); v != nil {
+		return *v
+	}
+	return 0
+}
+
 // currentResponse represents the Open-Meteo API response for current weather.
 type currentResponse struct {
 	Current struct {
-		Temperature   float64 `json:"temperature_2m"`
-		Humidity      *int    `json:"relative_humidity_2m"`
-		WeatherCode   int     `json:"weather_code"`
-		WindSpeed     float64 `json:"wind_speed_10m"`
-		WindDirection float64 `json:"wind_direction_10m"`
-		Time          string  `json:"time"`
+		Temperature   *float64 `json:"temperature_2m"`
+		Humidity      *int     `json:"relative_humidity_2m"`
+		WeatherCode   *int     `json:"weather_code"`
+		WindSpeed     *float64 `json:"wind_speed_10m"`
+		WindDirection *float64 `json:"wind_direction_10m"`
+		Time          string   `json:"time"`
 	} `json:"current"`
 }
 
 // forecastResponse represents the Open-Meteo API response for daily forecasts.
 type forecastResponse struct {
 	Daily struct {
-		Time             []string  `json:"time"`
-		Temperature2mMax []float64 `json:"temperature_2m_max"`
-		Temperature2mMin []float64 `json:"temperature_2m_min"`
-		WindSpeed10mMax  []float64 `json:"wind_speed_10m_max"`
-		WindDirection10m []float64 `json:"wind_direction_10m_dominant"`
+		Time             []string       `json:"time"`
+		Temperature2mMax nullableFloats `json:"temperature_2m_max"`
+		Temperature2mMin nullableFloats `json:"temperature_2m_min"`
+		WindSpeed10mMax  nullableFloats `json:"wind_speed_10m_max"`
+		WindDirection10m nullableFloats `json:"wind_direction_10m_dominant"`
 	} `json:"daily"`
 }
 
 // overviewResponse represents a combined current + hourly + daily payload.
 type overviewResponse struct {
 	Current struct {
-		Temperature   float64 `json:"temperature_2m"`
-		Humidity      *int    `json:"relative_humidity_2m"`
-		WeatherCode   int     `json:"weather_code"`
-		WindSpeed     float64 `json:"wind_speed_10m"`
-		WindDirection float64 `json:"wind_direction_10m"`
-		Time          string  `json:"time"`
+		Temperature   *float64 `json:"temperature_2m"`
+		Humidity      *int     `json:"relative_humidity_2m"`
+		WeatherCode   *int     `json:"weather_code"`
+		WindSpeed     *float64 `json:"wind_speed_10m"`
+		WindDirection *float64 `json:"wind_direction_10m"`
+		Time          string   `json:"time"`
 	} `json:"current"`
 	Hourly struct {
-		Time          []string  `json:"time"`
-		Temperature   []float64 `json:"temperature_2m"`
-		WeatherCode   []int     `json:"weather_code"`
-		WindSpeed     []float64 `json:"wind_speed_10m"`
-		WindDirection []float64 `json:"wind_direction_10m"`
-		Precipitation []int     `json:"precipitation_probability"`
+		Time          []string       `json:"time"`
+		Temperature   nullableFloats `json:"temperature_2m"`
+		WeatherCode   nullableInts   `json:"weather_code"`
+		WindSpeed     nullableFloats `json:"wind_speed_10m"`
+		WindDirection nullableFloats `json:"wind_direction_10m"`
+		Precipitation nullableInts   `json:"precipitation_probability"`
 	} `json:"hourly"`
 	Daily struct {
-		Time             []string  `json:"time"`
-		WeatherCode      []int     `json:"weather_code"`
-		Temperature2mMax []float64 `json:"temperature_2m_max"`
-		Temperature2mMin []float64 `json:"temperature_2m_min"`
-		WindSpeed10mMax  []float64 `json:"wind_speed_10m_max"`
-		WindDirection10m []float64 `json:"wind_direction_10m_dominant"`
+		Time             []string       `json:"time"`
+		WeatherCode      nullableInts   `json:"weather_code"`
+		Temperature2mMax nullableFloats `json:"temperature_2m_max"`
+		Temperature2mMin nullableFloats `json:"temperature_2m_min"`
+		WindSpeed10mMax  nullableFloats `json:"wind_speed_10m_max"`
+		WindDirection10m nullableFloats `json:"wind_direction_10m_dominant"`
 	} `json:"daily"`
 }
 
 // marineResponse represents the Open-Meteo Marine API response (wave data).
 type marineResponse struct {
 	Hourly struct {
-		Time        []string  `json:"time"`
-		WaveHeight  []float64 `json:"wave_height"`
-		SeaLevelMsl []float64 `json:"sea_level_height_msl"`
+		Time        []string       `json:"time"`
+		WaveHeight  nullableFloats `json:"wave_height"`
+		SeaLevelMsl nullableFloats `json:"sea_level_height_msl"`
 	} `json:"hourly"`
 	Daily struct {
-		Time          []string  `json:"time"`
-		WaveHeightMax []float64 `json:"wave_height_max"`
+		Time          []string       `json:"time"`
+		WaveHeightMax nullableFloats `json:"wave_height_max"`
 	} `json:"daily"`
 }
 
@@ -119,16 +160,30 @@ func (c *Client) GetCurrent(ctx context.Context, lat, lon float64) (*port.Weathe
 	}
 
 	t, _ := time.Parse(timeLayout, resp.Current.Time)
+	code := deref(resp.Current.WeatherCode)
 
 	return &port.WeatherData{
-		Temp:        resp.Current.Temperature,
-		WindSpeed:   resp.Current.WindSpeed,
-		WindDir:     resp.Current.WindDirection,
+		Temp:        deref(resp.Current.Temperature),
+		WindSpeed:   deref(resp.Current.WindSpeed),
+		WindDir:     deref(resp.Current.WindDirection),
 		Humidity:    resp.Current.Humidity,
-		WeatherCode: resp.Current.WeatherCode,
-		Description: describeWeatherCode(resp.Current.WeatherCode),
+		WeatherCode: code,
+		Description: describeWeatherCode(code),
 		Time:        t,
 	}, nil
+}
+
+// deref reads a nullable scalar, with the zero value for null.
+//
+// A null "current" reading is not something the API contract can express, and a
+// wrong-looking 0 in one cell beats failing the whole screen — which is what
+// decoding straight into float64 did.
+func deref[T any](v *T) T {
+	if v == nil {
+		var zero T
+		return zero
+	}
+	return *v
 }
 
 // GetForecast returns a multi-day weather forecast at the given coordinates.
@@ -150,17 +205,21 @@ func (c *Client) GetForecast(ctx context.Context, lat, lon float64, days int) ([
 
 	forecasts := make([]port.WeatherData, 0, len(resp.Daily.Time))
 	for i, dateStr := range resp.Daily.Time {
+		// A day with no temperature at all is not a forecast; skip it rather
+		// than report 0 °C. (This also used to index the arrays directly, so a
+		// series shorter than `time` panicked the handler.)
+		hi, lo := resp.Daily.Temperature2mMax.ptr(i), resp.Daily.Temperature2mMin.ptr(i)
+		if hi == nil && lo == nil {
+			continue
+		}
 		t, _ := time.Parse(dateLayout, dateStr)
 
-		wd := port.WeatherData{
-			Temp:    (resp.Daily.Temperature2mMax[i] + resp.Daily.Temperature2mMin[i]) / 2,
-			WindDir: safeIndex(resp.Daily.WindDirection10m, i),
-			Time:    t,
-		}
-		if i < len(resp.Daily.WindSpeed10mMax) {
-			wd.WindSpeed = resp.Daily.WindSpeed10mMax[i]
-		}
-		forecasts = append(forecasts, wd)
+		forecasts = append(forecasts, port.WeatherData{
+			Temp:      (deref(hi) + deref(lo)) / 2,
+			WindDir:   resp.Daily.WindDirection10m.at(i),
+			WindSpeed: resp.Daily.WindSpeed10mMax.at(i),
+			Time:      t,
+		})
 	}
 
 	return forecasts, nil
@@ -217,25 +276,26 @@ func (c *Client) GetOverview(ctx context.Context, lat, lon float64) (*port.Weath
 	dailyWaves := map[string]float64{}
 	if marineOK {
 		for i, ts := range marine.Hourly.Time {
-			if i < len(marine.Hourly.WaveHeight) {
-				hourlyWaves[ts] = marine.Hourly.WaveHeight[i]
+			if v := marine.Hourly.WaveHeight.ptr(i); v != nil {
+				hourlyWaves[ts] = *v
 			}
 		}
 		for i, ds := range marine.Daily.Time {
-			if i < len(marine.Daily.WaveHeightMax) {
-				dailyWaves[ds] = marine.Daily.WaveHeightMax[i]
+			if v := marine.Daily.WaveHeightMax.ptr(i); v != nil {
+				dailyWaves[ds] = *v
 			}
 		}
 	}
 
 	curTime, _ := time.Parse(timeLayout, fc.Current.Time)
+	curCode := deref(fc.Current.WeatherCode)
 	current := port.WeatherData{
-		Temp:        fc.Current.Temperature,
-		WindSpeed:   fc.Current.WindSpeed,
-		WindDir:     fc.Current.WindDirection,
+		Temp:        deref(fc.Current.Temperature),
+		WindSpeed:   deref(fc.Current.WindSpeed),
+		WindDir:     deref(fc.Current.WindDirection),
 		Humidity:    fc.Current.Humidity,
-		WeatherCode: fc.Current.WeatherCode,
-		Description: describeWeatherCode(fc.Current.WeatherCode),
+		WeatherCode: curCode,
+		Description: describeWeatherCode(curCode),
 		Time:        curTime,
 	}
 	hourly := buildHourly(&fc, hourlyWaves, curTime)
@@ -259,7 +319,7 @@ func (c *Client) GetOverview(ctx context.Context, lat, lon float64) (*port.Weath
 
 // buildTides converts the sea-level series into hourly tide points (from the
 // current hour forward, ~2 days) and detects high/low turning points.
-func buildTides(ok bool, times []string, levels []float64, now time.Time) ([]port.TidePoint, []port.TideExtreme) {
+func buildTides(ok bool, times []string, levels nullableFloats, now time.Time) ([]port.TidePoint, []port.TideExtreme) {
 	if !ok || len(levels) == 0 {
 		return nil, nil
 	}
@@ -269,8 +329,11 @@ func buildTides(ok bool, times []string, levels []float64, now time.Time) ([]por
 	}
 	var series []tp
 	for i, ts := range times {
-		if i >= len(levels) {
-			break
+		level := levels.ptr(i)
+		// A gap in the sea-level series is skipped, not read as 0 m: a false
+		// zero would invent a tide extreme where there is none.
+		if level == nil {
+			continue
 		}
 		parsed, err := time.Parse(timeLayout, ts)
 		if err != nil {
@@ -279,7 +342,10 @@ func buildTides(ok bool, times []string, levels []float64, now time.Time) ([]por
 		if parsed.Before(now.Add(-time.Hour)) {
 			continue
 		}
-		series = append(series, tp{t: parsed, h: levels[i]})
+		series = append(series, tp{t: parsed, h: *level})
+	}
+	if len(series) == 0 {
+		return nil, nil
 	}
 	const maxHours = 48
 	if len(series) > maxHours {
@@ -384,38 +450,51 @@ func (c *Client) GetHourly(ctx context.Context, lat, lon float64, date string) (
 	waves := map[string]float64{}
 	if marineOK {
 		for i, ts := range marine.Hourly.Time {
-			if i < len(marine.Hourly.WaveHeight) {
-				waves[ts] = marine.Hourly.WaveHeight[i]
+			if v := marine.Hourly.WaveHeight.ptr(i); v != nil {
+				waves[ts] = *v
 			}
 		}
 	}
 
 	points := make([]port.HourlyPoint, 0, len(fc.Hourly.Time))
 	for i := range fc.Hourly.Time {
-		points = append(points, hourlyPointAt(&fc, waves, i))
+		if p, ok := hourlyPointAt(&fc, waves, i); ok {
+			points = append(points, p)
+		}
 	}
 	return points, nil
 }
 
 // hourlyPointAt builds a single HourlyPoint from the parsed series at index i,
 // merging in wave data when available.
-func hourlyPointAt(fc *overviewResponse, waves map[string]float64, i int) port.HourlyPoint {
+//
+// Returns false for an hour with no temperature: the model has nothing for that
+// step, and an hour reading "0°" is worse than an hour that is not listed.
+func hourlyPointAt(
+	fc *overviewResponse,
+	waves map[string]float64,
+	i int,
+) (port.HourlyPoint, bool) {
+	temp := fc.Hourly.Temperature.ptr(i)
+	if temp == nil {
+		return port.HourlyPoint{}, false
+	}
 	t, _ := time.Parse(timeLayout, fc.Hourly.Time[i])
 	p := port.HourlyPoint{
 		Time:        t,
-		Temp:        safeIndex(fc.Hourly.Temperature, i),
-		WindSpeed:   safeIndex(fc.Hourly.WindSpeed, i),
-		WindDir:     safeIndex(fc.Hourly.WindDirection, i),
-		WeatherCode: safeIndexInt(fc.Hourly.WeatherCode, i),
+		Temp:        *temp,
+		WindSpeed:   fc.Hourly.WindSpeed.at(i),
+		WindDir:     fc.Hourly.WindDirection.at(i),
+		WeatherCode: fc.Hourly.WeatherCode.at(i),
 	}
-	if i < len(fc.Hourly.Precipitation) {
-		pp := fc.Hourly.Precipitation[i]
-		p.Precipitation = &pp
+	if pp := fc.Hourly.Precipitation.ptr(i); pp != nil {
+		value := *pp
+		p.Precipitation = &value
 	}
 	if w, ok := waves[fc.Hourly.Time[i]]; ok {
 		p.WaveHeight = &w
 	}
-	return p
+	return p, true
 }
 
 // buildHourly slices the hourly series to start at the current hour and returns
@@ -436,23 +515,31 @@ func buildHourly(fc *overviewResponse, waves map[string]float64, now time.Time) 
 	n := min(len(fc.Hourly.Time)-start, hoursAhead)
 	points := make([]port.HourlyPoint, 0, hoursAhead)
 	for i := range n {
-		points = append(points, hourlyPointAt(fc, waves, start+i))
+		if p, ok := hourlyPointAt(fc, waves, start+i); ok {
+			points = append(points, p)
+		}
 	}
 	return points
 }
 
-// buildDaily converts the daily series into DailyPoint values.
+// buildDaily converts the daily series into DailyPoint values, skipping days
+// the model has no temperature for at all.
 func buildDaily(fc *overviewResponse, waves map[string]float64) []port.DailyPoint {
 	days := make([]port.DailyPoint, 0, len(fc.Daily.Time))
 	for i, ds := range fc.Daily.Time {
+		hi := fc.Daily.Temperature2mMax.ptr(i)
+		lo := fc.Daily.Temperature2mMin.ptr(i)
+		if hi == nil && lo == nil {
+			continue
+		}
 		t, _ := time.Parse(dateLayout, ds)
 		d := port.DailyPoint{
 			Date:        t,
-			TempMax:     safeIndex(fc.Daily.Temperature2mMax, i),
-			TempMin:     safeIndex(fc.Daily.Temperature2mMin, i),
-			WindSpeed:   safeIndex(fc.Daily.WindSpeed10mMax, i),
-			WindDir:     safeIndex(fc.Daily.WindDirection10m, i),
-			WeatherCode: safeIndexInt(fc.Daily.WeatherCode, i),
+			TempMax:     deref(hi),
+			TempMin:     deref(lo),
+			WindSpeed:   fc.Daily.WindSpeed10mMax.at(i),
+			WindDir:     fc.Daily.WindDirection10m.at(i),
+			WeatherCode: fc.Daily.WeatherCode.at(i),
 		}
 		if w, ok := waves[ds]; ok {
 			d.WaveHeight = &w
@@ -485,22 +572,6 @@ func (c *Client) doGet(ctx context.Context, url string) ([]byte, error) {
 	}
 
 	return body, nil
-}
-
-// safeIndex returns the value at index i, or 0 if out of bounds.
-func safeIndex(s []float64, i int) float64 {
-	if i < len(s) {
-		return s[i]
-	}
-	return 0
-}
-
-// safeIndexInt returns the int value at index i, or 0 if out of bounds.
-func safeIndexInt(s []int, i int) int {
-	if i < len(s) {
-		return s[i]
-	}
-	return 0
 }
 
 // describeWeatherCode maps a WMO weather code to a short English description.

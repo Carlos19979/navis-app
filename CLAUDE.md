@@ -602,7 +602,15 @@ code → local checks → push → PR → CI green → merge → delete branch
 
 - **MVP:** Supabase Cloud + Railway (Go API, EU region) + App Store / Google Play
 - **Scale:** Migrate to K8s on Hetzner + self-hosted Supabase + Cloudflare R2/CDN + self-hosted Novu
-- **CI/CD:** GitHub Actions — lint+test on every PR and main push. Deploy to Railway is manual until the Railway project exists (see docs/deploy.md, phase 5 of the launch plan).
+- **CI/CD:** GitHub Actions — lint+test on every PR and main push.
+- ⚠️ **Merging to `main` deploys the API to production.** The Railway service is
+  connected to the repo and redeploys on push to `main` (~6 min; verified
+  2026-07-29 when `/join` went from 404 to 200 with no manual step). There is no
+  confirmation gate in between. The `deploy-api` CI job is still `if: false` and
+  is redundant — Railway does not need it. Prod URL:
+  `https://navis-app-production.up.railway.app`.
+- iOS/Android release builds **are** manual: `make mobile-build-ios` needs every
+  release secret plus Xcode → Archive → App Store Connect (see docs/deploy.md).
 
 ## Stack Versions
 
