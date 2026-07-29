@@ -32,6 +32,7 @@ func New(
 	anomalyH *handler.AnomalyHandler,
 	webhookH *handler.WebhookHandler,
 	legalH *handler.LegalHandler,
+	joinH *handler.JoinHandler,
 	moderationH *handler.ModerationHandler,
 	jwtSecret string,
 	jwksURL string,
@@ -102,6 +103,12 @@ func New(
 
 	// Support page (no auth) — the App Store Connect Support URL points here.
 	r.With(middleware.PublicPageCSP).Get("/support", legalH.Support)
+
+	// Invite landing page (no auth) — where a shared boat code lands. Opens the
+	// app when installed, offers the download when not. Rate limited like the
+	// other unauthenticated pages anyone with a link can reach.
+	r.With(middleware.PublicPageCSP, middleware.RateLimit(60, time.Minute)).
+		Get("/join", joinH.Join)
 
 	// Public ports (no auth) — global read-only nautical map data. The ports
 	// table is public-read (RLS `USING (true)`), so the bbox map feed needs no

@@ -26,17 +26,65 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   }
 
+  /// The vertical list. The screen also has horizontal chip strips, so a bare
+  /// `scrollUntilVisible` cannot tell which scrollable it means.
+  Finder pageScroll() => find.byType(Scrollable).first;
+
+  Future<void> pumpScreen(
+    WidgetTester tester, {
+    required List<Trip> trips,
+  }) async {
+    setPhoneSize(tester);
+    await tester.pumpWidget(
+      buildTestApp(
+        const TripStatsScreen(boatId: boatId),
+        overrides: [
+          allBoatTripsProvider.overrideWith((ref, id) async => trips),
+        ],
+      ),
+    );
+    await pumpFrames(tester);
+  }
+
+  /// Two seasons of trips: 2026 (Apr + Jul) and 2025 (Jul).
+  List<Trip> twoSeasons() => [
+        makeTrip(
+          departureTime: DateTime(2026, 4, 10, 10),
+          distanceNm: 20,
+          maxSpeedKnots: 6,
+          duration: const Duration(hours: 4),
+          departurePort: 'Palma',
+          arrivalPort: 'Soller',
+        ),
+        makeTrip(
+          id: 'trip-2',
+          departureTime: DateTime(2026, 7, 12, 9),
+          distanceNm: 30,
+          maxSpeedKnots: 9.5,
+          duration: const Duration(hours: 6),
+          departurePort: 'Palma',
+          arrivalPort: 'Andratx',
+        ),
+        makeTrip(
+          id: 'trip-3',
+          departureTime: DateTime(2025, 7, 3, 9),
+          distanceNm: 50,
+          maxSpeedKnots: 11,
+          duration: const Duration(hours: 10),
+          departurePort: 'Ibiza',
+          arrivalPort: 'Formentera',
+        ),
+      ];
+
   group('TripStatsScreen', () {
-    testWidgets('shows shimmer loading state', (tester) async {
+    testWidgets('shows shimmer while the logbook loads', (tester) async {
       final completer = Completer<List<Trip>>();
 
       await tester.pumpWidget(
         buildTestApp(
           const TripStatsScreen(boatId: boatId),
           overrides: [
-            boatTripsProvider.overrideWith(
-              (ref, boatId) => completer.future,
-            ),
+            allBoatTripsProvider.overrideWith((ref, id) => completer.future),
           ],
         ),
       );
@@ -45,331 +93,158 @@ void main() {
       expect(find.byType(NavisShimmer), findsOneWidget);
     });
 
-    testWidgets('displays Trip Statistics title', (tester) async {
-      await tester.pumpWidget(
-        buildTestApp(
-          const TripStatsScreen(boatId: boatId),
-          overrides: [
-            boatTripsProvider.overrideWith(
-              (ref, boatId) async => <Trip>[],
-            ),
-            tripStatsProvider.overrideWith(
-              (ref, trips) => const TripStats(
-                totalTrips: 0,
-                totalDistanceNm: 0,
-                totalHours: 0,
-              ),
-            ),
-          ],
-        ),
-      );
-      await pumpFrames(tester);
+    testWidgets('displays the screen title', (tester) async {
+      await pumpScreen(tester, trips: [makeTrip()]);
 
       expect(find.text('Trip Statistics'), findsOneWidget);
     });
 
-    testWidgets('shows All Time section with correct stat labels',
+    testWidgets('starts on all time and totals the whole logbook',
         (tester) async {
-      final trips = [
-        makeTrip(),
-        makeTrip(
-          id: 'trip-2',
-          departurePort: 'Barcelona',
-          arrivalPort: 'Valencia',
-          distanceNm: 113.8,
-          maxSpeedKnots: 9.2,
-        ),
-      ];
+      await pumpScreen(tester, trips: twoSeasons());
 
-      await tester.pumpWidget(
-        buildTestApp(
-          const TripStatsScreen(boatId: boatId),
-          overrides: [
-            boatTripsProvider.overrideWith(
-              (ref, boatId) async => trips,
-            ),
-            tripStatsProvider.overrideWith(
-              (ref, trips) => makeTripStats(),
-            ),
-          ],
-        ),
-      );
-      await pumpFrames(tester);
-
-      // All Time section header
-      expect(find.text('All Time'), findsOneWidget);
-
-      // Stat card labels
-      expect(find.text('Total Trips'), findsWidgets);
-      expect(find.text('NM sailed'), findsWidgets);
-      expect(find.text('Hours at sea'), findsWidgets);
-      expect(find.text('Ports visited'), findsWidgets);
-      expect(find.text('Top speed'), findsWidgets);
-      expect(find.text('Fuel consumed'), findsWidgets);
+      // 20 + 30 + 50 NM across the three trips.
+      expect(find.text('100.0'), findsOneWidget);
+      expect(find.text('ALL TIME'), findsOneWidget);
+      // 20 h at sea, 3 trips.
+      expect(find.textContaining('3 trips'), findsOneWidget);
     });
 
-    testWidgets('shows correct totalTrips value from stats', (tester) async {
-      final trips = [makeTrip()];
+    testWidgets('every figure is on screen for the selected period',
+        (tester) async {
+      await pumpScreen(tester, trips: twoSeasons());
 
-      await tester.pumpWidget(
-        buildTestApp(
-          const TripStatsScreen(boatId: boatId),
-          overrides: [
-            boatTripsProvider.overrideWith(
-              (ref, boatId) async => trips,
-            ),
-            tripStatsProvider.overrideWith(
-              (ref, trips) => const TripStats(
-                totalTrips: 5,
-                totalDistanceNm: 142.3,
-                totalHours: 24.5,
-              ),
-            ),
-          ],
-        ),
-      );
-      await pumpFrames(tester);
-
-      // Total trips: "5" should appear in the stats grid
-      expect(find.text('5'), findsWidgets);
-      // Distance: "142.3"
-      expect(find.text('142.3'), findsWidgets);
-      // Hours: "24.5"
-      expect(find.text('24.5'), findsWidgets);
+      for (final label in [
+        'Total Trips',
+        'Top speed',
+        'Average speed',
+        'Fuel consumed',
+        'Total engine hours',
+      ]) {
+        expect(find.text(label), findsOneWidget, reason: label);
+      }
+      // Stat card + the section listing the ports themselves.
+      expect(find.text('Ports visited'), findsNWidgets(2));
     });
 
-    testWidgets('shows This Year section', (tester) async {
-      final trips = [makeTrip()];
-      final thisYear = DateTime.now().year;
+    // The build-5 request: previous years, not just "this year".
+    testWidgets('picking a year recomputes every figure for that year',
+        (tester) async {
+      await pumpScreen(tester, trips: twoSeasons());
 
-      await tester.pumpWidget(
-        buildTestApp(
-          const TripStatsScreen(boatId: boatId),
-          overrides: [
-            boatTripsProvider.overrideWith(
-              (ref, boatId) async => trips,
-            ),
-            tripStatsProvider.overrideWith(
-              (ref, trips) => makeTripStats(),
-            ),
-          ],
-        ),
-      );
+      await tester.tap(find.text('2025'));
       await pumpFrames(tester);
 
-      expect(
-        find.text('This Year ($thisYear)'),
-        findsOneWidget,
-      );
+      // Only the 2025 trip: 50 NM, one trip, its own top speed.
+      expect(find.text('50.0'), findsOneWidget);
+      expect(find.textContaining('1 trip'), findsOneWidget);
+      expect(find.text('11.0 kn'), findsOneWidget);
     });
 
-    testWidgets('shows Monthly Activity chart', (tester) async {
-      final trips = [makeTrip()];
+    testWidgets('a year offers only the months it has trips in',
+        (tester) async {
+      await pumpScreen(tester, trips: twoSeasons());
 
-      await tester.pumpWidget(
-        buildTestApp(
-          const TripStatsScreen(boatId: boatId),
-          overrides: [
-            boatTripsProvider.overrideWith(
-              (ref, boatId) async => trips,
-            ),
-            tripStatsProvider.overrideWith(
-              (ref, trips) => makeTripStats(),
-            ),
-          ],
-        ),
-      );
+      await tester.tap(find.text('2026'));
       await pumpFrames(tester);
 
-      // Monthly Activity chart is below the fold -- scroll to it
+      expect(find.text('Whole year'), findsOneWidget);
+      // A chip plus the chart's axis label for the months that have trips…
+      expect(find.text('Apr'), findsNWidgets(2));
+      expect(find.text('Jul'), findsNWidgets(2));
+      // …and only the chart label for a month with none: no chip to tap.
+      expect(find.text('Jan'), findsOneWidget);
+    });
+
+    testWidgets('picking a month narrows the figures to that month',
+        (tester) async {
+      await pumpScreen(tester, trips: twoSeasons());
+
+      await tester.tap(find.text('2026'));
+      await pumpFrames(tester);
+      await tester.tap(find.text('Apr').first);
+      await pumpFrames(tester);
+
+      // Only the April trip: 20 NM.
+      expect(find.text('20.0'), findsOneWidget);
+      expect(find.textContaining('1 trip'), findsOneWidget);
+      // The monthly chart is a year-level view; a single month does not need it.
+      expect(find.text('Monthly Activity'), findsNothing);
+    });
+
+    testWidgets('the monthly chart is shown for a year', (tester) async {
+      await pumpScreen(tester, trips: twoSeasons());
+
+      await tester.tap(find.text('2026'));
+      await pumpFrames(tester);
       await tester.scrollUntilVisible(
         find.text('Monthly Activity'),
         200,
+        scrollable: pageScroll(),
       );
       await tester.pump();
 
       expect(find.text('Monthly Activity'), findsOneWidget);
     });
 
-    testWidgets('shows ports visited count from trip data', (tester) async {
-      final trips = [
-        makeTrip(
-          departurePort: 'Palma',
-          arrivalPort: 'Soller',
-        ),
-        makeTrip(
-          id: 'trip-2',
-          departurePort: 'Palma',
-          arrivalPort: 'Alcudia',
-        ),
-      ];
+    testWidgets('lists which ports were visited, not just how many',
+        (tester) async {
+      await pumpScreen(tester, trips: twoSeasons());
 
-      await tester.pumpWidget(
-        buildTestApp(
-          const TripStatsScreen(boatId: boatId),
-          overrides: [
-            boatTripsProvider.overrideWith(
-              (ref, boatId) async => trips,
-            ),
-            tripStatsProvider.overrideWith(
-              (ref, trips) => makeTripStats(),
-            ),
-          ],
-        ),
+      await tester.scrollUntilVisible(
+        find.text('Palma'),
+        200,
+        scrollable: pageScroll(),
       );
-      await pumpFrames(tester);
+      await tester.pump();
 
-      // 3 unique ports: Palma, Soller, Alcudia
-      expect(find.text('3'), findsWidgets);
+      expect(find.text('Palma'), findsOneWidget);
+      // Palma appears in two trips.
+      expect(find.text('×2'), findsOneWidget);
+      expect(find.text('Ibiza'), findsOneWidget);
     });
 
-    testWidgets('shows error state with retry button', (tester) async {
+    testWidgets('shows a dash instead of a zero when there is no reading',
+        (tester) async {
+      await pumpScreen(
+        tester,
+        trips: [makeTrip(maxSpeedKnots: null, distanceNm: null)],
+      );
+
+      expect(find.text('—'), findsWidgets);
+    });
+
+    testWidgets('shows the error state with a retry', (tester) async {
+      var calls = 0;
       await tester.pumpWidget(
         buildTestApp(
           const TripStatsScreen(boatId: boatId),
           overrides: [
-            boatTripsProvider.overrideWith(
-              (ref, boatId) async => throw Exception('Failed to load'),
-            ),
+            allBoatTripsProvider.overrideWith((ref, id) async {
+              calls++;
+              throw Exception('Failed to load');
+            }),
           ],
         ),
       );
       await pumpFrames(tester);
 
       expect(find.byType(NavisErrorWidget), findsOneWidget);
-      expect(find.text('Something went wrong'), findsOneWidget);
-      expect(find.text('Retry'), findsOneWidget);
-    });
-
-    testWidgets('retry button triggers provider refresh', (tester) async {
-      var callCount = 0;
-
-      await tester.pumpWidget(
-        buildTestApp(
-          const TripStatsScreen(boatId: boatId),
-          overrides: [
-            boatTripsProvider.overrideWith(
-              (ref, boatId) async {
-                callCount++;
-                throw Exception('Network error');
-              },
-            ),
-          ],
-        ),
-      );
-      await pumpFrames(tester);
-
-      final initialCount = callCount;
+      final before = calls;
 
       await tester.tap(find.text('Retry'));
       await pumpFrames(tester);
 
-      expect(callCount, greaterThan(initialCount));
+      expect(calls, greaterThan(before));
     });
 
-    testWidgets('shows empty state message when there are no trips',
-        (tester) async {
-      await tester.pumpWidget(
-        buildTestApp(
-          const TripStatsScreen(boatId: boatId),
-          overrides: [
-            boatTripsProvider.overrideWith(
-              (ref, boatId) async => <Trip>[],
-            ),
-          ],
-        ),
-      );
-      await pumpFrames(tester);
+    testWidgets('shows the empty state with no trips', (tester) async {
+      await pumpScreen(tester, trips: const []);
 
       expect(
         find.text('No trips recorded yet. Start your first trip!'),
         findsOneWidget,
       );
-      expect(
-        find.text(
-          'Record trips to see distance, hours at sea and monthly '
-          'activity here.',
-        ),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('shows total engine hours row when engine hours exist',
-        (tester) async {
-      setPhoneSize(tester);
-      final trips = [makeTrip().copyWith(engineHours: 10)];
-
-      await tester.pumpWidget(
-        buildTestApp(
-          const TripStatsScreen(boatId: boatId),
-          overrides: [
-            boatTripsProvider.overrideWith(
-              (ref, boatId) async => trips,
-            ),
-          ],
-        ),
-      );
-      await pumpFrames(tester);
-
-      await tester.scrollUntilVisible(
-        find.text('Total engine hours'),
-        200,
-      );
-      await tester.pump();
-
-      expect(find.text('Total engine hours'), findsOneWidget);
-      expect(find.text('10.0 h'), findsOneWidget);
-    });
-
-    testWidgets('shows top speed from trip data', (tester) async {
-      final trips = [
-        makeTrip(maxSpeedKnots: 9.2),
-      ];
-
-      await tester.pumpWidget(
-        buildTestApp(
-          const TripStatsScreen(boatId: boatId),
-          overrides: [
-            boatTripsProvider.overrideWith(
-              (ref, boatId) async => trips,
-            ),
-            tripStatsProvider.overrideWith(
-              (ref, trips) => makeTripStats(),
-            ),
-          ],
-        ),
-      );
-      await pumpFrames(tester);
-
-      expect(find.text('9.2 kn'), findsOneWidget);
-    });
-
-    testWidgets('shows dash for top speed when no speed data', (tester) async {
-      final trips = [
-        makeTrip(maxSpeedKnots: null),
-      ];
-
-      await tester.pumpWidget(
-        buildTestApp(
-          const TripStatsScreen(boatId: boatId),
-          overrides: [
-            boatTripsProvider.overrideWith(
-              (ref, boatId) async => trips,
-            ),
-            tripStatsProvider.overrideWith(
-              (ref, trips) => const TripStats(
-                totalTrips: 1,
-                totalDistanceNm: 28.5,
-                totalHours: 4.5,
-              ),
-            ),
-          ],
-        ),
-      );
-      await pumpFrames(tester);
-
-      // When maxSpeed is 0, shows '-'
-      expect(find.text('-'), findsWidgets);
     });
   });
 }

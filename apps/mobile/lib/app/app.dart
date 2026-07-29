@@ -6,6 +6,7 @@ import 'package:navis_mobile/app/router.dart';
 import 'package:navis_mobile/core/config/settings_service.dart';
 import 'package:navis_mobile/core/database/mutation_queue.dart';
 import 'package:navis_mobile/core/database/sync_auth_listener.dart';
+import 'package:navis_mobile/core/deeplinks/join_deep_link.dart';
 import 'package:navis_mobile/core/theme/app_theme.dart';
 import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/features/notifications/presentation/providers/notification_auth_listener.dart';
@@ -20,6 +21,7 @@ class NavisApp extends ConsumerWidget {
     ref.watch(notificationAuthListenerProvider);
     ref.watch(billingAuthListenerProvider);
     ref.watch(syncAuthListenerProvider);
+    ref.watch(joinDeepLinkListenerProvider);
     ref.watch(mutationQueueProvider);
     final router = ref.watch(routerProvider);
     final themeMode = ref.watch(themeModeProvider);

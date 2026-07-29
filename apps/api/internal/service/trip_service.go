@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"math"
 	"time"
@@ -61,16 +62,51 @@ func (s *TripService) Create(ctx context.Context, trip *domain.Trip) (*domain.Tr
 
 // GetByID retrieves a single trip the user owns or has shared access to.
 func (s *TripService) GetByID(ctx context.Context, userID, id string) (*domain.Trip, error) {
+	trip, _, err := s.GetByIDWithAccess(ctx, userID, id)
+	return trip, err
+}
+
+// GetByIDWithAccess retrieves a trip together with whether the caller may
+// modify it (edit, delete, share).
+//
+// A shared boat's logbook holds every member's trips, so reading one says
+// nothing about being allowed to change it. The clients need that answer up
+// front to hide the actions instead of offering a button that fails.
+func (s *TripService) GetByIDWithAccess(ctx context.Context, userID, id string) (*domain.Trip, bool, error) {
 	trip, err := s.tripRepo.GetByIDUnscoped(ctx, id)
 	if err != nil {
-		return nil, fmt.Errorf("getting trip %s: %w", id, err)
+		return nil, false, fmt.Errorf("getting trip %s: %w", id, err)
 	}
-	access, err := s.boatRepo.HasAccess(ctx, userID, trip.BoatID)
+	boat, err := s.boatRepo.GetByIDAccessible(ctx, userID, trip.BoatID)
 	if err != nil {
-		return nil, fmt.Errorf("getting trip %s: %w", id, err)
+		if errors.Is(err, domain.ErrBoatNotFound) || errors.Is(err, domain.ErrUnauthorized) {
+			return nil, false, fmt.Errorf("getting trip %s: %w", id, domain.ErrTripNotFound)
+		}
+		return nil, false, fmt.Errorf("getting trip %s: %w", id, err)
 	}
-	if !access {
-		return nil, fmt.Errorf("getting trip %s: %w", id, domain.ErrTripNotFound)
+	return trip, canManageTrip(trip, boat, userID), nil
+}
+
+// canManageTrip is the single rule for who may edit, delete or share a trip:
+// whoever recorded it, and the owner of the boat it belongs to.
+func canManageTrip(trip *domain.Trip, boat *domain.Boat, userID string) bool {
+	return trip.UserID == userID || boat.UserID == userID
+}
+
+// authorizeTripWrite resolves a trip for a write operation.
+//
+// Returns ErrTripNotFound when the trip does not exist or the caller cannot
+// even see the boat, and ErrForbidden when they can see it but may not change
+// this trip. Telling those apart is the whole point: a crew member trying to
+// delete the skipper's trip used to get "trip not found", which reads as data
+// loss rather than "you need permission".
+func (s *TripService) authorizeTripWrite(ctx context.Context, userID, tripID string) (*domain.Trip, error) {
+	trip, canManage, err := s.GetByIDWithAccess(ctx, userID, tripID)
+	if err != nil {
+		return nil, err
+	}
+	if !canManage {
+		return nil, fmt.Errorf("trip %s: %w", tripID, domain.ErrForbidden)
 	}
 	return trip, nil
 }
@@ -106,7 +142,7 @@ func (s *TripService) Update(ctx context.Context, userID string, trip *domain.Tr
 		return nil, &domain.ValidationError{Field: "id", Message: "id is required"}
 	}
 
-	existing, err := s.tripRepo.GetByID(ctx, userID, trip.ID)
+	existing, err := s.authorizeTripWrite(ctx, userID, trip.ID)
 	if err != nil {
 		return nil, fmt.Errorf("updating trip %s: %w", trip.ID, err)
 	}
@@ -114,7 +150,7 @@ func (s *TripService) Update(ctx context.Context, userID string, trip *domain.Tr
 		return nil, fmt.Errorf("updating trip %s: %w: trip is already completed", trip.ID, domain.ErrConflict)
 	}
 
-	updated, err := s.tripRepo.Update(ctx, userID, trip)
+	updated, err := s.tripRepo.Update(ctx, existing.UserID, trip)
 	if err != nil {
 		return nil, fmt.Errorf("updating trip %s: %w", trip.ID, err)
 	}
@@ -225,9 +261,16 @@ func haversineNM(lat1, lon1, lat2, lon2 float64) float64 {
 	return earthRadiusNM * c
 }
 
-// Delete removes a trip if owned by the user.
+// Delete removes a trip. The author and the boat's owner may delete it;
+// everyone else with access to the boat gets ErrForbidden.
 func (s *TripService) Delete(ctx context.Context, userID, id string) error {
-	if err := s.tripRepo.Delete(ctx, userID, id); err != nil {
+	trip, err := s.authorizeTripWrite(ctx, userID, id)
+	if err != nil {
+		return fmt.Errorf("deleting trip %s: %w", id, err)
+	}
+	// Scoped to the author, not the caller: the boat's owner is allowed to
+	// delete a crew member's trip, and that row carries the member's user_id.
+	if err := s.tripRepo.Delete(ctx, trip.UserID, id); err != nil {
 		return fmt.Errorf("deleting trip %s: %w", id, err)
 	}
 	return nil
@@ -291,7 +334,7 @@ func generateShareToken() (string, error) {
 // Share makes a trip publicly accessible, returning its share token. If the
 // trip is already shared, the existing token is reused (idempotent).
 func (s *TripService) Share(ctx context.Context, userID, tripID string) (string, error) {
-	trip, err := s.tripRepo.GetByID(ctx, userID, tripID)
+	trip, err := s.authorizeTripWrite(ctx, userID, tripID)
 	if err != nil {
 		return "", fmt.Errorf("share trip: %w", err)
 	}
@@ -302,7 +345,7 @@ func (s *TripService) Share(ctx context.Context, userID, tripID string) (string,
 	if err != nil {
 		return "", err
 	}
-	if err := s.tripRepo.SetShareToken(ctx, userID, tripID, token); err != nil {
+	if err := s.tripRepo.SetShareToken(ctx, trip.UserID, tripID, token); err != nil {
 		return "", fmt.Errorf("share trip: %w", err)
 	}
 	return token, nil
@@ -310,7 +353,11 @@ func (s *TripService) Share(ctx context.Context, userID, tripID string) (string,
 
 // Unshare revokes a trip's public share link.
 func (s *TripService) Unshare(ctx context.Context, userID, tripID string) error {
-	if err := s.tripRepo.ClearShareToken(ctx, userID, tripID); err != nil {
+	trip, err := s.authorizeTripWrite(ctx, userID, tripID)
+	if err != nil {
+		return fmt.Errorf("unshare trip: %w", err)
+	}
+	if err := s.tripRepo.ClearShareToken(ctx, trip.UserID, tripID); err != nil {
 		return fmt.Errorf("unshare trip: %w", err)
 	}
 	return nil

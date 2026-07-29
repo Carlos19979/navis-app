@@ -34,6 +34,9 @@ dependencies:
   connectivity_plus: ^6.1.0
   sentry_flutter: ^8.12.0
   share_plus: ^10.1.0
+  # Incoming links (navis://join?code=…, https://<api>/join?code=…). Already
+  # present transitively via supabase_flutter; declared because we listen too.
+  app_links: ^6.4.1
   image: ^4.8.0
   shared_preferences: ^2.5.5
   flutter_animate: ^4.5.0

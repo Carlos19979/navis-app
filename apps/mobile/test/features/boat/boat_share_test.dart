@@ -10,6 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:navis_mobile/features/boat/data/boat_share_repository.dart';
+import 'package:navis_mobile/features/boat/domain/boat_join_link.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/boat_detail_screen.dart';
 
@@ -146,7 +147,11 @@ void main() {
     // The recipient needs to know which boat, and needs something tappable.
     expect(text, contains('Luna Azul'));
     expect(text, contains(shareCode));
-    expect(text, contains('navis://join?code=$shareCode'));
+    // An https link, not the `navis://` scheme it used to be: WhatsApp does not
+    // linkify a custom scheme, and on a phone without Navis tapping it did
+    // nothing. The API page bounces into the app or offers the download.
+    expect(text, contains(boatJoinLink(shareCode)));
+    expect(text, contains('/join?code=$shareCode'));
 
     await drain(tester);
   });

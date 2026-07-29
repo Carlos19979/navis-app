@@ -1,8 +1,10 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
+import 'package:navis_mobile/core/error/exceptions.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
@@ -23,9 +25,20 @@ import 'package:navis_mobile/shared/widgets/navis_loading.dart';
 /// the most common reason the weather looks wrong, or does not load at all, so
 /// every manual refresh path goes through here.
 void _refresh(WidgetRef ref) {
-  ref.invalidate(positionProvider);
+  // The fix is what positionProvider derives from; invalidating only the
+  // derived provider would hand back the same cached (missing) fix.
+  ref.invalidate(locationFixProvider);
   ref.invalidate(weatherOverviewProvider);
 }
+
+/// True when the failure is "no network" rather than "the forecast broke".
+bool _isOffline(Object error) =>
+    error is NetworkException ||
+    (error is DioException &&
+        (error.error is NetworkException ||
+            error.type == DioExceptionType.connectionError ||
+            error.type == DioExceptionType.connectionTimeout ||
+            error.type == DioExceptionType.receiveTimeout));
 
 class WeatherScreen extends ConsumerWidget {
   const WeatherScreen({super.key});
@@ -43,9 +56,12 @@ class WeatherScreen extends ConsumerWidget {
         child: overview.when(
           loading: () => const NavisLoading(),
           // A localized reason, not the exception: users cannot act on a
-          // DioException string, and it is not ours to put on screen.
+          // DioException string, and it is not ours to put on screen. Offline
+          // is worth telling apart — it is the one the user can fix.
           error: (error, stack) => NavisErrorWidget(
-            message: l.weatherLoadFailed,
+            message: _isOffline(error)
+                ? l.noInternetConnection
+                : l.weatherLoadFailed,
             onRetry: () => _refresh(ref),
           ),
           // Pull-to-refresh on both loaded and no-location: the no-location
@@ -56,7 +72,10 @@ class WeatherScreen extends ConsumerWidget {
             backgroundColor: context.dialogSurface,
             onRefresh: () async => _refresh(ref),
             child: data == null
-                ? _LocationDenied(message: l.locationAccessNeeded)
+                ? _NoLocation(
+                    reason: ref.watch(locationFixProvider).valueOrNull?.reason,
+                    onRetry: () => _refresh(ref),
+                  )
                 : _OverviewBody(overview: data),
           ),
         ),
@@ -309,10 +328,25 @@ class _DetailPill extends StatelessWidget {
   }
 }
 
-class _LocationDenied extends StatelessWidget {
-  const _LocationDenied({required this.message});
+/// Shown when there is no position: says which of the three things went wrong
+/// and offers the action that fixes that one.
+class _NoLocation extends StatelessWidget {
+  const _NoLocation({required this.reason, required this.onRetry});
 
-  final String message;
+  final NoFixReason? reason;
+  final VoidCallback onRetry;
+
+  /// Settings is the way out of "off" or "denied". "No fix yet" is not
+  /// something Settings helps with — that one just needs another try.
+  bool get _settingsHelps => reason != NoFixReason.unavailable;
+
+  String _message(AppLocalizations l) => switch (reason) {
+        NoFixReason.serviceDisabled => l.locationServicesOff,
+        NoFixReason.unavailable => l.locationNoFixYet,
+        // Denied, or not known yet (the fix provider was overridden or has not
+        // reported): asking for access is the safe thing to say.
+        _ => l.locationAccessNeeded,
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -330,6 +364,7 @@ class _LocationDenied extends StatelessWidget {
   }
 
   Widget _body(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -345,14 +380,16 @@ class _LocationDenied extends StatelessWidget {
                 border: Border.all(color: context.glassBorderColor),
               ),
               child: Icon(
-                Icons.location_off,
+                _settingsHelps
+                    ? Icons.location_off
+                    : Icons.location_searching_rounded,
                 size: 40,
                 color: context.txtSecondary.withValues(alpha: 0.6),
               ),
             ),
             const SizedBox(height: 24),
             Text(
-              message,
+              _message(l),
               textAlign: TextAlign.center,
               style: Theme.of(context)
                   .textTheme
@@ -360,12 +397,21 @@ class _LocationDenied extends StatelessWidget {
                   ?.copyWith(color: context.txtSecondary),
             ),
             const SizedBox(height: 24),
+            if (_settingsHelps)
+              NavisButton(
+                label: l.openSettings,
+                icon: Icons.settings_outlined,
+                variant: NavisButtonVariant.secondary,
+                compact: true,
+                onPressed: Geolocator.openLocationSettings,
+              ),
+            const SizedBox(height: 10),
             NavisButton(
-              label: AppLocalizations.of(context)!.openSettings,
-              icon: Icons.settings_outlined,
+              label: l.retry,
+              icon: Icons.refresh_rounded,
               variant: NavisButtonVariant.secondary,
               compact: true,
-              onPressed: Geolocator.openLocationSettings,
+              onPressed: onRetry,
             ),
           ],
         ),

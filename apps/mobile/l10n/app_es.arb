@@ -899,5 +899,60 @@
   "preTripChecklistSetting": "Checklist antes de zarpar",
   "preTripChecklistAsks": "Se te preguntará al iniciar un viaje",
   "preTripChecklistAlways": "Se abre siempre antes de grabar",
-  "preTripChecklistSkipped": "Se salta; actívalo para que vuelva a preguntar"
+  "preTripChecklistSkipped": "Se salta; actívalo para que vuelva a preguntar",
+  "shareFailedCopied": "No se pudo abrir el menú de compartir. El texto está en el portapapeles.",
+  "shareTripLink": "Compartir enlace",
+  "shareTripLinkSubtitle": "Página web con el mapa del viaje",
+  "shareTripSummary": "Compartir resumen",
+  "shareTripSummarySubtitle": "Texto con los datos del viaje",
+  "shareLinkFailed": "No se pudo crear el enlace",
+  "madeWithNavis": "Hecho con Navis",
+  "tripReadOnly": "Viaje de solo lectura: solo quien lo registró o el propietario del barco puede modificarlo.",
+  "tripDeleteForbidden": "No tienes permiso para borrar este viaje. Pídelo al propietario del barco.",
+  "tripAlreadyDeleted": "Este viaje ya no existe",
+  "alertChipLongPressToDelete": "Mantén pulsado para eliminar",
+  "alertChipDeleteHint": "Mantén pulsada una alerta que hayas añadido para eliminarla.",
+  "alertChipDeleteTitle": "Eliminar alerta",
+  "alertChipDeleteConfirm": "¿Quitar la alerta de {days} días de este documento?",
+  "@alertChipDeleteConfirm": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "alertChipPresetNotRemovable": "Las alertas por defecto no se pueden eliminar; toca para desactivarla.",
+  "joinBoatInviteConfirm": "Te han invitado a un barco con el código {code}. ¿Te unes?",
+  "@joinBoatInviteConfirm": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "locationServicesOff": "La ubicación está desactivada en el dispositivo.\nActívala para ver la previsión donde estás.",
+  "locationNoFixYet": "No hemos podido obtener tu posición.\nAl aire libre suele tardar unos segundos.",
+  "wholeYear": "Todo el año",
+  "statsHoursAndTrips": "{hours} h en el mar · {trips, plural, one{{trips} viaje} other{{trips} viajes}}",
+  "@statsHoursAndTrips": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      },
+      "trips": {
+        "type": "int"
+      }
+    }
+  },
+  "statsAvgTrip": "Viaje medio",
+  "statsLongestTrip": "Viaje más largo",
+  "statsLitresPerNm": "Combustible por milla",
+  "statsMorePorts": "+{count} más",
+  "@statsMorePorts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

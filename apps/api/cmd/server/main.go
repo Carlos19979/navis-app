@@ -173,6 +173,10 @@ func main() {
 	anomalyH := handler.NewAnomalyHandler(anomalySvc)
 	webhookH := handler.NewWebhookHandler(profileSvc, cfg.RevenueCatWebhookSecret, logger)
 	legalH := handler.NewLegalHandler()
+	joinH := handler.NewJoinHandler(handler.StoreLinks{
+		IOS:     cfg.AppStoreURL,
+		Android: cfg.PlayStoreURL,
+	})
 	moderationH := handler.NewModerationHandler(moderationSvc)
 
 	// Create router.
@@ -187,6 +191,7 @@ func main() {
 		anomalyH,
 		webhookH,
 		legalH,
+		joinH,
 		moderationH,
 		cfg.SupabaseJWTSecret,
 		jwksURL,

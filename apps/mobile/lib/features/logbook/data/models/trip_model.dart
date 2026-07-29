@@ -6,6 +6,8 @@ class TripModel {
     required this.boatId,
     required this.departurePort,
     required this.departureTime,
+    this.ownerId,
+    this.canManage,
     this.arrivalPort,
     this.arrivalTime,
     this.distanceNm,
@@ -31,6 +33,8 @@ class TripModel {
       boatId: json['boat_id'] as String,
       departurePort: json['departure_port'] as String,
       departureTime: DateTime.parse(json['departure_time'] as String),
+      ownerId: json['owner_id'] as String?,
+      canManage: json['can_manage'] as bool?,
       arrivalPort: json['arrival_port'] as String?,
       arrivalTime: json['arrival_time'] != null
           ? DateTime.parse(json['arrival_time'] as String)
@@ -69,6 +73,8 @@ class TripModel {
       boatId: trip.boatId,
       departurePort: trip.departurePort,
       departureTime: trip.departureTime,
+      ownerId: trip.ownerId,
+      canManage: trip.canManage,
       arrivalPort: trip.arrivalPort,
       arrivalTime: trip.arrivalTime,
       distanceNm: trip.distanceNm,
@@ -86,6 +92,14 @@ class TripModel {
   final String boatId;
   final String departurePort;
   final DateTime departureTime;
+
+  /// Who recorded the trip. Null on locally built models (create/update
+  /// payloads), where the server is the one that decides.
+  final String? ownerId;
+
+  /// Server's answer to "may this user change the trip?". Only the single-trip
+  /// endpoint sends it.
+  final bool? canManage;
   final String? arrivalPort;
   final DateTime? arrivalTime;
   final double? distanceNm;
@@ -134,6 +148,8 @@ class TripModel {
       boatId: boatId,
       departurePort: departurePort,
       departureTime: departureTime,
+      ownerId: ownerId,
+      canManage: canManage,
       arrivalPort: arrivalPort,
       arrivalTime: arrivalTime,
       distanceNm: distanceNm,

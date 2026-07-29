@@ -1,11 +1,11 @@
 import 'dart:ui';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:share_plus/share_plus.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
@@ -15,12 +15,14 @@ import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/charts/data/tile_provider.dart';
 import 'package:navis_mobile/features/logbook/domain/entities/trip.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
+import 'package:navis_mobile/shared/utils/native_share.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
+import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 
 class TripDetailScreen extends ConsumerWidget {
   const TripDetailScreen({super.key, required this.tripId});
@@ -29,33 +31,47 @@ class TripDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final tripAsync = ref.watch(tripProvider(tripId));
+
+    // On a shared boat the logbook holds the whole crew's trips, and only the
+    // author or the boat's owner may change one. The server answers that with
+    // `can_manage`; offering buttons that end in a 403 (or, worse, the "trip
+    // not found" this used to produce) is not a permission check.
+    final canManage = tripAsync.valueOrNull?.canManage ?? true;
 
     return GradientBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: NavisAppBar(
-          title: AppLocalizations.of(context)!.tripDetails,
+          title: l.tripDetails,
           showBack: true,
           actions: [
-            IconButton(
-              icon: const Icon(Icons.share_outlined),
-              tooltip: AppLocalizations.of(context)!.shareTrip,
-              onPressed: () => _shareTrip(context, ref),
-            ),
-            IconButton(
-              icon: const Icon(Icons.edit_outlined),
-              tooltip: AppLocalizations.of(context)!.editTrip,
-              onPressed: () => context.push('/trips/$tripId/edit'),
-            ),
-            IconButton(
-              icon: const Icon(
-                Icons.delete_outlined,
-                color: AppColors.red,
+            if (canManage) ...[
+              IconButton(
+                icon: const Icon(Icons.share_outlined),
+                tooltip: l.shareTrip,
+                onPressed: () => _shareTrip(context, ref),
               ),
-              tooltip: AppLocalizations.of(context)!.deleteTrip,
-              onPressed: () => _confirmDelete(context, ref),
-            ),
+              IconButton(
+                icon: const Icon(Icons.edit_outlined),
+                tooltip: l.editTrip,
+                onPressed: () => context.push('/trips/$tripId/edit'),
+              ),
+              IconButton(
+                icon: const Icon(
+                  Icons.delete_outlined,
+                  color: AppColors.red,
+                ),
+                tooltip: l.deleteTrip,
+                onPressed: () => _confirmDelete(context, ref),
+              ),
+            ] else
+              IconButton(
+                icon: const Icon(Icons.lock_outline_rounded),
+                tooltip: l.tripReadOnly,
+                onPressed: () => NavisSnackbar.info(context, l.tripReadOnly),
+              ),
           ],
         ),
         body: tripAsync.when(
@@ -136,6 +152,11 @@ class TripDetailScreen extends ConsumerWidget {
                           trackPoints.first.longitude,
                         ),
                         initialZoom: 12,
+                        minZoom: 3,
+                        maxZoom: 18,
+                        // Navy while tiles load, instead of flutter_map's
+                        // default light grey flashing inside a dark card.
+                        backgroundColor: AppColors.navy,
                         interactionOptions: const InteractionOptions(
                           flags: InteractiveFlag.none,
                         ),
@@ -417,55 +438,71 @@ class TripDetailScreen extends ConsumerWidget {
         .toString();
   }
 
-  void _shareTrip(BuildContext context, WidgetRef ref) {
-    final tripAsync = ref.read(tripProvider(tripId));
-    if (tripAsync case AsyncData(:final value)) {
-      final trip = value;
-      showModalBottomSheet<void>(
-        context: context,
-        useRootNavigator: true,
-        backgroundColor: context.dialogSurface,
-        showDragHandle: true,
-        builder: (sheetCtx) => SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.link, color: AppColors.cyan),
-                title: const Text('Compartir enlace'),
-                subtitle: const Text('P\u00e1gina web con el mapa del viaje'),
-                onTap: () {
-                  Navigator.of(sheetCtx).pop();
-                  _shareLink(context, ref, trip);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.short_text, color: AppColors.cyan),
-                title: const Text('Compartir resumen'),
-                subtitle: const Text('Texto con los datos del viaje'),
-                onTap: () {
-                  Navigator.of(sheetCtx).pop();
-                  Share.share('${_summaryText(trip)}\nHecho con Navis');
-                },
-              ),
-            ],
-          ),
+  /// Asks what to share, then shares it.
+  ///
+  /// The choice comes back as the sheet's pop value and the share happens
+  /// *after* it closes: opening the OS share sheet while a route is still
+  /// dismissing is how these things end up doing nothing at all.
+  Future<void> _shareTrip(BuildContext context, WidgetRef ref) async {
+    final l = AppLocalizations.of(context)!;
+    final trip = ref.read(tripProvider(tripId)).valueOrNull;
+    if (trip == null) return;
+
+    final choice = await showModalBottomSheet<_ShareChoice>(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: context.dialogSurface,
+      showDragHandle: true,
+      builder: (sheetCtx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.link, color: AppColors.cyan),
+              title: Text(l.shareTripLink),
+              subtitle: Text(l.shareTripLinkSubtitle),
+              onTap: () => Navigator.of(sheetCtx).pop(_ShareChoice.link),
+            ),
+            ListTile(
+              leading: const Icon(Icons.short_text, color: AppColors.cyan),
+              title: Text(l.shareTripSummary),
+              subtitle: Text(l.shareTripSummarySubtitle),
+              onTap: () => Navigator.of(sheetCtx).pop(_ShareChoice.summary),
+            ),
+          ],
         ),
-      );
+      ),
+    );
+    if (choice == null || !context.mounted) return;
+
+    switch (choice) {
+      case _ShareChoice.link:
+        await _shareLink(context, ref, trip);
+      case _ShareChoice.summary:
+        await shareNavisText(
+          context,
+          text: '${_summaryText(trip)}\n${l.madeWithNavis}',
+          subject: l.shareTrip,
+        );
     }
   }
 
   Future<void> _shareLink(
       BuildContext context, WidgetRef ref, Trip trip) async {
-    final messenger = ScaffoldMessenger.of(context);
+    final l = AppLocalizations.of(context)!;
+    final String url;
     try {
-      final url = await ref.read(tripRepositoryProvider).shareTrip(trip.id);
-      await Share.share('${_summaryText(trip)}\n$url');
+      url = await ref.read(tripRepositoryProvider).shareTrip(trip.id);
     } catch (_) {
-      messenger.showSnackBar(
-        const SnackBar(content: Text('No se pudo crear el enlace')),
-      );
+      if (context.mounted) NavisSnackbar.error(context, l.shareLinkFailed);
+      return;
     }
+    if (!context.mounted) return;
+    await shareNavisText(
+      context,
+      text: '${_summaryText(trip)}\n$url',
+      subject: l.shareTrip,
+    );
   }
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
@@ -492,15 +529,32 @@ class TripDetailScreen extends ConsumerWidget {
         );
         context.pop();
       }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${l.failedToDelete}: $e')),
-        );
+    } on DioException catch (e) {
+      if (!context.mounted) return;
+      // 403 is not a failure to explain with an exception string: it is the
+      // owner not having granted this. 404 after a successful read means the
+      // trip is already gone, which is what the user wanted anyway.
+      final status = e.response?.statusCode;
+      NavisSnackbar.error(
+        context,
+        switch (status) {
+          403 => l.tripDeleteForbidden,
+          404 => l.tripAlreadyDeleted,
+          _ => l.failedToDelete,
+        },
+      );
+      if (status == 404) {
+        ref.invalidate(tripProvider(tripId));
+        context.pop();
       }
+    } catch (_) {
+      if (context.mounted) NavisSnackbar.error(context, l.failedToDelete);
     }
   }
 }
+
+/// What the share sheet came back with.
+enum _ShareChoice { link, summary }
 
 class _SpeedLegend extends StatelessWidget {
   const _SpeedLegend();
@@ -657,6 +711,11 @@ class _TripMapFullScreen extends StatelessWidget {
     required this.polylines,
   });
 
+  /// Matches the tile layers' `maxZoom` (see [OpenSeaMapTileProvider]) and the
+  /// chart screen. Above it there are no tiles to draw.
+  static const _maxZoom = 18.0;
+  static const _minZoom = 3.0;
+
   final List<TrackPoint> trackPoints;
   final List<Polyline> polylines;
 
@@ -672,9 +731,19 @@ class _TripMapFullScreen extends StatelessWidget {
         children: [
           FlutterMap(
             options: MapOptions(
+              // Both bounds are needed here, and this is why the map came up
+              // blank: `CameraFit.bounds` divides the viewport by the track's
+              // extent, so a short hop (or a track whose points are all within
+              // a few metres) asks for a zoom far past 18 — and above the tile
+              // layer's maxZoom nothing is painted at all, leaving flutter_map's
+              // grey backgroundColor. Capping the fit keeps tiles on screen.
+              minZoom: _minZoom,
+              maxZoom: _maxZoom,
+              backgroundColor: AppColors.navy,
               initialCameraFit: CameraFit.bounds(
                 bounds: LatLngBounds.fromPoints(points),
                 padding: const EdgeInsets.all(48),
+                maxZoom: _maxZoom,
               ),
               interactionOptions: const InteractionOptions(
                 flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
