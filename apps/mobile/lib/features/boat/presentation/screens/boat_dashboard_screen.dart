@@ -180,6 +180,20 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
     }
   }
 
+  /// The invite code currently being handled, so a rebuild does not offer the
+  /// same one twice.
+  String? _handlingInvite;
+
+  /// Handles a pending invite code after the current frame.
+  ///
+  /// Deferred on purpose: it is picked up during build, and clearing the
+  /// provider or pushing a dialog mid-build is not allowed.
+  void _scheduleInvite(String code) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(_acceptInvite(code));
+    });
+  }
+
   /// An invite link opened the app. Confirm before acting: a tap on a link is
   /// not consent to hand your account to whoever sent it, and the boat's name
   /// is not known until the join goes through.
@@ -194,8 +208,12 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
       message: l.joinBoatInviteConfirm(code),
       confirmLabel: l.join,
     );
-    if (!confirmed || !mounted) return;
+    if (!confirmed || !mounted) {
+      _handlingInvite = null;
+      return;
+    }
     await _joinWithCode(code);
+    _handlingInvite = null;
   }
 
   @override
@@ -204,9 +222,17 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
     ref.watch(accountProvider); // warm the plan for FAB gating
     // An invite code from a link the app was opened with. This screen is the
     // first authenticated thing the user sees, which is why it consumes it.
-    ref.listen<String?>(pendingJoinCodeProvider, (_, code) {
-      if (code != null) unawaited(_acceptInvite(code));
-    });
+    // `fireImmediately` matters: the link can land before this screen exists
+    // (cold start, or the user was on another tab), and a plain listener only
+    // hears changes that happen while it is mounted.
+    // Watched, not listened to: the link can land before this screen exists
+    // (cold start, or the user was on another tab), and a listener only hears
+    // changes that happen while it is mounted.
+    final pending = ref.watch(pendingJoinCodeProvider);
+    if (pending != null && pending != _handlingInvite) {
+      _handlingInvite = pending;
+      _scheduleInvite(pending);
+    }
     final l = AppLocalizations.of(context)!;
 
     return Scaffold(
