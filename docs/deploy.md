@@ -4,8 +4,17 @@ Step-by-step to take Navis from a green `main` to production: **Supabase Cloud**
 (database, auth, storage) → **Railway** (Go API, EU) → **mobile release builds**
 → post-deploy verification.
 
-Everything here is done once by the operator; nothing in this list is automated
-yet (the CI deploy job exists but is gated off — see the last section).
+Sections 1 and 2 are one-time setup by the operator and are **already done** for
+the live project.
+
+> ⚠️ **Day to day, the API deploys itself: merging to `main` ships it to
+> production.** The Railway service is connected to the repo, so a push to
+> `main` triggers a build and, once `/readyz` passes, routes traffic to it —
+> about 6 minutes end to end, with no confirmation step. Verified 2026-07-29:
+> `/join` went from 404 to 200 after merging PR #77, with the CI `deploy-api`
+> job still disabled. Treat a merge to `main` as a production release.
+>
+> Mobile release builds are **not** automated (section 3).
 
 > Prerequisites: the Supabase CLI, Railway CLI (`npm i -g @railway/cli`),
 > Flutter, an Apple Developer account, and the RevenueCat dashboard from
@@ -111,10 +120,23 @@ webhook flips the plan to Pro (the `payments-setup.md` smoke test). Finally,
 exercise **Settings → Delete account** and confirm the user can no longer log
 in and their storage is gone.
 
-## 5. Enabling automated deploy (later)
+## 5. The `deploy-api` CI job (not needed)
 
-CI has a `deploy-api` job (`.github/workflows/ci.yml`) that runs `railway up`
-on `main` push. It is gated `if: false`. To enable:
+CI has a `deploy-api` job (`.github/workflows/ci.yml`) that would run
+`railway up` on `main` push. It is gated `if: false` **and should stay that
+way**: Railway already redeploys from the repo connection on every `main` push,
+so enabling it would produce two deploys of the same commit.
+
+It is worth keeping only as a fallback if the repo connection is ever removed in
+favour of token-based deploys. To enable it then:
 
 1. Add `RAILWAY_TOKEN` as a repo secret.
 2. Change `if: false` to `if: github.event_name == 'push' && github.ref == 'refs/heads/main'`.
+3. Disable the automatic deploy in the Railway service settings first.
+
+To deploy by hand instead (e.g. to ship a branch without merging):
+
+```bash
+railway login                 # interactive, opens a browser
+cd apps/api && railway up --service navis-api
+```
