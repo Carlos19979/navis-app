@@ -10,9 +10,16 @@ the live project.
 > ⚠️ **Day to day, the API deploys itself: merging to `main` ships it to
 > production.** The Railway service is connected to the repo, so a push to
 > `main` triggers a build and, once `/readyz` passes, routes traffic to it —
-> about 6 minutes end to end, with no confirmation step. Verified 2026-07-29:
-> `/join` went from 404 to 200 after merging PR #77, with the CI `deploy-api`
-> job still disabled. Treat a merge to `main` as a production release.
+> about 6 minutes end to end. Verified 2026-07-29: `/join` went from 404 to 200
+> after merging PR #77, with the CI `deploy-api` job still disabled. Treat a
+> merge to `main` as a production release.
+>
+> **But Railway waits for the check suite and skips the deploy if it is red.**
+> One flaky test on `main` is enough for a merge to ship nothing at all, and it
+> is quiet about it: the dashboard marks the deployment `SKIPPED — CI check
+> suite failed`, and `/readyz` keeps answering 200 from the old container. This
+> bit be760af (#78). **Confirm every deploy** (section 4) instead of assuming
+> the merge was enough.
 >
 > Mobile release builds are **not** automated (section 3).
 
@@ -97,6 +104,21 @@ IAP subscription created in App Store Connect (in "Ready to Submit"), plus the
 privacy policy / terms URLs (served at `/legal/privacy` and `/legal/terms`).
 
 ## 4. Post-deploy verification
+
+**Start here: did the deploy actually happen?** Every check below passes just as
+happily against the *previous* container, so none of them can tell you whether
+your commit shipped.
+
+```bash
+# The newest deployment must reach `success`. `in_progress → inactive` with no
+# `success` means Railway skipped or failed it — check the dashboard for the
+# reason (a red check suite on `main` is the usual one).
+DEP=$(gh api "repos/Carlos19979/navis-app/deployments?per_page=1" --jq '.[0].id')
+gh api repos/Carlos19979/navis-app/deployments/$DEP --jq '.sha[0:7]'
+gh api repos/Carlos19979/navis-app/deployments/$DEP/statuses --jq '.[0].state'
+```
+
+Then the service itself:
 
 ```bash
 # API is up and the DB is reachable

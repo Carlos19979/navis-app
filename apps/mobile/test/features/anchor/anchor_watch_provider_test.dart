@@ -12,6 +12,8 @@ import 'package:navis_mobile/core/alarm/alarm_service.dart';
 import 'package:navis_mobile/core/database/local_database.dart';
 import 'package:navis_mobile/features/anchor/presentation/providers/anchor_watch_provider.dart';
 
+import '../../helpers/local_db.dart';
+
 class MockAlarmService extends Mock implements AlarmService {}
 
 /// Controllable GPS: drives a stream we feed by hand and a settable one-shot
@@ -76,9 +78,8 @@ void main() {
   const outside = LatLng(39.5004, 2.6);
   const inside = LatLng(39.50005, 2.6);
 
-  setUpAll(() {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
+  setUpAll(() async {
+    await useIsolatedDatabase('anchor_watch');
   });
 
   setUp(() async {

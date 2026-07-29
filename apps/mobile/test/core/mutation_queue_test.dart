@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,6 +11,7 @@ import 'package:navis_mobile/core/network/api_client.dart';
 import 'package:navis_mobile/core/network/connectivity_provider.dart';
 
 import '../helpers/helpers.dart';
+import '../helpers/local_db.dart';
 
 void main() {
   late LocalDatabase db;
@@ -20,13 +20,7 @@ void main() {
   late RecordingHttpAdapter adapter;
 
   setUpAll(() async {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-    // Own directory so this suite's navis_cache.db never clashes with
-    // other test files running in parallel isolates.
-    await databaseFactory.setDatabasesPath(
-      Directory.systemTemp.createTempSync('navis_mq_test').path,
-    );
+    await useIsolatedDatabase('mq');
     // Replay goes through ApiClient.instance, whose auth interceptor
     // reads the Supabase session.
     await initFakeSupabase();

@@ -130,6 +130,13 @@ Boat makeBoat({
   );
 }
 
+/// Midday on the calendar day [days] from today. `DateTime` normalises the day
+/// overflow, and midday keeps the value clear of any DST hour shift.
+DateTime _calendarDaysFromToday(int days) {
+  final now = DateTime.now();
+  return DateTime(now.year, now.month, now.day + days, 12);
+}
+
 Document makeDocument({
   String id = 'doc-1',
   String boatId = 'boat-1',
@@ -144,7 +151,12 @@ Document makeDocument({
     boatId: boatId,
     type: type,
     customName: customName,
-    expiryDate: DateTime.now().add(Duration(days: daysUntilExpiry)),
+    // The calendar day [daysUntilExpiry] days out, at midday — not
+    // `now.add(Duration(days: N))`, which adds N×24h of absolute time and lands
+    // a day early when a DST change falls inside the window. That is what broke
+    // the 120-day expectations at local midnight on 30 July 2026: 120 days out
+    // crossed the October fall-back and the screen said 119.
+    expiryDate: _calendarDaysFromToday(daysUntilExpiry),
     status: status,
     notes: 'Test document',
     alertDaysBefore:

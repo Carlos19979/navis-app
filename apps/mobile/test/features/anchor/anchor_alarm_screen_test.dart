@@ -13,6 +13,7 @@ import 'package:navis_mobile/core/database/local_database.dart';
 import 'package:navis_mobile/features/anchor/presentation/screens/anchor_alarm_screen.dart';
 
 import '../../helpers/helpers.dart';
+import '../../helpers/local_db.dart';
 
 class MockAlarmService extends Mock implements AlarmService {}
 
@@ -63,9 +64,8 @@ void main() {
   late MockAlarmService alarm;
   late FakeGeolocatorPlatform gps;
 
-  setUpAll(() {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
+  setUpAll(() async {
+    await useIsolatedDatabase('anchor_alarm');
   });
 
   setUp(() async {
