@@ -29,11 +29,14 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
+      # Pinned to the same version the repo's .golangci.yml is written for
+      # (v2 schema) and the same one used locally, so a green local run means a
+      # green CI run. It did not before: the config was v1 while every current
+      # golangci-lint is v2, so the lint could only be run by CI.
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v9
         with:
-          version: v1.64.8
-          install-mode: goinstall
+          version: v2.12.2
           working-directory: apps/api
           args: --timeout=5m
 

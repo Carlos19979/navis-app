@@ -136,7 +136,7 @@ Dependency flow: `handler → service → port ← adapter`
 
 ### Go — Linting & Build
 
-- `.golangci.yml` with: errcheck, gosimple, govet, ineffassign, staticcheck, unused, gosec, revive, gocritic, exhaustive (for typed enum switches).
+- `.golangci.yml` is **v2 schema** (`version: "2"`), pinned to golangci-lint v2.12.2 in CI so a local run and CI agree. v2 enables errcheck, govet, ineffassign, staticcheck (which absorbed gosimple) and unused by default; the file adds gosec, revive, gocritic and exhaustive (for typed enum switches).
 - Code MUST pass `golangci-lint run` without errors.
 - Multi-stage Docker: build stage → `gcr.io/distroless/static-debian12` final (~10MB).
 - Always check `exhaustive` linter for switch statements on typed enums — ensures all cases handled.

@@ -9,6 +9,10 @@ import (
 
 // devDatabaseURL is the local-development default. It must never be used in
 // production — Validate rejects it there.
+//
+// default, and Validate() refuses to boot production with it.
+//
+//nolint:gosec // G101: not a credential. It is Supabase's published local
 const devDatabaseURL = "postgres://postgres:postgres@localhost:54322/postgres?sslmode=disable"
 
 // Config holds the application configuration loaded from environment variables.

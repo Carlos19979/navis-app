@@ -8,6 +8,7 @@ import 'package:navis_mobile/core/database/mutation_queue.dart';
 import 'package:navis_mobile/core/database/sync_auth_listener.dart';
 import 'package:navis_mobile/core/deeplinks/join_deep_link.dart';
 import 'package:navis_mobile/core/theme/app_theme.dart';
+import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/features/notifications/presentation/providers/notification_auth_listener.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -45,9 +46,16 @@ class NavisApp extends ConsumerWidget {
         Locale('es'),
       ],
       routerConfig: router,
-      builder: (context, child) => NavisOfflineBanner(
-        child: child ?? const SizedBox.shrink(),
-      ),
+      builder: (context, child) {
+        // Dates: here, not in main(), because this is where the locale
+        // MaterialApp actually resolved is readable — `localeProvider` is null
+        // when the user follows the system, and Settings can change it at
+        // runtime.
+        NavisDateUtils.useLocale(Localizations.localeOf(context));
+        return NavisOfflineBanner(
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
     );
   }
 }

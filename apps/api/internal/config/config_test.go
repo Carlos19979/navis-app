@@ -6,6 +6,7 @@ import (
 )
 
 func productionConfig() *Config {
+	//nolint:gosec // G101: fabricated URL in a test fixture, not a credential.
 	return &Config{
 		AppEnv:                  "production",
 		DatabaseURL:             "postgres://app:secret@db.example.com:5432/navis?sslmode=require",
