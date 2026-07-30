@@ -33,10 +33,20 @@ class NavisDateUtils {
     return DocExpiryStatus.ok;
   }
 
+  /// Whole calendar days from today to [date], as local dates.
+  ///
+  /// The subtraction happens on UTC-normalised midnights on purpose. A
+  /// difference between two *local* midnights spans 23 or 25 hours when the
+  /// clocks change in between, and `.inDays` truncates — so a document exactly
+  /// 30 calendar days out reported **29** whenever a spring-forward fell inside
+  /// the window, moving its expiry badge (and the reminder copy) a day early.
+  /// In UTC every day is 24 hours, and the count is the calendar difference the
+  /// rest of the app assumes.
   static int daysUntil(DateTime date) {
     final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final target = DateTime(date.year, date.month, date.day);
+    final local = date.toLocal();
+    final today = DateTime.utc(now.year, now.month, now.day);
+    final target = DateTime.utc(local.year, local.month, local.day);
     return target.difference(today).inDays;
   }
 

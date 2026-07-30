@@ -12,6 +12,8 @@ import 'package:navis_mobile/features/logbook/presentation/providers/logbook_pro
 import 'package:navis_mobile/features/logbook/presentation/providers/trip_recording_provider.dart';
 import 'package:navis_mobile/features/logbook/presentation/widgets/trip_completion_dialog.dart';
 
+import '../../helpers/local_db.dart';
+
 class MockTripRepository extends Mock implements TripRepository {}
 
 class FakeTrip extends Fake implements Trip {}
@@ -23,9 +25,8 @@ void main() {
   late MockTripRepository tripRepo;
   late ProviderContainer container;
 
-  setUpAll(() {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
+  setUpAll(() async {
+    await useIsolatedDatabase('trip_recording');
     registerFallbackValue(FakeTrip());
   });
 

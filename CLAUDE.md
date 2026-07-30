@@ -605,10 +605,23 @@ code → local checks → push → PR → CI green → merge → delete branch
 - **CI/CD:** GitHub Actions — lint+test on every PR and main push.
 - ⚠️ **Merging to `main` deploys the API to production.** The Railway service is
   connected to the repo and redeploys on push to `main` (~6 min; verified
-  2026-07-29 when `/join` went from 404 to 200 with no manual step). There is no
-  confirmation gate in between. The `deploy-api` CI job is still `if: false` and
-  is redundant — Railway does not need it. Prod URL:
-  `https://navis-app-production.up.railway.app`.
+  2026-07-29 when `/join` went from 404 to 200 with no manual step). The
+  `deploy-api` CI job is still `if: false` and is redundant — Railway does not
+  need it. Prod URL: `https://navis-app-production.up.railway.app`.
+- **Railway waits for the check suite, and skips the deploy when it is red.** A
+  flaky test on `main` therefore means the merge silently does not ship: the
+  dashboard shows the deployment as `SKIPPED — CI check suite failed` and
+  GitHub's deployments API shows `in_progress → inactive` with no `success`. It
+  happened to be760af (#78) on a sqflite disk-I/O flake. **After merging,
+  confirm the deploy, do not assume it** — `/readyz` keeps answering 200 from
+  the old container, so it proves nothing:
+  ```bash
+  gh api "repos/Carlos19979/navis-app/deployments?per_page=1" --jq '.[0].id' \
+    | xargs -I{} gh api repos/Carlos19979/navis-app/deployments/{}/statuses \
+      --jq '.[0].state'          # want: success
+  ```
+  Recover a skipped deploy with an empty commit to `main` (re-runs CI) or
+  Redeploy from the Railway dashboard.
 - iOS/Android release builds **are** manual: `make mobile-build-ios` needs every
   release secret plus Xcode → Archive → App Store Connect (see docs/deploy.md).
 
