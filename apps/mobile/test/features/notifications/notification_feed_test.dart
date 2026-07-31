@@ -85,7 +85,6 @@ void main() {
   }
 
   Widget bellHost() => const Scaffold(
-        appBar: null,
         body: Row(children: [NotificationBell()]),
       );
 
@@ -154,7 +153,7 @@ void main() {
       when(() => repo.getNotifications(cursor: any(named: 'cursor')))
           .thenAnswer((_) async => PaginatedResponse<AppNotification>(
                 items: [
-                  notification(id: 'n1', title: 'Sin leer'),
+                  notification(title: 'Sin leer'),
                   notification(
                     id: 'n2',
                     title: 'Ya leida',
@@ -186,7 +185,6 @@ void main() {
           .thenAnswer((_) async => PaginatedResponse<AppNotification>(
                 items: [
                   notification(
-                    id: 'n1',
                     title: 'Seguro caduca',
                     linkType: 'document',
                     linkId: 'doc-9',
@@ -208,7 +206,7 @@ void main() {
         (tester) async {
       when(() => repo.getNotifications(cursor: any(named: 'cursor')))
           .thenAnswer((_) async => PaginatedResponse<AppNotification>(
-                items: [notification(id: 'n1', title: 'Sin destino')],
+                items: [notification(title: 'Sin destino')],
               ));
 
       await tester.pumpWidget(wrap(const NotificationsScreen()));
@@ -226,7 +224,7 @@ void main() {
       when(() => repo.getNotifications(cursor: any(named: 'cursor')))
           .thenAnswer((_) async => PaginatedResponse<AppNotification>(
                 items: [
-                  notification(id: 'n1', title: 'Una'),
+                  notification(title: 'Una'),
                   notification(id: 'n2', title: 'Otra'),
                 ],
               ));
@@ -248,7 +246,7 @@ void main() {
       when(() => repo.getUnreadCount()).thenAnswer((_) async => 2);
       when(() => repo.getNotifications(cursor: any(named: 'cursor')))
           .thenAnswer((_) async => PaginatedResponse<AppNotification>(
-                items: [notification(id: 'n1')],
+                items: [notification()],
               ));
       when(() => repo.markRead('n1')).thenThrow(Exception('offline'));
 
@@ -272,9 +270,9 @@ void main() {
     });
 
     test('loadMore appends the next page only once', () async {
-      when(() => repo.getNotifications(cursor: null)).thenAnswer(
+      when(() => repo.getNotifications()).thenAnswer(
         (_) async => PaginatedResponse<AppNotification>(
-          items: [notification(id: 'n1')],
+          items: [notification()],
           nextCursor: 'cursor-2',
         ),
       );
