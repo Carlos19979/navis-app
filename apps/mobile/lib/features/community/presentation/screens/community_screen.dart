@@ -14,6 +14,7 @@ import 'package:navis_mobile/features/events/presentation/screens/events_screen.
 import 'package:navis_mobile/features/groups/domain/entities/group.dart';
 import 'package:navis_mobile/features/groups/presentation/providers/group_provider.dart';
 import 'package:navis_mobile/features/groups/presentation/widgets/group_card.dart';
+import 'package:navis_mobile/features/notifications/presentation/widgets/notification_bell.dart';
 import 'package:navis_mobile/features/profile/data/account_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/join_by_code_sheet.dart';
@@ -115,25 +116,25 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
           Tab(text: l.discoverTab),
         ],
       ),
-      actions: _onClubsTab
-          ? [
-              Padding(
-                padding: const EdgeInsets.only(right: Dimens.spaceSm),
-                child: TextButton.icon(
-                  onPressed: _joinByCode,
-                  icon: const Icon(
-                    Icons.vpn_key_outlined,
-                    size: Dimens.iconSm,
-                    color: AppColors.cyan,
-                  ),
-                  label: Text(
-                    l.joinByCode,
-                    style: const TextStyle(color: AppColors.cyan),
-                  ),
-                ),
+      actions: [
+        const NotificationBell(),
+        if (_onClubsTab)
+          Padding(
+            padding: const EdgeInsets.only(right: Dimens.spaceSm),
+            child: TextButton.icon(
+              onPressed: _joinByCode,
+              icon: const Icon(
+                Icons.vpn_key_outlined,
+                size: Dimens.iconSm,
+                color: AppColors.cyan,
               ),
-            ]
-          : null,
+              label: Text(
+                l.joinByCode,
+                style: const TextStyle(color: AppColors.cyan),
+              ),
+            ),
+          ),
+      ],
       // Creating a club is Pro. Marked before the tap, like the paid rows on
       // the boat screen, instead of only finding out via the paywall.
       floatingActionButton: _onClubsTab

@@ -14,6 +14,7 @@ import 'package:navis_mobile/features/boat/data/boat_share_repository.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
+import 'package:navis_mobile/features/notifications/presentation/widgets/notification_bell.dart';
 import 'package:navis_mobile/features/profile/data/account_provider.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 import 'package:navis_mobile/features/boat/presentation/widgets/boat_header.dart';
@@ -240,6 +241,7 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
       appBar: NavisAppBar(
         title: l.myBoats,
         actions: [
+          const NotificationBell(),
           Padding(
             padding: const EdgeInsets.only(right: Dimens.spaceSm),
             child: TextButton.icon(

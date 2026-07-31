@@ -870,20 +870,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get selectLanguage => 'Seleccionar idioma';
 
   @override
-  String get documentExpiryAlerts => 'Alertas de vencimiento';
-
-  @override
-  String get expiryAlertsSubtitle =>
-      'Recibe alertas antes de que venzan los documentos';
-
-  @override
-  String get eventReminders => 'Recordatorios de eventos';
-
-  @override
-  String get eventRemindersSubtitle =>
-      'Recibe recordatorios de eventos próximos';
-
-  @override
   String get dataAndStorage => 'Datos y almacenamiento';
 
   @override
@@ -2658,4 +2644,72 @@ class AppLocalizationsEs extends AppLocalizations {
   String statsMorePorts(int count) {
     return '+$count más';
   }
+
+  @override
+  String get markAllRead => 'Marcar todo como leído';
+
+  @override
+  String get noNotifications => 'Sin notificaciones';
+
+  @override
+  String get noNotificationsDescription =>
+      'Aquí verás los recordatorios, la actividad de tu barco y las novedades de tus clubes.';
+
+  @override
+  String unreadNotifications(int count) {
+    return '$count sin leer';
+  }
+
+  @override
+  String get timeJustNow => 'Ahora mismo';
+
+  @override
+  String timeMinutesAgo(int count) {
+    return 'Hace $count min';
+  }
+
+  @override
+  String timeHoursAgo(int count) {
+    return 'Hace $count h';
+  }
+
+  @override
+  String timeDaysAgo(int count) {
+    return 'Hace $count d';
+  }
+
+  @override
+  String get notifCategoryReminders => 'Recordatorios';
+
+  @override
+  String get notifCategoryRemindersSubtitle =>
+      'Documentos que caducan y mantenimiento pendiente';
+
+  @override
+  String get notifCategoryRegattas => 'Regatas';
+
+  @override
+  String get notifCategoryRegattasSubtitle =>
+      'Regatas programadas, confirmaciones y cambios';
+
+  @override
+  String get notifCategoryGroups => 'Clubes y grupos';
+
+  @override
+  String get notifCategoryGroupsSubtitle =>
+      'Solicitudes de acceso y cambios de miembros';
+
+  @override
+  String get notifCategoryBoatActivity => 'Actividad del barco';
+
+  @override
+  String get notifCategoryBoatActivitySubtitle =>
+      'Reservas, gastos compartidos y travesías de la tripulación';
+
+  @override
+  String get notifCategoryEvents => 'Eventos en directo';
+
+  @override
+  String get notifCategoryEventsSubtitle =>
+      'Cuando empieza un evento náutico que te interesa';
 }

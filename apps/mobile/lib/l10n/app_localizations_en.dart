@@ -865,18 +865,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectLanguage => 'Select Language';
 
   @override
-  String get documentExpiryAlerts => 'Document Expiry Alerts';
-
-  @override
-  String get expiryAlertsSubtitle => 'Get notified before documents expire';
-
-  @override
-  String get eventReminders => 'Event Reminders';
-
-  @override
-  String get eventRemindersSubtitle => 'Get reminded about upcoming events';
-
-  @override
   String get dataAndStorage => 'Data & Storage';
 
   @override
@@ -2633,4 +2621,71 @@ class AppLocalizationsEn extends AppLocalizations {
   String statsMorePorts(int count) {
     return '+$count more';
   }
+
+  @override
+  String get markAllRead => 'Mark all as read';
+
+  @override
+  String get noNotifications => 'No notifications';
+
+  @override
+  String get noNotificationsDescription =>
+      'Reminders, your boat\'s activity and news from your clubs will show up here.';
+
+  @override
+  String unreadNotifications(int count) {
+    return '$count unread';
+  }
+
+  @override
+  String get timeJustNow => 'Just now';
+
+  @override
+  String timeMinutesAgo(int count) {
+    return '$count min ago';
+  }
+
+  @override
+  String timeHoursAgo(int count) {
+    return '$count h ago';
+  }
+
+  @override
+  String timeDaysAgo(int count) {
+    return '$count d ago';
+  }
+
+  @override
+  String get notifCategoryReminders => 'Reminders';
+
+  @override
+  String get notifCategoryRemindersSubtitle =>
+      'Expiring documents and maintenance due';
+
+  @override
+  String get notifCategoryRegattas => 'Regattas';
+
+  @override
+  String get notifCategoryRegattasSubtitle =>
+      'Scheduled regattas, RSVPs and changes';
+
+  @override
+  String get notifCategoryGroups => 'Clubs and groups';
+
+  @override
+  String get notifCategoryGroupsSubtitle => 'Join requests and member changes';
+
+  @override
+  String get notifCategoryBoatActivity => 'Boat activity';
+
+  @override
+  String get notifCategoryBoatActivitySubtitle =>
+      'Bookings, shared expenses and crew trips';
+
+  @override
+  String get notifCategoryEvents => 'Live events';
+
+  @override
+  String get notifCategoryEventsSubtitle =>
+      'When a nautical event you follow starts';
 }
