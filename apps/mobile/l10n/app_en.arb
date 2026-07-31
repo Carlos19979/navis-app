@@ -59,11 +59,19 @@
   "readinessAllGood": "Everything is in order",
   "readinessItemsNeedAttention": "{count} items need attention",
   "@readinessItemsNeedAttention": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "readinessScoreOf": "Score {score} / 100",
   "@readinessScoreOf": {
-    "placeholders": { "score": { "type": "int" } }
+    "placeholders": {
+      "score": {
+        "type": "int"
+      }
+    }
   },
   "readinessNeedsAttention": "Needs attention",
   "readinessCatDocuments": "Documents",
@@ -71,13 +79,24 @@
   "readinessCatMaintenance": "Maintenance",
   "readinessOkOfTotal": "{ok}/{total} OK",
   "@readinessOkOfTotal": {
-    "placeholders": { "ok": { "type": "int" }, "total": { "type": "int" } }
+    "placeholders": {
+      "ok": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
   },
   "readinessUpgradeForFull": "Unlock the full readiness check (safety gear + maintenance) with Pro",
   "readinessExpired": "expired",
   "readinessExpiresInDays": "in {days} days",
   "@readinessExpiresInDays": {
-    "placeholders": { "days": { "type": "int" } }
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
   },
   "readinessServiceOverdue": "no recent service",
   "readinessRefItb": "Technical inspection (ITB)",
@@ -126,7 +145,11 @@
   "bookingEndBeforeStart": "Arrival must be after departure",
   "bookingOverlapDetail": "Already booked: {range}",
   "@bookingOverlapDetail": {
-    "placeholders": { "range": { "type": "String" } }
+    "placeholders": {
+      "range": {
+        "type": "String"
+      }
+    }
   },
   "bookingsEmpty": "No bookings yet",
   "bookingsEmptyDescription": "Reserve boat days so co-owners and crew know who has it when.",
@@ -150,17 +173,29 @@
   "splitSettled": "Settled",
   "splitYouOwe": "You owe {amount} €",
   "@splitYouOwe": {
-    "placeholders": { "amount": { "type": "int" } }
+    "placeholders": {
+      "amount": {
+        "type": "int"
+      }
+    }
   },
   "splitSharedAmong": "Split among {count}",
   "@splitSharedAmong": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "paywallReasonShared": "Coordinate a shared boat with Navis Pro",
   "anomaliesTitle": "Anomalies",
   "anomalyFuelHigh": "Used {pct}% more fuel per mile than usual",
   "@anomalyFuelHigh": {
-    "placeholders": { "pct": { "type": "int" } }
+    "placeholders": {
+      "pct": {
+        "type": "int"
+      }
+    }
   },
   "readinessMaintNoPlan": "set up a maintenance plan",
   "readinessMaintOverdue": "overdue",
@@ -170,7 +205,11 @@
   "engineSectionHint": "Current engine hours. Set up service tasks in the Maintenance tab.",
   "readinessMaintInHours": "in {hours} h",
   "@readinessMaintInHours": {
-    "placeholders": { "hours": { "type": "int" } }
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
   },
   "maintenancePlanTitle": "Maintenance plan",
   "maintenanceOtherTitle": "Other records",
@@ -189,23 +228,43 @@
   "taskField": "Task",
   "maintenanceEveryMonths": "every {months} mo",
   "@maintenanceEveryMonths": {
-    "placeholders": { "months": { "type": "int" } }
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
   },
   "maintenanceEveryHours": "every {hours} h",
   "@maintenanceEveryHours": {
-    "placeholders": { "hours": { "type": "int" } }
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
   },
   "maintenanceInDays": "in {days} d",
   "@maintenanceInDays": {
-    "placeholders": { "days": { "type": "int" } }
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
   },
   "maintenanceNextDue": "next {date}",
   "@maintenanceNextDue": {
-    "placeholders": { "date": { "type": "String" } }
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
   },
   "maintenanceLastDone": "last {date}",
   "@maintenanceLastDone": {
-    "placeholders": { "date": { "type": "String" } }
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
   },
   "taskEngineOil": "Engine oil",
   "taskFilters": "Filters",
@@ -340,10 +399,6 @@
   "lightThemeActive": "Light theme active",
   "systemDefault": "System default",
   "selectLanguage": "Select Language",
-  "documentExpiryAlerts": "Document Expiry Alerts",
-  "expiryAlertsSubtitle": "Get notified before documents expire",
-  "eventReminders": "Event Reminders",
-  "eventRemindersSubtitle": "Get reminded about upcoming events",
   "dataAndStorage": "Data & Storage",
   "clearImageCache": "Clear Image Cache",
   "clearImageCacheSubtitle": "Remove cached photos and map tiles",
@@ -530,10 +585,10 @@
   "noNearbyPorts": "No ports found nearby",
   "tapPortForDetails": "Tap a port marker for details",
   "docTypeItb": "Technical Inspection (ITB)",
-"docTypeInsuranceRc": "Third-Party Insurance",
-"docTypeInsuranceFull": "Full Insurance",
-"docTypeNavigationLicense": "Navigation License",
-"docTypeRegistration": "Registration",
+  "docTypeInsuranceRc": "Third-Party Insurance",
+  "docTypeInsuranceFull": "Full Insurance",
+  "docTypeNavigationLicense": "Navigation License",
+  "docTypeRegistration": "Registration",
   "docTypeInsurance": "Insurance",
   "docTypeInspection": "Inspection",
   "docTypeLicense": "License",
@@ -747,13 +802,13 @@
   },
   "totalSpent": "Total spent",
   "noExpensesRecorded": "No expenses recorded",
-"expensesPeriodMonth": "Month",
-"expensesPeriodYear": "Year",
-"expensesFilterAll": "All",
-"expensesPeriodTotal": "Period total",
-"expensesPrevPeriod": "Previous",
-"expensesNextPeriod": "Next",
-"expensesNoneInPeriod": "No expenses in this period",
+  "expensesPeriodMonth": "Month",
+  "expensesPeriodYear": "Year",
+  "expensesFilterAll": "All",
+  "expensesPeriodTotal": "Period total",
+  "expensesPrevPeriod": "Previous",
+  "expensesNextPeriod": "Next",
+  "expensesNoneInPeriod": "No expenses in this period",
   "expensesSelectPeriod": "Select period",
   "expensesPeriodWholeYear": "Whole year",
   "categoryLabel": "Category",
@@ -989,13 +1044,21 @@
   "expenseLitersLabel": "Liters (optional)",
   "pricePerLiterValue": "{value} €/L",
   "@pricePerLiterValue": {
-    "placeholders": { "value": { "type": "String" } }
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
   },
   "expenseLitersSummary": "{liters} L · {price} €/L",
   "@expenseLitersSummary": {
     "placeholders": {
-      "liters": { "type": "String" },
-      "price": { "type": "String" }
+      "liters": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
     }
   },
   "costAvgPricePerLiter": "Avg fuel price",
@@ -1078,5 +1141,51 @@
         "type": "int"
       }
     }
-  }
+  },
+  "markAllRead": "Mark all as read",
+  "noNotifications": "No notifications",
+  "noNotificationsDescription": "Reminders, your boat's activity and news from your clubs will show up here.",
+  "unreadNotifications": "{count} unread",
+  "@unreadNotifications": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeJustNow": "Just now",
+  "timeMinutesAgo": "{count} min ago",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeHoursAgo": "{count} h ago",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeDaysAgo": "{count} d ago",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notifCategoryReminders": "Reminders",
+  "notifCategoryRemindersSubtitle": "Expiring documents and maintenance due",
+  "notifCategoryRegattas": "Regattas",
+  "notifCategoryRegattasSubtitle": "Scheduled regattas, RSVPs and changes",
+  "notifCategoryGroups": "Clubs and groups",
+  "notifCategoryGroupsSubtitle": "Join requests and member changes",
+  "notifCategoryBoatActivity": "Boat activity",
+  "notifCategoryBoatActivitySubtitle": "Bookings, shared expenses and crew trips",
+  "notifCategoryEvents": "Live events",
+  "notifCategoryEventsSubtitle": "When a nautical event you follow starts"
 }

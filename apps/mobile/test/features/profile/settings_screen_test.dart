@@ -13,6 +13,9 @@ import 'package:navis_mobile/core/database/local_database.dart';
 import 'package:navis_mobile/features/auth/data/auth_repository.dart';
 import 'package:navis_mobile/features/auth/domain/auth_state.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
+import 'package:navis_mobile/features/notifications/domain/entities/app_notification.dart';
+import 'package:navis_mobile/features/notifications/domain/repositories/notification_feed_repository.dart';
+import 'package:navis_mobile/features/notifications/presentation/providers/notification_feed_provider.dart';
 import 'package:navis_mobile/features/profile/data/account_provider.dart';
 import 'package:navis_mobile/features/profile/presentation/screens/settings_screen.dart';
 import 'package:navis_mobile/features/profile/presentation/widgets/export_data_tile.dart';
@@ -28,6 +31,9 @@ class MockAccountRepository extends Mock implements AccountRepository {}
 class MockAnalyticsService extends Mock implements AnalyticsService {}
 
 class MockLocalDatabase extends Mock implements LocalDatabase {}
+
+class MockNotificationFeedRepository extends Mock
+    implements NotificationFeedRepository {}
 
 class MockAuthNotifier extends StateNotifier<AuthState>
     with Mock
@@ -46,6 +52,14 @@ void main() {
   late MockAnalyticsService mockAnalyticsService;
   late MockLocalDatabase mockLocalDatabase;
   late MockAccountRepository mockAccountRepository;
+  late MockNotificationFeedRepository mockFeedRepository;
+
+  /// All five categories enabled — what a user who never touched the toggles
+  /// gets from the API.
+  List<NotificationPreference> allEnabled() => [
+        for (final category in NotificationCategory.values)
+          NotificationPreference(category: category, enabled: true),
+      ];
 
   setUpAll(() {
     registerFallbackValue(FakeRoute());
@@ -59,6 +73,16 @@ void main() {
     mockAccountRepository = MockAccountRepository();
     when(() => mockAccountRepository.getMe())
         .thenAnswer((_) async => makeAccount());
+
+    // The notification card is server-backed, so every test in this file needs
+    // it stubbed — otherwise pumping Settings would reach the real ApiClient.
+    mockFeedRepository = MockNotificationFeedRepository();
+    when(() => mockFeedRepository.getPreferences())
+        .thenAnswer((_) async => allEnabled());
+    when(() => mockFeedRepository.setPreferences(any())).thenAnswer(
+      (invocation) async =>
+          invocation.positionalArguments.first as List<NotificationPreference>,
+    );
   });
 
   void setPhoneSize(WidgetTester tester) {
@@ -93,6 +117,9 @@ void main() {
             sharedPreferencesProvider.overrideWithValue(snapshot.data!),
             accountRepositoryProvider.overrideWithValue(
               mockAccountRepository,
+            ),
+            notificationFeedRepositoryProvider.overrideWithValue(
+              mockFeedRepository,
             ),
             ...extraOverrides,
           ],
@@ -236,36 +263,45 @@ void main() {
         expect(find.text('NOTIFICATIONS'), findsOneWidget);
       });
 
-      testWidgets('displays Document Expiry Alerts toggle', (tester) async {
+      testWidgets('displays one toggle per notification category',
+          (tester) async {
         setPhoneSize(tester);
         await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
-        expect(
-          find.text('Document Expiry Alerts'),
-          findsOneWidget,
-        );
-        expect(
-          find.text(
-            'Get notified before documents expire',
-          ),
-          findsOneWidget,
-        );
+        // The five server-side categories, each with its explanation.
+        expect(find.text('Reminders'), findsOneWidget);
+        expect(find.text('Expiring documents and maintenance due'),
+            findsOneWidget);
+        expect(find.text('Regattas'), findsOneWidget);
+        expect(find.text('Clubs and groups'), findsOneWidget);
+        expect(find.text('Boat activity'), findsOneWidget);
+        expect(find.text('Live events'), findsOneWidget);
+        expect(find.byType(SwitchListTile),
+            findsNWidgets(NotificationCategory.values.length + 2));
       });
 
-      testWidgets('displays Event Reminders toggle', (tester) async {
+      testWidgets('reflects a muted category as an off switch', (tester) async {
+        when(() => mockFeedRepository.getPreferences())
+            .thenAnswer((_) async => [
+                  for (final category in NotificationCategory.values)
+                    NotificationPreference(
+                      category: category,
+                      enabled: category != NotificationCategory.groupUpdates,
+                    ),
+                ]);
+
         setPhoneSize(tester);
         await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
-        expect(
-          find.text('Event Reminders'),
-          findsOneWidget,
+        final groupSwitch = tester.widget<SwitchListTile>(
+          find.ancestor(
+            of: find.text('Clubs and groups'),
+            matching: find.byType(SwitchListTile),
+          ),
         );
-        expect(
-          find.text('Get reminded about upcoming events'),
-          findsOneWidget,
-        );
+        expect(groupSwitch.value, isFalse);
       });
     });
 
@@ -531,22 +567,37 @@ void main() {
       });
     });
 
-    group('notification toggles persistence', () {
-      testWidgets('turning off expiry alerts persists to SharedPreferences',
+    group('notification preferences persistence', () {
+      testWidgets('turning a category off sends the full set to the API',
           (tester) async {
         setPhoneSize(tester);
         await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
-        final expirySwitch = find.ancestor(
-          of: find.text('Document Expiry Alerts'),
+        final remindersSwitch = find.ancestor(
+          of: find.text('Reminders'),
           matching: find.byType(SwitchListTile),
         );
-        await tester.tap(expirySwitch);
+        await tester.tap(remindersSwitch);
         await tester.pumpAndSettle();
 
-        final prefs = await SharedPreferences.getInstance();
-        expect(prefs.getBool('settings_expiry_alerts'), isFalse);
+        final sent =
+            verify(() => mockFeedRepository.setPreferences(captureAny()))
+                .captured
+                .single as List<NotificationPreference>;
+        // The PUT replaces the set, so all five travel — with only the tapped
+        // one disabled.
+        expect(sent.length, NotificationCategory.values.length);
+        expect(
+          sent
+              .firstWhere((p) => p.category == NotificationCategory.reminders)
+              .enabled,
+          isFalse,
+        );
+        expect(
+          sent.where((p) => p.enabled).length,
+          NotificationCategory.values.length - 1,
+        );
       });
     });
 

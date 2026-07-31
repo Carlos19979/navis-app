@@ -8,6 +8,8 @@ import 'package:go_router/go_router.dart';
 import 'package:navis_mobile/app/router.dart';
 import 'package:navis_mobile/core/network/api_client.dart';
 import 'package:navis_mobile/features/notifications/data/repositories/notification_repository.dart';
+import 'package:navis_mobile/features/notifications/presentation/providers/notification_feed_provider.dart';
+import 'package:navis_mobile/features/notifications/presentation/providers/notification_link.dart';
 
 final notificationRepositoryProvider = Provider<NotificationRepositoryImpl>(
   (ref) => NotificationRepositoryImpl(apiClient: ApiClient.instance),
@@ -15,7 +17,7 @@ final notificationRepositoryProvider = Provider<NotificationRepositoryImpl>(
 
 final notificationProvider =
     StateNotifierProvider<NotificationNotifier, NotificationState>(
-  (ref) => NotificationNotifier(ref.watch(notificationRepositoryProvider)),
+  (ref) => NotificationNotifier(ref.watch(notificationRepositoryProvider), ref),
 );
 
 class NotificationState {
@@ -31,11 +33,14 @@ class NotificationState {
 }
 
 class NotificationNotifier extends StateNotifier<NotificationState> {
-  NotificationNotifier(this._repository) : super(const NotificationState());
+  NotificationNotifier(this._repository, this._ref)
+      : super(const NotificationState());
 
   final NotificationRepositoryImpl _repository;
+  final Ref _ref;
   StreamSubscription<String>? _tokenRefreshSub;
   StreamSubscription<RemoteMessage>? _foregroundSub;
+  StreamSubscription<RemoteMessage>? _messageSub;
 
   Future<void> initialize() async {
     if (state.isInitialized) return;
@@ -59,6 +64,9 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
     _tokenRefreshSub = _repository.onTokenRefresh.listen(_onTokenRefresh);
     _foregroundSub =
         FirebaseMessaging.onMessageOpenedApp.listen(_onMessageTapped);
+    // A push that arrives while the app is open does not go through the tap
+    // handler, so the bell badge would stay stale until the next launch.
+    _messageSub = FirebaseMessaging.onMessage.listen((_) => _refreshFeed());
 
     // Cold start: app opened from a terminated state by tapping a notification.
     final initial = await FirebaseMessaging.instance.getInitialMessage();
@@ -86,24 +94,25 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
     state = NotificationState(token: newToken, isInitialized: true);
   }
 
-  void _onMessageTapped(RemoteMessage message) => _handlePayload(message.data);
+  void _onMessageTapped(RemoteMessage message) {
+    // The tap means the notification was seen: bring the in-app feed in line.
+    _refreshFeed();
+    _handlePayload(message.data);
+  }
+
+  /// Re-reads the badge and the notification list, which the server owns.
+  void _refreshFeed() {
+    _ref.read(unreadNotificationCountProvider.notifier).refresh();
+    _ref.invalidate(notificationFeedProvider);
+  }
 
   /// Routes a notification payload `{type, id}` to the matching screen via the
   /// root navigator. The Novu workflow must forward these as FCM data fields.
   void _handlePayload(Map<String, dynamic> data) {
-    final type = data['type'] as String?;
-    final id = data['id'] as String?;
-    if (type == null || id == null || id.isEmpty) return;
-
-    final path = switch (type) {
-      'document' => '/documents/$id',
-      'regatta' => '/regattas/$id',
-      'group' => '/groups/$id',
-      'event' => '/events/$id',
-      'trip' => '/trips/$id',
-      'boat' => '/boats/$id',
-      _ => null,
-    };
+    final path = notificationPath(
+      data['type'] as String?,
+      data['id'] as String?,
+    );
     if (path == null) return;
 
     final ctx = rootNavigatorKey.currentContext;
@@ -119,6 +128,7 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
     }
     await _tokenRefreshSub?.cancel();
     await _foregroundSub?.cancel();
+    await _messageSub?.cancel();
     state = const NotificationState();
   }
 
@@ -126,6 +136,7 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
   void dispose() {
     _tokenRefreshSub?.cancel();
     _foregroundSub?.cancel();
+    _messageSub?.cancel();
     super.dispose();
   }
 }

@@ -4,8 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 const _keyThemeMode = 'settings_theme_mode';
 const _keyLocale = 'settings_locale';
-const _keyExpiryAlerts = 'settings_expiry_alerts';
-const _keyEventReminders = 'settings_event_reminders';
 
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
   throw UnimplementedError(
@@ -55,39 +53,5 @@ class LocaleNotifier extends Notifier<Locale?> {
       prefs.setString(_keyLocale, locale.languageCode);
     }
     state = locale;
-  }
-}
-
-final expiryAlertsProvider =
-    NotifierProvider<ExpiryAlertsNotifier, bool>(ExpiryAlertsNotifier.new);
-
-class ExpiryAlertsNotifier extends Notifier<bool> {
-  @override
-  bool build() {
-    final prefs = ref.watch(sharedPreferencesProvider);
-    return prefs.getBool(_keyExpiryAlerts) ?? true;
-  }
-
-  void set(bool value) {
-    final prefs = ref.read(sharedPreferencesProvider);
-    prefs.setBool(_keyExpiryAlerts, value);
-    state = value;
-  }
-}
-
-final eventRemindersProvider =
-    NotifierProvider<EventRemindersNotifier, bool>(EventRemindersNotifier.new);
-
-class EventRemindersNotifier extends Notifier<bool> {
-  @override
-  bool build() {
-    final prefs = ref.watch(sharedPreferencesProvider);
-    return prefs.getBool(_keyEventReminders) ?? true;
-  }
-
-  void set(bool value) {
-    final prefs = ref.read(sharedPreferencesProvider);
-    prefs.setBool(_keyEventReminders, value);
-    state = value;
   }
 }
