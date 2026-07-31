@@ -122,3 +122,6 @@ docker-compose.override.yml
 *.swo
 .cache/
 node_modules/
+
+# Scratch git worktrees used by Claude Code agents
+.claude/worktrees/

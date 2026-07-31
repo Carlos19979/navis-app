@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"time"
 
+	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 	"github.com/Carlos19979/navis-app/apps/api/internal/port"
 )
 
@@ -14,12 +16,16 @@ import (
 // (the Novu plan caps total workflows at 20). Delivery is generic — each
 // trigger carries its own title/body + deep-link in the payload — so one
 // workflow per domain serves many event types without losing information.
+// The identifiers are the domain notification categories, which are also the
+// axis the user mutes and the value stored with each feed entry — one set of
+// strings, so a workflow can never be delivered under a category that has no
+// preference toggle.
 const (
-	WorkflowRegattaUpdates = "regatta-updates" // regatta lifecycle
-	WorkflowGroupUpdates   = "group-updates"   // club/group membership
-	WorkflowBoatActivity   = "boat-activity"   // shared-boat crew activity
-	WorkflowReminders      = "reminders"       // cron reminders (docs, maintenance)
-	WorkflowEventLive      = "event-live"      // nautical event goes live
+	WorkflowRegattaUpdates = string(domain.CategoryRegattaUpdates) // regatta lifecycle
+	WorkflowGroupUpdates   = string(domain.CategoryGroupUpdates)   // club/group membership
+	WorkflowBoatActivity   = string(domain.CategoryBoatActivity)   // shared-boat crew activity
+	WorkflowReminders      = string(domain.CategoryReminders)      // cron reminders (docs, maintenance)
+	WorkflowEventLive      = string(domain.CategoryEventLive)      // nautical event goes live
 )
 
 // Per-event aliases → the grouped workflow they belong to. Keeping the
@@ -172,8 +178,15 @@ func (n *Notifier) TrySend(ctx context.Context, userID, workflow, title, body, l
 	}
 	if err := n.provider.TriggerWorkflow(ctx, workflow, userID, payload); err != nil {
 		if n.logger != nil {
-			n.logger.Warn("notification failed",
-				"workflow", workflow, "user_id", userID, "error", err)
+			// A muted category is a choice, not a fault: log it quietly so it
+			// does not read as a delivery problem in the logs.
+			if errors.Is(err, domain.ErrNotificationMuted) {
+				n.logger.Debug("notification muted by user preference",
+					"workflow", workflow, "user_id", userID)
+			} else {
+				n.logger.Warn("notification failed",
+					"workflow", workflow, "user_id", userID, "error", err)
+			}
 		}
 		return false
 	}

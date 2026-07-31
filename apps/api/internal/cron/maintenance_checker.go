@@ -2,6 +2,7 @@ package cron
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"time"
@@ -88,7 +89,7 @@ func (mc *MaintenanceChecker) check(ctx context.Context) {
 	// Cache plan lookups per owner within the run.
 	pro := map[string]bool{}
 
-	var sent, skipped int
+	var sent, skipped, muted int
 	for _, n := range notices {
 		allowed, ok := pro[n.OwnerID]
 		if !ok {
@@ -115,8 +116,13 @@ func (mc *MaintenanceChecker) check(ctx context.Context) {
 
 		title, body := buildMaintenanceMessage(n)
 		payload := map[string]any{
-			"title":     title,
-			"body":      body,
+			"title": title,
+			"body":  body,
+			// Deep-link target for the push tap and the in-app feed row. The
+			// maintenance plan lives under the boat, so that is where the
+			// reminder opens.
+			"type":      "boat",
+			"id":        n.BoatID,
 			"boat_id":   n.BoatID,
 			"boat_name": n.BoatName,
 			"task_id":   n.TaskID,
@@ -128,6 +134,12 @@ func (mc *MaintenanceChecker) check(ctx context.Context) {
 		}
 
 		if err := mc.notifier.TriggerWorkflow(ctx, "reminders", n.OwnerID, payload); err != nil {
+			// Muted stays pending: not logging dedup means unmuting still
+			// delivers the reminder instead of silently swallowing it.
+			if errors.Is(err, domain.ErrNotificationMuted) {
+				muted++
+				continue
+			}
 			mc.logger.Error("failed to trigger maintenance workflow",
 				slog.String("task_id", n.TaskID),
 				slog.String("user_id", n.OwnerID),
@@ -155,6 +167,8 @@ func (mc *MaintenanceChecker) check(ctx context.Context) {
 		slog.Int("tasks_due", len(notices)),
 		slog.Int("notifications_sent", sent),
 		slog.Int("notifications_skipped", skipped),
+		// Muted reminders are left pending rather than marked as handled.
+		slog.Int("notifications_muted", muted),
 	)
 }
 
@@ -176,25 +190,27 @@ func (mc *MaintenanceChecker) ownerIsPro(ctx context.Context, userID string) boo
 // buildMaintenanceMessage renders the notification title/body for a due task.
 func buildMaintenanceMessage(n domain.MaintenanceDueNotice) (string, string) {
 	if n.Status == domain.MaintenanceOverdue {
-		title := fmt.Sprintf("%s overdue", n.TaskName)
-		body := fmt.Sprintf("%s on %s is overdue.", n.TaskName, n.BoatName)
+		title := fmt.Sprintf("Mantenimiento vencido: %s", n.TaskName)
+		body := fmt.Sprintf("%s de %s esta vencido.", n.TaskName, n.BoatName)
 		if n.NextDueDate != nil && n.DueDays < 0 {
-			body = fmt.Sprintf("%s on %s was due %d days ago.", n.TaskName, n.BoatName, -n.DueDays)
+			body = fmt.Sprintf("%s de %s vencio hace %d dias.", n.TaskName, n.BoatName, -n.DueDays)
 		} else if n.HoursUntilDue != nil && *n.HoursUntilDue <= 0 {
-			body = fmt.Sprintf("%s on %s is %.0f engine hours past due.", n.TaskName, n.BoatName, -*n.HoursUntilDue)
+			body = fmt.Sprintf("%s de %s lleva %.0f horas de motor de retraso.",
+				n.TaskName, n.BoatName, -*n.HoursUntilDue)
 		}
 		return title, body
 	}
-	title := fmt.Sprintf("%s due soon", n.TaskName)
-	body := fmt.Sprintf("%s on %s is due soon.", n.TaskName, n.BoatName)
+	title := fmt.Sprintf("Mantenimiento proximo: %s", n.TaskName)
+	body := fmt.Sprintf("%s de %s toca pronto.", n.TaskName, n.BoatName)
 	switch {
 	case n.NextDueDate != nil && n.HoursUntilDue != nil:
-		body = fmt.Sprintf("%s on %s is due in %d days or %.0f engine hours.",
+		body = fmt.Sprintf("%s de %s toca en %d dias o %.0f horas de motor.",
 			n.TaskName, n.BoatName, n.DueDays, *n.HoursUntilDue)
 	case n.NextDueDate != nil:
-		body = fmt.Sprintf("%s on %s is due in %d days.", n.TaskName, n.BoatName, n.DueDays)
+		body = fmt.Sprintf("%s de %s toca en %d dias.", n.TaskName, n.BoatName, n.DueDays)
 	case n.HoursUntilDue != nil:
-		body = fmt.Sprintf("%s on %s is due in %.0f engine hours.", n.TaskName, n.BoatName, *n.HoursUntilDue)
+		body = fmt.Sprintf("%s de %s toca en %.0f horas de motor.",
+			n.TaskName, n.BoatName, *n.HoursUntilDue)
 	}
 	return title, body
 }

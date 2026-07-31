@@ -2,6 +2,7 @@ package cron
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"slices"
@@ -82,7 +83,7 @@ func (ec *ExpirationChecker) check(ctx context.Context) {
 	// Pro users get all. allowed holds the doc IDs eligible to notify this run.
 	allowed := ec.allowedDocs(ctx, docs)
 
-	var sent, skipped int
+	var sent, skipped, muted int
 	for _, doc := range docs {
 		if !allowed[doc.ID] {
 			skipped++
@@ -91,6 +92,13 @@ func (ec *ExpirationChecker) check(ctx context.Context) {
 
 		daysUntilExpiry := int(time.Until(doc.ExpiryDate).Hours() / 24)
 
+		// Alert days that have been crossed and not yet notified. A document 5
+		// days out has crossed BOTH the 30- and 7-day marks, but the message
+		// only ever says "expires in 5 days": notifying once per crossed mark
+		// sent the very same text twice (and, since #80, filed it twice in the
+		// in-app feed). Notify once, then log every crossed mark so the
+		// remaining ones cannot fire the same reminder again tomorrow.
+		var pending []int
 		for _, alertDay := range doc.AlertDays {
 			if daysUntilExpiry > alertDay {
 				continue
@@ -108,47 +116,67 @@ func (ec *ExpirationChecker) check(ctx context.Context) {
 				skipped++
 				continue
 			}
+			pending = append(pending, alertDay)
+		}
+		if len(pending) == 0 {
+			continue
+		}
 
-			title, body := buildMessage(string(doc.Type), doc.CustomName, daysUntilExpiry, doc.ExpiryDate)
+		title, body := buildMessage(doc.Type, doc.CustomName, daysUntilExpiry, doc.ExpiryDate)
 
-			payload := map[string]any{
-				"title":             title,
-				"body":              body,
-				"document_id":       doc.ID,
-				"document_type":     string(doc.Type),
-				"days_until_expiry": daysUntilExpiry,
-				"expiry_date":       doc.ExpiryDate.Format("2006-01-02"),
-			}
+		payload := map[string]any{
+			"title": title,
+			"body":  body,
+			// The deep-link pair the app routes on, both for the push tap and
+			// for the row in the notification feed. Without these the reminder
+			// opens nothing.
+			"type":              "document",
+			"id":                doc.ID,
+			"document_id":       doc.ID,
+			"document_type":     string(doc.Type),
+			"days_until_expiry": daysUntilExpiry,
+			"expiry_date":       doc.ExpiryDate.Format("2006-01-02"),
+		}
 
-			if err := ec.notifier.TriggerWorkflow(ctx, "reminders", doc.UserID, payload); err != nil {
-				ec.logger.Error("failed to trigger notification workflow",
-					slog.String("doc_id", doc.ID),
-					slog.String("user_id", doc.UserID),
-					slog.String("error", err.Error()),
-				)
+		if err := ec.notifier.TriggerWorkflow(ctx, "reminders", doc.UserID, payload); err != nil {
+			// A muted category is not a failure and must stay pending: the user
+			// unmuting later is exactly when this reminder should be delivered.
+			if errors.Is(err, domain.ErrNotificationMuted) {
+				muted++
 				continue
 			}
+			ec.logger.Error("failed to trigger notification workflow",
+				slog.String("doc_id", doc.ID),
+				slog.String("user_id", doc.UserID),
+				slog.String("error", err.Error()),
+			)
+			continue
+		}
 
+		for _, alertDay := range pending {
 			if err := ec.notifLogs.Create(ctx, doc.UserID, doc.ID, alertDay); err != nil {
 				ec.logger.Error("failed to create notification log",
 					slog.String("doc_id", doc.ID),
 					slog.String("error", err.Error()),
 				)
 			}
-
-			sent++
-			ec.logger.Info("triggered expiry notification",
-				slog.String("doc_id", doc.ID),
-				slog.String("user_id", doc.UserID),
-				slog.Int("alert_day", alertDay),
-			)
 		}
+
+		sent++
+		ec.logger.Info("triggered expiry notification",
+			slog.String("doc_id", doc.ID),
+			slog.String("user_id", doc.UserID),
+			slog.Any("alert_days", pending),
+		)
 	}
 
 	ec.logger.Info("expiration check completed",
 		slog.Int("documents_checked", len(docs)),
 		slog.Int("notifications_sent", sent),
 		slog.Int("notifications_skipped", skipped),
+		// Muted reminders stay pending on purpose, so they are counted apart
+		// from the ones that were actually handled.
+		slog.Int("notifications_muted", muted),
 	)
 }
 
@@ -216,16 +244,53 @@ func sortByExpiry(docs []domain.Document, idxs []int) {
 	})
 }
 
-func buildMessage(docType string, customName *string, daysUntil int, expiryDate time.Time) (string, string) {
-	name := docType
-	if customName != nil {
-		name = *customName
+// documentLabels are the Spanish names of the canonical document types, so a
+// reminder reads "El seguro a terceros caduca..." instead of leaking the
+// database slug ("insurance_rc") to the user.
+var documentLabels = map[domain.DocumentType]string{
+	domain.DocumentTypeITB:               "certificado ITB",
+	domain.DocumentTypeInsuranceRC:       "seguro de responsabilidad civil",
+	domain.DocumentTypeInsuranceFull:     "seguro a todo riesgo",
+	domain.DocumentTypeLifeRaft:          "balsa salvavidas",
+	domain.DocumentTypeExtinguisher:      "extintor",
+	domain.DocumentTypeFlares:            "bengalas",
+	domain.DocumentTypeFirstAid:          "botiquin",
+	domain.DocumentTypeMedicalCert:       "certificado medico",
+	domain.DocumentTypeRadioCert:         "titulo de radio",
+	domain.DocumentTypeNavigationLicense: "titulacion de navegacion",
+	domain.DocumentTypeCustom:            "documento",
+}
+
+// documentName is the user-facing name of a document: its custom name when it
+// has one, otherwise the Spanish label of its type.
+func documentName(docType domain.DocumentType, customName *string) string {
+	if customName != nil && *customName != "" {
+		return *customName
 	}
+	if label, ok := documentLabels[docType]; ok {
+		return label
+	}
+	return "documento"
+}
+
+// buildMessage writes the reminder text. Spanish, like every other
+// notification the API sends (the app is Spanish-first and the server has no
+// per-user locale to switch on).
+func buildMessage(
+	docType domain.DocumentType, customName *string, daysUntil int, expiryDate time.Time,
+) (string, string) {
+	name := documentName(docType, customName)
 
 	if daysUntil <= 0 {
-		return "Document Expired", fmt.Sprintf("Your document %q has expired.", name)
+		return "Documento caducado",
+			fmt.Sprintf("Tu %s ha caducado.", name)
+	}
+	if daysUntil == 1 {
+		return "Documento a punto de caducar",
+			fmt.Sprintf("Tu %s caduca manana (%s).", name, expiryDate.Format("02/01/2006"))
 	}
 
-	return "Document Expiring Soon", fmt.Sprintf("Your document %q expires in %d days (on %s).",
-		name, daysUntil, expiryDate.Format("2006-01-02"))
+	return "Documento a punto de caducar",
+		fmt.Sprintf("Tu %s caduca en %d dias (el %s).",
+			name, daysUntil, expiryDate.Format("02/01/2006"))
 }

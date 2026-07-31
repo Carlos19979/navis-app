@@ -69,6 +69,10 @@ func TestMaintenanceChecker_NotifiesProOwner(t *testing.T) {
 		t.Fatalf("triggered = %d, want 1", len(notifier.Triggered))
 	}
 	tw := notifier.Triggered[0]
+	if tw.Payload["type"] != "boat" || tw.Payload["id"] != tw.Payload["boat_id"] {
+		t.Errorf("deep link = %v/%v, want boat/%v",
+			tw.Payload["type"], tw.Payload["id"], tw.Payload["boat_id"])
+	}
 	if tw.WorkflowID != "reminders" {
 		t.Errorf("workflow = %q, want reminders", tw.WorkflowID)
 	}
@@ -124,7 +128,7 @@ func TestBuildMaintenanceMessage_Variants(t *testing.T) {
 	t.Parallel()
 	n := dueNotice(domain.MaintenanceDueSoon)
 	title, body := buildMaintenanceMessage(n)
-	if title != "Engine oil due soon" {
+	if title != "Mantenimiento proximo: Engine oil" {
 		t.Errorf("title = %q", title)
 	}
 	if body == "" {
@@ -134,7 +138,7 @@ func TestBuildMaintenanceMessage_Variants(t *testing.T) {
 	n.Status = domain.MaintenanceOverdue
 	n.DueDays = -5
 	title, _ = buildMaintenanceMessage(n)
-	if title != "Engine oil overdue" {
+	if title != "Mantenimiento vencido: Engine oil" {
 		t.Errorf("overdue title = %q", title)
 	}
 }

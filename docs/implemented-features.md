@@ -186,6 +186,47 @@ AnchorSafe). Reuses ~70% of existing infra; new feature lives in
 - Verified with two accounts: viewer record-trip/expense 403; owner grants record-trips+manage-expenses (PUT 204); member then records trips 201, logs expenses 201, but maintenance 403 and document-view 403; base expense *read* still 200; non-member 404.
 - Mobile: `Boat.permissions` + `BoatPermissions`; "Compartir barco" members list is a **per-member 5-toggle editor**; the documents tile, logbook record FAB, maintenance/expense FABs+edit, and document FAB are each gated on the matching permission.
 
+## Notification feed + per-category opt-out (2026-07-31)
+Until now a notification existed only as a Novu trigger: a missed push meant the
+event was gone, and the app had no history to show. `service.FeedRecorder` wraps
+the `NotificationProvider`, so **both** paths — the `Notifier` (in-app events)
+and the crons (which hold the provider directly) — go through one choke point
+that (1) drops categories the user muted and (2) stores what was delivered.
+- Migration **`00041`**: `notifications` (category, title, body, deep-link
+  `{type,id}`, `read_at`; feed index on `(user_id, created_at DESC, id DESC)`,
+  partial index for the unread badge) + `notification_mutes` (a row = muted, so
+  absence means enabled and new users need no seeding).
+- Categories are the five Novu workflow ids (`domain.NotificationCategory`, now
+  the single source for `service.Workflow*`) — one preference toggle per domain.
+- Two recorders, because the two callers differ: the crons get
+  record-**after**-success (they retry next run, so recording a failure would
+  duplicate the row), the in-app `Notifier` gets record-**always** (it is
+  fire-and-forget with no retry, so dropping the row would lose the event —
+  exactly what the feed exists to prevent). With no `NOVU_API_KEY` the provider
+  is a no-op that returns nil, so the feed fills either way: the bell works
+  before push is configured.
+- Muting returns `domain.ErrNotificationMuted`, **not** success. A cron records
+  dedup state only on a successful trigger, so reporting "delivered" would burn
+  the reminder's only slot and the user would unmute to silence. Muted
+  reminders stay pending and are counted apart in the cron logs.
+- A feed-write failure never fails the delivery (the push already went out), and
+  a preferences-lookup failure defaults to *not* muted.
+- Client RLS is **SELECT-only** on both tables (the API writes with the service
+  role), like `sent_notifications` since 00028 — otherwise the app's own
+  Supabase client could forge bell entries or clear its unread count.
+- Both crons now send the `{type, id}` deep-link pair, so a reminder opens the
+  document (or the boat) instead of nothing — in the push and in the feed. Their
+  copy is Spanish like every other notification, and document types read as
+  names ("seguro de responsabilidad civil"), not slugs ("insurance_rc").
+- The expiry cron notifies **once** per document per run: a document 5 days out
+  has crossed both the 30- and 7-day marks, and it used to send the identical
+  message twice (now it would also file two identical feed rows). It notifies
+  once and logs every crossed mark.
+- `GET /user/export` includes the feed and the muted categories (GDPR).
+- Endpoints: `GET /notifications` (keyset), `GET /notifications/unread-count`,
+  `PUT /notifications/:id/read`, `PUT /notifications/read-all`,
+  `GET|PUT /me/notification-preferences`. See `docs/api-spec.md`.
+
 ## Cron jobs (all UTC)
 - `0 8 * * *` document-expiry (`ExpirationChecker`) → owners; plan reminder quota (Free=1 nearest doc); dedup `notification_logs`.
 - `15 8 * * *` maintenance-due (`MaintenanceChecker`, #47) → Pro owners; dedup `maintenance_notification_logs`.

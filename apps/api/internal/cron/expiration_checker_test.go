@@ -77,7 +77,7 @@ func TestExpirationChecker_Check_TriggersWorkflows(t *testing.T) {
 
 	notifier := &testutil.FakeNotificationProvider{}
 	var loggedDocID string
-	var loggedAlertDay int
+	var loggedAlertDays []int
 
 	ec := newTestChecker(
 		&mockDocRepo{
@@ -91,7 +91,7 @@ func TestExpirationChecker_Check_TriggersWorkflows(t *testing.T) {
 			existsFn: func(_ context.Context, _, _ string, _ int) (bool, error) { return false, nil },
 			createFn: func(_ context.Context, _, docID string, alertDay int) error {
 				loggedDocID = docID
-				loggedAlertDay = alertDay
+				loggedAlertDays = append(loggedAlertDays, alertDay)
 				return nil
 			},
 		},
@@ -100,8 +100,10 @@ func TestExpirationChecker_Check_TriggersWorkflows(t *testing.T) {
 
 	ec.check(context.Background())
 
-	if len(notifier.Triggered) != 2 {
-		t.Fatalf("expected 2 workflow triggers (2 alert days), got %d", len(notifier.Triggered))
+	// A document 5 days out crossed BOTH alert days, but the message only says
+	// "in 5 days": notify once, and log both marks so neither fires it again.
+	if len(notifier.Triggered) != 1 {
+		t.Fatalf("expected 1 workflow trigger for one document, got %d", len(notifier.Triggered))
 	}
 	if notifier.Triggered[0].WorkflowID != "reminders" {
 		t.Errorf("expected workflow 'reminders', got %s", notifier.Triggered[0].WorkflowID)
@@ -109,11 +111,54 @@ func TestExpirationChecker_Check_TriggersWorkflows(t *testing.T) {
 	if notifier.Triggered[0].SubscriberID != "user-1" {
 		t.Errorf("expected subscriber user-1, got %s", notifier.Triggered[0].SubscriberID)
 	}
+	// The deep-link pair the app routes on: without it the reminder opens
+	// nothing, in the push and in the in-app feed alike.
+	payload := notifier.Triggered[0].Payload
+	if payload["type"] != "document" || payload["id"] != "doc-1" {
+		t.Errorf("deep link = %v/%v, want document/doc-1", payload["type"], payload["id"])
+	}
 	if loggedDocID != "doc-1" {
 		t.Errorf("expected notification log for doc-1, got %s", loggedDocID)
 	}
-	if loggedAlertDay != 7 {
-		t.Errorf("expected last alert day 7, got %d", loggedAlertDay)
+	if len(loggedAlertDays) != 2 {
+		t.Errorf("logged alert days = %v, want both 30 and 7", loggedAlertDays)
+	}
+}
+
+// Muting must not consume the reminder's dedup slots: the user unmuting later
+// is exactly when the reminder should finally be delivered.
+func TestExpirationChecker_Check_MutedCategoryStaysPending(t *testing.T) {
+	t.Parallel()
+
+	notifier := &testutil.FakeNotificationProvider{
+		TriggerFn: func(_ context.Context, _, _ string, _ map[string]any) error {
+			return domain.ErrNotificationMuted
+		},
+	}
+	var logged []int
+
+	ec := newTestChecker(
+		&mockDocRepo{
+			listExpiringFn: func(_ context.Context, _ int) ([]domain.Document, error) {
+				return []domain.Document{
+					docExpiringIn("doc-1", "user-1", 5, []int{30, 7}),
+				}, nil
+			},
+		},
+		&mockNotifLogRepo{
+			existsFn: func(_ context.Context, _, _ string, _ int) (bool, error) { return false, nil },
+			createFn: func(_ context.Context, _, _ string, alertDay int) error {
+				logged = append(logged, alertDay)
+				return nil
+			},
+		},
+		notifier,
+	)
+
+	ec.check(context.Background())
+
+	if len(logged) != 0 {
+		t.Errorf("dedup logged %v for a muted reminder; it would never be sent again", logged)
 	}
 }
 
@@ -247,8 +292,8 @@ func TestExpirationChecker_Check_ExpiredDocument(t *testing.T) {
 		t.Fatal("expected workflow trigger for expired document")
 	}
 	title, _ := notifier.Triggered[0].Payload["title"].(string)
-	if title != "Document Expired" {
-		t.Errorf("expected 'Document Expired' title, got %q", title)
+	if title != "Documento caducado" {
+		t.Errorf("expected the expired title, got %q", title)
 	}
 }
 
@@ -335,12 +380,24 @@ func TestBuildMessage_Expiring(t *testing.T) {
 	t.Parallel()
 
 	expiry := time.Date(2026, 5, 10, 0, 0, 0, 0, time.UTC)
-	title, body := buildMessage("itb", nil, 14, expiry)
+	title, body := buildMessage(domain.DocumentTypeITB, nil, 14, expiry)
 
-	if title != "Document Expiring Soon" {
-		t.Errorf("expected 'Document Expiring Soon', got %q", title)
+	if title != "Documento a punto de caducar" {
+		t.Errorf("title = %q", title)
 	}
-	if body != `Your document "itb" expires in 14 days (on 2026-05-10).` {
+	// The type slug ("itb") must not reach the user: it is now a readable name.
+	if body != "Tu certificado ITB caduca en 14 dias (el 10/05/2026)." {
+		t.Errorf("unexpected body: %s", body)
+	}
+}
+
+func TestBuildMessage_ExpiringTomorrow(t *testing.T) {
+	t.Parallel()
+
+	expiry := time.Date(2026, 5, 10, 0, 0, 0, 0, time.UTC)
+	_, body := buildMessage(domain.DocumentTypeITB, nil, 1, expiry)
+
+	if body != "Tu certificado ITB caduca manana (10/05/2026)." {
 		t.Errorf("unexpected body: %s", body)
 	}
 }
@@ -349,12 +406,12 @@ func TestBuildMessage_Expired(t *testing.T) {
 	t.Parallel()
 
 	expiry := time.Date(2026, 4, 20, 0, 0, 0, 0, time.UTC)
-	title, body := buildMessage("insurance_rc", nil, -5, expiry)
+	title, body := buildMessage(domain.DocumentTypeInsuranceRC, nil, -5, expiry)
 
-	if title != "Document Expired" {
-		t.Errorf("expected 'Document Expired', got %q", title)
+	if title != "Documento caducado" {
+		t.Errorf("title = %q", title)
 	}
-	if body != `Your document "insurance_rc" has expired.` {
+	if body != "Tu seguro de responsabilidad civil ha caducado." {
 		t.Errorf("unexpected body: %s", body)
 	}
 }
@@ -362,15 +419,36 @@ func TestBuildMessage_Expired(t *testing.T) {
 func TestBuildMessage_CustomName(t *testing.T) {
 	t.Parallel()
 
-	name := "Fire Extinguisher Cert"
+	name := "Certificado del extintor"
 	expiry := time.Date(2026, 6, 1, 0, 0, 0, 0, time.UTC)
-	title, body := buildMessage("custom", &name, 30, expiry)
+	title, body := buildMessage(domain.DocumentTypeCustom, &name, 30, expiry)
 
-	if title != "Document Expiring Soon" {
-		t.Errorf("expected 'Document Expiring Soon', got %q", title)
+	if title != "Documento a punto de caducar" {
+		t.Errorf("title = %q", title)
 	}
-	if body != `Your document "Fire Extinguisher Cert" expires in 30 days (on 2026-06-01).` {
+	if body != "Tu Certificado del extintor caduca en 30 dias (el 01/06/2026)." {
 		t.Errorf("unexpected body: %s", body)
+	}
+}
+
+// Every canonical document type needs a readable name, or a reminder leaks the
+// database slug to the user.
+func TestDocumentName_CoversEveryType(t *testing.T) {
+	t.Parallel()
+
+	types := []domain.DocumentType{
+		domain.DocumentTypeITB, domain.DocumentTypeInsuranceRC,
+		domain.DocumentTypeInsuranceFull, domain.DocumentTypeLifeRaft,
+		domain.DocumentTypeExtinguisher, domain.DocumentTypeFlares,
+		domain.DocumentTypeFirstAid, domain.DocumentTypeMedicalCert,
+		domain.DocumentTypeRadioCert, domain.DocumentTypeNavigationLicense,
+		domain.DocumentTypeCustom,
+	}
+	for _, docType := range types {
+		name := documentName(docType, nil)
+		if name == "" || name == string(docType) {
+			t.Errorf("document type %q has no readable name (got %q)", docType, name)
+		}
 	}
 }
 

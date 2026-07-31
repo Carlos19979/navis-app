@@ -34,6 +34,7 @@ func New(
 	legalH *handler.LegalHandler,
 	joinH *handler.JoinHandler,
 	moderationH *handler.ModerationHandler,
+	notificationH *handler.NotificationHandler,
 	jwtSecret string,
 	jwksURL string,
 	allowedOrigins []string,
@@ -312,6 +313,17 @@ func New(
 			r.Delete("/{token}", deviceH.Delete)
 		})
 
+		// In-app notification feed (the bell icon). Every notification the API
+		// delivers is stored, so the history survives a missed or denied push.
+		r.Route("/notifications", func(r chi.Router) {
+			r.Get("/", notificationH.List)
+			// Static segments before the /{id} param, which chi would
+			// otherwise match first.
+			r.Get("/unread-count", notificationH.UnreadCount)
+			r.Put("/read-all", notificationH.MarkAllRead)
+			r.Put("/{id}/read", notificationH.MarkRead)
+		})
+
 		// User account (GDPR).
 		r.Route("/user", func(r chi.Router) {
 			r.Get("/export", userH.ExportData)
@@ -323,6 +335,9 @@ func New(
 			r.Get("/", profileH.Me)
 			// User IDs the caller has blocked (client hides their content).
 			r.Get("/blocked", moderationH.ListBlocked)
+			// Per-category notification opt-out.
+			r.Get("/notification-preferences", notificationH.GetPreferences)
+			r.Put("/notification-preferences", notificationH.UpdatePreferences)
 			// Dev-only plan switcher. In production the plan is driven solely by
 			// the RevenueCat webhook, so this route is not registered.
 			if enableDevPlanSwitcher {

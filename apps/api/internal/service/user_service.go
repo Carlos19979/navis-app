@@ -31,6 +31,8 @@ type UserService struct {
 	groups       port.GroupRepository
 	devices      port.DeviceTokenRepository
 	profiles     port.ProfileRepository
+	notifs       port.NotificationFeedRepository
+	notifPrefs   port.NotificationPrefsRepository
 	logger       *slog.Logger
 }
 
@@ -48,6 +50,8 @@ func NewUserService(
 	groups port.GroupRepository,
 	devices port.DeviceTokenRepository,
 	profiles port.ProfileRepository,
+	notifs port.NotificationFeedRepository,
+	notifPrefs port.NotificationPrefsRepository,
 	logger *slog.Logger,
 ) *UserService {
 	return &UserService{
@@ -62,6 +66,8 @@ func NewUserService(
 		expenses:     expenses,
 		groups:       groups,
 		devices:      devices,
+		notifs:       notifs,
+		notifPrefs:   notifPrefs,
 		profiles:     profiles,
 		logger:       logger,
 	}
@@ -178,6 +184,16 @@ func (s *UserService) ExportData(ctx context.Context, userID string) (map[string
 		return nil, fmt.Errorf("user_service.ExportData: groups: %w", err)
 	}
 
+	notifications, err := s.allNotifications(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("user_service.ExportData: notifications: %w", err)
+	}
+
+	mutedCategories, err := s.notifPrefs.ListMuted(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("user_service.ExportData: notification prefs: %w", err)
+	}
+
 	devices, err := s.devices.GetByUserID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("user_service.ExportData: devices: %w", err)
@@ -198,7 +214,30 @@ func (s *UserService) ExportData(ctx context.Context, userID string) (map[string
 		"expenses":          expensesByBoat,
 		"groups":            groups,
 		"devices":           devices,
+		// The notification history is user-facing content now that the bell
+		// lists it, so it belongs in the export.
+		"notifications":       notifications,
+		"muted_notifications": mutedCategories,
 	}, nil
+}
+
+// allNotifications drains the user's notification feed to its last cursor.
+func (s *UserService) allNotifications(
+	ctx context.Context, userID string,
+) ([]domain.Notification, error) {
+	var all []domain.Notification
+	cursor := ""
+	for {
+		page, next, err := s.notifs.List(ctx, userID, cursor, exportPageSize)
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, page...)
+		if next == "" {
+			return all, nil
+		}
+		cursor = next
+	}
 }
 
 func (s *UserService) allBoats(ctx context.Context, userID string) ([]domain.Boat, error) {
