@@ -254,3 +254,26 @@ type BlockRepository interface {
 	// ListBlockedIDs returns the user IDs that blockerID has blocked.
 	ListBlockedIDs(ctx context.Context, blockerID string) ([]string, error)
 }
+
+// NotificationFeedRepository persists delivered notifications so the app can
+// show a history and an unread badge, independently of push delivery.
+type NotificationFeedRepository interface {
+	Create(ctx context.Context, n *domain.Notification) error
+	// List returns the user's notifications, newest first, keyset-paginated.
+	List(ctx context.Context, userID, cursor string, limit int) ([]domain.Notification, string, error)
+	UnreadCount(ctx context.Context, userID string) (int, error)
+	// MarkRead marks one notification as read, returning domain.ErrNotFound
+	// when it does not exist or belongs to another user.
+	MarkRead(ctx context.Context, userID, id string) error
+	// MarkAllRead marks every unread notification of the user as read.
+	MarkAllRead(ctx context.Context, userID string) error
+}
+
+// NotificationPrefsRepository persists per-category notification opt-outs.
+// Absence of a row means the category is enabled.
+type NotificationPrefsRepository interface {
+	// ListMuted returns the categories the user has muted.
+	ListMuted(ctx context.Context, userID string) ([]domain.NotificationCategory, error)
+	// ReplaceMuted makes muted the user's complete set of muted categories.
+	ReplaceMuted(ctx context.Context, userID string, muted []domain.NotificationCategory) error
+}

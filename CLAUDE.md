@@ -457,6 +457,7 @@ Use these Dart 3.x features everywhere they apply:
   - `reminders` — the two crons (document-expiry, maintenance-due)
   - `event-live` — nautical event goes live
 - The notifier is async (fire-and-forget goroutines with shutdown coordination).
+- **Every delivery is stored and preference-filtered at the provider boundary.** `service.FeedRecorder` decorates the `NotificationProvider` in `main.go`, so both the `Notifier` and the crons (which hold the provider directly) pass through it. It drops categories the user muted (`notification_mutes`) and writes a `notifications` row after a successful trigger — that row is what the app's bell icon lists (`GET /api/v1/notifications`, `/unread-count`, `PUT /:id/read`, `/read-all`, `GET|PUT /me/notification-preferences`). The **category is the workflow id**: `domain.NotificationCategory` is the single source for the `service.Workflow*` constants, so a new workflow cannot ship without a preference toggle. Recording happens *after* delivery on purpose (the crons retry on failure and would otherwise duplicate rows); with no `NOVU_API_KEY` the provider no-ops successfully, so the feed still fills.
 
 ## Commands
 

@@ -635,6 +635,40 @@ acknowledged as no-ops. `401` on bad secret.
 Plan enforcement returns **402** with code `PLAN_LIMIT` (boat quota) or `PLAN_FORBIDDEN`
 (e.g. a `free` user creating a group).
 
+## Notifications (in-app feed + preferences)
+
+Every notification the API delivers is stored, so the bell icon shows a history
+even when the push never arrives (permission denied, Firebase not configured,
+app uninstalled). Recording happens at the provider boundary
+(`service.FeedRecorder`), so both the in-app events and the crons are covered.
+
+### GET /api/v1/notifications
+Keyset-paginated feed, newest first. Item:
+`{ id, category, title, body, link_type|null, link_id|null, read, read_at|null, created_at }`.
+`category` ∈ `reminders | regatta-updates | group-updates | boat-activity | event-live`
+(the Novu workflow it was delivered through). `link_type`/`link_id` are the
+deep-link target for the tap.
+
+### GET /api/v1/notifications/unread-count
+`{ count }` — the bell badge value.
+
+### PUT /api/v1/notifications/:id/read
+Marks one notification as read. `204`; `404` when the id is unknown or belongs
+to another user. Idempotent (re-marking keeps the original `read_at`).
+
+### PUT /api/v1/notifications/read-all
+Marks every unread notification of the caller as read. `204`.
+
+### GET /api/v1/me/notification-preferences
+`{ categories: [{ category, enabled }] }` — all five categories in display
+order. Absence of an opt-out row means enabled, so new users get everything.
+
+### PUT /api/v1/me/notification-preferences
+Body `{ categories: [{ category, enabled }] }` replaces the caller's choices;
+a category left out of the list stays **enabled**. Returns the full new state.
+`422` on an unknown category. A muted category is neither pushed nor stored in
+the feed.
+
 ## Trip sharing
 
 ### PUT /api/v1/trips/:id/share

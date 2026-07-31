@@ -186,6 +186,28 @@ AnchorSafe). Reuses ~70% of existing infra; new feature lives in
 - Verified with two accounts: viewer record-trip/expense 403; owner grants record-trips+manage-expenses (PUT 204); member then records trips 201, logs expenses 201, but maintenance 403 and document-view 403; base expense *read* still 200; non-member 404.
 - Mobile: `Boat.permissions` + `BoatPermissions`; "Compartir barco" members list is a **per-member 5-toggle editor**; the documents tile, logbook record FAB, maintenance/expense FABs+edit, and document FAB are each gated on the matching permission.
 
+## Notification feed + per-category opt-out (2026-07-31)
+Until now a notification existed only as a Novu trigger: a missed push meant the
+event was gone, and the app had no history to show. `service.FeedRecorder` wraps
+the `NotificationProvider`, so **both** paths — the `Notifier` (in-app events)
+and the crons (which hold the provider directly) — go through one choke point
+that (1) drops categories the user muted and (2) stores what was delivered.
+- Migration **`00041`**: `notifications` (category, title, body, deep-link
+  `{type,id}`, `read_at`; feed index on `(user_id, created_at DESC, id DESC)`,
+  partial index for the unread badge) + `notification_mutes` (a row = muted, so
+  absence means enabled and new users need no seeding).
+- Categories are the five Novu workflow ids (`domain.NotificationCategory`, now
+  the single source for `service.Workflow*`) — one preference toggle per domain.
+- Delivery is recorded **after** a successful trigger: the crons only persist
+  their dedup state on success and retry otherwise, which would duplicate feed
+  rows. With no `NOVU_API_KEY` the provider is a no-op that returns nil, so the
+  feed still fills — the bell works before push is configured.
+- A feed-write failure never fails the delivery (the push already went out), and
+  a preferences-lookup failure defaults to *not* muted.
+- Endpoints: `GET /notifications` (keyset), `GET /notifications/unread-count`,
+  `PUT /notifications/:id/read`, `PUT /notifications/read-all`,
+  `GET|PUT /me/notification-preferences`. See `docs/api-spec.md`.
+
 ## Cron jobs (all UTC)
 - `0 8 * * *` document-expiry (`ExpirationChecker`) → owners; plan reminder quota (Free=1 nearest doc); dedup `notification_logs`.
 - `15 8 * * *` maintenance-due (`MaintenanceChecker`, #47) → Pro owners; dedup `maintenance_notification_logs`.

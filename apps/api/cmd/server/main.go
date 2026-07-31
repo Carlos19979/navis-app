@@ -105,10 +105,18 @@ func main() {
 	expenseSplitRepo := postgres.NewExpenseSplitRepo(pool)
 	reportRepo := postgres.NewReportRepo(pool)
 	blockRepo := postgres.NewBlockRepo(pool)
+	notificationFeedRepo := postgres.NewNotificationFeedRepo(pool)
+	notificationPrefsRepo := postgres.NewNotificationPrefsRepo(pool)
 
 	// Create adapters.
 	weatherProvider := openmeteo.New()
-	notifier := novu.New(cfg.NovuAPIKey, logger)
+	// Every delivery goes through the feed recorder: it honours the user's
+	// per-category opt-out and stores what was sent so the app's bell icon has
+	// a history even when the push itself never arrives. Wrapping the provider
+	// (rather than the Notifier) also covers the crons, which trigger
+	// workflows through the provider directly.
+	notifier := service.NewFeedRecorder(
+		novu.New(cfg.NovuAPIKey, logger), notificationFeedRepo, notificationPrefsRepo, logger)
 	notifySvc := service.NewNotifier(notifier, userRepo, logger)
 	// Deliver notifications off the request path; drained on shutdown.
 	notifySvc.Start()
@@ -122,6 +130,7 @@ func main() {
 	eventSvc := service.NewEventService(eventRepo, interestRepo)
 	groupSvc := service.NewGroupService(groupRepo, groupMemberRepo, profileRepo, blockRepo, notifySvc, postgres.NewTxManager(pool))
 	moderationSvc := service.NewModerationService(reportRepo, blockRepo)
+	notificationSvc := service.NewNotificationService(notificationFeedRepo, notificationPrefsRepo)
 	profileSvc := service.NewProfileService(profileRepo, boatRepo)
 	readinessSvc := service.NewReadinessService(docRepo, maintenanceRepo, maintenanceTaskRepo, boatRepo, profileRepo)
 	costSvc := service.NewCostService(expenseRepo, maintenanceRepo, tripRepo, boatRepo, profileRepo)
@@ -178,6 +187,7 @@ func main() {
 		Android: cfg.PlayStoreURL,
 	})
 	moderationH := handler.NewModerationHandler(moderationSvc)
+	notificationH := handler.NewNotificationHandler(notificationSvc)
 
 	// Create router.
 	jwksURL := cfg.SupabaseURL + "/auth/v1/.well-known/jwks.json"
@@ -193,6 +203,7 @@ func main() {
 		legalH,
 		joinH,
 		moderationH,
+		notificationH,
 		cfg.SupabaseJWTSecret,
 		jwksURL,
 		cfg.CORSAllowedOrigins,
