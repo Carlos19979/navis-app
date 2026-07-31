@@ -15,6 +15,7 @@ import 'package:navis_mobile/core/config/env.dart';
 import 'package:navis_mobile/core/config/settings_service.dart';
 import 'package:navis_mobile/core/alarm/alarm_service.dart';
 import 'package:navis_mobile/features/billing/billing.dart';
+import 'package:navis_mobile/features/notifications/presentation/providers/notification_link.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(
@@ -24,18 +25,29 @@ Future<void> _firebaseMessagingBackgroundHandler(
   // No additional processing needed here.
 }
 
+/// Routes a tapped push to its screen. This is the ONE place a tap navigates:
+/// it runs before providers exist (cold start from a terminated app), so the
+/// notification feature only refreshes the badge on tap and leaves routing here
+/// — otherwise both handlers fired and the screen was pushed twice.
+///
+/// The target is the `{type, id}` pair every notification carries (see
+/// notification_link.dart); the old code read `document_id`, so it could only
+/// ever open documents and ignored every other reminder.
 void _handleNotificationTap(RemoteMessage message) {
-  final documentId = message.data['document_id'];
-  if (documentId != null) {
-    // Schedule navigation after the current frame to ensure the
-    // router is mounted and ready to handle the deep link.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final context = rootNavigatorKey.currentContext;
-      if (context != null) {
-        GoRouter.of(context).push('/documents/$documentId');
-      }
-    });
-  }
+  final path = notificationPath(
+    message.data['type'] as String?,
+    message.data['id'] as String?,
+  );
+  if (path == null) return;
+
+  // Schedule navigation after the current frame to ensure the router is
+  // mounted and ready to handle the deep link.
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    final context = rootNavigatorKey.currentContext;
+    if (context != null) {
+      GoRouter.of(context).push(path);
+    }
+  });
 }
 
 // Initializes Firebase + push messaging. Firebase.initializeApp() is awaited
