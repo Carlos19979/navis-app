@@ -1718,30 +1718,6 @@ abstract class AppLocalizations {
   /// **'Select Language'**
   String get selectLanguage;
 
-  /// No description provided for @documentExpiryAlerts.
-  ///
-  /// In en, this message translates to:
-  /// **'Document Expiry Alerts'**
-  String get documentExpiryAlerts;
-
-  /// No description provided for @expiryAlertsSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Get notified before documents expire'**
-  String get expiryAlertsSubtitle;
-
-  /// No description provided for @eventReminders.
-  ///
-  /// In en, this message translates to:
-  /// **'Event Reminders'**
-  String get eventReminders;
-
-  /// No description provided for @eventRemindersSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Get reminded about upcoming events'**
-  String get eventRemindersSubtitle;
-
   /// No description provided for @dataAndStorage.
   ///
   /// In en, this message translates to:
@@ -4999,6 +4975,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'+{count} more'**
   String statsMorePorts(int count);
+
+  /// No description provided for @markAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all as read'**
+  String get markAllRead;
+
+  /// No description provided for @noNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications'**
+  String get noNotifications;
+
+  /// No description provided for @noNotificationsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders, your boat\'s activity and news from your clubs will show up here.'**
+  String get noNotificationsDescription;
+
+  /// No description provided for @unreadNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} unread'**
+  String unreadNotifications(int count);
+
+  /// No description provided for @timeJustNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get timeJustNow;
+
+  /// No description provided for @timeMinutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} min ago'**
+  String timeMinutesAgo(int count);
+
+  /// No description provided for @timeHoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} h ago'**
+  String timeHoursAgo(int count);
+
+  /// No description provided for @timeDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} d ago'**
+  String timeDaysAgo(int count);
+
+  /// No description provided for @notifCategoryReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
+  String get notifCategoryReminders;
+
+  /// No description provided for @notifCategoryRemindersSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Expiring documents and maintenance due'**
+  String get notifCategoryRemindersSubtitle;
+
+  /// No description provided for @notifCategoryRegattas.
+  ///
+  /// In en, this message translates to:
+  /// **'Regattas'**
+  String get notifCategoryRegattas;
+
+  /// No description provided for @notifCategoryRegattasSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled regattas, RSVPs and changes'**
+  String get notifCategoryRegattasSubtitle;
+
+  /// No description provided for @notifCategoryGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Clubs and groups'**
+  String get notifCategoryGroups;
+
+  /// No description provided for @notifCategoryGroupsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Join requests and member changes'**
+  String get notifCategoryGroupsSubtitle;
+
+  /// No description provided for @notifCategoryBoatActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Boat activity'**
+  String get notifCategoryBoatActivity;
+
+  /// No description provided for @notifCategoryBoatActivitySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bookings, shared expenses and crew trips'**
+  String get notifCategoryBoatActivitySubtitle;
+
+  /// No description provided for @notifCategoryEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Live events'**
+  String get notifCategoryEvents;
+
+  /// No description provided for @notifCategoryEventsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'When a nautical event you follow starts'**
+  String get notifCategoryEventsSubtitle;
 }
 
 class _AppLocalizationsDelegate

@@ -36,6 +36,7 @@ import 'package:navis_mobile/features/logbook/presentation/screens/trip_detail_s
 import 'package:navis_mobile/features/logbook/presentation/screens/trip_edit_screen.dart';
 import 'package:navis_mobile/features/logbook/presentation/screens/trip_recording_screen.dart';
 import 'package:navis_mobile/features/logbook/presentation/screens/trip_stats_screen.dart';
+import 'package:navis_mobile/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:navis_mobile/features/profile/presentation/screens/profile_screen.dart';
 import 'package:navis_mobile/features/profile/presentation/screens/settings_screen.dart';
 import 'package:navis_mobile/features/weather/presentation/screens/weather_screen.dart';
@@ -361,6 +362,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+      // The bell's destination: the history of everything the API delivered.
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationsScreen(),
       ),
     ],
   );
