@@ -1,15 +1,11 @@
 import 'dart:async';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import 'package:navis_mobile/app/router.dart';
 import 'package:navis_mobile/core/network/api_client.dart';
 import 'package:navis_mobile/features/notifications/data/repositories/notification_repository.dart';
 import 'package:navis_mobile/features/notifications/presentation/providers/notification_feed_provider.dart';
-import 'package:navis_mobile/features/notifications/presentation/providers/notification_link.dart';
 
 final notificationRepositoryProvider = Provider<NotificationRepositoryImpl>(
   (ref) => NotificationRepositoryImpl(apiClient: ApiClient.instance),
@@ -68,14 +64,6 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
     // handler, so the bell badge would stay stale until the next launch.
     _messageSub = FirebaseMessaging.onMessage.listen((_) => _refreshFeed());
 
-    // Cold start: app opened from a terminated state by tapping a notification.
-    final initial = await FirebaseMessaging.instance.getInitialMessage();
-    if (initial != null) {
-      WidgetsBinding.instance.addPostFrameCallback(
-        (_) => _handlePayload(initial.data),
-      );
-    }
-
     state = NotificationState(token: token, isInitialized: true);
   }
 
@@ -94,11 +82,11 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
     state = NotificationState(token: newToken, isInitialized: true);
   }
 
-  void _onMessageTapped(RemoteMessage message) {
-    // The tap means the notification was seen: bring the in-app feed in line.
-    _refreshFeed();
-    _handlePayload(message.data);
-  }
+  /// A tap means the notification was seen: bring the badge and the in-app feed
+  /// in line. Navigation is deliberately NOT done here — `main.dart` owns it,
+  /// because it is also the only handler alive on a cold start. Doing both
+  /// pushed the target screen twice.
+  void _onMessageTapped(RemoteMessage _) => _refreshFeed();
 
   /// Re-reads the badge and the notification list, which the server owns.
   void _refreshFeed() {
@@ -108,17 +96,6 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
 
   /// Routes a notification payload `{type, id}` to the matching screen via the
   /// root navigator. The Novu workflow must forward these as FCM data fields.
-  void _handlePayload(Map<String, dynamic> data) {
-    final path = notificationPath(
-      data['type'] as String?,
-      data['id'] as String?,
-    );
-    if (path == null) return;
-
-    final ctx = rootNavigatorKey.currentContext;
-    if (ctx != null) ctx.push(path);
-  }
-
   Future<void> unregister() async {
     final token = state.token;
     if (token != null) {
