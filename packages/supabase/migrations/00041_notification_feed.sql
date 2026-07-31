@@ -46,12 +46,17 @@ CREATE TABLE IF NOT EXISTS notification_mutes (
   PRIMARY KEY (user_id, category)
 );
 
--- RLS: the Go API uses the service role and enforces access itself, but keep
--- rows owner-scoped for defence in depth (consistent with the rest of the schema).
+-- RLS: the Go API writes with the service role, so the client needs READ only.
+-- Granting writes here would let the app's own Supabase client forge bell
+-- entries, flip read_at or delete history, bypassing the API — the same reason
+-- 00028 made sent_notifications select-only.
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notification_mutes ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS notifications_own ON notifications;
+DROP POLICY IF EXISTS notification_mutes_own ON notification_mutes;
+
 CREATE POLICY notifications_own ON notifications
-  FOR ALL USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+  FOR SELECT TO authenticated USING (user_id = auth.uid());
 CREATE POLICY notification_mutes_own ON notification_mutes
-  FOR ALL USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+  FOR SELECT TO authenticated USING (user_id = auth.uid());

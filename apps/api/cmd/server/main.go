@@ -115,9 +115,17 @@ func main() {
 	// a history even when the push itself never arrives. Wrapping the provider
 	// (rather than the Notifier) also covers the crons, which trigger
 	// workflows through the provider directly.
+	novuClient := novu.New(cfg.NovuAPIKey, logger)
+	// The crons retry on their next run, so they must not record a delivery
+	// that failed (it would duplicate the feed entry).
 	notifier := service.NewFeedRecorder(
-		novu.New(cfg.NovuAPIKey, logger), notificationFeedRepo, notificationPrefsRepo, logger)
-	notifySvc := service.NewNotifier(notifier, userRepo, logger)
+		novuClient, notificationFeedRepo, notificationPrefsRepo, logger, false)
+	// The in-app notifier is fire-and-forget with no retry: record even when
+	// the provider call fails, or a Novu hiccup loses the event for good.
+	notifySvc := service.NewNotifier(
+		service.NewFeedRecorder(
+			novuClient, notificationFeedRepo, notificationPrefsRepo, logger, true),
+		userRepo, logger)
 	// Deliver notifications off the request path; drained on shutdown.
 	notifySvc.Start()
 	defer notifySvc.Stop()
@@ -143,7 +151,7 @@ func main() {
 	userSvc := service.NewUserService(
 		supabaseAdmin, boatRepo, docRepo, tripRepo, trackRepo, participantRepo,
 		checklistRepo, maintenanceRepo, expenseRepo, groupRepo, deviceTokenRepo,
-		profileRepo, logger)
+		profileRepo, notificationFeedRepo, notificationPrefsRepo, logger)
 
 	// Create and start expiration checker cron.
 	expirationChecker := cron.New(docRepo, notifLogRepo, profileRepo, notifier, logger)

@@ -665,9 +665,13 @@ order. Absence of an opt-out row means enabled, so new users get everything.
 
 ### PUT /api/v1/me/notification-preferences
 Body `{ categories: [{ category, enabled }] }` replaces the caller's choices;
-a category left out of the list stays **enabled**. Returns the full new state.
-`422` on an unknown category. A muted category is neither pushed nor stored in
-the feed.
+a category left out of the list stays **enabled** (an empty list therefore means
+"everything on"). Returns the full new state. `422` on an unknown or duplicated
+category.
+
+A muted category is neither pushed nor stored in the feed, and — importantly —
+the crons do **not** mark it as handled: a reminder muted today is still pending,
+so unmuting delivers it instead of silently swallowing it.
 
 ## Trip sharing
 

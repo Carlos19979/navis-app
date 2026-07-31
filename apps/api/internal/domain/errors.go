@@ -35,6 +35,11 @@ var (
 	// ErrObjectionableContent is returned when user-generated text fails the
 	// moderation content filter (App Store guideline 1.2).
 	ErrObjectionableContent = errors.New("content contains objectionable language")
+	// ErrNotificationMuted is returned instead of delivering a notification the
+	// user opted out of. It is NOT a failure, but it must not read as success
+	// either: callers that record dedup state (the crons) have to leave the
+	// reminder pending, so that unmuting still delivers it.
+	ErrNotificationMuted = errors.New("notification category muted by user")
 )
 
 // ValidationError represents a field-level validation failure.

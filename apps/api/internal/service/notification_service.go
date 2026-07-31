@@ -22,29 +22,52 @@ type FeedRecorder struct {
 	feed   port.NotificationFeedRepository
 	prefs  port.NotificationPrefsRepository
 	logger *slog.Logger
+
+	// recordUndelivered files the notification in the feed even when the
+	// provider call failed. Set it for callers that never retry, and leave it
+	// off for callers that do (see NewFeedRecorder).
+	recordUndelivered bool
 }
 
 var _ port.NotificationProvider = (*FeedRecorder)(nil)
 
 // NewFeedRecorder wraps inner so deliveries are filtered by preferences and
 // recorded in the feed.
+//
+// recordUndelivered decides what happens when the provider fails, and the two
+// answers are both right for their caller:
+//   - false for the crons: they record dedup state only on success and retry on
+//     the next run, so recording a failed delivery would duplicate the entry.
+//   - true for the in-app Notifier: it is fire-and-forget with no retry, so
+//     dropping the row would lose the event entirely — which is exactly what
+//     the feed exists to prevent.
 func NewFeedRecorder(
 	inner port.NotificationProvider,
 	feed port.NotificationFeedRepository,
 	prefs port.NotificationPrefsRepository,
 	logger *slog.Logger,
+	recordUndelivered bool,
 ) *FeedRecorder {
-	return &FeedRecorder{inner: inner, feed: feed, prefs: prefs, logger: logger}
+	return &FeedRecorder{
+		inner:             inner,
+		feed:              feed,
+		prefs:             prefs,
+		logger:            logger,
+		recordUndelivered: recordUndelivered,
+	}
 }
 
-// TriggerWorkflow drops the notification when the user muted its category,
-// otherwise delegates and — on success — records it in the feed.
+// TriggerWorkflow delivers the notification and records it in the feed, unless
+// the user muted its category — in which case nothing is sent, nothing is
+// stored, and domain.ErrNotificationMuted says so.
 //
-// Delivery happens before recording so a provider failure leaves no row: the
-// crons only persist their dedup state on success and will retry, which would
-// otherwise pile up duplicates in the feed. With no NOVU_API_KEY the provider
-// is a no-op that returns nil, so the feed still fills in (that is what makes
-// the bell work before push is configured).
+// Muting reports an error rather than success on purpose: the crons record
+// their dedup state only when a trigger succeeded, and treating a muted
+// category as delivered would burn the reminder's only slot. The user would
+// then unmute and never hear about the document that was about to expire.
+//
+// With no NOVU_API_KEY the provider is a no-op that returns nil, so the feed
+// still fills in — that is what makes the bell work before push is configured.
 func (r *FeedRecorder) TriggerWorkflow(
 	ctx context.Context, workflowID, subscriberID string, payload map[string]any,
 ) error {
@@ -56,11 +79,12 @@ func (r *FeedRecorder) TriggerWorkflow(
 	}
 
 	if r.muted(ctx, subscriberID, category) {
-		return nil
+		return domain.ErrNotificationMuted
 	}
 
-	if err := r.inner.TriggerWorkflow(ctx, workflowID, subscriberID, payload); err != nil {
-		return err
+	deliveryErr := r.inner.TriggerWorkflow(ctx, workflowID, subscriberID, payload)
+	if deliveryErr != nil && !r.recordUndelivered {
+		return deliveryErr
 	}
 
 	n := &domain.Notification{
@@ -72,12 +96,12 @@ func (r *FeedRecorder) TriggerWorkflow(
 		LinkID:   payloadString(payload, "id"),
 	}
 	if err := r.feed.Create(ctx, n); err != nil && r.logger != nil {
-		// The push already went out; a feed write failure must not turn a
-		// delivered notification into a failed one (crons would re-send it).
+		// A feed write failure must not turn a delivered notification into a
+		// failed one (crons would re-send it).
 		r.logger.Warn("notification feed write failed",
 			"category", workflowID, "user_id", subscriberID, "error", err)
 	}
-	return nil
+	return deliveryErr
 }
 
 // muted reports whether the user opted out of this category. A lookup failure
@@ -200,6 +224,7 @@ func (s *NotificationService) SetPreferences(
 	ctx context.Context, userID string, prefs []domain.CategoryPreference,
 ) ([]domain.CategoryPreference, error) {
 	muted := make([]domain.NotificationCategory, 0, len(prefs))
+	seen := make(map[domain.NotificationCategory]struct{}, len(prefs))
 	for _, p := range prefs {
 		if !p.Category.Valid() {
 			return nil, &domain.ValidationError{
@@ -207,7 +232,16 @@ func (s *NotificationService) SetPreferences(
 				Message: "unsupported notification category",
 			}
 		}
-		if !p.Enabled && !slices.Contains(muted, p.Category) {
+		// Two entries for one category have no defined answer — rejecting is
+		// better than silently letting one of them win.
+		if _, dup := seen[p.Category]; dup {
+			return nil, &domain.ValidationError{
+				Field:   "category",
+				Message: "duplicate notification category",
+			}
+		}
+		seen[p.Category] = struct{}{}
+		if !p.Enabled {
 			muted = append(muted, p.Category)
 		}
 	}

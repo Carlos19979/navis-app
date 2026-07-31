@@ -198,12 +198,31 @@ that (1) drops categories the user muted and (2) stores what was delivered.
   absence means enabled and new users need no seeding).
 - Categories are the five Novu workflow ids (`domain.NotificationCategory`, now
   the single source for `service.Workflow*`) — one preference toggle per domain.
-- Delivery is recorded **after** a successful trigger: the crons only persist
-  their dedup state on success and retry otherwise, which would duplicate feed
-  rows. With no `NOVU_API_KEY` the provider is a no-op that returns nil, so the
-  feed still fills — the bell works before push is configured.
+- Two recorders, because the two callers differ: the crons get
+  record-**after**-success (they retry next run, so recording a failure would
+  duplicate the row), the in-app `Notifier` gets record-**always** (it is
+  fire-and-forget with no retry, so dropping the row would lose the event —
+  exactly what the feed exists to prevent). With no `NOVU_API_KEY` the provider
+  is a no-op that returns nil, so the feed fills either way: the bell works
+  before push is configured.
+- Muting returns `domain.ErrNotificationMuted`, **not** success. A cron records
+  dedup state only on a successful trigger, so reporting "delivered" would burn
+  the reminder's only slot and the user would unmute to silence. Muted
+  reminders stay pending and are counted apart in the cron logs.
 - A feed-write failure never fails the delivery (the push already went out), and
   a preferences-lookup failure defaults to *not* muted.
+- Client RLS is **SELECT-only** on both tables (the API writes with the service
+  role), like `sent_notifications` since 00028 — otherwise the app's own
+  Supabase client could forge bell entries or clear its unread count.
+- Both crons now send the `{type, id}` deep-link pair, so a reminder opens the
+  document (or the boat) instead of nothing — in the push and in the feed. Their
+  copy is Spanish like every other notification, and document types read as
+  names ("seguro de responsabilidad civil"), not slugs ("insurance_rc").
+- The expiry cron notifies **once** per document per run: a document 5 days out
+  has crossed both the 30- and 7-day marks, and it used to send the identical
+  message twice (now it would also file two identical feed rows). It notifies
+  once and logs every crossed mark.
+- `GET /user/export` includes the feed and the muted categories (GDPR).
 - Endpoints: `GET /notifications` (keyset), `GET /notifications/unread-count`,
   `PUT /notifications/:id/read`, `PUT /notifications/read-all`,
   `GET|PUT /me/notification-preferences`. See `docs/api-spec.md`.

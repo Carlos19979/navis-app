@@ -5,7 +5,11 @@ import (
 	"errors"
 	"io"
 	"log/slog"
+	"os"
+	"path/filepath"
+	"regexp"
 	"slices"
+	"strings"
 	"testing"
 	"time"
 
@@ -102,12 +106,20 @@ func discardLogger() *slog.Logger {
 	return slog.New(slog.NewTextHandler(io.Discard, nil))
 }
 
+// remindersPayload mirrors what the expiry cron actually sends (see
+// internal/cron/expiration_checker.go): the extra document_* keys are part of
+// the real shape, and "type"/"id" are what the feed stores as the deep link. A
+// hand-idealised payload here is how the missing deep link went unnoticed.
 func remindersPayload() map[string]any {
 	return map[string]any{
-		"title": "Seguro caduca en 30 días",
-		"body":  "Póliza del Mar Azul",
-		"type":  "document",
-		"id":    "doc-1",
+		"title":             "Documento a punto de caducar",
+		"body":              "Tu seguro de responsabilidad civil caduca en 5 dias (el 05/08/2026).",
+		"type":              "document",
+		"id":                "doc-1",
+		"document_id":       "doc-1",
+		"document_type":     "insurance_rc",
+		"days_until_expiry": 5,
+		"expiry_date":       "2026-08-05",
 	}
 }
 
@@ -118,7 +130,7 @@ func TestFeedRecorder_TriggerWorkflow_RecordsDeliveredNotification(t *testing.T)
 
 	provider := &testutil.FakeNotificationProvider{}
 	feed := newFakeFeedRepo()
-	rec := service.NewFeedRecorder(provider, feed, newFakePrefsRepo(), discardLogger())
+	rec := service.NewFeedRecorder(provider, feed, newFakePrefsRepo(), discardLogger(), false)
 
 	if err := rec.TriggerWorkflow(context.Background(),
 		service.WorkflowReminders, "user-1", remindersPayload()); err != nil {
@@ -139,7 +151,8 @@ func TestFeedRecorder_TriggerWorkflow_RecordsDeliveredNotification(t *testing.T)
 	if got.Category != domain.CategoryReminders {
 		t.Errorf("category = %q, want %q", got.Category, domain.CategoryReminders)
 	}
-	if got.Title != "Seguro caduca en 30 días" || got.Body != "Póliza del Mar Azul" {
+	if got.Title != "Documento a punto de caducar" ||
+		!strings.Contains(got.Body, "caduca en 5 dias") {
 		t.Errorf("title/body = %q / %q", got.Title, got.Body)
 	}
 	if got.LinkType != "document" || got.LinkID != "doc-1" {
@@ -154,13 +167,17 @@ func TestFeedRecorder_TriggerWorkflow_MutedCategoryIsNotDeliveredNorRecorded(t *
 	feed := newFakeFeedRepo()
 	prefs := newFakePrefsRepo()
 	prefs.muted["user-1"] = []domain.NotificationCategory{domain.CategoryReminders}
-	rec := service.NewFeedRecorder(provider, feed, prefs, discardLogger())
+	rec := service.NewFeedRecorder(provider, feed, prefs, discardLogger(), false)
 
-	if err := rec.TriggerWorkflow(context.Background(),
-		service.WorkflowReminders, "user-1", remindersPayload()); err != nil {
-		t.Fatalf("TriggerWorkflow: %v", err)
+	err := rec.TriggerWorkflow(context.Background(),
+		service.WorkflowReminders, "user-1", remindersPayload())
+
+	// Reported as muted, not as delivered: the crons record dedup state only on
+	// success, so "delivered" would burn the reminder's only slot and the user
+	// would never hear about it after unmuting.
+	if !errors.Is(err, domain.ErrNotificationMuted) {
+		t.Fatalf("error = %v, want ErrNotificationMuted", err)
 	}
-
 	if len(provider.Triggered) != 0 {
 		t.Errorf("muted category was delivered (%d triggers)", len(provider.Triggered))
 	}
@@ -176,7 +193,7 @@ func TestFeedRecorder_TriggerWorkflow_OtherCategoriesStillDeliveredWhenOneIsMute
 	feed := newFakeFeedRepo()
 	prefs := newFakePrefsRepo()
 	prefs.muted["user-1"] = []domain.NotificationCategory{domain.CategoryReminders}
-	rec := service.NewFeedRecorder(provider, feed, prefs, discardLogger())
+	rec := service.NewFeedRecorder(provider, feed, prefs, discardLogger(), false)
 
 	if err := rec.TriggerWorkflow(context.Background(),
 		service.WorkflowBoatActivity, "user-1", remindersPayload()); err != nil {
@@ -202,7 +219,7 @@ func TestFeedRecorder_TriggerWorkflow_ProviderFailureRecordsNothing(t *testing.T
 		TriggerFn: func(_ context.Context, _, _ string, _ map[string]any) error { return wantErr },
 	}
 	feed := newFakeFeedRepo()
-	rec := service.NewFeedRecorder(provider, feed, newFakePrefsRepo(), discardLogger())
+	rec := service.NewFeedRecorder(provider, feed, newFakePrefsRepo(), discardLogger(), false)
 
 	err := rec.TriggerWorkflow(context.Background(),
 		service.WorkflowReminders, "user-1", remindersPayload())
@@ -222,7 +239,7 @@ func TestFeedRecorder_TriggerWorkflow_FeedWriteFailureStillSucceeds(t *testing.T
 	provider := &testutil.FakeNotificationProvider{}
 	feed := newFakeFeedRepo()
 	feed.createErr = errors.New("db down")
-	rec := service.NewFeedRecorder(provider, feed, newFakePrefsRepo(), discardLogger())
+	rec := service.NewFeedRecorder(provider, feed, newFakePrefsRepo(), discardLogger(), false)
 
 	if err := rec.TriggerWorkflow(context.Background(),
 		service.WorkflowReminders, "user-1", remindersPayload()); err != nil {
@@ -241,7 +258,7 @@ func TestFeedRecorder_TriggerWorkflow_PrefsFailureDeliversAnyway(t *testing.T) {
 	feed := newFakeFeedRepo()
 	prefs := newFakePrefsRepo()
 	prefs.listErr = errors.New("db down")
-	rec := service.NewFeedRecorder(provider, feed, prefs, discardLogger())
+	rec := service.NewFeedRecorder(provider, feed, prefs, discardLogger(), false)
 
 	if err := rec.TriggerWorkflow(context.Background(),
 		service.WorkflowReminders, "user-1", remindersPayload()); err != nil {
@@ -257,7 +274,7 @@ func TestFeedRecorder_TriggerWorkflow_UnknownWorkflowIsDeliveredButNotRecorded(t
 
 	provider := &testutil.FakeNotificationProvider{}
 	feed := newFakeFeedRepo()
-	rec := service.NewFeedRecorder(provider, feed, newFakePrefsRepo(), discardLogger())
+	rec := service.NewFeedRecorder(provider, feed, newFakePrefsRepo(), discardLogger(), false)
 
 	if err := rec.TriggerWorkflow(context.Background(),
 		"some-future-workflow", "user-1", remindersPayload()); err != nil {
@@ -295,7 +312,7 @@ func TestNotifier_Send_RecordsThroughFeedRecorder(t *testing.T) {
 
 	provider := &testutil.FakeNotificationProvider{}
 	feed := newFakeFeedRepo()
-	rec := service.NewFeedRecorder(provider, feed, newFakePrefsRepo(), discardLogger())
+	rec := service.NewFeedRecorder(provider, feed, newFakePrefsRepo(), discardLogger(), false)
 	notifier := service.NewNotifier(rec, nil, discardLogger())
 
 	notifier.Send(context.Background(), "user-1", service.WorkflowBoatActivity,
@@ -464,5 +481,102 @@ func TestNotificationService_UnreadCount_ReturnsBadgeValue(t *testing.T) {
 	}
 	if count != 7 {
 		t.Errorf("count = %d, want 7", count)
+	}
+}
+
+// A provider failure on the in-app path (fire-and-forget, no retry) must still
+// leave a feed row: dropping it loses the event for good, which is the exact
+// failure the feed exists to prevent.
+func TestFeedRecorder_TriggerWorkflow_RecordsUndeliveredForNonRetryingCaller(t *testing.T) {
+	t.Parallel()
+
+	wantErr := errors.New("novu 429")
+	provider := &testutil.FakeNotificationProvider{
+		TriggerFn: func(_ context.Context, _, _ string, _ map[string]any) error { return wantErr },
+	}
+	feed := newFakeFeedRepo()
+	rec := service.NewFeedRecorder(provider, feed, newFakePrefsRepo(), discardLogger(), true)
+
+	err := rec.TriggerWorkflow(context.Background(),
+		service.WorkflowBoatActivity, "user-1", remindersPayload())
+
+	// The error still surfaces (the caller decides what to do with it)...
+	if !errors.Is(err, wantErr) {
+		t.Fatalf("error = %v, want %v", err, wantErr)
+	}
+	// ...but the notification is in the feed.
+	if len(feed.created) != 1 {
+		t.Fatalf("recorded %d notifications, want 1", len(feed.created))
+	}
+}
+
+// Muted must not be recorded even for the record-undelivered variant.
+func TestFeedRecorder_TriggerWorkflow_MutedIsNeverRecorded(t *testing.T) {
+	t.Parallel()
+
+	provider := &testutil.FakeNotificationProvider{}
+	feed := newFakeFeedRepo()
+	prefs := newFakePrefsRepo()
+	prefs.muted["user-1"] = []domain.NotificationCategory{domain.CategoryBoatActivity}
+	rec := service.NewFeedRecorder(provider, feed, prefs, discardLogger(), true)
+
+	err := rec.TriggerWorkflow(context.Background(),
+		service.WorkflowBoatActivity, "user-1", remindersPayload())
+
+	if !errors.Is(err, domain.ErrNotificationMuted) {
+		t.Fatalf("error = %v, want ErrNotificationMuted", err)
+	}
+	if len(feed.created) != 0 {
+		t.Errorf("recorded %d rows for a muted category, want 0", len(feed.created))
+	}
+}
+
+func TestNotificationService_SetPreferences_RejectsDuplicateCategory(t *testing.T) {
+	t.Parallel()
+
+	prefsRepo := newFakePrefsRepo()
+	svc := service.NewNotificationService(newFakeFeedRepo(), prefsRepo)
+
+	// Which one wins is undefined, so the request is refused instead.
+	_, err := svc.SetPreferences(context.Background(), "user-1", []domain.CategoryPreference{
+		{Category: domain.CategoryReminders, Enabled: false},
+		{Category: domain.CategoryReminders, Enabled: true},
+	})
+	if !errors.Is(err, domain.ErrValidation) {
+		t.Fatalf("error = %v, want a validation error", err)
+	}
+	if len(prefsRepo.muted) != 0 {
+		t.Errorf("stored %v despite the duplicate", prefsRepo.muted)
+	}
+}
+
+// The category CHECK constraint in migration 00041 must list exactly the
+// categories the code can emit: a mismatch only shows up in production as a
+// constraint violation that the feed writer swallows as a WARN log.
+func TestNotificationCategories_MatchMigrationConstraint(t *testing.T) {
+	t.Parallel()
+
+	sql, err := os.ReadFile(
+		filepath.Join("..", "..", "..", "..",
+			"packages", "supabase", "migrations", "00041_notification_feed.sql"))
+	if err != nil {
+		t.Fatalf("reading migration: %v", err)
+	}
+
+	for _, category := range domain.AllNotificationCategories() {
+		if !strings.Contains(string(sql), "'"+string(category)+"'") {
+			t.Errorf("category %q is missing from the migration CHECK constraint", category)
+		}
+	}
+	// And nothing extra: count the quoted values inside the CHECK lists.
+	quoted := regexp.MustCompile(`'([a-z-]+)'`).FindAllStringSubmatch(string(sql), -1)
+	found := map[string]bool{}
+	for _, m := range quoted {
+		found[m[1]] = true
+	}
+	for value := range found {
+		if !domain.NotificationCategory(value).Valid() {
+			t.Errorf("migration allows category %q, which the code never emits", value)
+		}
 	}
 }

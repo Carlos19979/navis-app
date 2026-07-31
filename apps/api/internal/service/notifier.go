@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"time"
 
@@ -177,8 +178,15 @@ func (n *Notifier) TrySend(ctx context.Context, userID, workflow, title, body, l
 	}
 	if err := n.provider.TriggerWorkflow(ctx, workflow, userID, payload); err != nil {
 		if n.logger != nil {
-			n.logger.Warn("notification failed",
-				"workflow", workflow, "user_id", userID, "error", err)
+			// A muted category is a choice, not a fault: log it quietly so it
+			// does not read as a delivery problem in the logs.
+			if errors.Is(err, domain.ErrNotificationMuted) {
+				n.logger.Debug("notification muted by user preference",
+					"workflow", workflow, "user_id", userID)
+			} else {
+				n.logger.Warn("notification failed",
+					"workflow", workflow, "user_id", userID, "error", err)
+			}
 		}
 		return false
 	}

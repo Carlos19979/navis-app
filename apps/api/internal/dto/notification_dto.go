@@ -14,11 +14,11 @@ type NotificationResponse struct {
 	Body     string `json:"body"`
 	// LinkType and LinkID are the deep-link target for the tap; omitted when
 	// the notification has no destination.
-	LinkType  *string   `json:"link_type"`
-	LinkID    *string   `json:"link_id"`
-	Read      bool      `json:"read"`
-	ReadAt    *string   `json:"read_at"`
-	CreatedAt time.Time `json:"created_at"`
+	LinkType  *string    `json:"link_type"`
+	LinkID    *string    `json:"link_id"`
+	Read      bool       `json:"read"`
+	ReadAt    *time.Time `json:"read_at"`
+	CreatedAt time.Time  `json:"created_at"`
 }
 
 // NotificationResponseFromDomain converts a domain notification.
@@ -37,10 +37,7 @@ func NotificationResponseFromDomain(n domain.Notification) NotificationResponse 
 	if n.LinkID != "" {
 		resp.LinkID = &n.LinkID
 	}
-	if n.ReadAt != nil {
-		readAt := n.ReadAt.Format(time.RFC3339)
-		resp.ReadAt = &readAt
-	}
+	resp.ReadAt = n.ReadAt
 	return resp
 }
 
@@ -85,7 +82,9 @@ func NotificationPreferencesResponseFromDomain(prefs []domain.CategoryPreference
 // UpdateNotificationPreferencesRequest replaces the caller's preferences. Any
 // category left out of the list stays enabled.
 type UpdateNotificationPreferencesRequest struct {
-	Categories []NotificationPreference `json:"categories" validate:"required,max=5,dive"`
+	// An empty list is valid and means "every category enabled": the PUT
+	// replaces the whole set, and anything absent stays on.
+	Categories []NotificationPreference `json:"categories" validate:"omitempty,max=5,dive"`
 }
 
 // ToDomain converts the request to the domain representation.
