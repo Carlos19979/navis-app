@@ -37,3 +37,20 @@ func (r *UserRepo) DisplayName(ctx context.Context, userID string) (string, erro
 	}
 	return name, nil
 }
+
+// Email returns the user's sign-in email, or an empty string when the user has
+// none (an OAuth identity without a shared email). Callers treat empty as "no
+// email channel for this subscriber" rather than as an error.
+func (r *UserRepo) Email(ctx context.Context, userID string) (string, error) {
+	var email *string
+	err := r.pool.QueryRow(ctx,
+		`SELECT email::text FROM auth.users WHERE id = $1`, userID,
+	).Scan(&email)
+	if err != nil {
+		return "", fmt.Errorf("resolving email for %s: %w", userID, err)
+	}
+	if email == nil {
+		return "", nil
+	}
+	return *email, nil
+}

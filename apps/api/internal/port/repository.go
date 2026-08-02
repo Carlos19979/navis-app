@@ -194,6 +194,9 @@ type EventInterestRepository interface {
 // notification messages. Backed by Supabase auth.users metadata.
 type UserRepository interface {
 	DisplayName(ctx context.Context, userID string) (string, error)
+	// Email returns the user's sign-in email, used to give the notification
+	// provider a reachable address for the email channel.
+	Email(ctx context.Context, userID string) (string, error)
 }
 
 // SentNotificationRepository is a generic dedup log for scheduled notifications.

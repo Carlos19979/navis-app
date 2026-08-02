@@ -91,7 +91,10 @@ type SupabaseAdmin interface {
 // NotificationProvider abstracts notification delivery (e.g. Novu).
 type NotificationProvider interface {
 	TriggerWorkflow(ctx context.Context, workflowID, subscriberID string, payload map[string]any) error
-	EnsureSubscriber(ctx context.Context, subscriberID string) error
+	// EnsureSubscriber creates or updates the provider-side subscriber. email
+	// and name may be empty; a subscriber without an email cannot receive the
+	// email channel, which is why they are passed at all.
+	EnsureSubscriber(ctx context.Context, subscriberID, email, name string) error
 	SetPushToken(ctx context.Context, subscriberID, token string) error
 	RemovePushToken(ctx context.Context, subscriberID, token string) error
 }

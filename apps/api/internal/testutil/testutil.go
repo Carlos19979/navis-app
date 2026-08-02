@@ -16,9 +16,16 @@ type TriggeredWorkflow struct {
 	Payload      map[string]any
 }
 
+// EnsuredSubscriber records a single FakeNotificationProvider.EnsureSubscriber call.
+type EnsuredSubscriber struct {
+	SubscriberID, Email, Name string
+}
+
 // FakeNotificationProvider is an in-memory port.NotificationProvider that
 // records TriggerWorkflow calls and optionally fails via TriggerFn.
 type FakeNotificationProvider struct {
+	// Subscribers holds every EnsureSubscriber call in order.
+	Subscribers []EnsuredSubscriber
 	// TriggerFn, when set, is called after recording and its error returned.
 	TriggerFn func(ctx context.Context, workflowID, subscriberID string, payload map[string]any) error
 	// Triggered holds every TriggerWorkflow call in order.
@@ -36,8 +43,11 @@ func (f *FakeNotificationProvider) TriggerWorkflow(ctx context.Context, workflow
 	return nil
 }
 
-// EnsureSubscriber is a no-op.
-func (f *FakeNotificationProvider) EnsureSubscriber(_ context.Context, _ string) error { return nil }
+// EnsureSubscriber records the subscriber details it was given.
+func (f *FakeNotificationProvider) EnsureSubscriber(_ context.Context, subscriberID, email, name string) error {
+	f.Subscribers = append(f.Subscribers, EnsuredSubscriber{subscriberID, email, name})
+	return nil
+}
 
 // SetPushToken is a no-op.
 func (f *FakeNotificationProvider) SetPushToken(_ context.Context, _, _ string) error { return nil }

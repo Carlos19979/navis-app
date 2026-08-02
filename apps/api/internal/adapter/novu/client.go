@@ -47,14 +47,26 @@ func (c *Client) TriggerWorkflow(ctx context.Context, workflowID, subscriberID s
 	return c.doRequest(ctx, http.MethodPost, "/v1/events/trigger", body)
 }
 
-// EnsureSubscriber creates or updates a subscriber in Novu.
-func (c *Client) EnsureSubscriber(ctx context.Context, subscriberID string) error {
+// EnsureSubscriber creates or updates a subscriber in Novu (the endpoint
+// upserts), including the address the email channel needs.
+//
+// Without an email every email step ends as "Subscriber missing email
+// address": the fallback that exists precisely for when push does not arrive
+// could never deliver. Empty values are omitted rather than sent blank, so a
+// user with no email keeps whatever Novu already has.
+func (c *Client) EnsureSubscriber(ctx context.Context, subscriberID, email, name string) error {
 	if c.apiKey == "" {
 		return nil
 	}
 
 	body := map[string]any{
 		"subscriberId": subscriberID,
+	}
+	if email != "" {
+		body["email"] = email
+	}
+	if name != "" {
+		body["firstName"] = name
 	}
 	return c.doRequest(ctx, http.MethodPost, "/v1/subscribers", body)
 }
