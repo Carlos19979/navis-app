@@ -43,8 +43,20 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
 
     await _repository.initialize();
 
+    // Subscribe BEFORE asking for the token. If the token is not ready yet it
+    // arrives through this stream seconds later, and the old code had already
+    // returned — so the device was never registered for the whole session.
+    _tokenRefreshSub = _repository.onTokenRefresh.listen(_onTokenRefresh);
+    _foregroundSub =
+        FirebaseMessaging.onMessageOpenedApp.listen(_onMessageTapped);
+    // A push that arrives while the app is open does not go through the tap
+    // handler, so the bell badge would stay stale until the next launch.
+    _messageSub = FirebaseMessaging.onMessage.listen((_) => _refreshFeed());
+
     final token = await _repository.getToken();
     if (token == null) {
+      // No token yet. Not the same as a refused permission: the listener above
+      // still registers the device if one shows up.
       state = const NotificationState(
         isInitialized: true,
         permissionDenied: true,
@@ -56,13 +68,6 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
       token,
       NotificationRepositoryImpl.currentPlatform,
     );
-
-    _tokenRefreshSub = _repository.onTokenRefresh.listen(_onTokenRefresh);
-    _foregroundSub =
-        FirebaseMessaging.onMessageOpenedApp.listen(_onMessageTapped);
-    // A push that arrives while the app is open does not go through the tap
-    // handler, so the bell badge would stay stale until the next launch.
-    _messageSub = FirebaseMessaging.onMessage.listen((_) => _refreshFeed());
 
     state = NotificationState(token: token, isInitialized: true);
   }
