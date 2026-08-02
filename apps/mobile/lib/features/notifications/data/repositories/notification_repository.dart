@@ -13,6 +13,12 @@ final class NotificationRepositoryImpl implements NotificationRepository {
 
   final ApiClient _apiClient;
 
+  /// How long to wait for iOS to hand Firebase the APNs token: 10 tries, 500ms
+  /// apart. It normally lands within a second; the ceiling keeps a device that
+  /// will never get one from blocking the notification setup.
+  static const int _apnsTokenAttempts = 10;
+  static const Duration _apnsTokenRetryDelay = Duration(milliseconds: 500);
+
   /// Lazily resolved: `FirebaseMessaging.instance` itself throws
   /// [core/no-app] when `Firebase.initializeApp()` failed (no
   /// GoogleService-Info.plist / google-services.json), so it must not run in a
@@ -53,14 +59,39 @@ final class NotificationRepositoryImpl implements NotificationRepository {
   }
 
   /// Returns the FCM token, or null when push is unavailable. Never throws.
+  ///
+  /// On iOS the APNs token reaches Firebase asynchronously, a moment after the
+  /// permission is granted, and asking for the FCM token before that fails with
+  /// `[firebase_messaging/apns-token-not-set]` — every single launch, not just
+  /// the first. That is why this waits for the APNs token instead of asking
+  /// straight away: the previous code took the failure for "permission denied"
+  /// and never registered the device at all.
   @override
   Future<String?> getToken() async {
+    final messaging = _messaging;
+    if (messaging == null) return null;
+
     try {
-      return await _messaging?.getToken();
+      if (Platform.isIOS && await _awaitAPNSToken(messaging) == null) {
+        debugPrint('notifications: APNs token unavailable, skipping FCM token');
+        return null;
+      }
+      return await messaging.getToken();
     } catch (e) {
       debugPrint('notifications: getToken failed: $e');
       return null;
     }
+  }
+
+  /// Polls for the APNs token until iOS provides it. Bounded: a device that
+  /// never gets one (no network, permission denied) must not hang startup.
+  Future<String?> _awaitAPNSToken(FirebaseMessaging messaging) async {
+    for (var attempt = 0; attempt < _apnsTokenAttempts; attempt++) {
+      final token = await messaging.getAPNSToken();
+      if (token != null) return token;
+      await Future<void>.delayed(_apnsTokenRetryDelay);
+    }
+    return null;
   }
 
   @override
