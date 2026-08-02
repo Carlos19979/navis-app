@@ -44,7 +44,33 @@ func (c *Client) TriggerWorkflow(ctx context.Context, workflowID, subscriberID s
 		"to":      map[string]string{"subscriberId": subscriberID},
 		"payload": payload,
 	}
+	if data := deepLinkData(payload); len(data) > 0 {
+		body["overrides"] = map[string]any{"fcm": map[string]any{"data": data}}
+	}
 	return c.doRequest(ctx, http.MethodPost, "/v1/events/trigger", body)
+}
+
+// deepLinkData lifts the {type, id} deep-link target out of the payload and
+// into FCM's data block.
+//
+// The payload alone does not reach the device: Novu renders title and body from
+// it, but the app reads the tap target from `message.data`, and that is only
+// populated from the provider overrides. Verified on a real device — the push
+// arrived and looked right, yet tapping it navigated nowhere because data was
+// empty. FCM requires every data value to be a string.
+func deepLinkData(payload map[string]any) map[string]string {
+	data := make(map[string]string, 2)
+	for _, key := range []string{"type", "id"} {
+		if value, ok := payload[key].(string); ok && value != "" {
+			data[key] = value
+		}
+	}
+	// Both halves or nothing: a type without an id (or the reverse) routes
+	// nowhere, and sending half a target only invites a crash downstream.
+	if len(data) != 2 {
+		return nil
+	}
+	return data
 }
 
 // EnsureSubscriber creates or updates a subscriber in Novu (the endpoint
