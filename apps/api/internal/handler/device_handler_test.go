@@ -31,9 +31,14 @@ func (m *mockDeviceRepo) Delete(ctx context.Context, userID, token string) error
 	return m.deleteFn(ctx, userID, token)
 }
 
-type mockNotifier struct{}
+type mockNotifier struct {
+	ensured [][3]string
+}
 
-func (m *mockNotifier) EnsureSubscriber(_ context.Context, _ string) error   { return nil }
+func (m *mockNotifier) EnsureSubscriber(_ context.Context, id, email, name string) error {
+	m.ensured = append(m.ensured, [3]string{id, email, name})
+	return nil
+}
 func (m *mockNotifier) SetPushToken(_ context.Context, _, _ string) error    { return nil }
 func (m *mockNotifier) RemovePushToken(_ context.Context, _, _ string) error { return nil }
 
@@ -67,7 +72,7 @@ func TestDeviceHandler_Create_Success(t *testing.T) {
 			gotPlatform = platform
 			return nil
 		},
-	}, &mockNotifier{})
+	}, &mockNotifier{}, &mockUserDirectory{})
 
 	w := httptest.NewRecorder()
 	r := authedRequest(http.MethodPost, "/api/v1/devices", `{"token":"abc123","platform":"ios"}`, "user-1")
@@ -92,7 +97,7 @@ func TestDeviceHandler_Create_MissingAuth(t *testing.T) {
 
 	h := handler.NewDeviceHandler(&mockDeviceRepo{
 		upsertFn: func(_ context.Context, _, _ string, _ domain.Platform) error { return nil },
-	}, &mockNotifier{})
+	}, &mockNotifier{}, &mockUserDirectory{})
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodPost, "/api/v1/devices", strings.NewReader(`{"token":"abc","platform":"ios"}`))
@@ -108,7 +113,7 @@ func TestDeviceHandler_Create_InvalidJSON(t *testing.T) {
 
 	h := handler.NewDeviceHandler(&mockDeviceRepo{
 		upsertFn: func(_ context.Context, _, _ string, _ domain.Platform) error { return nil },
-	}, &mockNotifier{})
+	}, &mockNotifier{}, &mockUserDirectory{})
 
 	w := httptest.NewRecorder()
 	r := authedRequest(http.MethodPost, "/api/v1/devices", `{invalid`, "user-1")
@@ -124,7 +129,7 @@ func TestDeviceHandler_Create_ValidationError_MissingFields(t *testing.T) {
 
 	h := handler.NewDeviceHandler(&mockDeviceRepo{
 		upsertFn: func(_ context.Context, _, _ string, _ domain.Platform) error { return nil },
-	}, &mockNotifier{})
+	}, &mockNotifier{}, &mockUserDirectory{})
 
 	w := httptest.NewRecorder()
 	r := authedRequest(http.MethodPost, "/api/v1/devices", `{}`, "user-1")
@@ -140,7 +145,7 @@ func TestDeviceHandler_Create_ValidationError_InvalidPlatform(t *testing.T) {
 
 	h := handler.NewDeviceHandler(&mockDeviceRepo{
 		upsertFn: func(_ context.Context, _, _ string, _ domain.Platform) error { return nil },
-	}, &mockNotifier{})
+	}, &mockNotifier{}, &mockUserDirectory{})
 
 	w := httptest.NewRecorder()
 	r := authedRequest(http.MethodPost, "/api/v1/devices", `{"token":"abc","platform":"windows"}`, "user-1")
@@ -163,7 +168,7 @@ func TestDeviceHandler_Create_RepoError(t *testing.T) {
 		upsertFn: func(_ context.Context, _, _ string, _ domain.Platform) error {
 			return errors.New("db error")
 		},
-	}, &mockNotifier{})
+	}, &mockNotifier{}, &mockUserDirectory{})
 
 	w := httptest.NewRecorder()
 	r := authedRequest(http.MethodPost, "/api/v1/devices", `{"token":"abc","platform":"android"}`, "user-1")
@@ -188,7 +193,7 @@ func TestDeviceHandler_Delete_Success(t *testing.T) {
 			deletedToken = token
 			return nil
 		},
-	}, &mockNotifier{})
+	}, &mockNotifier{}, &mockUserDirectory{})
 
 	w := httptest.NewRecorder()
 	r := authedRequest(http.MethodDelete, "/api/v1/devices/abc123", "", "user-1")
@@ -212,7 +217,7 @@ func TestDeviceHandler_Delete_Unauthenticated(t *testing.T) {
 	h := handler.NewDeviceHandler(&mockDeviceRepo{
 		upsertFn: func(_ context.Context, _, _ string, _ domain.Platform) error { return nil },
 		deleteFn: func(_ context.Context, _, _ string) error { return nil },
-	}, &mockNotifier{})
+	}, &mockNotifier{}, &mockUserDirectory{})
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodDelete, "/api/v1/devices/abc123", nil)
@@ -230,7 +235,7 @@ func TestDeviceHandler_Delete_MissingToken(t *testing.T) {
 	h := handler.NewDeviceHandler(&mockDeviceRepo{
 		upsertFn: func(_ context.Context, _, _ string, _ domain.Platform) error { return nil },
 		deleteFn: func(_ context.Context, _, _ string) error { return nil },
-	}, &mockNotifier{})
+	}, &mockNotifier{}, &mockUserDirectory{})
 
 	w := httptest.NewRecorder()
 	r := authedRequest(http.MethodDelete, "/api/v1/devices/", "", "user-1")
@@ -250,7 +255,7 @@ func TestDeviceHandler_Delete_RepoError(t *testing.T) {
 		deleteFn: func(_ context.Context, _, _ string) error {
 			return errors.New("db error")
 		},
-	}, &mockNotifier{})
+	}, &mockNotifier{}, &mockUserDirectory{})
 
 	w := httptest.NewRecorder()
 	r := authedRequest(http.MethodDelete, "/api/v1/devices/abc123", "", "user-1")
@@ -259,5 +264,66 @@ func TestDeviceHandler_Delete_RepoError(t *testing.T) {
 
 	if w.Code != http.StatusInternalServerError {
 		t.Fatalf("expected 500, got %d", w.Code)
+	}
+}
+
+// mockUserDirectory is the subscriber directory the handler uses to give Novu
+// an email address.
+type mockUserDirectory struct {
+	email, name string
+	err         error
+}
+
+func (m *mockUserDirectory) Email(_ context.Context, _ string) (string, error) {
+	return m.email, m.err
+}
+
+func (m *mockUserDirectory) DisplayName(_ context.Context, _ string) (string, error) {
+	return m.name, m.err
+}
+
+// Registering a device is what gives the Novu subscriber an email address; a
+// subscriber without one can never receive the email channel.
+func TestDeviceHandler_Create_SendsSubscriberEmailAndName(t *testing.T) {
+	t.Parallel()
+
+	notifier := &mockNotifier{}
+	h := handler.NewDeviceHandler(&mockDeviceRepo{
+		upsertFn: func(_ context.Context, _, _ string, _ domain.Platform) error { return nil },
+	}, notifier, &mockUserDirectory{email: "carlos@example.com", name: "Carlos"})
+
+	w := httptest.NewRecorder()
+	h.Create(w, authedRequest(http.MethodPost,
+		"/api/v1/devices", `{"token":"tok-1","platform":"ios"}`, "user-1"))
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("status = %d, want 201: %s", w.Code, w.Body.String())
+	}
+	if len(notifier.ensured) != 1 {
+		t.Fatalf("EnsureSubscriber called %d times, want 1", len(notifier.ensured))
+	}
+	if got := notifier.ensured[0]; got != [3]string{"user-1", "carlos@example.com", "Carlos"} {
+		t.Errorf("subscriber = %v, want user-1 / carlos@example.com / Carlos", got)
+	}
+}
+
+// A directory failure must not block the device registration: push still works.
+func TestDeviceHandler_Create_SucceedsWhenTheDirectoryFails(t *testing.T) {
+	t.Parallel()
+
+	notifier := &mockNotifier{}
+	h := handler.NewDeviceHandler(&mockDeviceRepo{
+		upsertFn: func(_ context.Context, _, _ string, _ domain.Platform) error { return nil },
+	}, notifier, &mockUserDirectory{err: errors.New("db down")})
+
+	w := httptest.NewRecorder()
+	h.Create(w, authedRequest(http.MethodPost,
+		"/api/v1/devices", `{"token":"tok-1","platform":"ios"}`, "user-1"))
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("status = %d, want 201", w.Code)
+	}
+	if got := notifier.ensured[0]; got != [3]string{"user-1", "", ""} {
+		t.Errorf("subscriber = %v, want the id with empty details", got)
 	}
 }

@@ -180,7 +180,7 @@ func main() {
 	regattaH := handler.NewRegattaHandler(regattaSvc)
 	portH := handler.NewPortHandler(portSvc)
 	weatherH := handler.NewWeatherHandler(weatherSvc)
-	deviceH := handler.NewDeviceHandler(deviceTokenRepo, notifier)
+	deviceH := handler.NewDeviceHandler(deviceTokenRepo, notifier, userRepo)
 	userH := handler.NewUserHandler(userSvc)
 	profileH := handler.NewProfileHandler(profileSvc)
 	maintenanceH := handler.NewMaintenanceHandler(maintenanceSvc)

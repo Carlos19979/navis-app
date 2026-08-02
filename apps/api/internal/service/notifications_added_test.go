@@ -24,7 +24,9 @@ func (c *captureProvider) TriggerWorkflow(_ context.Context, workflowID, subscri
 	c.triggers = append(c.triggers, capturedTrigger{workflowID, subscriberID})
 	return nil
 }
-func (c *captureProvider) EnsureSubscriber(context.Context, string) error        { return nil }
+func (c *captureProvider) EnsureSubscriber(context.Context, string, string, string) error {
+	return nil
+}
 func (c *captureProvider) SetPushToken(context.Context, string, string) error    { return nil }
 func (c *captureProvider) RemovePushToken(context.Context, string, string) error { return nil }
 

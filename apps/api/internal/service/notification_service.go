@@ -123,8 +123,8 @@ func (r *FeedRecorder) muted(ctx context.Context, userID string, category domain
 }
 
 // EnsureSubscriber delegates to the wrapped provider.
-func (r *FeedRecorder) EnsureSubscriber(ctx context.Context, subscriberID string) error {
-	return r.inner.EnsureSubscriber(ctx, subscriberID)
+func (r *FeedRecorder) EnsureSubscriber(ctx context.Context, subscriberID, email, name string) error {
+	return r.inner.EnsureSubscriber(ctx, subscriberID, email, name)
 }
 
 // SetPushToken delegates to the wrapped provider.
