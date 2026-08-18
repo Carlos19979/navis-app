@@ -15,10 +15,10 @@ import '../../helpers/local_db.dart';
 
 /// Records what was asked for and answers without a network.
 class _FakeFetcher extends ChartTileFetcher {
-  _FakeFetcher({this.alwaysFails = false});
-
   final List<String> requested = [];
-  bool alwaysFails;
+
+  /// Flipped by the test that checks a download with no network at all.
+  bool alwaysFails = false;
 
   @override
   Future<Uint8List> fetch(
