@@ -10,7 +10,9 @@ import 'package:navis_mobile/core/config/settings_service.dart';
 import 'package:navis_mobile/core/database/local_database.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
+import 'package:navis_mobile/core/utils/byte_utils.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
+import 'package:navis_mobile/features/charts/presentation/providers/offline_charts_provider.dart';
 import 'package:navis_mobile/features/notifications/presentation/widgets/notification_preferences_card.dart';
 import 'package:navis_mobile/features/profile/data/account_provider.dart';
 import 'package:navis_mobile/features/profile/presentation/widgets/export_data_tile.dart';
@@ -30,6 +32,7 @@ class SettingsScreen extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
     final locale = ref.watch(localeProvider);
     final checklistMode = ref.watch(preTripChecklistModeProvider);
+    final chartBytes = ref.watch(chartStorageBytesProvider).valueOrNull;
 
     final languageLabel = switch (locale?.languageCode) {
       'es' => 'Español',
@@ -201,6 +204,30 @@ class SettingsScreen extends ConsumerWidget {
                   children: [
                     _SectionHeader(
                       label: l.dataAndStorage.toUpperCase(),
+                    ),
+                    ListTile(
+                      leading: Icon(
+                        Icons.map_outlined,
+                        color: context.txtSecondary,
+                      ),
+                      title: Text(l.offlineCharts),
+                      subtitle: Text(
+                        chartBytes == null
+                            ? l.manageSavedAreas
+                            : l.chartStorageUsed(
+                                ByteUtils.format(chartBytes),
+                              ),
+                      ),
+                      trailing: Icon(
+                        Icons.chevron_right,
+                        color: context.txtSecondary,
+                      ),
+                      onTap: () => context.push('/charts/offline'),
+                    ),
+                    Divider(
+                      height: 1,
+                      color: context.glassBorderColor.withValues(alpha: 0.3),
+                      indent: 56,
                     ),
                     ListTile(
                       leading: Icon(

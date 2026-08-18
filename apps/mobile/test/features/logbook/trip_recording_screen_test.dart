@@ -78,6 +78,7 @@ void main() {
         overrides: [
           tripRecordingProvider.overrideWith((ref) => notifier),
           overridePorts(),
+          overrideConnectivity(),
           nearbyPortsProvider.overrideWith((ref, params) async => []),
           boatPermissionsProvider.overrideWith((ref, id) async => permissions),
         ],
@@ -332,6 +333,7 @@ void main() {
           overrides: [
             tripRecordingProvider.overrideWith((ref) => notifier),
             overridePorts(),
+            overrideConnectivity(),
             nearbyPortsProvider.overrideWith((ref, params) async => []),
             boatPermissionsProvider.overrideWith(
               (ref, id) async => const BoatPermissions.none(),

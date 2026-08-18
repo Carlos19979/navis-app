@@ -1187,5 +1187,68 @@
   "notifCategoryBoatActivity": "Boat activity",
   "notifCategoryBoatActivitySubtitle": "Bookings, shared expenses and crew trips",
   "notifCategoryEvents": "Live events",
-  "notifCategoryEventsSubtitle": "When a nautical event you follow starts"
+  "notifCategoryEventsSubtitle": "When a nautical event you follow starts",
+  "offlineCharts": "Offline charts",
+  "offlineChartsIntro": "Save the area you sail. The chart then draws from the device, with no signal at all.",
+  "offlineChartsBanner": "No connection - drawing saved charts",
+  "offlineChartsBannerEmpty": "No connection - no charts saved for this area",
+  "downloadThisArea": "Download this area",
+  "chartDetailStandard": "Standard",
+  "chartDetailFine": "Detailed",
+  "chartAreaEstimate": "{tiles} tiles, about {size}",
+  "@chartAreaEstimate": {
+    "placeholders": {
+      "tiles": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "chartAreaTooLarge": "This area is too large to save. Zoom in, or choose standard detail.",
+  "downloadingCharts": "Saving charts",
+  "chartsDownloadDone": "Charts saved for offline use",
+  "chartsDownloadFailed": "The download could not finish. Check the connection and try again.",
+  "chartsDownloadCancelled": "Download stopped. What was saved stays available.",
+  "noSavedAreas": "No charts saved yet",
+  "noSavedAreasDescription": "Open the chart, frame the area you sail and tap the download button.",
+  "manageSavedAreas": "Manage saved areas",
+  "chartStorageUsed": "{size} on this device",
+  "@chartStorageUsed": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "chartRegionDetail": "Zoom {minZoom}-{maxZoom}, {size}",
+  "@chartRegionDetail": {
+    "placeholders": {
+      "minZoom": {
+        "type": "int"
+      },
+      "maxZoom": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "chartRegionIncomplete": "Incomplete",
+  "deleteArea": "Delete area",
+  "deleteAreaConfirm": "The charts saved for \"{name}\" will be removed from this device.",
+  "@deleteAreaConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "areaDeleted": "Area deleted",
+  "bgRecordingTitle": "Navis is recording your trip",
+  "bgRecordingBody": "GPS tracking active - tap to open",
+  "bgAnchorWatchTitle": "Anchor watch active",
+  "bgAnchorWatchBody": "Watching your position - tap to open"
 }

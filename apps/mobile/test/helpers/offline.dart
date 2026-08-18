@@ -20,6 +20,14 @@ class FakeConnectivityNotifier extends StateNotifier<bool>
   void setOnline(bool value) => state = value;
 }
 
+/// Override for widget tests of screens that watch connectivity (any map
+/// screen does, to decide whether it is drawing saved charts): keeps the
+/// connectivity_plus platform channel out of the test.
+Override overrideConnectivity({bool online = true}) =>
+    connectivityProvider.overrideWith(
+      (ref) => FakeConnectivityNotifier(online),
+    );
+
 /// Builds a JSON [ResponseBody] the way the Go API answers.
 ResponseBody jsonResponseBody(String body, {int statusCode = 200}) {
   return ResponseBody.fromString(

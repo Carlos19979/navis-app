@@ -92,6 +92,7 @@ void main() {
         ...planOverrides(pro: pro),
         localDatabaseProvider.overrideWithValue(db),
         alarmServiceProvider.overrideWithValue(alarm),
+        overrideConnectivity(),
       ];
 
   // The Free-plan branch returns a paywall gate (no FlutterMap), so it is safe

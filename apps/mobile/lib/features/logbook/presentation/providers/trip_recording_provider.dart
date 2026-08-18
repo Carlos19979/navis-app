@@ -1,12 +1,16 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
 import 'package:navis_mobile/core/database/local_database.dart';
 import 'package:navis_mobile/core/database/mutation_queue.dart';
+import 'package:navis_mobile/core/lifecycle/app_lifecycle.dart';
+import 'package:navis_mobile/core/lifecycle/background_copy.dart';
+import 'package:navis_mobile/core/lifecycle/gps_stream_watchdog.dart';
 import 'package:navis_mobile/core/utils/distance_utils.dart';
 import 'package:navis_mobile/features/logbook/domain/entities/trip.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
@@ -109,13 +113,35 @@ final tripRecordingProvider =
 });
 
 class TripRecordingNotifier extends StateNotifier<TripRecordingState> {
-  TripRecordingNotifier(this._ref) : super(TripRecordingState.initial);
+  TripRecordingNotifier(this._ref) : super(TripRecordingState.initial) {
+    // Recording has to survive being minimized, and it has to survive it
+    // whether or not the recording screen is still mounted — the trip is
+    // deliberately independent of that screen. So the lifecycle hook lives
+    // here, not in a widget's WidgetsBindingObserver (which is exactly what
+    // used to happen, and is why leaving the map and then backgrounding the
+    // app quietly stopped collecting fixes).
+    _watchdog = GpsStreamWatchdog(
+      timeout: _fixTimeout,
+      onRestart: _startLocationStream,
+      clock: _ref.read(gpsWatchdogClockProvider),
+    );
+    _lifecycle =
+        _ref.read(appLifecycleBusProvider).stream.listen(_onLifecycleChange);
+  }
 
   final Ref _ref;
   StreamSubscription<Position>? _positionSubscription;
+  StreamSubscription<AppLifecycleState>? _lifecycle;
   Timer? _uploadTimer;
 
   static const _uploadInterval = Duration(seconds: 60);
+
+  /// A recording stream may legitimately go quiet: `distanceFilter` is 10 m, so
+  /// a boat drifting at anchor or stopped for lunch produces nothing at all.
+  /// Three minutes of silence is past that and into "the OS killed us".
+  static const _fixTimeout = Duration(minutes: 3);
+
+  late final GpsStreamWatchdog _watchdog;
 
   LocalDatabase get _db => _ref.read(localDatabaseProvider);
 
@@ -265,6 +291,7 @@ class TripRecordingNotifier extends StateNotifier<TripRecordingState> {
 
   void pause() {
     if (state.status != RecordingStatus.recording) return;
+    _watchdog.stop();
     _positionSubscription?.cancel();
     _positionSubscription = null;
     state = state.copyWith(status: RecordingStatus.paused);
@@ -278,11 +305,30 @@ class TripRecordingNotifier extends StateNotifier<TripRecordingState> {
     _startLocationStream();
   }
 
-  /// Re-arms the GPS stream if the OS killed it (app resumed from background).
+  /// Re-arms the GPS stream when it has stopped delivering.
+  ///
+  /// Called on every app lifecycle transition. Judging by evidence rather than
+  /// by a null check matters: the OS stops feeding the stream without ever
+  /// closing it, so the subscription still looks perfectly healthy (see
+  /// [GpsStreamWatchdog]).
   void ensureLocationStream() {
     if (state.status != RecordingStatus.recording) return;
-    if (_positionSubscription != null) return;
-    _startLocationStream();
+    _watchdog.check(hasSubscription: _positionSubscription != null);
+  }
+
+  void _onLifecycleChange(AppLifecycleState lifecycle) {
+    switch (lifecycle) {
+      // Going to the background is as important as coming back: on Android a
+      // location foreground service can only be *started* while the app is
+      // visible, so a dead stream has to be revived before we lose that.
+      case AppLifecycleState.resumed:
+      case AppLifecycleState.paused:
+      case AppLifecycleState.hidden:
+        ensureLocationStream();
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.detached:
+        break;
+    }
   }
 
   /// Discards the recording: deletes the solo trip on the server (or reverts
@@ -417,6 +463,7 @@ class TripRecordingNotifier extends StateNotifier<TripRecordingState> {
     _positionSubscription = Geolocator.getPositionStream(
       locationSettings: _platformLocationSettings(),
     ).listen(_onPositionUpdate);
+    _watchdog.start();
   }
 
   LocationSettings _platformLocationSettings() {
@@ -425,10 +472,14 @@ class TripRecordingNotifier extends StateNotifier<TripRecordingState> {
         accuracy: LocationAccuracy.high,
         distanceFilter: 10,
         intervalDuration: const Duration(seconds: 10),
-        foregroundNotificationConfig: const ForegroundNotificationConfig(
-          notificationTitle: 'Navis is recording your trip',
-          notificationText: 'GPS tracking is active',
-          notificationIcon: AndroidResource(name: 'ic_launcher'),
+        // The notification IS the app while minimized: it must be in the
+        // user's language, and tapping it must come back to Navis.
+        foregroundNotificationConfig: ForegroundNotificationConfig(
+          notificationTitle: BackgroundCopy.recordingTitle,
+          notificationText: BackgroundCopy.recordingBody,
+          notificationIcon: const AndroidResource(name: 'ic_launcher'),
+          enableWakeLock: true,
+          setOngoing: true,
         ),
       );
     }
@@ -447,6 +498,8 @@ class TripRecordingNotifier extends StateNotifier<TripRecordingState> {
   }
 
   void _onPositionUpdate(Position position) {
+    // Evidence the stream is alive, whatever the recording state.
+    _watchdog.recordFix();
     final newPos = LatLng(position.latitude, position.longitude);
     final speedKn = position.speed * 1.94384;
 
@@ -601,6 +654,7 @@ class TripRecordingNotifier extends StateNotifier<TripRecordingState> {
       .toList();
 
   void _stopStreamAndTimers() {
+    _watchdog.stop();
     _positionSubscription?.cancel();
     _positionSubscription = null;
     _uploadTimer?.cancel();
@@ -609,6 +663,7 @@ class TripRecordingNotifier extends StateNotifier<TripRecordingState> {
 
   @override
   void dispose() {
+    unawaited(_lifecycle?.cancel());
     _stopStreamAndTimers();
     super.dispose();
   }

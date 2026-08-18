@@ -5083,6 +5083,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'When a nautical event you follow starts'**
   String get notifCategoryEventsSubtitle;
+
+  /// No description provided for @offlineCharts.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline charts'**
+  String get offlineCharts;
+
+  /// No description provided for @offlineChartsIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Save the area you sail. The chart then draws from the device, with no signal at all.'**
+  String get offlineChartsIntro;
+
+  /// No description provided for @offlineChartsBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection - drawing saved charts'**
+  String get offlineChartsBanner;
+
+  /// No description provided for @offlineChartsBannerEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection - no charts saved for this area'**
+  String get offlineChartsBannerEmpty;
+
+  /// No description provided for @downloadThisArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Download this area'**
+  String get downloadThisArea;
+
+  /// No description provided for @chartDetailStandard.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard'**
+  String get chartDetailStandard;
+
+  /// No description provided for @chartDetailFine.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed'**
+  String get chartDetailFine;
+
+  /// No description provided for @chartAreaEstimate.
+  ///
+  /// In en, this message translates to:
+  /// **'{tiles} tiles, about {size}'**
+  String chartAreaEstimate(int tiles, String size);
+
+  /// No description provided for @chartAreaTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'This area is too large to save. Zoom in, or choose standard detail.'**
+  String get chartAreaTooLarge;
+
+  /// No description provided for @downloadingCharts.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving charts'**
+  String get downloadingCharts;
+
+  /// No description provided for @chartsDownloadDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Charts saved for offline use'**
+  String get chartsDownloadDone;
+
+  /// No description provided for @chartsDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The download could not finish. Check the connection and try again.'**
+  String get chartsDownloadFailed;
+
+  /// No description provided for @chartsDownloadCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Download stopped. What was saved stays available.'**
+  String get chartsDownloadCancelled;
+
+  /// No description provided for @noSavedAreas.
+  ///
+  /// In en, this message translates to:
+  /// **'No charts saved yet'**
+  String get noSavedAreas;
+
+  /// No description provided for @noSavedAreasDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the chart, frame the area you sail and tap the download button.'**
+  String get noSavedAreasDescription;
+
+  /// No description provided for @manageSavedAreas.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage saved areas'**
+  String get manageSavedAreas;
+
+  /// No description provided for @chartStorageUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'{size} on this device'**
+  String chartStorageUsed(String size);
+
+  /// No description provided for @chartRegionDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom {minZoom}-{maxZoom}, {size}'**
+  String chartRegionDetail(int minZoom, int maxZoom, String size);
+
+  /// No description provided for @chartRegionIncomplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Incomplete'**
+  String get chartRegionIncomplete;
+
+  /// No description provided for @deleteArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete area'**
+  String get deleteArea;
+
+  /// No description provided for @deleteAreaConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'The charts saved for "{name}" will be removed from this device.'**
+  String deleteAreaConfirm(String name);
+
+  /// No description provided for @areaDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Area deleted'**
+  String get areaDeleted;
+
+  /// No description provided for @bgRecordingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Navis is recording your trip'**
+  String get bgRecordingTitle;
+
+  /// No description provided for @bgRecordingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS tracking active - tap to open'**
+  String get bgRecordingBody;
+
+  /// No description provided for @bgAnchorWatchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Anchor watch active'**
+  String get bgAnchorWatchTitle;
+
+  /// No description provided for @bgAnchorWatchBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Watching your position - tap to open'**
+  String get bgAnchorWatchBody;
 }
 
 class _AppLocalizationsDelegate

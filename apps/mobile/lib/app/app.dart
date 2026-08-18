@@ -7,6 +7,7 @@ import 'package:navis_mobile/core/config/settings_service.dart';
 import 'package:navis_mobile/core/database/mutation_queue.dart';
 import 'package:navis_mobile/core/database/sync_auth_listener.dart';
 import 'package:navis_mobile/core/deeplinks/join_deep_link.dart';
+import 'package:navis_mobile/core/lifecycle/background_copy.dart';
 import 'package:navis_mobile/core/theme/app_theme.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/billing/billing.dart';
@@ -52,6 +53,12 @@ class NavisApp extends ConsumerWidget {
         // when the user follows the system, and Settings can change it at
         // runtime.
         NavisDateUtils.useLocale(Localizations.localeOf(context));
+        // Same reason, same place: the trip recorder and the anchor watch put
+        // text in the notification shade while no screen exists to translate
+        // it. Null-tolerant because a missing string must never take the whole
+        // app down.
+        final l = AppLocalizations.of(context);
+        if (l != null) BackgroundCopy.useLocalizations(l);
         return NavisOfflineBanner(
           child: child ?? const SizedBox.shrink(),
         );

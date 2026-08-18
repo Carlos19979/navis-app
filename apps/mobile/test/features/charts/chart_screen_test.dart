@@ -63,6 +63,7 @@ void main() {
         const ChartScreen(),
         overrides: [
           overridePorts(),
+          overrideConnectivity(),
           boatsProvider.overrideWith(
             () => _FakeBoatsNotifier(boats ?? [makeBoat()]),
           ),

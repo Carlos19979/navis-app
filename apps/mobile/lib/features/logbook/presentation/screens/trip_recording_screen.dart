@@ -15,7 +15,10 @@ import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart
 import 'package:navis_mobile/features/boat/presentation/providers/boat_permissions_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/widgets/permission_gate.dart';
 import 'package:navis_mobile/features/charts/data/tile_provider.dart';
+import 'package:navis_mobile/features/charts/presentation/providers/offline_charts_provider.dart';
 import 'package:navis_mobile/features/charts/presentation/widgets/map_controls.dart';
+import 'package:navis_mobile/features/charts/presentation/widgets/offline_chart_banner.dart';
+import 'package:navis_mobile/features/charts/presentation/widgets/offline_charts_sheet.dart';
 import 'package:navis_mobile/features/charts/presentation/widgets/position_indicator.dart';
 import 'package:navis_mobile/features/logbook/domain/entities/trip.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/trip_recording_provider.dart';
@@ -64,8 +67,7 @@ class TripRecordingScreen extends ConsumerStatefulWidget {
       _TripRecordingScreenState();
 }
 
-class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
-    with WidgetsBindingObserver {
+class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen> {
   bool _followMode = true;
   bool _showSeamarks = true;
   bool _showPorts = true;
@@ -85,7 +87,9 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
+    // No lifecycle observer here on purpose: TripRecordingNotifier listens to
+    // the app lifecycle bus itself, because the recording must survive this
+    // screen being gone as well as the app being minimized.
     _ports = ViewportPortsController(
       repository: ref.read(portRepositoryProvider),
       enabled: _showPorts,
@@ -105,17 +109,9 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     _ports.dispose();
     _mapController.dispose();
     super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      ref.read(tripRecordingProvider.notifier).ensureLocationStream();
-    }
   }
 
   Future<void> _acquireInitialPosition() async {
@@ -129,6 +125,21 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
         );
       }
     } catch (_) {}
+  }
+
+  /// Offers the chart on screen for offline download. Reads the camera at tap
+  /// time: "this area" means whatever the helm is looking at.
+  Future<void> _openOfflineCharts() async {
+    final bounds = _mapController.camera.visibleBounds;
+    await showOfflineChartsSheet(
+      context,
+      box: (
+        west: bounds.west,
+        south: bounds.south,
+        east: bounds.east,
+        north: bounds.north,
+      ),
+    );
   }
 
   Future<void> _startRecording() async {
@@ -424,6 +435,11 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
     // Fails closed: the start button is only offered once the server has
     // confirmed can_record_trips. A recording already in progress keeps its
     // controls — the permission was checked when it started.
+    // Offline: clamp the tile layers to the deepest zoom on disk, so zooming
+    // in upscales stored tiles instead of leaving the helm with a blank map.
+    final offlineZoom = ref.watch(offlineChartZoomProvider);
+    final topInset = MediaQuery.of(context).padding.top;
+    final downloading = ref.watch(chartDownloadProvider).isRunning;
     final canRecord = isActive ||
         ref
             .watch(boatPermissionsProvider(widget.boatId))
@@ -460,76 +476,85 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
           : Stack(
               children: [
                 RepaintBoundary(
-                  child: FlutterMap(
-                    mapController: _mapController,
-                    options: MapOptions(
-                      initialCenter: center,
-                      initialZoom: 14,
-                      interactionOptions: const InteractionOptions(
-                        flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
-                      ),
-                      onMapReady: () => _onCameraChanged(_mapController.camera),
-                      onPositionChanged: (camera, hasGesture) {
-                        _onCameraChanged(camera);
-                        // The only state worth a rebuild here is dropping out
-                        // of follow mode, and that happens once per gesture.
-                        if (hasGesture && _followMode) {
-                          setState(() => _followMode = false);
-                        }
-                      },
-                    ),
-                    children: [
-                      OpenSeaMapTileProvider.baseLayer,
-                      if (_showSeamarks) OpenSeaMapTileProvider.seamarkLayer,
-                      if (recording.trackPoints.length >= 2)
-                        PolylineLayer(
-                          polylines: _trackPolylines(recording.trackPoints),
+                  child: ColoredBox(
+                    color: OpenSeaMapTileProvider.waterBackground,
+                    child: FlutterMap(
+                      mapController: _mapController,
+                      options: MapOptions(
+                        initialCenter: center,
+                        initialZoom: 14,
+                        interactionOptions: const InteractionOptions(
+                          flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
                         ),
-                      ValueListenableBuilder<List<Port>>(
-                        valueListenable: _ports,
-                        builder: (context, ports, _) {
-                          if (ports.isEmpty) return const SizedBox.shrink();
-                          return PortMarkersLayer(
-                            ports: ports,
-                            userPosition: recording.currentPosition,
-                          );
+                        onMapReady: () =>
+                            _onCameraChanged(_mapController.camera),
+                        onPositionChanged: (camera, hasGesture) {
+                          _onCameraChanged(camera);
+                          // The only state worth a rebuild here is dropping out
+                          // of follow mode, and that happens once per gesture.
+                          if (hasGesture && _followMode) {
+                            setState(() => _followMode = false);
+                          }
                         },
                       ),
-                      if (recording.currentPosition != null)
-                        PositionIndicator(
-                          position: recording.currentPosition!,
+                      children: [
+                        OpenSeaMapTileProvider.baseLayer(
+                          maxNativeZoom: offlineZoom,
                         ),
-                      if (recording.trackPoints.isNotEmpty)
-                        MarkerLayer(
-                          markers: [
-                            Marker(
-                              point: LatLng(
-                                recording.trackPoints.first.latitude,
-                                recording.trackPoints.first.longitude,
-                              ),
-                              width: 14,
-                              height: 14,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: AppColors.green,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.white,
-                                    width: 2,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.green
-                                          .withValues(alpha: 0.4),
-                                      blurRadius: 6,
+                        if (_showSeamarks)
+                          OpenSeaMapTileProvider.seamarkLayer(
+                            maxNativeZoom: offlineZoom,
+                          ),
+                        if (recording.trackPoints.length >= 2)
+                          PolylineLayer(
+                            polylines: _trackPolylines(recording.trackPoints),
+                          ),
+                        ValueListenableBuilder<List<Port>>(
+                          valueListenable: _ports,
+                          builder: (context, ports, _) {
+                            if (ports.isEmpty) return const SizedBox.shrink();
+                            return PortMarkersLayer(
+                              ports: ports,
+                              userPosition: recording.currentPosition,
+                            );
+                          },
+                        ),
+                        if (recording.currentPosition != null)
+                          PositionIndicator(
+                            position: recording.currentPosition!,
+                          ),
+                        if (recording.trackPoints.isNotEmpty)
+                          MarkerLayer(
+                            markers: [
+                              Marker(
+                                point: LatLng(
+                                  recording.trackPoints.first.latitude,
+                                  recording.trackPoints.first.longitude,
+                                ),
+                                width: 14,
+                                height: 14,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: AppColors.green,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.white,
+                                      width: 2,
                                     ),
-                                  ],
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.green
+                                            .withValues(alpha: 0.4),
+                                        blurRadius: 6,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                    ],
+                            ],
+                          ),
+                      ],
+                    ),
                   ),
                 ),
                 if (isActive)
@@ -574,6 +599,19 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen>
                     _ports.setEnabled(_showPorts);
                   },
                   showPorts: _showPorts,
+                  onDownloadCharts: _openOfflineCharts,
+                  isDownloadingCharts: downloading,
+                ),
+                // Says whether the chart under the boat is still trustworthy
+                // once the signal goes — the whole point of sailing with it.
+                Positioned(
+                  top: topInset + (isActive ? 88 : 60),
+                  left: 16,
+                  right: 16,
+                  child: const Align(
+                    alignment: Alignment.centerLeft,
+                    child: OfflineChartBanner(),
+                  ),
                 ),
                 if (!canRecord)
                   Positioned(

@@ -24,6 +24,10 @@ class FakeGeo extends GeolocatorPlatform {
   Position _position;
   final _controller = StreamController<Position>.broadcast();
 
+  /// How many times something subscribed to the position stream. Evidence that
+  /// a background stream the OS stopped feeding was re-armed.
+  int streamStarts = 0;
+
   /// Pushes [position] to `getPositionStream` listeners and makes it the
   /// current/last-known position.
   void emit(Position position) {
@@ -55,8 +59,10 @@ class FakeGeo extends GeolocatorPlatform {
   @override
   Stream<Position> getPositionStream({
     LocationSettings? locationSettings,
-  }) =>
-      _controller.stream;
+  }) {
+    streamStarts++;
+    return _controller.stream;
+  }
 
   @override
   Future<bool> openLocationSettings() async {

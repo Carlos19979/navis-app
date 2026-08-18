@@ -29,11 +29,11 @@ class _FakeBoatsNotifier extends AsyncNotifier<List<Boat>>
 /// Spike: ChartScreen (flutter_map + geolocator) IS pumpable in widget tests.
 ///
 /// Two things must be tolerated:
-///  - Tile fetches: the map's CachedTileProvider resolves tiles through
-///    cached_network_image, whose flutter_cache_manager backend hits
-///    path_provider/HTTP; in tests that surfaces MissingPluginException and
-///    image-load errors through FlutterError. They are cosmetic here, so a
-///    scoped FlutterError.onError filter swallows only those.
+///  - Tile fetches: the map's ChartTileProvider resolves tiles through the
+///    offline tile store (sqflite via path_provider) and then the network; in
+///    tests that surfaces MissingPluginException and image-load errors through
+///    FlutterError. They are cosmetic here, so a scoped FlutterError.onError
+///    filter swallows only those.
 ///  - flutter_animate/tile fade timers: use pumpScreen + drain, never
 ///    pumpAndSettle.
 void main() {
@@ -58,6 +58,8 @@ void main() {
         'Connection closed',
         'Couldn\'t download or retrieve file',
         'HttpExceptionWithStatus',
+        'DioException',
+        'databaseFactory not initialized',
       ];
       if (tolerated.any(message.contains)) return;
       originalOnError?.call(details);
@@ -70,6 +72,7 @@ void main() {
         overrides: [
           boatsProvider.overrideWith(_FakeBoatsNotifier.new),
           overridePorts(),
+          overrideConnectivity(),
         ],
       ),
     );

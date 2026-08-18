@@ -6,12 +6,15 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:navis_mobile/core/database/local_database.dart';
 import 'package:navis_mobile/core/database/mutation_queue.dart';
+import 'package:navis_mobile/core/lifecycle/gps_stream_watchdog.dart';
 import 'package:navis_mobile/features/logbook/data/repositories/trip_repository.dart';
 import 'package:navis_mobile/features/logbook/domain/entities/trip.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/trip_recording_provider.dart';
 import 'package:navis_mobile/features/logbook/presentation/widgets/trip_completion_dialog.dart';
 
+import '../../helpers/geo.dart';
+import '../../helpers/lifecycle.dart';
 import '../../helpers/local_db.dart';
 
 class MockTripRepository extends Mock implements TripRepository {}
@@ -24,6 +27,11 @@ void main() {
   late LocalDatabase db;
   late MockTripRepository tripRepo;
   late ProviderContainer container;
+  late FakeLifecycle lifecycle;
+
+  /// What the GPS watchdog reads as "now", so a stream can be aged past its
+  /// timeout without the test waiting three minutes.
+  late DateTime gpsNow;
 
   setUpAll(() async {
     await useIsolatedDatabase('trip_recording');
@@ -36,9 +44,13 @@ void main() {
 
     db = LocalDatabase();
     tripRepo = MockTripRepository();
+    lifecycle = FakeLifecycle();
+    gpsNow = DateTime(2026, 8, 18, 10);
     container = ProviderContainer(overrides: [
       localDatabaseProvider.overrideWithValue(db),
       tripRepositoryProvider.overrideWithValue(tripRepo),
+      ...lifecycle.overrides,
+      gpsWatchdogClockProvider.overrideWithValue(() => gpsNow),
       // Bypasses the connectivity listener (platform channel) of the real
       // provider body; enqueue/getPendingMutations work against the ffi DB.
       mutationQueueProvider.overrideWith(
@@ -49,6 +61,7 @@ void main() {
 
   tearDown(() async {
     container.dispose();
+    lifecycle.dispose();
     await db.close();
   });
 
@@ -218,6 +231,85 @@ void main() {
       expect(paths, contains('/api/v1/trips/trip-9/complete'));
       expect(
           container.read(tripRecordingProvider).status, RecordingStatus.idle);
+    });
+  });
+
+  group('TripRecordingNotifier background survival', () {
+    RecordingStatus recordingStatus() =>
+        container.read(tripRecordingProvider).status;
+
+    /// Seeds an interrupted session that was still RECORDING, which is what
+    /// makes recovery start the GPS stream.
+    Future<void> seedRecordingSession() async {
+      await db.startRecordingSession(
+        boatId: 'boat-1',
+        tripId: 'trip-1',
+        isRegatta: false,
+        departurePort: 'Palma',
+        startedAt: DateTime(2026, 8, 18, 9),
+      );
+      await db.insertRecordingPoint(
+        lat: 39.5,
+        lon: 2.6,
+        timestamp: DateTime(2026, 8, 18, 9),
+        speedKnots: 5,
+      );
+    }
+
+    // The bug this covers: the re-arm lived in TripRecordingScreen's
+    // WidgetsBindingObserver, so a trip recording with the map closed and the
+    // app minimized silently stopped collecting fixes.
+    test('re-arms a stream that went quiet with no screen mounted', () async {
+      final geo = installFakeGeo();
+      await seedRecordingSession();
+      final notifier = container.read(tripRecordingProvider.notifier);
+
+      expect(await notifier.recoverSession(), isTrue);
+      expect(recordingStatus(), RecordingStatus.recording);
+      expect(geo.streamStarts, 1);
+
+      geo.emit(makePosition());
+      await pumpEventQueue();
+
+      // Four minutes minimized with nothing delivered.
+      gpsNow = gpsNow.add(const Duration(minutes: 4));
+      lifecycle.leaveAndReturn(away: const Duration(minutes: 4));
+      await lifecycle.settle(container);
+      await pumpEventQueue();
+
+      expect(geo.streamStarts, 2, reason: 'the recording must re-subscribe');
+      expect(recordingStatus(), RecordingStatus.recording);
+    });
+
+    test('leaves a stream that is still delivering alone', () async {
+      final geo = installFakeGeo();
+      await seedRecordingSession();
+      final notifier = container.read(tripRecordingProvider.notifier);
+      await notifier.recoverSession();
+      geo.emit(makePosition());
+      await pumpEventQueue();
+
+      lifecycle.leaveAndReturn(away: const Duration(seconds: 30));
+      await lifecycle.settle(container);
+      await pumpEventQueue();
+
+      expect(geo.streamStarts, 1);
+    });
+
+    test('a paused recording is not resumed by coming back', () async {
+      final geo = installFakeGeo();
+      await seedRecordingSession();
+      await db.updateRecordingSession({'status': 'paused'});
+      await container.read(tripRecordingProvider.notifier).recoverSession();
+      expect(geo.streamStarts, 0);
+
+      gpsNow = gpsNow.add(const Duration(minutes: 10));
+      lifecycle.leaveAndReturn();
+      await lifecycle.settle(container);
+      await pumpEventQueue();
+
+      expect(geo.streamStarts, 0);
+      expect(recordingStatus(), RecordingStatus.paused);
     });
   });
 }
