@@ -564,6 +564,12 @@ Note: Android emulator uses `10.0.2.2` to reach the host machine's localhost.
 | **Sentry** | Error/crash reporting (Go API + Flutter) | sentry.io | `SENTRY_DSN` (Go), `--dart-define=SENTRY_DSN=...` (Flutter) |
 | **RevenueCat** | Subscriptions / Pro entitlement (webhook flips `profiles.plan`) | app.revenuecat.com | `REVENUECAT_WEBHOOK_SECRET` (Go), `--dart-define=REVENUECAT_IOS_KEY / REVENUECAT_ANDROID_KEY` (Flutter) |
 
+> Tooling and credentials to *inspect* these services (CLIs, which token per
+> service, minimum scopes, and what an agent session can and cannot reach) live
+> in `docs/dev-access.md`. Short version: a dashboard open in your browser is
+> invisible to an agent — every token has to be minted by a human and dropped in
+> `~/.config/navis/tokens.env`.
+
 ### Novu Setup
 
 - **Workflows (5, grouped by domain):** `regatta-updates`, `group-updates`, `boat-activity`, `reminders` (both crons), `event-live` (see the `const` block in `internal/service/notifier.go` — per-event names are Go aliases onto these five). Steps per workflow: Push (FCM) → Email (Resend).
