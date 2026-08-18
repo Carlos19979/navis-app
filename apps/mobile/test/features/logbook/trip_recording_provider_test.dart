@@ -235,6 +235,9 @@ void main() {
   });
 
   group('TripRecordingNotifier background survival', () {
+    RecordingStatus recordingStatus() =>
+        container.read(tripRecordingProvider).status;
+
     /// Seeds an interrupted session that was still RECORDING, which is what
     /// makes recovery start the GPS stream.
     Future<void> seedRecordingSession() async {
@@ -262,8 +265,7 @@ void main() {
       final notifier = container.read(tripRecordingProvider.notifier);
 
       expect(await notifier.recoverSession(), isTrue);
-      expect(container.read(tripRecordingProvider).status,
-          RecordingStatus.recording);
+      expect(recordingStatus(), RecordingStatus.recording);
       expect(geo.streamStarts, 1);
 
       geo.emit(makePosition());
@@ -276,8 +278,7 @@ void main() {
       await pumpEventQueue();
 
       expect(geo.streamStarts, 2, reason: 'the recording must re-subscribe');
-      expect(container.read(tripRecordingProvider).status,
-          RecordingStatus.recording);
+      expect(recordingStatus(), RecordingStatus.recording);
     });
 
     test('leaves a stream that is still delivering alone', () async {
@@ -308,8 +309,7 @@ void main() {
       await pumpEventQueue();
 
       expect(geo.streamStarts, 0);
-      expect(container.read(tripRecordingProvider).status,
-          RecordingStatus.paused);
+      expect(recordingStatus(), RecordingStatus.paused);
     });
   });
 }
