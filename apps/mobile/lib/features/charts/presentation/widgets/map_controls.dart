@@ -17,6 +17,8 @@ class MapControls extends StatelessWidget {
     this.showTracks = false,
     this.onTogglePorts,
     this.showPorts = false,
+    this.onDownloadCharts,
+    this.isDownloadingCharts = false,
   });
 
   final VoidCallback onZoomIn;
@@ -28,6 +30,11 @@ class MapControls extends StatelessWidget {
   final bool showTracks;
   final VoidCallback? onTogglePorts;
   final bool showPorts;
+
+  /// Opens the offline-chart sheet for whatever the map is currently showing.
+  /// Absent on the pickers, where downloading a region makes no sense.
+  final VoidCallback? onDownloadCharts;
+  final bool isDownloadingCharts;
 
   @override
   Widget build(BuildContext context) {
@@ -99,6 +106,17 @@ class MapControls extends StatelessWidget {
                       tooltip: l.toggleTripTracks,
                       onPressed: onToggleTracks!,
                       isActive: showTracks,
+                    ),
+                  ],
+                  if (onDownloadCharts != null) ...[
+                    _buildDivider(),
+                    _ControlButton(
+                      icon: isDownloadingCharts
+                          ? Icons.downloading
+                          : Icons.download_for_offline_outlined,
+                      tooltip: l.offlineCharts,
+                      onPressed: onDownloadCharts!,
+                      isActive: isDownloadingCharts,
                     ),
                   ],
                 ],

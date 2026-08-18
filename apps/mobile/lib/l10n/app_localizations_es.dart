@@ -2712,4 +2712,96 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get notifCategoryEventsSubtitle =>
       'Cuando empieza un evento náutico que te interesa';
+
+  @override
+  String get offlineCharts => 'Cartas offline';
+
+  @override
+  String get offlineChartsIntro =>
+      'Guarda la zona donde navegas. La carta se dibuja desde el dispositivo, sin necesidad de cobertura.';
+
+  @override
+  String get offlineChartsBanner => 'Sin conexión: mostrando cartas guardadas';
+
+  @override
+  String get offlineChartsBannerEmpty =>
+      'Sin conexión: no hay cartas guardadas de esta zona';
+
+  @override
+  String get downloadThisArea => 'Descargar esta zona';
+
+  @override
+  String get chartDetailStandard => 'Estándar';
+
+  @override
+  String get chartDetailFine => 'Detallado';
+
+  @override
+  String chartAreaEstimate(int tiles, String size) {
+    return '$tiles teselas, unos $size';
+  }
+
+  @override
+  String get chartAreaTooLarge =>
+      'Esta zona es demasiado grande. Acércate o elige detalle estándar.';
+
+  @override
+  String get downloadingCharts => 'Guardando cartas';
+
+  @override
+  String get chartsDownloadDone => 'Cartas guardadas para uso sin conexión';
+
+  @override
+  String get chartsDownloadFailed =>
+      'La descarga no pudo terminar. Revisa la conexión e inténtalo de nuevo.';
+
+  @override
+  String get chartsDownloadCancelled =>
+      'Descarga detenida. Lo guardado sigue disponible.';
+
+  @override
+  String get noSavedAreas => 'Todavía no has guardado cartas';
+
+  @override
+  String get noSavedAreasDescription =>
+      'Abre la carta, encuadra la zona donde navegas y pulsa el botón de descarga.';
+
+  @override
+  String get manageSavedAreas => 'Gestionar zonas guardadas';
+
+  @override
+  String chartStorageUsed(String size) {
+    return '$size en este dispositivo';
+  }
+
+  @override
+  String chartRegionDetail(int minZoom, int maxZoom, String size) {
+    return 'Zoom $minZoom-$maxZoom, $size';
+  }
+
+  @override
+  String get chartRegionIncomplete => 'Incompleta';
+
+  @override
+  String get deleteArea => 'Eliminar zona';
+
+  @override
+  String deleteAreaConfirm(String name) {
+    return 'Se borrarán del dispositivo las cartas guardadas de "$name".';
+  }
+
+  @override
+  String get areaDeleted => 'Zona eliminada';
+
+  @override
+  String get bgRecordingTitle => 'Navis está grabando tu viaje';
+
+  @override
+  String get bgRecordingBody => 'Seguimiento GPS activo - toca para abrir';
+
+  @override
+  String get bgAnchorWatchTitle => 'Guardia de fondeo activa';
+
+  @override
+  String get bgAnchorWatchBody => 'Vigilando tu posición - toca para abrir';
 }

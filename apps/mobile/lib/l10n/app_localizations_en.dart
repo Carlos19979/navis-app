@@ -2688,4 +2688,96 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get notifCategoryEventsSubtitle =>
       'When a nautical event you follow starts';
+
+  @override
+  String get offlineCharts => 'Offline charts';
+
+  @override
+  String get offlineChartsIntro =>
+      'Save the area you sail. The chart then draws from the device, with no signal at all.';
+
+  @override
+  String get offlineChartsBanner => 'No connection - drawing saved charts';
+
+  @override
+  String get offlineChartsBannerEmpty =>
+      'No connection - no charts saved for this area';
+
+  @override
+  String get downloadThisArea => 'Download this area';
+
+  @override
+  String get chartDetailStandard => 'Standard';
+
+  @override
+  String get chartDetailFine => 'Detailed';
+
+  @override
+  String chartAreaEstimate(int tiles, String size) {
+    return '$tiles tiles, about $size';
+  }
+
+  @override
+  String get chartAreaTooLarge =>
+      'This area is too large to save. Zoom in, or choose standard detail.';
+
+  @override
+  String get downloadingCharts => 'Saving charts';
+
+  @override
+  String get chartsDownloadDone => 'Charts saved for offline use';
+
+  @override
+  String get chartsDownloadFailed =>
+      'The download could not finish. Check the connection and try again.';
+
+  @override
+  String get chartsDownloadCancelled =>
+      'Download stopped. What was saved stays available.';
+
+  @override
+  String get noSavedAreas => 'No charts saved yet';
+
+  @override
+  String get noSavedAreasDescription =>
+      'Open the chart, frame the area you sail and tap the download button.';
+
+  @override
+  String get manageSavedAreas => 'Manage saved areas';
+
+  @override
+  String chartStorageUsed(String size) {
+    return '$size on this device';
+  }
+
+  @override
+  String chartRegionDetail(int minZoom, int maxZoom, String size) {
+    return 'Zoom $minZoom-$maxZoom, $size';
+  }
+
+  @override
+  String get chartRegionIncomplete => 'Incomplete';
+
+  @override
+  String get deleteArea => 'Delete area';
+
+  @override
+  String deleteAreaConfirm(String name) {
+    return 'The charts saved for "$name" will be removed from this device.';
+  }
+
+  @override
+  String get areaDeleted => 'Area deleted';
+
+  @override
+  String get bgRecordingTitle => 'Navis is recording your trip';
+
+  @override
+  String get bgRecordingBody => 'GPS tracking active - tap to open';
+
+  @override
+  String get bgAnchorWatchTitle => 'Anchor watch active';
+
+  @override
+  String get bgAnchorWatchBody => 'Watching your position - tap to open';
 }

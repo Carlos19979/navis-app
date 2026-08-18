@@ -363,7 +363,41 @@ Use these Dart 3.x features everywhere they apply:
 
 - `flutter_map` with MapLibre renderer. OpenSeaMap tiles as nautical layer.
 - GPS tracking with `geolocator`.
-- Offline charts: `flutter_map_mbtiles` for local MBTiles/SQLite.
+- **Offline charts** (`features/charts/data/`): raster tiles are stored on the
+  device in their own SQLite db (`navis_chart_tiles.db`, `ChartTileStore`) and
+  served store-first by `ChartTileProvider` — no MBTiles package, no
+  `cached_network_image` (its 200-object / 7-day cache was why the map went
+  blank at sea). Two kinds of tile: **pinned** (belong to a `ChartRegion` the
+  user downloaded — never expire, never evicted) and **browse** (whatever was
+  panned over — LRU-capped at 120 MB, revalidated after 60 days). Pinning is
+  *derived* from the region rows (`_recomputePinned`), so a browse tile inside a
+  later download becomes protected and stops being protected when its last
+  region is deleted. Downloads run through `ChartRegionDownloader` (both layers,
+  shallow zoom first so an interrupted run still has wide coverage, resumes by
+  skipping stored tiles, hard cap `maxTilesPerRegion`). Offline, the map layers
+  get `maxNativeZoom` = the shallowest downloaded depth
+  (`offlineChartZoomProvider`), so zooming past what was saved upscales stored
+  tiles instead of going blank. Tile URLs come from `Env.chartTileUrl` /
+  `Env.seamarkTileUrl`: the OSM/OpenSeaMap defaults forbid bulk downloading, so
+  point them at a self-hosted or commercial provider before this scales.
+- **Background GPS** (trips + anchor watch): both features keep a
+  `getPositionStream` alive for hours with the app minimized, so **the notifier
+  owns the lifecycle, never the screen**. `TripRecordingNotifier` and
+  `AnchorWatchNotifier` each subscribe to `appLifecycleBusProvider` in their
+  constructor and re-check the stream on `resumed`/`paused`/`hidden` (on the way
+  out too: Android only lets a location foreground service *start* while the app
+  is visible). Aliveness is judged by evidence, not by a null check —
+  `GpsStreamWatchdog` (`core/lifecycle/`) stamps every fix and re-subscribes
+  after `timeout` of silence, because iOS suspends delivery and Android drops
+  the service **without closing the stream**, so the subscription still looks
+  healthy. Timeouts: 3 min for recording (`distanceFilter` 10 m — a moored boat
+  legitimately emits nothing), 90 s for the anchor watch (it is the safety
+  feature; a needless re-subscribe is free). `gpsWatchdogClockProvider` is the
+  test seam, mirroring `resumeRefreshClockProvider`. Every string the OS renders
+  while Navis is backgrounded (Android foreground-service notification, drag
+  alarm) comes from `BackgroundCopy`, seeded from `NavisApp.builder` the way
+  `NavisDateUtils.useLocale` is — a notifier has no `BuildContext` and these
+  used to be hardcoded English in a Spanish-first app.
 - **Anchor watch** (Pro): `features/anchor/` — drop an anchor position + swing
   radius (`CircleLayer`) and get a loud drift alarm. Reuses the trip-recording
   GPS/persistence pattern (background-capable `getPositionStream`, singleton

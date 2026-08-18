@@ -119,7 +119,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                               ),
                             ),
                             children: [
-                              OpenSeaMapTileProvider.baseLayer,
+                              OpenSeaMapTileProvider.baseLayer(),
                               MarkerLayer(
                                 markers: [
                                   Marker(

@@ -1063,5 +1063,68 @@
   "notifCategoryBoatActivity": "Actividad del barco",
   "notifCategoryBoatActivitySubtitle": "Reservas, gastos compartidos y travesías de la tripulación",
   "notifCategoryEvents": "Eventos en directo",
-  "notifCategoryEventsSubtitle": "Cuando empieza un evento náutico que te interesa"
+  "notifCategoryEventsSubtitle": "Cuando empieza un evento náutico que te interesa",
+  "offlineCharts": "Cartas offline",
+  "offlineChartsIntro": "Guarda la zona donde navegas. La carta se dibuja desde el dispositivo, sin necesidad de cobertura.",
+  "offlineChartsBanner": "Sin conexión: mostrando cartas guardadas",
+  "offlineChartsBannerEmpty": "Sin conexión: no hay cartas guardadas de esta zona",
+  "downloadThisArea": "Descargar esta zona",
+  "chartDetailStandard": "Estándar",
+  "chartDetailFine": "Detallado",
+  "chartAreaEstimate": "{tiles} teselas, unos {size}",
+  "@chartAreaEstimate": {
+    "placeholders": {
+      "tiles": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "chartAreaTooLarge": "Esta zona es demasiado grande. Acércate o elige detalle estándar.",
+  "downloadingCharts": "Guardando cartas",
+  "chartsDownloadDone": "Cartas guardadas para uso sin conexión",
+  "chartsDownloadFailed": "La descarga no pudo terminar. Revisa la conexión e inténtalo de nuevo.",
+  "chartsDownloadCancelled": "Descarga detenida. Lo guardado sigue disponible.",
+  "noSavedAreas": "Todavía no has guardado cartas",
+  "noSavedAreasDescription": "Abre la carta, encuadra la zona donde navegas y pulsa el botón de descarga.",
+  "manageSavedAreas": "Gestionar zonas guardadas",
+  "chartStorageUsed": "{size} en este dispositivo",
+  "@chartStorageUsed": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "chartRegionDetail": "Zoom {minZoom}-{maxZoom}, {size}",
+  "@chartRegionDetail": {
+    "placeholders": {
+      "minZoom": {
+        "type": "int"
+      },
+      "maxZoom": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "chartRegionIncomplete": "Incompleta",
+  "deleteArea": "Eliminar zona",
+  "deleteAreaConfirm": "Se borrarán del dispositivo las cartas guardadas de \"{name}\".",
+  "@deleteAreaConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "areaDeleted": "Zona eliminada",
+  "bgRecordingTitle": "Navis está grabando tu viaje",
+  "bgRecordingBody": "Seguimiento GPS activo - toca para abrir",
+  "bgAnchorWatchTitle": "Guardia de fondeo activa",
+  "bgAnchorWatchBody": "Vigilando tu posición - toca para abrir"
 }

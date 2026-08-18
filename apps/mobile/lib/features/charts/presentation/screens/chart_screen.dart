@@ -13,7 +13,10 @@ import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/charts/data/tile_provider.dart';
 import 'package:navis_mobile/features/charts/presentation/providers/chart_provider.dart';
+import 'package:navis_mobile/features/charts/presentation/providers/offline_charts_provider.dart';
 import 'package:navis_mobile/features/charts/presentation/widgets/map_controls.dart';
+import 'package:navis_mobile/features/charts/presentation/widgets/offline_chart_banner.dart';
+import 'package:navis_mobile/features/charts/presentation/widgets/offline_charts_sheet.dart';
 import 'package:navis_mobile/features/charts/presentation/widgets/position_indicator.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
 import 'package:navis_mobile/features/ports/domain/entities/port.dart';
@@ -133,6 +136,22 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
     }
   }
 
+  /// Offers the chart currently on screen for offline download. Reads the
+  /// camera at tap time rather than tracking bounds per frame — what the user
+  /// means by "this area" is whatever they are looking at now.
+  Future<void> _openOfflineCharts() async {
+    final bounds = _mapController.camera.visibleBounds;
+    await showOfflineChartsSheet(
+      context,
+      box: (
+        west: bounds.west,
+        south: bounds.south,
+        east: bounds.east,
+        north: bounds.north,
+      ),
+    );
+  }
+
   void _zoomBy(double delta) {
     final camera = _mapController.camera;
     final target = (camera.zoom + delta).clamp(3.0, 18.0);
@@ -144,6 +163,10 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
   Widget build(BuildContext context) {
     final mapState = ref.watch(chartProvider);
     final boatsAsync = ref.watch(boatsProvider);
+    // Offline: clamp the tile layers to the deepest zoom actually on disk, so
+    // zooming in upscales stored tiles instead of going blank.
+    final offlineZoom = ref.watch(offlineChartZoomProvider);
+    final downloading = ref.watch(chartDownloadProvider).isRunning;
 
     // Keep the ports layer in step with its toggle. ref.listen (not a build-time
     // call) so the controller is never mutated mid-build.
@@ -156,38 +179,56 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
       body: Stack(
         children: [
           RepaintBoundary(
-            child: FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                initialCenter: mapState.center,
-                initialZoom: mapState.zoom,
-                minZoom: 3,
-                maxZoom: 18,
-                // Seed the feed as soon as the map is laid out, so ports show
-                // on the initial view without waiting for a pan.
-                onMapReady: () => _onCameraChanged(_mapController.camera),
-                onPositionChanged: (position, _) => _onCameraChanged(position),
-                onMapEvent: _onMapEvent,
-              ),
-              children: [
-                OpenSeaMapTileProvider.baseLayer,
-                if (mapState.showSeamarks) OpenSeaMapTileProvider.seamarkLayer,
-                _ViewportPortMarkers(
-                  ports: _ports,
-                  userPosition: _currentPosition,
+            child: ColoredBox(
+              color: OpenSeaMapTileProvider.waterBackground,
+              child: FlutterMap(
+                mapController: _mapController,
+                options: MapOptions(
+                  initialCenter: mapState.center,
+                  initialZoom: mapState.zoom,
+                  minZoom: 3,
+                  maxZoom: 18,
+                  // Seed the feed as soon as the map is laid out, so ports show
+                  // on the initial view without waiting for a pan.
+                  onMapReady: () => _onCameraChanged(_mapController.camera),
+                  onPositionChanged: (position, _) =>
+                      _onCameraChanged(position),
+                  onMapEvent: _onMapEvent,
                 ),
-                if (_currentPosition != null && mapState.showPosition)
-                  PositionIndicator(position: _currentPosition!),
-                if (boatsAsync case AsyncData(:final value))
-                  _HomePortMarkers(
-                    boats: value,
+                children: [
+                  OpenSeaMapTileProvider.baseLayer(maxNativeZoom: offlineZoom),
+                  if (mapState.showSeamarks)
+                    OpenSeaMapTileProvider.seamarkLayer(
+                      maxNativeZoom: offlineZoom,
+                    ),
+                  _ViewportPortMarkers(
                     ports: _ports,
                     userPosition: _currentPosition,
                   ),
-                if (mapState.showTracks)
+                  if (_currentPosition != null && mapState.showPosition)
+                    PositionIndicator(position: _currentPosition!),
                   if (boatsAsync case AsyncData(:final value))
-                    _TripTracksLayer(boats: value),
-              ],
+                    _HomePortMarkers(
+                      boats: value,
+                      ports: _ports,
+                      userPosition: _currentPosition,
+                    ),
+                  if (mapState.showTracks)
+                    if (boatsAsync case AsyncData(:final value))
+                      _TripTracksLayer(boats: value),
+                ],
+              ),
+            ),
+          ),
+
+          // What the chart under the boat actually is when the signal drops.
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 54,
+            left: 16,
+            right: 16,
+            child: const Align(
+              alignment: Alignment.centerLeft,
+              child: OfflineChartBanner(),
             ),
           ),
 
@@ -367,6 +408,8 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
               ref.read(chartProvider.notifier).togglePorts();
             },
             showPorts: mapState.showPorts,
+            onDownloadCharts: _openOfflineCharts,
+            isDownloadingCharts: downloading,
           ),
         ],
       ),

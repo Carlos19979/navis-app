@@ -26,6 +26,21 @@ class Env {
     defaultValue: 'http://Carloss-MacBook-Pro.local:8080',
   );
 
+  // Chart raster tiles. Defaults are the public OpenStreetMap / OpenSeaMap
+  // servers, whose tile usage policies forbid bulk downloading — point these
+  // at a self-hosted or commercial provider (MapTiler, Thunderforest, …)
+  // before offline chart downloads ship to a real user base. Kept as
+  // dart-defines so swapping provider is a build flag, not a code change.
+  static const chartTileUrl = String.fromEnvironment(
+    'CHART_TILE_URL',
+    defaultValue: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+  );
+
+  static const seamarkTileUrl = String.fromEnvironment(
+    'SEAMARK_TILE_URL',
+    defaultValue: 'https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png',
+  );
+
   static const sentryDsn = String.fromEnvironment('SENTRY_DSN');
 
   /// App version shown in About; injected by the release build (Makefile).

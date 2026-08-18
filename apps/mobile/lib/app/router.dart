@@ -17,6 +17,7 @@ import 'package:navis_mobile/features/boat/presentation/screens/boat_form_screen
 import 'package:navis_mobile/features/boat/presentation/screens/document_detail_screen.dart';
 import 'package:navis_mobile/features/anchor/presentation/screens/anchor_alarm_screen.dart';
 import 'package:navis_mobile/features/charts/presentation/screens/chart_screen.dart';
+import 'package:navis_mobile/features/charts/presentation/screens/offline_charts_screen.dart';
 import 'package:navis_mobile/features/documents/presentation/screens/document_form_screen.dart';
 import 'package:navis_mobile/features/documents/presentation/screens/document_list_screen.dart';
 import 'package:navis_mobile/features/maintenance/presentation/screens/maintenance_screen.dart';
@@ -362,6 +363,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+      // Saved chart areas. Reachable from the chart's download sheet and from
+      // Settings, so the storage they cost is never hidden from the user.
+      GoRoute(
+        path: '/charts/offline',
+        builder: (context, state) => const OfflineChartsScreen(),
       ),
       // The bell's destination: the history of everything the API delivered.
       GoRoute(

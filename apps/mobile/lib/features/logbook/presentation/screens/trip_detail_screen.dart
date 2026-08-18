@@ -162,7 +162,7 @@ class TripDetailScreen extends ConsumerWidget {
                         ),
                       ),
                       children: [
-                        OpenSeaMapTileProvider.baseLayer,
+                        OpenSeaMapTileProvider.baseLayer(),
                         PolylineLayer(
                           polylines: _buildSpeedPolylines(trackPoints),
                         ),
@@ -750,8 +750,8 @@ class _TripMapFullScreen extends StatelessWidget {
               ),
             ),
             children: [
-              OpenSeaMapTileProvider.baseLayer,
-              OpenSeaMapTileProvider.seamarkLayer,
+              OpenSeaMapTileProvider.baseLayer(),
+              OpenSeaMapTileProvider.seamarkLayer(),
               PolylineLayer(polylines: polylines),
               MarkerLayer(
                 markers: [

@@ -1,12 +1,16 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
 import 'package:navis_mobile/core/alarm/alarm_service.dart';
 import 'package:navis_mobile/core/database/local_database.dart';
+import 'package:navis_mobile/core/lifecycle/app_lifecycle.dart';
+import 'package:navis_mobile/core/lifecycle/background_copy.dart';
+import 'package:navis_mobile/core/lifecycle/gps_stream_watchdog.dart';
 import 'package:navis_mobile/core/utils/distance_utils.dart';
 
 /// One nautical mile in metres — `DistanceUtils.calculateDistance` returns NM.
@@ -92,10 +96,30 @@ final anchorWatchProvider =
 });
 
 class AnchorWatchNotifier extends StateNotifier<AnchorWatchState> {
-  AnchorWatchNotifier(this._ref) : super(AnchorWatchState.initial);
+  AnchorWatchNotifier(this._ref) : super(AnchorWatchState.initial) {
+    // The watch is armed and then the phone goes in a pocket — that is the
+    // whole point of it. So it owns its own lifecycle hook rather than relying
+    // on the anchor screen being mounted to re-arm the stream.
+    _watchdog = GpsStreamWatchdog(
+      timeout: _fixTimeout,
+      onRestart: _startStream,
+      clock: _ref.read(gpsWatchdogClockProvider),
+    );
+    _lifecycle =
+        _ref.read(appLifecycleBusProvider).stream.listen(_onLifecycleChange);
+  }
 
   final Ref _ref;
   StreamSubscription<Position>? _sub;
+  StreamSubscription<AppLifecycleState>? _lifecycle;
+
+  /// At anchor the boat veers continuously and `distanceFilter` is 2 m, so
+  /// fixes should never stop for long. Shorter than the recorder's window
+  /// because this is the safety feature: a needless re-subscribe costs nothing,
+  /// a watch that quietly stopped costs the boat.
+  static const _fixTimeout = Duration(seconds: 90);
+
+  late final GpsStreamWatchdog _watchdog;
 
   /// Consecutive out-of-circle fixes before we declare a drag — smooths over
   /// single-fix GPS spikes that the sector reports as a false-alarm source.
@@ -190,6 +214,7 @@ class AnchorWatchNotifier extends StateNotifier<AnchorWatchState> {
 
   /// Fully stops the watch and clears persistence.
   Future<void> disarm() async {
+    _watchdog.stop();
     await _sub?.cancel();
     _sub = null;
     _consecutiveOut = 0;
@@ -237,11 +262,28 @@ class AnchorWatchNotifier extends StateNotifier<AnchorWatchState> {
     }
   }
 
-  /// Re-arms the GPS stream if the OS killed it while backgrounded.
+  /// Re-arms the GPS stream when it has stopped delivering fixes.
+  ///
+  /// The old null check could not help: iOS suspends delivery and Android
+  /// drops the foreground service without either of them closing the stream,
+  /// so `_sub` stays non-null while nothing arrives (see [GpsStreamWatchdog]).
   void ensureStream() {
     if (!state.isArmed) return;
-    if (_sub != null) return;
-    _startStream();
+    _watchdog.check(hasSubscription: _sub != null);
+  }
+
+  void _onLifecycleChange(AppLifecycleState lifecycle) {
+    switch (lifecycle) {
+      // On the way out too: Android only lets a location foreground service
+      // start while the app is visible.
+      case AppLifecycleState.resumed:
+      case AppLifecycleState.paused:
+      case AppLifecycleState.hidden:
+        ensureStream();
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.detached:
+        break;
+    }
   }
 
   // ── GPS ─────────────────────────────────────────────────────────────────
@@ -263,6 +305,7 @@ class AnchorWatchNotifier extends StateNotifier<AnchorWatchState> {
     _sub = Geolocator.getPositionStream(
       locationSettings: _locationSettings(),
     ).listen(_onFix);
+    _watchdog.start();
   }
 
   /// Anchor-watch location settings — distinct from trip recording so we can
@@ -274,10 +317,14 @@ class AnchorWatchNotifier extends StateNotifier<AnchorWatchState> {
         accuracy: LocationAccuracy.high,
         distanceFilter: 2,
         intervalDuration: const Duration(seconds: 5),
-        foregroundNotificationConfig: const ForegroundNotificationConfig(
-          notificationTitle: 'Navis anchor watch is active',
-          notificationText: 'Monitoring your position',
-          notificationIcon: AndroidResource(name: 'ic_launcher'),
+        // Localized, wake-locked and non-dismissible: while the phone is in a
+        // pocket this notification is the only Navis there is.
+        foregroundNotificationConfig: ForegroundNotificationConfig(
+          notificationTitle: BackgroundCopy.anchorWatchTitle,
+          notificationText: BackgroundCopy.anchorWatchBody,
+          notificationIcon: const AndroidResource(name: 'ic_launcher'),
+          enableWakeLock: true,
+          setOngoing: true,
         ),
       );
     }
@@ -304,6 +351,8 @@ class AnchorWatchNotifier extends StateNotifier<AnchorWatchState> {
     // cancelled asynchronously, and the OS/fake stream may deliver one more
     // tick during teardown) — touching `state` then throws. Guard it.
     if (!mounted) return;
+    // Evidence the stream is alive.
+    _watchdog.recordFix();
     final pos = LatLng(position.latitude, position.longitude);
     final anchor = state.anchorPosition;
     if (anchor == null) {
@@ -346,8 +395,8 @@ class AnchorWatchNotifier extends StateNotifier<AnchorWatchState> {
       );
       if (!state.alarmSilenced) {
         unawaited(_alarm.trigger(
-          title: 'Anchor drag alarm',
-          body: 'Your boat has drifted outside the anchor circle.',
+          title: BackgroundCopy.anchorDragTitle,
+          body: BackgroundCopy.anchorDragBody,
         ));
       }
     } else {
@@ -368,6 +417,8 @@ class AnchorWatchNotifier extends StateNotifier<AnchorWatchState> {
 
   @override
   void dispose() {
+    unawaited(_lifecycle?.cancel());
+    _watchdog.stop();
     _sub?.cancel();
     super.dispose();
   }

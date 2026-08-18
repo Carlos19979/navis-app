@@ -144,8 +144,8 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
                 },
               ),
               children: [
-                OpenSeaMapTileProvider.baseLayer,
-                OpenSeaMapTileProvider.seamarkLayer,
+                OpenSeaMapTileProvider.baseLayer(),
+                OpenSeaMapTileProvider.seamarkLayer(),
                 ValueListenableBuilder<List<Port>>(
                   valueListenable: _ports,
                   builder: (context, ports, _) {

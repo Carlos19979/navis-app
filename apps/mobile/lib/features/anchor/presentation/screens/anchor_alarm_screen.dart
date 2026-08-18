@@ -13,6 +13,7 @@ import 'package:navis_mobile/features/anchor/presentation/providers/anchor_watch
 import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
 import 'package:navis_mobile/features/charts/data/tile_provider.dart';
+import 'package:navis_mobile/features/charts/presentation/providers/offline_charts_provider.dart';
 import 'package:navis_mobile/features/charts/presentation/widgets/position_indicator.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
@@ -29,8 +30,7 @@ class AnchorAlarmScreen extends ConsumerStatefulWidget {
   ConsumerState<AnchorAlarmScreen> createState() => _AnchorAlarmScreenState();
 }
 
-class _AnchorAlarmScreenState extends ConsumerState<AnchorAlarmScreen>
-    with WidgetsBindingObserver {
+class _AnchorAlarmScreenState extends ConsumerState<AnchorAlarmScreen> {
   final _mapController = MapController();
   LatLng _center = const LatLng(39.5696, 2.6347); // Palma, until the first fix.
   bool _busy = false;
@@ -38,7 +38,9 @@ class _AnchorAlarmScreenState extends ConsumerState<AnchorAlarmScreen>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
+    // No lifecycle observer here on purpose: AnchorWatchNotifier listens to the
+    // app lifecycle bus itself, because an armed watch must keep running with
+    // the phone in a pocket and this screen closed.
     // Keep the screen awake while the anchor screen is open (foreground watch).
     // Best-effort — a missing wakelock plugin must not break the screen.
     unawaited(WakelockPlus.enable().catchError((_) {}));
@@ -47,17 +49,9 @@ class _AnchorAlarmScreenState extends ConsumerState<AnchorAlarmScreen>
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     unawaited(WakelockPlus.disable().catchError((_) {}));
     _mapController.dispose();
     super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      ref.read(anchorWatchProvider.notifier).ensureStream();
-    }
   }
 
   Future<void> _seedPosition() async {
@@ -123,6 +117,8 @@ class _AnchorAlarmScreenState extends ConsumerState<AnchorAlarmScreen>
 
     final anchor = watch.anchorPosition;
     final current = watch.currentPosition;
+    // Anchored out of range of anything: draw from the stored charts.
+    final offlineZoom = ref.watch(offlineChartZoomProvider);
 
     return NavisScaffold(
       title: l.anchorAlarmTitle,
@@ -140,8 +136,10 @@ class _AnchorAlarmScreenState extends ConsumerState<AnchorAlarmScreen>
                 ),
               ),
               children: [
-                OpenSeaMapTileProvider.baseLayer,
-                OpenSeaMapTileProvider.seamarkLayer,
+                OpenSeaMapTileProvider.baseLayer(maxNativeZoom: offlineZoom),
+                OpenSeaMapTileProvider.seamarkLayer(
+                  maxNativeZoom: offlineZoom,
+                ),
                 if (anchor != null)
                   CircleLayer(
                     circles: [

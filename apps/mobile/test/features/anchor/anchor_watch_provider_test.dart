@@ -10,8 +10,10 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:navis_mobile/core/alarm/alarm_service.dart';
 import 'package:navis_mobile/core/database/local_database.dart';
+import 'package:navis_mobile/core/lifecycle/gps_stream_watchdog.dart';
 import 'package:navis_mobile/features/anchor/presentation/providers/anchor_watch_provider.dart';
 
+import '../../helpers/lifecycle.dart';
 import '../../helpers/local_db.dart';
 
 class MockAlarmService extends Mock implements AlarmService {}
@@ -55,9 +57,15 @@ class FakeGeolocatorPlatform extends GeolocatorPlatform {
           {bool forceLocationManager = false}) async =>
       _pos(current, 5);
 
+  /// How many times the notifier subscribed — the evidence that a dead
+  /// background stream was re-armed.
+  int streamStarts = 0;
+
   @override
-  Stream<Position> getPositionStream({LocationSettings? locationSettings}) =>
-      _controller.stream;
+  Stream<Position> getPositionStream({LocationSettings? locationSettings}) {
+    streamStarts++;
+    return _controller.stream;
+  }
 
   void emit(LatLng at, {double accuracy = 5}) =>
       _controller.add(_pos(at, accuracy));
@@ -72,6 +80,11 @@ void main() {
   late MockAlarmService alarm;
   late FakeGeolocatorPlatform gps;
   late ProviderContainer container;
+  late FakeLifecycle lifecycle;
+
+  /// What the GPS watchdog reads as "now", so a stream can be aged without
+  /// waiting ninety seconds.
+  late DateTime gpsNow;
 
   // Anchor at Palma; ~44 m north is outside a 40 m circle, ~5.5 m north inside.
   const anchor = LatLng(39.5, 2.6);
@@ -98,14 +111,19 @@ void main() {
           body: any(named: 'body'),
         )).thenAnswer((_) async {});
 
+    lifecycle = FakeLifecycle();
+    gpsNow = DateTime(2026, 8, 18, 10);
     container = ProviderContainer(overrides: [
       localDatabaseProvider.overrideWithValue(db),
       alarmServiceProvider.overrideWithValue(alarm),
+      ...lifecycle.overrides,
+      gpsWatchdogClockProvider.overrideWithValue(() => gpsNow),
     ]);
   });
 
   tearDown(() async {
     container.dispose();
+    lifecycle.dispose();
     await gps.close();
     await db.close();
   });
@@ -254,5 +272,55 @@ void main() {
     expect(state.anchorPosition, anchor);
     expect(state.radiusMeters, 55);
     expect(state.boatId, 'boat-1');
+  });
+
+  group('background survival', () {
+    // The bug this covers: re-arming the GPS stream used to live in the anchor
+    // screen's WidgetsBindingObserver, so an armed watch with the phone in a
+    // pocket and the screen closed simply stopped checking for drift.
+    test('re-arms a stream that went quiet while the app was away', () async {
+      gps.current = anchor;
+      final notifier = container.read(anchorWatchProvider.notifier);
+      await notifier.dropAnchor(boatId: 'boat-1');
+      await emit(anchor);
+      expect(gps.streamStarts, 1);
+
+      // Two minutes in a pocket with nothing delivered, no screen mounted.
+      gpsNow = gpsNow.add(const Duration(minutes: 2));
+      lifecycle.leaveAndReturn(away: const Duration(minutes: 2));
+      await lifecycle.settle(container);
+      await pumpEventQueue();
+
+      expect(gps.streamStarts, 2, reason: 'the watch must re-subscribe');
+      expect(container.read(anchorWatchProvider).isArmed, isTrue);
+    });
+
+    test('leaves a stream that is still delivering alone', () async {
+      gps.current = anchor;
+      final notifier = container.read(anchorWatchProvider.notifier);
+      await notifier.dropAnchor(boatId: 'boat-1');
+      await emit(anchor);
+
+      lifecycle.leaveAndReturn(away: const Duration(seconds: 20));
+      await lifecycle.settle(container);
+      await pumpEventQueue();
+
+      expect(gps.streamStarts, 1);
+    });
+
+    test('a disarmed watch is not resurrected by coming back', () async {
+      gps.current = anchor;
+      final notifier = container.read(anchorWatchProvider.notifier);
+      await notifier.dropAnchor(boatId: 'boat-1');
+      await notifier.disarm();
+
+      gpsNow = gpsNow.add(const Duration(minutes: 10));
+      lifecycle.leaveAndReturn();
+      await lifecycle.settle(container);
+      await pumpEventQueue();
+
+      expect(gps.streamStarts, 1);
+      expect(container.read(anchorWatchProvider).isArmed, isFalse);
+    });
   });
 }
