@@ -68,6 +68,15 @@ curl -sSL -o /tmp/sentry-cli "$URL"
 install -m755 /tmp/sentry-cli ~/.local/bin/sentry-cli
 ```
 
+```bash
+# Railway CLI (5.41.2 at time of writing) — no npm needed either
+URL=$(curl -sS https://api.github.com/repos/railwayapp/cli/releases/latest \
+  | grep -o 'https://[^"]*x86_64-unknown-linux-gnu\.tar\.gz' | head -1)
+curl -sSL "$URL" | tar xz -C /tmp
+install -m755 "$(find /tmp -maxdepth 2 -name railway -type f | head -1)" \
+  ~/.local/bin/railway
+```
+
 **Novu and Resend need no CLI** — both are plain REST APIs, so `curl` is the
 tool. Their CLIs exist but only wrap local development studios we do not use.
 
@@ -108,6 +117,9 @@ RESEND_API_KEY=re_...                  # "navis-agent", Full access — see warn
 NOVU_API_KEY_DEV=...                   # one key per environment, no overlap
 NOVU_API_KEY_PROD=...
 NOVU_APP_ID_DEV=3sKV2o8XQR25           # public application identifier, not a secret
+RAILWAY_TOKEN=...                      # PROJECT token, scoped to grateful-perfection/production
+RAILWAY_PROJECT_ID=4215baa2-c1d7-42d2-ab34-4ebad1488e65
+RAILWAY_SERVICE=navis-app              # navis-app-production.up.railway.app
 ```
 
 Names in the dashboards, so they can be found and revoked: Supabase
@@ -205,6 +217,50 @@ The local seed user (`packages/supabase/seed.sql`) is `test@navis.app` /
 `password123`, plan Free, with two boats and dated documents. Local stack only —
 it does not exist in production.
 
+### Railway (Go API runtime)
+
+This is where the API's **runtime logs** live — Sentry only has what the app
+chose to report, so a startup failure or a cron that never fired shows up here
+and nowhere else.
+
+```bash
+set -a; . ~/.config/navis/tokens.env; set +a
+railway status --json                      # project, environments, deployments
+railway logs --service navis-app           # the log stream
+```
+
+A healthy boot looks like this (verified 2026-08-18, right after #87 merged) —
+worth knowing, because it is the only proof the three crons are actually armed:
+
+```
+connected to database
+expiration checker cron started    schedule="daily 08:00 UTC"
+maintenance checker cron started   schedule="daily 08:15 UTC"
+regatta notifier cron started      reminder="daily 09:00 UTC" live="every 15m"
+starting server addr=":8080"
+GET /readyz 200
+```
+
+**Use a project token, not `railway login`.** The CLI's browser login asks for
+`workspace:admin` + `project:admin` + `ssh_keys` — full control of every
+workspace including **members and billing**, and the permission list is fixed
+(the dashboard's "Change" button does not narrow it). A project token from
+*Project Settings → Tokens* is scoped to one project and environment instead.
+
+Two traps when creating that token:
+
+- **The value is shown once and there is no copy button.** The table masks it
+  immediately as `****-6d28`. To capture it without reading it: before creating,
+  stash the UUIDs already in the DOM (`window.__before = new Set(...)`); after
+  creating, take the new UUID whose last four characters match the masked suffix
+  and `navigator.clipboard.writeText` it, then append from the clipboard as in
+  §3. `execCommand('copy')` is blocked from injected script, but
+  `navigator.clipboard.writeText` works.
+- **A project token can read the environment variables**, which are the real
+  production secrets (`SUPABASE_JWT_SECRET`, `NOVU_API_KEY`,
+  `REVENUECAT_WEBHOOK_SECRET`). So never dump `railway variables` — that puts the
+  whole production secret set in a log.
+
 ### Sentry
 
 ```bash
@@ -264,6 +320,18 @@ Resend is wired as Novu's email channel, not called directly by our code, so a
 missing email is usually a Novu-side problem (muted category, missing subscriber
 email, workflow absent) rather than a Resend one. Sender:
 `Navis <notifications@aerolume.app>`.
+
+### Still not reachable from here
+
+No credentials exist for these, so anything about them is guesswork:
+
+- **RevenueCat** — subscriptions, entitlements, and whether the webhook is
+  actually delivering. This matters: the webhook is the only thing that grants a
+  paid tier in production (`PUT /me/plan` is dev-only).
+- **Firebase / FCM** — if a push does not arrive, Novu can prove it triggered,
+  but not that FCM delivered.
+- **App Store Connect / Play Console** — which is also where TestFlight lives, so
+  release builds stay a human job.
 
 ---
 
