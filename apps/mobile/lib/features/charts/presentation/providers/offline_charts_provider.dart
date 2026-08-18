@@ -21,6 +21,7 @@ class ChartRegionsNotifier extends AsyncNotifier<List<ChartRegion>> {
 
   Future<void> reload() async {
     state = AsyncData(await ref.read(chartTileStoreProvider).regions());
+    ref.invalidate(chartStorageBytesProvider);
   }
 
   /// Deletes a region and frees its tiles. Optimistic: the row disappears at
@@ -30,6 +31,7 @@ class ChartRegionsNotifier extends AsyncNotifier<List<ChartRegion>> {
     state = AsyncData(previous.where((r) => r.id != id).toList());
     try {
       await ref.read(chartTileStoreProvider).deleteRegion(id);
+      ref.invalidate(chartStorageBytesProvider);
     } on Exception {
       state = AsyncData(previous);
       rethrow;
@@ -38,9 +40,12 @@ class ChartRegionsNotifier extends AsyncNotifier<List<ChartRegion>> {
 }
 
 /// Bytes the chart tiles occupy, downloaded regions and browse cache together.
-final chartStorageBytesProvider = FutureProvider<int>((ref) async {
-  // Recomputed whenever the region list changes — a download or a delete.
-  ref.watch(chartRegionsProvider);
+///
+/// Refreshed explicitly by [ChartRegionsNotifier] after a download or a delete,
+/// rather than by watching the region list: watching an AsyncNotifier makes
+/// this recompute the instant that list settles, which strands the in-flight
+/// future anyone was already awaiting.
+final chartStorageBytesProvider = FutureProvider<int>((ref) {
   return ref.watch(chartTileStoreProvider).totalBytes();
 });
 

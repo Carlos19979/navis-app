@@ -111,6 +111,8 @@ void main() {
 
     expect(container.read(chartRegionsProvider).valueOrNull, isEmpty);
     expect(await store.has(ChartTileLayer.base, _inside), isFalse);
+    // And the storage figure follows: the delete invalidates it explicitly.
+    expect(await container.read(chartStorageBytesProvider.future), 0);
   });
 
   test('reports the storage the charts occupy', () async {
