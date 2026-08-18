@@ -269,18 +269,17 @@ Five merged phases getting the app from "feature-complete" to launchable:
 
 ## Test data (local DB)
 - `test@navis.app` / `password123` → owner of seeded boats. Plan defaults to **free** after `db reset`; flip via the dev switcher or the RevenueCat webhook.
-- `crew@navis.app` / `password123` → **member of boat "Rayo Veloz"** and the public group "Club Náutico de Prueba".
 
 ## Pending / next steps
-1. **RevenueCat / payments external config** (code done): create products `navis_pro_monthly` (3,99 €) + `navis_pro_yearly` (29,99 €) in App Store Connect / Play Console; RevenueCat entitlement `pro` + webhook (`REVENUECAT_WEBHOOK_SECRET`) → `…/api/v1/webhooks/revenuecat`; `--dart-define REVENUECAT_IOS_KEY/REVENUECAT_ANDROID_KEY`; run `flutter pub get` (adds `purchases_flutter`); device **sandbox** purchase test.
-2. **Reminder delivery**: `NOVU_API_KEY` + Novu `document-expiry` workflow with an **Email (Resend)** step (works without FCM). Other workflows (`regatta-*`, `group-*`, `event-live`). FCM push (`GoogleService-Info.plist`) as fast-follow; Novu forwards `type`/`id` for deep-links.
+1. **RevenueCat / payments external config** (code done): create the 4 products (`navis_plus_monthly` 4,99 € / `navis_plus_yearly` 39,99 € / `navis_pro_monthly` 8,99 € / `navis_pro_yearly` 69,99 €) in App Store Connect / Play Console; RevenueCat entitlements `plus` + `pro` + webhook (`REVENUECAT_WEBHOOK_SECRET`) → `…/api/v1/webhooks/revenuecat`; `--dart-define REVENUECAT_IOS_KEY/REVENUECAT_ANDROID_KEY`; device **sandbox** purchase test.
+2. **Reminder delivery**: `NOVU_API_KEY` + the 5 grouped workflows (`reminders` for both crons, `regatta-updates`, `group-updates`, `boat-activity`, `event-live`), each Push (FCM) → Email (Resend). Novu forwards `type`/`id` for deep-links.
 3. **F1 external config**: Supabase Apple+Google providers, Apple Developer + Google Cloud client IDs, iOS "Sign in with Apple" capability, re-add iOS URL scheme. Native Apple sheet (App Store requirement) — **blocking for App Store approval alongside IAP review**.
 4. **F2a** trip image card (capture a stats card → share image).
 5. ✅ **Maintenance schedules + reminders** — DONE (#47, cron `maintenance-due`).
-   Novu config: add a `maintenance-due` workflow (Push+Email) alongside the rest.
+   Both crons trigger the single `reminders` workflow — no per-cron workflow.
 6. **Expenses screen redesign** (month/year + category/date filters) — planned, not built.
-7. **Anchor alarm (B1)** — next big Pro feature; planned, not built (needs iOS
-   background location + critical-alert design).
+7. ✅ **Anchor alarm (B1)** — DONE (`features/anchor/`, `core/alarm/alarm_service.dart`).
+   Gated Plus+. NOT an iOS Critical Alert (needs Apple's entitlement — deferred).
 8. (If float plan is ever revived: notify the **shore contact** via SMS/email — not the owner — with a clear "not a rescue system" disclaimer.)
 
 ## Local run reminder
