@@ -97,17 +97,22 @@ chmod 600 ~/.config/navis/tokens.env
 ```
 
 ```bash
-# ~/.config/navis/tokens.env
-SUPABASE_ACCESS_TOKEN=sbp_...        # account-wide; see the warning below
-SUPABASE_PROJECT_REF=...             # from the project URL
-SUPABASE_DB_URL=postgresql://...     # only if direct SQL is needed
-SENTRY_AUTH_TOKEN=sntrys_...
-SENTRY_ORG=...
-SENTRY_PROJECT=...
-RESEND_API_KEY=re_...
-NOVU_API_KEY_DEV=...
+# ~/.config/navis/tokens.env  — the set that exists today (2026-08-18)
+SUPABASE_ACCESS_TOKEN=sbp_...          # account-wide, EXPIRES IN 30 DAYS
+SUPABASE_PROJECT_REF=igyhbyxefbrtinerllkl   # the only project: navis-prod, eu-west-1
+SENTRY_AUTH_TOKEN=sntrys_...           # scoped read-only (see below)
+SENTRY_ORG=metaplain
+SENTRY_PROJECT_FLUTTER=flutter         # the two projects in the org
+SENTRY_PROJECT_GO=go
+RESEND_API_KEY=re_...                  # "navis-agent", Full access — see warning
+NOVU_API_KEY_DEV=...                   # one key per environment, no overlap
 NOVU_API_KEY_PROD=...
+NOVU_APP_ID_DEV=3sKV2o8XQR25           # public application identifier, not a secret
 ```
+
+Names in the dashboards, so they can be found and revoked: Supabase
+`navis-agent-30d`, Sentry `navis-agent-readonly`, Resend `navis-agent`. The Novu
+keys were **not** created — they already existed and were only copied.
 
 Use it per command rather than exporting it into a long-lived shell:
 
@@ -146,12 +151,17 @@ clearClipboardHistory` clears it.
 
 Minimum useful scopes, where scoping exists:
 
-| Service | Token | Scope that suffices |
+| Service | Token | Scope actually used |
 |---|---|---|
-| Supabase | Personal Access Token | not scopeable (account-wide) |
-| Sentry | Auth Token | `org:read`, `project:read`, `event:read` |
-| Resend | API Key | **Full access** — a sending-only key cannot list deliveries |
-| Novu | API Key | one per environment (Development / Production) |
+| Supabase | Personal Access Token | not scopeable (account-wide) — so give it a **30-day expiry**, which the dialog offers by default |
+| Sentry | Auth Token | Project=Read, Issue & Event=Read, Organization=Read, everything else No Access |
+| Resend | API Key | **Full access**, because there is no read-only tier — and that key can also *send mail from the verified domain* |
+| Novu | API Key | one per environment; the key alone decides which |
+
+The Resend row is the one to think about: listing deliveries and sending mail as
+`notifications@aerolume.app` are the same permission. If an agent only needs to
+know whether a message went out, the dashboard's Logs page answers that without a
+key at all.
 
 ---
 
@@ -179,8 +189,9 @@ psql "$SUPABASE_DB_URL" -c "
   on conflict (id) do update set plan = 'pro';"
 ```
 
-`psql` is not installed here and needs root. Without it, the management API takes
-SQL directly:
+`psql` is not installed here and needs root — and it turns out not to be needed:
+the management API runs SQL directly, which is how the plan-per-user query above
+was actually answered (verified 2026-08-18):
 
 ```bash
 curl -sS -X POST \
