@@ -1,48 +1,5 @@
 import 'package:navis_mobile/features/logbook/domain/entities/trip.dart';
 
-/// The slice of the logbook the statistics screen is showing: everything, a
-/// single year, or a single month of a year.
-///
-/// One type for the three cases so the aggregation, the header and the chart
-/// all agree on what "the period" is, instead of each recomputing its own
-/// filter (the old screen hard-coded "all time" and "this year" and could show
-/// nothing else).
-class StatsPeriod {
-  const StatsPeriod.allTime()
-      : year = null,
-        month = null;
-  const StatsPeriod.year(int this.year) : month = null;
-  const StatsPeriod.month(int this.year, int this.month);
-
-  /// Null for all time.
-  final int? year;
-
-  /// 1-12, null when the whole year is selected.
-  final int? month;
-
-  bool get isAllTime => year == null;
-  bool get isWholeYear => year != null && month == null;
-
-  bool contains(DateTime when) {
-    if (year == null) return true;
-    if (when.year != year) return false;
-    return month == null || when.month == month;
-  }
-
-  StatsPeriod withMonth(int? month) =>
-      month == null ? StatsPeriod.year(year!) : StatsPeriod.month(year!, month);
-
-  @override
-  bool operator ==(Object other) =>
-      other is StatsPeriod && other.year == year && other.month == month;
-
-  @override
-  int get hashCode => Object.hash(year, month);
-
-  @override
-  String toString() => 'StatsPeriod(year: $year, month: $month)';
-}
-
 /// A port and how many times it appears in the period, either as a departure
 /// or an arrival.
 class PortVisits {

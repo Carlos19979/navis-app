@@ -239,6 +239,113 @@ class AppLocalizationsEn extends AppLocalizations {
   String get costMonthlySpend => 'Monthly spend';
 
   @override
+  String get costTotalForPeriod => 'Total cost';
+
+  @override
+  String get costBreakdownExpenses => 'Expenses';
+
+  @override
+  String get costBreakdownMaintenance => 'Maintenance';
+
+  @override
+  String get costBreakdownDocuments => 'Document renewals';
+
+  @override
+  String costPeriodUsage(String nm, int trips) {
+    String _temp0 = intl.Intl.pluralLogic(
+      trips,
+      locale: localeName,
+      other: '$trips trips',
+      one: '1 trip',
+    );
+    return '$nm NM · $_temp0';
+  }
+
+  @override
+  String costVsPrevious(String delta, String period) {
+    return '$delta vs. $period';
+  }
+
+  @override
+  String get costRunRateTitle => 'Cost run rate';
+
+  @override
+  String costPerMonthValue(String value) {
+    return '$value/month';
+  }
+
+  @override
+  String costPerYearValue(String value) {
+    return '$value/year';
+  }
+
+  @override
+  String costRunRateBasis(int months) {
+    String _temp0 = intl.Intl.pluralLogic(
+      months,
+      locale: localeName,
+      other: 'Over $months months with records',
+      one: 'Over 1 month with records',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get costPerEngineHourLabel => 'Cost / engine h';
+
+  @override
+  String get costLitersPurchased => 'Litres bought';
+
+  @override
+  String get costFixedVsVariable => 'Fixed and variable';
+
+  @override
+  String get costFixed => 'Fixed';
+
+  @override
+  String get costVariable => 'Variable';
+
+  @override
+  String get costFixedExplainer =>
+      'Fixed costs (berth, insurance, paperwork) are owed even if the boat never leaves the dock.';
+
+  @override
+  String get costTrend => 'Trend';
+
+  @override
+  String costTrendAverage(String value) {
+    return 'Average: $value';
+  }
+
+  @override
+  String get costViewExpenses => 'View expenses';
+
+  @override
+  String get costEmptyMessage => 'No costs yet';
+
+  @override
+  String get costEmptyDescription =>
+      'Log an expense, a maintenance job with a cost or a document renewal and you will see what your boat costs here.';
+
+  @override
+  String get costEmptyAction => 'Add an expense';
+
+  @override
+  String get costLoadError => 'Could not load costs';
+
+  @override
+  String get costNoSpendInPeriod => 'No costs in this period';
+
+  @override
+  String anomalyExcessCost(String value) {
+    return '$value of extra fuel';
+  }
+
+  @override
+  String get anomaliesExplainer =>
+      'Trips that burned far more fuel per mile than this boat\'s average.';
+
+  @override
   String get paywallReasonCostAnalytics =>
       'Unlock cost intelligence with Navis Pro';
 
@@ -677,7 +784,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hoursLabel => 'Hours';
 
   @override
-  String get allTime => 'All Time';
+  String get allTime => 'All time';
 
   @override
   String get totalDistance => 'Total Distance';
@@ -1032,7 +1139,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get passwordResetSent =>
-      'Password reset email sent. Check your inbox.';
+      'If an account exists for that address, we have sent it a link. Check your spam folder too.';
 
   @override
   String get failedToSendResetEmail => 'Failed to send reset email';
@@ -1828,7 +1935,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noPublicGroups => 'No public groups to discover.';
 
   @override
-  String get cancelTrip => 'Cancel trip';
+  String get cancelTrip => 'Discard trip';
 
   @override
   String get cancelTripRegattaWarning =>
@@ -2495,7 +2602,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get costAvgPricePerLiter => 'Avg fuel price';
+  String get costAvgPricePerLiter => 'Avg price';
 
   @override
   String get moderationReport => 'Report';
@@ -2808,7 +2915,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String deleteAreaConfirm(String name) {
-    return 'The charts saved for "$name" will be removed from this device.';
+    return 'The charts saved for \"$name\" will be removed from this device.';
   }
 
   @override
@@ -2825,4 +2932,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bgAnchorWatchBody => 'Watching your position - tap to open';
+
+  @override
+  String get authLinkOpening => 'Opening Navis...';
+
+  @override
+  String get authLinkExpiredTitle => 'This link no longer works';
+
+  @override
+  String get authLinkExpiredBody =>
+      'Links expire after an hour and can only be used once. Ask for a new one from \"Forgot Password?\".';
 }

@@ -25,7 +25,7 @@ import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/boat_dashboard_screen.dart';
 import 'package:navis_mobile/features/community/presentation/screens/community_screen.dart';
-import 'package:navis_mobile/features/cost/data/cost_repository.dart';
+import 'package:navis_mobile/features/cost/domain/entities/cost_analytics.dart';
 import 'package:navis_mobile/features/cost/presentation/providers/cost_provider.dart';
 import 'package:navis_mobile/features/cost/presentation/screens/cost_analytics_screen.dart';
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
@@ -230,47 +230,8 @@ void main() {
 
   // (d) Cost analytics.
   testWidgets('appstore — cost analytics', (tester) async {
-    const cost = CostAnalytics(
-      totalSpend: 1840,
-      expenseSpend: 1200,
-      maintenanceSpend: 640,
-      byCategory: [
-        CostBreakdownItem(key: 'combustible', amount: 720),
-        CostBreakdownItem(key: 'maintenance', amount: 640),
-        CostBreakdownItem(key: 'amarre', amount: 320),
-        CostBreakdownItem(key: 'seguro', amount: 160),
-      ],
-      monthly: [
-        CostMonthly(month: '2025-08', amount: 210),
-        CostMonthly(month: '2025-09', amount: 90),
-        CostMonthly(month: '2025-10', amount: 0),
-        CostMonthly(month: '2025-11', amount: 340),
-        CostMonthly(month: '2025-12', amount: 120),
-        CostMonthly(month: '2026-01', amount: 60),
-        CostMonthly(month: '2026-02', amount: 0),
-        CostMonthly(month: '2026-03', amount: 180),
-        CostMonthly(month: '2026-04', amount: 240),
-        CostMonthly(month: '2026-05', amount: 150),
-        CostMonthly(month: '2026-06', amount: 90),
-        CostMonthly(month: '2026-07', amount: 90),
-      ],
-      totalDistanceNm: 460,
-      completedTrips: 12,
-      totalFuelL: 180,
-      costPerNm: 4,
-      costPerTrip: 153,
-      fuelPerNm: 0.39,
-    );
-    final anomalies = [
-      Anomaly(
-        tripId: 't1',
-        date: DateTime(2026, 6, 20),
-        metric: 'fuel_per_nm',
-        value: 0.6,
-        baseline: 0.39,
-        deviationPct: 52,
-      ),
-    ];
+    final cost = _sampleCost();
+    final anomalies = _sampleAnomalies();
     await _pumpAppStore(
       tester,
       const CostAnalyticsScreen(boatId: 'boat-1'),
@@ -335,3 +296,111 @@ void main() {
     );
   });
 }
+
+/// A season on a Mediterranean sailboat: a berth and insurance every year, fuel
+/// and maintenance when it is used, and a document renewal in the spring.
+CostAnalytics _sampleCost() => CostAnalytics(months: [
+      _month('2025-08',
+          fuel: 180,
+          liters: 110,
+          berth: 95,
+          trips: 4,
+          nm: 168,
+          fuelL: 62,
+          engineH: 9),
+      _month('2025-09',
+          fuel: 90,
+          liters: 56,
+          berth: 95,
+          trips: 2,
+          nm: 74,
+          fuelL: 31,
+          engineH: 5),
+      _month('2025-10', berth: 95),
+      _month('2025-11', berth: 95, maintenance: 340),
+      _month('2025-12', berth: 95),
+      _month('2026-01', berth: 95, insurance: 420),
+      _month('2026-02', berth: 95),
+      _month('2026-03', berth: 95, maintenance: 180, documents: 210),
+      _month('2026-04',
+          fuel: 130,
+          liters: 78,
+          berth: 95,
+          trips: 3,
+          nm: 96,
+          fuelL: 38,
+          engineH: 6),
+      _month('2026-05',
+          fuel: 210,
+          liters: 126,
+          berth: 95,
+          trips: 5,
+          nm: 214,
+          fuelL: 74,
+          engineH: 11),
+      _month('2026-06',
+          fuel: 160,
+          liters: 95,
+          berth: 95,
+          trips: 4,
+          nm: 152,
+          fuelL: 55,
+          engineH: 8),
+      _month('2026-07',
+          fuel: 240,
+          liters: 142,
+          berth: 95,
+          maintenance: 120,
+          trips: 6,
+          nm: 268,
+          fuelL: 92,
+          engineH: 14),
+    ]);
+
+/// One month of the sample, with the fixed/variable split the API computes.
+CostMonth _month(
+  String month, {
+  double fuel = 0,
+  double liters = 0,
+  double berth = 0,
+  double insurance = 0,
+  double maintenance = 0,
+  double documents = 0,
+  int trips = 0,
+  double nm = 0,
+  double fuelL = 0,
+  double engineH = 0,
+}) {
+  return CostMonth(
+    month: month,
+    byCategory: {
+      if (fuel > 0) 'combustible': fuel,
+      if (berth > 0) 'amarre': berth,
+      if (insurance > 0) 'seguro': insurance,
+      if (maintenance > 0) 'maintenance': maintenance,
+      if (documents > 0) 'documents': documents,
+    },
+    fixed: berth + insurance + documents,
+    variable: fuel + maintenance,
+    fuelAmount: fuel,
+    fuelLiters: liters,
+    trips: trips,
+    distanceNm: nm,
+    fuelL: fuelL,
+    engineHours: engineH,
+    hours: nm > 0 ? nm / 5.5 : 0,
+  );
+}
+
+List<Anomaly> _sampleAnomalies() => [
+      Anomaly(
+        tripId: 't1',
+        date: DateTime(2026, 6, 20),
+        metric: 'fuel_per_nm',
+        value: 0.6,
+        baseline: 0.39,
+        deviationPct: 52,
+        distanceNm: 38,
+        excessLiters: 8,
+      ),
+    ];

@@ -5,40 +5,6 @@ import 'package:navis_mobile/features/logbook/domain/trip_period_stats.dart';
 import '../../helpers/helpers.dart';
 
 void main() {
-  group('StatsPeriod', () {
-    test('all time contains everything', () {
-      const period = StatsPeriod.allTime();
-
-      expect(period.contains(DateTime(2019, 1, 12)), isTrue);
-      expect(period.contains(DateTime(2026, 12, 31)), isTrue);
-      expect(period.isAllTime, isTrue);
-    });
-
-    test('a year contains only that year', () {
-      const period = StatsPeriod.year(2025);
-
-      expect(period.contains(DateTime(2025, 1, 14)), isTrue);
-      expect(period.contains(DateTime(2025, 12, 31, 23, 59)), isTrue);
-      expect(period.contains(DateTime(2026, 1, 14)), isFalse);
-      expect(period.contains(DateTime(2024, 12, 31)), isFalse);
-    });
-
-    test('a month contains only that month of that year', () {
-      const period = StatsPeriod.month(2025, 7);
-
-      expect(period.contains(DateTime(2025, 7, 15)), isTrue);
-      expect(period.contains(DateTime(2025, 8, 3)), isFalse);
-      expect(period.contains(DateTime(2024, 7, 15)), isFalse);
-    });
-
-    test('withMonth switches between a month and the whole year', () {
-      const year = StatsPeriod.year(2025);
-
-      expect(year.withMonth(3), const StatsPeriod.month(2025, 3));
-      expect(year.withMonth(3).withMonth(null), const StatsPeriod.year(2025));
-    });
-  });
-
   group('aggregateTrips', () {
     test('sums the figures of the trips it is given', () {
       final stats = aggregateTrips([

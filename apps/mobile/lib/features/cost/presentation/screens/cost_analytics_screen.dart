@@ -1,19 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
+import 'package:navis_mobile/core/utils/money_utils.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/anomaly/data/anomaly_repository.dart';
-import 'package:navis_mobile/features/cost/data/cost_repository.dart';
+import 'package:navis_mobile/features/cost/domain/cost_period_stats.dart';
+import 'package:navis_mobile/features/cost/domain/entities/cost_analytics.dart';
 import 'package:navis_mobile/features/cost/presentation/providers/cost_provider.dart';
+import 'package:navis_mobile/features/cost/presentation/widgets/cost_sections.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
+import 'package:navis_mobile/shared/models/analytics_period.dart';
+import 'package:navis_mobile/shared/widgets/navis_bar_chart.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
+import 'package:navis_mobile/shared/widgets/navis_empty_state.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
+import 'package:navis_mobile/shared/widgets/navis_period_picker.dart';
 import 'package:navis_mobile/shared/widgets/navis_scaffold.dart';
+import 'package:navis_mobile/shared/widgets/navis_section.dart';
 import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
+import 'package:navis_mobile/shared/widgets/navis_stat_tile.dart';
 
+/// What the boat costs, for whatever period the owner picks.
+///
+/// The previous version answered one question badly: a single "total spend" that
+/// silently meant every record ever, next to a €/NM that divided that lifetime
+/// total by a lifetime of miles. Everything is now computed for the selected
+/// period, from a month series fetched once — so the chips cost no round trip —
+/// and the headline always shows the sources it is made of.
 class CostAnalyticsScreen extends ConsumerWidget {
   const CostAnalyticsScreen({super.key, required this.boatId});
 
@@ -29,119 +46,320 @@ class CostAnalyticsScreen extends ConsumerWidget {
       showBack: true,
       body: async.when(
         loading: () => const NavisShimmer(itemHeight: 96),
-        error: (e, _) => NavisErrorWidget(
-          message: e.toString(),
+        // The exception is never shown: a Dio message is not something an owner
+        // can act on, and the house rule is a clear message plus a retry.
+        error: (_, __) => NavisErrorWidget(
+          message: l.costLoadError,
           onRetry: () => ref.invalidate(boatCostAnalyticsProvider(boatId)),
         ),
-        data: (c) => ListView(
-          padding: const EdgeInsets.all(Dimens.spaceLg),
-          children: [
-            _AnomaliesSection(boatId: boatId),
-            Row(
-              children: [
-                _Kpi(
-                  label: l.costTotalSpend,
-                  value: _money(c.totalSpend),
-                  color: AppColors.cyan,
-                ),
-                const SizedBox(width: Dimens.spaceSm),
-                _Kpi(
-                  label: l.costPerNmLabel,
-                  value: c.costPerNm == null ? '—' : _money(c.costPerNm!),
-                  color: AppColors.green,
-                ),
-              ],
-            ),
-            const SizedBox(height: Dimens.spaceSm),
-            Row(
-              children: [
-                _Kpi(
-                  label: l.costPerTripLabel,
-                  value: c.costPerTrip == null ? '—' : _money(c.costPerTrip!),
-                  color: AppColors.amber,
-                ),
-                const SizedBox(width: Dimens.spaceSm),
-                _Kpi(
-                  label: l.costFuelEfficiency,
-                  value: c.fuelPerNm == null
-                      ? '—'
-                      : '${c.fuelPerNm!.toStringAsFixed(2)} L',
-                  color: AppColors.cyan,
-                ),
-              ],
-            ),
-            if (c.avgPricePerLiter != null) ...[
-              const SizedBox(height: Dimens.spaceSm),
-              NavisCard(
-                child: Row(
-                  children: [
-                    const Icon(Icons.local_gas_station_rounded,
-                        color: AppColors.cyan, size: 20),
-                    const SizedBox(width: Dimens.spaceMd),
-                    Expanded(
-                      child: Text(
-                        l.costAvgPricePerLiter,
-                        style: TextStyle(color: context.txtSecondary),
-                      ),
-                    ),
-                    Text(
-                      '${c.avgPricePerLiter!.toStringAsFixed(2)} €/L',
-                      style: const TextStyle(
-                        color: AppColors.cyan,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            const SizedBox(height: Dimens.spaceLg),
-            if (c.byCategory.isNotEmpty) ...[
-              _SectionTitle(l.costByCategory),
-              const SizedBox(height: Dimens.spaceSm),
-              _CategoryBreakdown(items: c.byCategory, total: c.totalSpend),
-              const SizedBox(height: Dimens.spaceLg),
-            ],
-            _SectionTitle(l.costMonthlySpend),
-            const SizedBox(height: Dimens.spaceSm),
-            _MonthlyChart(monthly: c.monthly),
-          ],
-        ),
+        data: (analytics) => analytics.isEmpty
+            ? _EmptyCosts(boatId: boatId)
+            : _CostBody(boatId: boatId, analytics: analytics),
       ),
     );
   }
 }
 
-String _money(double v) => '${v.toStringAsFixed(0)} €';
-
-/// Fuel-efficiency anomalies, shown only when there are any (Pro insight).
-class _AnomaliesSection extends ConsumerWidget {
-  const _AnomaliesSection({required this.boatId});
+/// No expense, no maintenance cost, no renewal: there is nothing to slice. The
+/// old screen showed `0 €` and three dashes here.
+class _EmptyCosts extends StatelessWidget {
+  const _EmptyCosts({required this.boatId});
 
   final String boatId;
 
   @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return NavisEmptyState(
+      icon: Icons.savings_outlined,
+      message: l.costEmptyMessage,
+      description: l.costEmptyDescription,
+      actionLabel: l.costEmptyAction,
+      onAction: () => context.push('/boats/$boatId/maintenance'),
+    );
+  }
+}
+
+class _CostBody extends ConsumerWidget {
+  const _CostBody({required this.boatId, required this.analytics});
+
+  final String boatId;
+  final CostAnalytics analytics;
+
+  @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
-    final async = ref.watch(boatAnomaliesProvider(boatId));
-    final anomalies = async.valueOrNull ?? const <Anomaly>[];
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    final years = yearsWithCosts(analytics);
+    var period = ref.watch(costPeriodProvider);
+
+    // A year can disappear from under the selection when the list reloads.
+    if (period.year != null && !years.contains(period.year)) {
+      period = const AnalyticsPeriod.allTime();
+    }
+    final stats = costStatsFor(analytics, period);
+
+    void select(AnalyticsPeriod next) =>
+        ref.read(costPeriodProvider.notifier).state = next;
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(
+        Dimens.spaceLg,
+        Dimens.spaceMd,
+        Dimens.spaceLg,
+        Dimens.spaceXxl,
+      ),
+      children: [
+        NavisPeriodPicker(
+          period: period,
+          years: years,
+          monthsWithData: period.year == null
+              ? const {}
+              : monthsWithCosts(analytics, period.year!),
+          onChanged: select,
+        ),
+        const SizedBox(height: Dimens.spaceLg),
+        CostHeadlineCard(period: period, stats: stats, locale: locale),
+        if (!stats.hasAnyData) ...[
+          const SizedBox(height: Dimens.spaceMd),
+          NavisCard(
+            child: Text(
+              l.costNoSpendInPeriod,
+              style: TextStyle(color: context.txtSecondary),
+            ),
+          ),
+        ],
+        if (stats.monthlyRunRate != null) ...[
+          const SizedBox(height: Dimens.spaceMd),
+          CostRunRateCard(stats: stats, locale: locale),
+        ],
+        if (stats.hasAnyData) ...[
+          const SizedBox(height: Dimens.spaceMd),
+          _RatioGrid(stats: stats, locale: locale),
+        ],
+        if (stats.hasSpend) ...[
+          const SizedBox(height: Dimens.spaceMd),
+          CostFixedVariableCard(stats: stats, locale: locale),
+          NavisSectionHeader(
+            label: l.costByCategory,
+            trailing: TextButton(
+              onPressed: () => context.push('/boats/$boatId/maintenance'),
+              child: Text(l.costViewExpenses),
+            ),
+          ),
+          CostCategoryCard(stats: stats, locale: locale),
+        ],
+        // A single month has no trend of its own — the chart is the way back up
+        // to the year.
+        if (period.month == null) ...[
+          NavisSectionHeader(label: l.costTrend),
+          _TrendChart(
+            analytics: analytics,
+            period: period,
+            locale: locale,
+            onSelect: select,
+          ),
+        ],
+        _Anomalies(
+            boatId: boatId, period: period, stats: stats, locale: locale),
+      ],
+    );
+  }
+}
+
+/// The per-unit figures. Each is `—` when its denominator is missing, rather
+/// than a confident zero.
+class _RatioGrid extends StatelessWidget {
+  const _RatioGrid({required this.stats, required this.locale});
+
+  final CostPeriodStats stats;
+  final String locale;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+
+    String money(double? value) =>
+        value == null ? '—' : Money.format(locale, value);
+
+    return NavisStatGrid(
+      children: [
+        NavisStatTile(
+          icon: Icons.straighten_rounded,
+          value: money(stats.costPerNm),
+          label: l.costPerNmLabel,
+          color: AppColors.cyan,
+        ),
+        NavisStatTile(
+          icon: Icons.route_rounded,
+          value: money(stats.costPerTrip),
+          label: l.costPerTripLabel,
+          color: AppColors.green,
+        ),
+        NavisStatTile(
+          icon: Icons.engineering_rounded,
+          value: money(stats.costPerEngineHour),
+          label: l.costPerEngineHourLabel,
+          color: AppColors.amber,
+        ),
+        NavisStatTile(
+          icon: Icons.opacity_rounded,
+          value: stats.litresPerNm == null
+              ? '—'
+              : '${stats.litresPerNm!.toStringAsFixed(2)} L/NM',
+          label: l.costFuelEfficiency,
+          color: AppColors.cyan,
+        ),
+        NavisStatTile(
+          icon: Icons.local_gas_station_rounded,
+          value: stats.pricePerLiter == null
+              ? '—'
+              : Money.perUnit(locale, stats.pricePerLiter!, 'L', precise: true),
+          label: l.costAvgPricePerLiter,
+          color: AppColors.amber,
+        ),
+        NavisStatTile(
+          icon: Icons.water_drop_outlined,
+          value: stats.fuelLiters > 0
+              ? '${stats.fuelLiters.toStringAsFixed(0)} L'
+              : '—',
+          label: l.costLitersPurchased,
+          color: AppColors.green,
+        ),
+      ],
+    );
+  }
+}
+
+/// Spend over time: one bar per year when looking at everything, one per month
+/// inside a year. Tapping a bar drills in, which is also how the month filter is
+/// discovered.
+class _TrendChart extends StatelessWidget {
+  const _TrendChart({
+    required this.analytics,
+    required this.period,
+    required this.locale,
+    required this.onSelect,
+  });
+
+  final CostAnalytics analytics;
+  final AnalyticsPeriod period;
+  final String locale;
+  final ValueChanged<AnalyticsPeriod> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final bars = period.isAllTime
+        ? _yearBars(context)
+        : _monthBars(context, period.year!);
+    if (bars.isEmpty) return const SizedBox.shrink();
+
+    final withValue = bars.where((b) => b.value > 0).toList();
+    final average = withValue.isEmpty
+        ? null
+        : withValue.fold<double>(0, (sum, b) => sum + b.value) /
+            withValue.length;
+
+    return NavisBarChart(
+      bars: bars,
+      averageValue: average,
+      averageLabel: average == null
+          ? null
+          : l.costTrendAverage(Money.format(locale, average)),
+    );
+  }
+
+  List<NavisBar> _yearBars(BuildContext context) {
+    final byYear = <int, double>{};
+    for (final month in analytics.months) {
+      byYear[month.year] = (byYear[month.year] ?? 0) + month.total;
+    }
+    final years = byYear.keys.toList()..sort();
+    return [
+      for (final year in years)
+        NavisBar(
+          label: '$year',
+          value: byYear[year]!,
+          valueLabel: Money.format(locale, byYear[year]!),
+          onTap: () => onSelect(AnalyticsPeriod.year(year)),
+        ),
+    ];
+  }
+
+  List<NavisBar> _monthBars(BuildContext context, int year) {
+    final names = navisShortMonthNames(context);
+    final byMonth = <int, double>{};
+    for (final month in analytics.months) {
+      if (month.year != year) continue;
+      final index = int.tryParse(month.month.split('-').last);
+      if (index != null) byMonth[index] = month.total;
+    }
+    return [
+      for (var m = 1; m <= 12; m++)
+        if (byMonth.containsKey(m))
+          NavisBar(
+            label: names[m - 1],
+            value: byMonth[m]!,
+            valueLabel: Money.format(locale, byMonth[m]!),
+            semanticsLabel: '${names[m - 1]} $year: '
+                '${Money.format(locale, byMonth[m]!)}',
+            onTap: () => onSelect(AnalyticsPeriod.month(year, m)),
+          ),
+    ];
+  }
+}
+
+/// Fuel-efficiency anomalies of the period, priced. Shown only when there are
+/// any (a Free plan gets a 402, which stays invisible here).
+class _Anomalies extends ConsumerWidget {
+  const _Anomalies({
+    required this.boatId,
+    required this.period,
+    required this.stats,
+    required this.locale,
+  });
+
+  /// Enough to see a pattern without turning the card into a list screen.
+  static const _maxShown = 5;
+
+  final String boatId;
+  final AnalyticsPeriod period;
+  final CostPeriodStats stats;
+  final String locale;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
+    final all = ref.watch(boatAnomaliesProvider(boatId)).valueOrNull ??
+        const <Anomaly>[];
+    final anomalies = all
+        .where((a) => period.contains(a.date))
+        .take(_maxShown)
+        .toList(growable: false);
     if (anomalies.isEmpty) return const SizedBox.shrink();
+
+    final pricePerLiter = stats.pricePerLiter;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionTitle(l.anomaliesTitle),
-        const SizedBox(height: Dimens.spaceSm),
+        NavisSectionHeader(label: l.anomaliesTitle, color: AppColors.amber),
         for (final a in anomalies)
           Padding(
             padding: const EdgeInsets.only(bottom: Dimens.spaceSm),
             child: NavisCard(
               borderColor: AppColors.amber.withValues(alpha: 0.4),
+              onTap: a.tripId.isEmpty
+                  ? null
+                  : () => context.push('/trips/${a.tripId}'),
               child: Row(
                 children: [
-                  const Icon(Icons.local_gas_station_rounded,
-                      color: AppColors.amber, size: 22),
+                  const Icon(
+                    Icons.local_gas_station_rounded,
+                    color: AppColors.amber,
+                    size: Dimens.iconMd,
+                  ),
                   const SizedBox(width: Dimens.spaceMd),
                   Expanded(
                     child: Column(
@@ -161,201 +379,43 @@ class _AnomaliesSection extends ConsumerWidget {
                             color: context.txtSecondary,
                           ),
                         ),
+                        // The litres are only money once there is a €/L to
+                        // price them with, which needs a fuel expense that
+                        // recorded its quantity.
+                        if (pricePerLiter != null && a.excessLiters > 0)
+                          Text(
+                            l.anomalyExcessCost(
+                              Money.format(
+                                locale,
+                                a.excessLiters * pricePerLiter,
+                              ),
+                            ),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.amber,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                       ],
                     ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: Dimens.iconSm,
+                    color: context.txtSecondary,
                   ),
                 ],
               ),
             ),
           ),
-        const SizedBox(height: Dimens.spaceLg),
+        Text(
+          l.anomaliesExplainer,
+          style: Theme.of(context)
+              .textTheme
+              .bodySmall
+              ?.copyWith(color: context.txtSecondary),
+        ),
       ],
-    );
-  }
-}
-
-String _categoryLabel(AppLocalizations l, String key) => switch (key) {
-      'combustible' => l.expenseCategoryFuel,
-      'amarre' => l.expenseCategoryMooring,
-      'seguro' => l.expenseCategoryInsurance,
-      'reparación' => l.expenseCategoryRepair, // i18n-exempt: API value
-      'limpieza' => l.expenseCategoryCleaning,
-      'otros' => l.expenseCategoryOther,
-      'maintenance' => l.readinessCatMaintenance,
-      _ => key,
-    };
-
-class _Kpi extends StatelessWidget {
-  const _Kpi({required this.label, required this.value, required this.color});
-
-  final String label;
-  final String value;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: NavisCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: TextStyle(fontSize: 12, color: context.txtSecondary),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 4),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Text(
-                value,
-                maxLines: 1,
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: color,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle(this.label);
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      label,
-      style: TextStyle(
-        fontWeight: FontWeight.w700,
-        fontSize: 15,
-        color: context.txtPrimary,
-      ),
-    );
-  }
-}
-
-class _CategoryBreakdown extends StatelessWidget {
-  const _CategoryBreakdown({required this.items, required this.total});
-
-  final List<CostBreakdownItem> items;
-  final double total;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
-    return NavisCard(
-      child: Column(
-        children: [
-          for (final item in items) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          _categoryLabel(l, item.key),
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: context.txtPrimary,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        _money(item.amount),
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: context.txtPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: total > 0 ? (item.amount / total) : 0,
-                      minHeight: 6,
-                      backgroundColor: context.glassBg,
-                      valueColor: const AlwaysStoppedAnimation(AppColors.cyan),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _MonthlyChart extends StatelessWidget {
-  const _MonthlyChart({required this.monthly});
-
-  final List<CostMonthly> monthly;
-
-  @override
-  Widget build(BuildContext context) {
-    final maxAmount = monthly.fold<double>(
-      1,
-      (m, e) => e.amount > m ? e.amount : m,
-    );
-    return NavisCard(
-      child: SizedBox(
-        height: 120,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            for (final m in monthly)
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 2),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Container(
-                        height: (m.amount / maxAmount * 80).clamp(2.0, 80.0),
-                        decoration: BoxDecoration(
-                          gradient:
-                              m.amount > 0 ? AppColors.cyanGradient : null,
-                          color: m.amount > 0
-                              ? null
-                              : context.txtSecondary.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          m.month.substring(5), // "MM"
-                          style: TextStyle(
-                            fontSize: 9,
-                            color: context.txtSecondary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
     );
   }
 }

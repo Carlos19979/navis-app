@@ -7,7 +7,7 @@ import 'package:navis_mobile/features/anomaly/data/anomaly_repository.dart';
 import 'package:navis_mobile/features/boat/data/boat_share_repository.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
-import 'package:navis_mobile/features/cost/data/cost_repository.dart';
+import 'package:navis_mobile/features/cost/domain/entities/cost_analytics.dart';
 import 'package:navis_mobile/features/groups/domain/entities/group.dart';
 import 'package:navis_mobile/features/maintenance/data/maintenance_models.dart';
 import 'package:navis_mobile/features/readiness/data/readiness_repository.dart';
@@ -508,40 +508,79 @@ Readiness makeReadiness({
   );
 }
 
-CostAnalytics makeCostAnalytics({
-  double totalSpend = 1250,
-  double expenseSpend = 950,
-  double maintenanceSpend = 300,
-  List<CostBreakdownItem>? byCategory,
-  List<CostMonthly>? monthly,
-  double totalDistanceNm = 142.3,
-  int completedTrips = 5,
-  double totalFuelL = 180,
-  double? costPerNm = 8.8,
-  double? costPerTrip = 250,
-  double? fuelPerNm = 1.3,
+/// A month of the cost series. Everything defaults to zero so a test names only
+/// the dimension it is about.
+CostMonth makeCostMonth(
+  String month, {
+  Map<String, double>? byCategory,
+  double fixed = 0,
+  double variable = 0,
+  double fuelAmount = 0,
+  double fuelLiters = 0,
+  int trips = 0,
+  double distanceNm = 0,
+  double fuelL = 0,
+  double engineHours = 0,
+  double hours = 0,
 }) {
+  return CostMonth(
+    month: month,
+    byCategory: byCategory ?? const {},
+    fixed: fixed,
+    variable: variable,
+    fuelAmount: fuelAmount,
+    fuelLiters: fuelLiters,
+    trips: trips,
+    distanceNm: distanceNm,
+    fuelL: fuelL,
+    engineHours: engineHours,
+    hours: hours,
+  );
+}
+
+/// Two months of 2026 with spend from all three sources, some sailing, and fuel
+/// bought with its litres — enough for every card on the screen to render.
+CostAnalytics makeCostAnalytics({List<CostMonth>? months}) {
   return CostAnalytics(
-    totalSpend: totalSpend,
-    expenseSpend: expenseSpend,
-    maintenanceSpend: maintenanceSpend,
-    byCategory: byCategory ??
-        const [
-          CostBreakdownItem(key: 'fuel', amount: 500),
-          CostBreakdownItem(key: 'mooring', amount: 450),
-          CostBreakdownItem(key: 'maintenance', amount: 300),
+    months: months ??
+        [
+          makeCostMonth(
+            '2026-03',
+            byCategory: const {
+              'combustible': 200,
+              'amarre': 150,
+              'maintenance': 50,
+            },
+            fixed: 150,
+            variable: 250,
+            fuelAmount: 200,
+            fuelLiters: 125,
+            trips: 2,
+            distanceNm: 60,
+            fuelL: 78,
+            engineHours: 8,
+            hours: 6,
+          ),
+          makeCostMonth(
+            '2026-04',
+            byCategory: const {
+              'combustible': 300,
+              'amarre': 150,
+              'seguro': 250,
+              'maintenance': 100,
+              'documents': 50,
+            },
+            fixed: 450,
+            variable: 400,
+            fuelAmount: 300,
+            fuelLiters: 175,
+            trips: 3,
+            distanceNm: 82.3,
+            fuelL: 102,
+            engineHours: 12,
+            hours: 9,
+          ),
         ],
-    monthly: monthly ??
-        const [
-          CostMonthly(month: '2026-03', amount: 400),
-          CostMonthly(month: '2026-04', amount: 850),
-        ],
-    totalDistanceNm: totalDistanceNm,
-    completedTrips: completedTrips,
-    totalFuelL: totalFuelL,
-    costPerNm: costPerNm,
-    costPerTrip: costPerTrip,
-    fuelPerNm: fuelPerNm,
   );
 }
 
@@ -552,6 +591,8 @@ Anomaly makeAnomaly({
   double value = 2.4,
   double baseline = 1.3,
   double deviationPct = 84.6,
+  double distanceNm = 40,
+  double excessLiters = 20,
 }) {
   return Anomaly(
     tripId: tripId,
@@ -560,5 +601,7 @@ Anomaly makeAnomaly({
     value: value,
     baseline: baseline,
     deviationPct: deviationPct,
+    distanceNm: distanceNm,
+    excessLiters: excessLiters,
   );
 }
