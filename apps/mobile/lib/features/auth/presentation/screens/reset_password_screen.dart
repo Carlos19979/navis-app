@@ -45,7 +45,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       await ref
           .read(authRepositoryProvider)
           .updatePassword(_passwordController.text);
-      ref.read(passwordRecoveryProvider.notifier).state = false;
+      ref.read(passwordRecoveryProvider.notifier).complete();
       if (!mounted) return;
       NavisSnackbar.success(context, l.resetPwSuccess);
       context.go('/boats');
@@ -55,6 +55,14 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
         NavisSnackbar.error(context, l.resetPwFailed);
       }
     }
+  }
+
+  /// Leaves the recovery without setting a password. Signs out on the way:
+  /// the link handed us a live session, and abandoning the flow must not leave
+  /// the account open to whoever opened the email.
+  Future<void> _onCancel() async {
+    await ref.read(authProvider.notifier).logout();
+    if (mounted) context.go('/login');
   }
 
   @override
@@ -176,6 +184,20 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                       onPressed: _onSubmit,
                       isLoading: _submitting,
                     ).animate().fadeIn(delay: 500.ms, duration: 500.ms),
+                    const SizedBox(height: 12),
+
+                    // The way out. Mandatory now that the flag survives a
+                    // restart: without it, opening a recovery link and
+                    // changing your mind locks you on this screen for good.
+                    TextButton(
+                      onPressed: _submitting ? null : _onCancel,
+                      child: Text(
+                        l.cancel,
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: context.txtSecondary,
+                        ),
+                      ),
+                    ).animate().fadeIn(delay: 600.ms, duration: 500.ms),
                   ],
                 ),
               ),
