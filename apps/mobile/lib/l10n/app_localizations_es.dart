@@ -1779,7 +1779,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get shareBoat => 'Compartir barco';
 
   @override
-  String get shareBoatSubtitle => 'Tripulación y copropietarios';
+  String get shareBoatSubtitle => 'Invita a alguien con un código';
 
   @override
   String get leaveSharedBoat => 'Salir del barco compartido';
@@ -2347,7 +2347,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get boatCrewTitle => 'Tripulación y permisos';
 
   @override
-  String get boatCrewSubtitle => 'Quién tiene acceso y qué puede hacer';
+  String get boatCrewSubtitle => 'Ve quién se ha unido y ajusta permisos';
 
   @override
   String get boatCrewExplainer =>

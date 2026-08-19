@@ -3383,7 +3383,7 @@ abstract class AppLocalizations {
   /// No description provided for @shareBoatSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Crew and co-owners'**
+  /// **'Invite someone with a code'**
   String get shareBoatSubtitle;
 
   /// No description provided for @leaveSharedBoat.
@@ -4427,7 +4427,7 @@ abstract class AppLocalizations {
   /// No description provided for @boatCrewSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Who has access and what they can do'**
+  /// **'See who joined and adjust permissions'**
   String get boatCrewSubtitle;
 
   /// No description provided for @boatCrewExplainer.
