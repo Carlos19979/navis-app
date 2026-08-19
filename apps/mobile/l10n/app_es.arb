@@ -211,11 +211,11 @@
       }
     }
   },
-  "maintenancePlanTitle": "Plan de mantenimiento",
-  "maintenanceOtherTitle": "Otros registros",
   "noMaintenanceTasks": "Aún no hay tareas de mantenimiento",
+  "maintenanceUpcomingTitle": "Próximos",
+  "maintenanceHistoryTitle": "Historial",
+  "maintenanceSeeAll": "Ver todo",
   "suggestedTasksLabel": "Sugeridas",
-  "addTask": "Añadir tarea",
   "editTask": "Editar tarea",
   "taskName": "Nombre de la tarea",
   "taskIntervalMonthsLabel": "Cada (meses)",
@@ -224,8 +224,12 @@
   "maintenanceDueSoonLabel": "pronto",
   "maintenanceNoInterval": "sin intervalo",
   "maintenanceHistoryEmpty": "Aún no hay servicios registrados",
-  "noTaskOption": "Sin tarea (puntual)",
-  "taskField": "Tarea",
+  "maintenancePartOfPlan": "Del plan (opcional)",
+  "maintenanceWhatWasDone": "¿Qué se ha hecho? (ej. cambio de aceite)",
+  "maintenanceRepeatEvery": "Se repite cada",
+  "maintenanceIntervalMonths": "Meses",
+  "maintenanceIntervalHours": "Horas de motor",
+  "maintenanceRepeatHint": "Déjalo vacío si es puntual. Con un intervalo entra en el plan y te avisamos cuando toque.",
   "maintenanceEveryMonths": "cada {months} meses",
   "@maintenanceEveryMonths": {
     "placeholders": {
@@ -717,7 +721,6 @@
   "keepGoing": "Seguir",
   "noMaintenanceRecords": "Sin registros de mantenimiento",
   "invoiceLabel": "Factura",
-  "maintenanceTypeHint": "Tipo (ej. cambio de aceite)",
   "costOptional": "Coste € (opc.)",
   "providerOptional": "Proveedor (opc.)",
   "dateWithValue": "Fecha: {date}",

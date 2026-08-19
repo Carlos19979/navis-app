@@ -44,11 +44,19 @@ class MaintenanceRepository {
     return data.map(MaintenanceTask.fromJson).toList();
   }
 
-  Future<void> addTask(String boatId, Map<String, dynamic> body) async {
-    await _apiClient.post<Map<String, dynamic>>(
+  /// Returns the created task: recording a service with an interval creates
+  /// the plan entry and links the log to it in the same flow, so the caller
+  /// needs the new id without a re-fetch.
+  Future<MaintenanceTask> addTask(
+    String boatId,
+    Map<String, dynamic> body,
+  ) async {
+    final res = await _apiClient.post<Map<String, dynamic>>(
       '/api/v1/boats/$boatId/maintenance/tasks',
       data: body,
     );
+    final data = res.data!['data'] as Map<String, dynamic>;
+    return MaintenanceTask.fromJson(data);
   }
 
   Future<void> updateTask(

@@ -190,7 +190,7 @@ void main() {
   });
 
   group('MaintenanceScreen suggested chips', () {
-    testWidgets('hidden when every template task already exists',
+    testWidgets('hidden once the plan has any entry',
         (tester) async {
       setPhoneSize(tester);
       final names = [
@@ -213,7 +213,8 @@ void main() {
 
     testWidgets('tapping a chip adds the template task', (tester) async {
       setPhoneSize(tester);
-      when(() => mockRepo.addTask(boatId, any())).thenAnswer((_) async {});
+      when(() => mockRepo.addTask(boatId, any()))
+          .thenAnswer((_) async => makeMaintenanceTask());
       await tester.pumpWidget(buildSubject());
       await pumpScreen(tester);
 
@@ -284,15 +285,16 @@ void main() {
       await pumpScreen(tester);
 
       expect(find.text('Record service'), findsOneWidget);
-      expect(find.text('Type (e.g. oil change)'), findsOneWidget);
+      expect(find.text('What was done? (e.g. oil change)'), findsOneWidget);
       expect(find.text('Engine Hours (optional)'), findsOneWidget);
       expect(find.text('Cost € (opt.)'), findsOneWidget);
       expect(find.text('Provider (opt.)'), findsOneWidget);
 
       await tester.enterText(
-        find.widgetWithText(TextField, 'Type (e.g. oil change)'),
+        find.widgetWithText(TextField, 'What was done? (e.g. oil change)'),
         'Oil change',
       );
+      await tester.ensureVisible(find.text('Save'));
       await tester.tap(find.text('Save'));
       await pumpScreen(tester);
 
@@ -302,39 +304,148 @@ void main() {
       expect(body['type'], 'Oil change');
     });
 
-    testWidgets('add-task sheet opens from the FAB and saves a task',
+    testWidgets('an interval turns the service into a plan entry',
         (tester) async {
       setPhoneSize(tester);
-      when(() => mockRepo.addTask(boatId, any())).thenAnswer((_) async {});
+      when(() => mockRepo.addLog(boatId, any())).thenAnswer((_) async {});
+      when(() => mockRepo.addTask(boatId, any()))
+          .thenAnswer((_) async => makeMaintenanceTask(id: 'new-task'));
+      await tester.pumpWidget(buildSubject());
+      await pumpScreen(tester);
+
+      await tester.tap(find.byTooltip('Record service'));
+      await pumpScreen(tester);
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'What was done? (e.g. oil change)'),
+        'Antifouling',
+      );
+      await tester.enterText(find.widgetWithText(TextField, 'Months'), '12');
+      await tester.ensureVisible(find.text('Save'));
+      await tester.tap(find.text('Save'));
+      await pumpScreen(tester);
+
+      // The plan entry is created from the service, not from a second form.
+      final task = verify(() => mockRepo.addTask(boatId, captureAny()))
+          .captured
+          .single as Map<String, dynamic>;
+      expect(task['name'], 'Antifouling');
+      expect(task['interval_months'], 12);
+
+      // ...and the log is linked to it in the same save.
+      final log = verify(() => mockRepo.addLog(boatId, captureAny()))
+          .captured
+          .single as Map<String, dynamic>;
+      expect(log['type'], 'Antifouling');
+      expect(log['task_id'], 'new-task');
+    });
+
+    testWidgets('no interval leaves the service unlinked', (tester) async {
+      setPhoneSize(tester);
+      when(() => mockRepo.addLog(boatId, any())).thenAnswer((_) async {});
+      await tester.pumpWidget(buildSubject());
+      await pumpScreen(tester);
+
+      await tester.tap(find.byTooltip('Record service'));
+      await pumpScreen(tester);
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'What was done? (e.g. oil change)'),
+        'Bilge pump',
+      );
+      await tester.ensureVisible(find.text('Save'));
+      await tester.tap(find.text('Save'));
+      await pumpScreen(tester);
+
+      verifyNever(() => mockRepo.addTask(any(), any()));
+      final log = verify(() => mockRepo.addLog(boatId, captureAny()))
+          .captured
+          .single as Map<String, dynamic>;
+      expect(log['task_id'], isNull);
+    });
+
+    testWidgets('picking a plan chip links the service to it', (tester) async {
+      setPhoneSize(tester);
+      when(() => mockRepo.addLog(boatId, any())).thenAnswer((_) async {});
       await tester.pumpWidget(
         buildSubject(tasks: () async => [makeMaintenanceTask()]),
       );
       await pumpScreen(tester);
 
-      await tester.tap(find.byTooltip('Add task'));
+      await tester.tap(find.byTooltip('Record service'));
       await pumpScreen(tester);
 
-      expect(find.text('Add task'), findsWidgets);
-      expect(find.text('Task name'), findsOneWidget);
-      expect(find.text('Every (months)'), findsOneWidget);
-      expect(find.text('Every (engine hours)'), findsOneWidget);
-
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Task name'),
-        'Rigging check',
-      );
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Every (months)'),
-        '12',
-      );
+      // The chip names the service and links it in one tap.
+      await tester.tap(find.widgetWithText(ChoiceChip, 'Engine oil change'));
+      await pumpScreen(tester);
+      await tester.ensureVisible(find.text('Save'));
       await tester.tap(find.text('Save'));
       await pumpScreen(tester);
 
-      final body = verify(() => mockRepo.addTask(boatId, captureAny()))
+      final log = verify(() => mockRepo.addLog(boatId, captureAny()))
           .captured
           .single as Map<String, dynamic>;
-      expect(body['name'], 'Rigging check');
-      expect(body['interval_months'], 12);
+      expect(log['type'], 'Engine oil change');
+      expect(log['task_id'], 'task-1');
+    });
+  });
+
+  group('MaintenanceScreen history', () {
+    testWidgets('lists linked services too', (tester) async {
+      setPhoneSize(tester);
+      await tester.pumpWidget(
+        buildSubject(
+          tasks: () async => [makeMaintenanceTask()],
+          logs: () async => [
+            makeMaintenanceLog(id: 'l1', type: 'Oil change', taskId: 'task-1'),
+            makeMaintenanceLog(id: 'l2', type: 'Bilge pump'),
+          ],
+        ),
+      );
+      await pumpScreen(tester);
+
+      // Both kinds share one history: a linked service used to be visible
+      // only inside its plan entry.
+      expect(find.text('History'), findsOneWidget);
+      expect(find.text('Oil change'), findsOneWidget);
+      expect(find.text('Bilge pump'), findsOneWidget);
+      // "Other records" is gone as a concept.
+      expect(find.text('Other records'), findsNothing);
+    });
+
+    testWidgets('long history collapses behind See all', (tester) async {
+      setPhoneSize(tester);
+      await tester.pumpWidget(
+        buildSubject(
+          logs: () async => [
+            for (var i = 0; i < 7; i++)
+              makeMaintenanceLog(
+                id: 'l$i',
+                type: 'Service $i',
+                performedAt: DateTime(2026, 1, i + 1),
+              ),
+          ],
+        ),
+      );
+      await pumpScreen(tester);
+
+      expect(find.text('See all'), findsOneWidget);
+
+      await tester.ensureVisible(find.text('See all'));
+      await tester.tap(find.text('See all'));
+      await pumpScreen(tester);
+
+      expect(find.text('See all'), findsNothing);
+    });
+
+    testWidgets('short history shows no See all row', (tester) async {
+      setPhoneSize(tester);
+      await tester.pumpWidget(
+        buildSubject(logs: () async => [makeMaintenanceLog()]),
+      );
+      await pumpScreen(tester);
+
+      expect(find.text('See all'), findsNothing);
     });
   });
 
@@ -375,9 +486,10 @@ void main() {
       expect(find.byTooltip('Add Photo'), findsOneWidget);
 
       await tester.enterText(
-        find.widgetWithText(TextField, 'Type (e.g. oil change)'),
+        find.widgetWithText(TextField, 'What was done? (e.g. oil change)'),
         'Impeller swap',
       );
+      await tester.ensureVisible(find.text('Save'));
       await tester.tap(find.text('Save'));
       await pumpScreen(tester);
 
