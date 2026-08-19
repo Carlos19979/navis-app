@@ -190,8 +190,7 @@ void main() {
   });
 
   group('MaintenanceScreen suggested chips', () {
-    testWidgets('hidden once the plan has any entry',
-        (tester) async {
+    testWidgets('hidden once the plan has any entry', (tester) async {
       setPhoneSize(tester);
       final names = [
         'Engine oil',
