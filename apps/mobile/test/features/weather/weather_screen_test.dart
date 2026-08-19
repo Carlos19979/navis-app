@@ -9,9 +9,9 @@ import 'package:navis_mobile/features/weather/domain/entities/weather.dart';
 import 'package:navis_mobile/features/weather/domain/entities/weather_overview.dart';
 import 'package:navis_mobile/features/weather/presentation/providers/weather_provider.dart';
 import 'package:navis_mobile/features/weather/presentation/screens/weather_screen.dart';
+import 'package:navis_mobile/features/weather/presentation/widgets/current_conditions.dart';
 import 'package:navis_mobile/features/weather/presentation/widgets/daily_forecast_list.dart';
 import 'package:navis_mobile/features/weather/presentation/widgets/hourly_forecast_strip.dart';
-import 'package:navis_mobile/features/weather/presentation/widgets/wind_indicator.dart';
 
 import '../../helpers/geo.dart';
 import '../../helpers/test_helpers.dart';
@@ -135,18 +135,44 @@ void main() {
         expect(find.byType(HourlyForecastStrip), findsNothing);
       });
 
-      testWidgets('shows wind indicator, waves and humidity in details card',
+      testWidgets('shows wind, waves and humidity as metric tiles',
           (tester) async {
         await pumpScreen(tester, overrides: [
           weatherOverviewProvider.overrideWith((ref) async => makeOverview()),
         ]);
 
-        expect(find.byType(WindIndicator), findsOneWidget);
-        expect(find.text('Waves'), findsOneWidget);
-        expect(find.text('Humidity'), findsOneWidget);
-        // makeWeather() waveHeight 0.8, humidity 65
-        expect(find.text('0.8 m'), findsOneWidget);
-        expect(find.text('65%'), findsOneWidget);
+        expect(find.byType(CurrentConditions), findsOneWidget);
+        expect(find.text('WIND'), findsOneWidget);
+        expect(find.text('WAVES'), findsOneWidget);
+        expect(find.text('HUMIDITY'), findsOneWidget);
+        // makeWeather(): wind 12 kt from 225 deg, waveHeight 0.8, humidity 65.
+        expect(find.text('12'), findsOneWidget);
+        expect(find.text('kt'), findsOneWidget);
+        expect(find.text('0.8'), findsOneWidget);
+        expect(find.text('65'), findsOneWidget);
+        // Direction as text instead of the old compass dial.
+        expect(find.text('SW  225°'), findsOneWidget);
+      });
+
+      testWidgets('grades wind and waves for screen readers', (tester) async {
+        await pumpScreen(tester, overrides: [
+          weatherOverviewProvider.overrideWith(
+            (ref) async => makeOverview(
+              current: makeWeather(windSpeed: 5, waveHeight: 0.2),
+            ),
+          ),
+        ]);
+
+        // The gauge color grades the metric visually; the word only exists in
+        // the semantics label, so that is where it has to be asserted. Both
+        // metrics sit under their first threshold, hence two 'Calm'.
+        final graded = tester
+            .widgetList<Semantics>(find.byType(Semantics))
+            .map((s) => s.properties.label)
+            .whereType<String>()
+            .where((label) => label.contains('Calm'));
+
+        expect(graded.length, 2);
       });
 
       testWidgets('shows 7-Day Forecast header', (tester) async {
@@ -229,7 +255,7 @@ void main() {
           ),
         ]);
 
-        expect(find.text('Humidity'), findsOneWidget);
+        expect(find.text('HUMIDITY'), findsOneWidget);
         expect(find.text('—'), findsOneWidget);
       });
     });

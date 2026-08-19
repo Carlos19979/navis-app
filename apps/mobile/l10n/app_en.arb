@@ -449,6 +449,38 @@
   "wind": "Wind",
   "waves": "Waves",
   "humidity": "Humidity",
+  "dirN": "N",
+  "@dirN": {
+    "description": "Cardinal wind direction abbreviation"
+  },
+  "dirNE": "NE",
+  "@dirNE": {
+    "description": "Cardinal wind direction abbreviation"
+  },
+  "dirE": "E",
+  "@dirE": {
+    "description": "Cardinal wind direction abbreviation"
+  },
+  "dirSE": "SE",
+  "@dirSE": {
+    "description": "Cardinal wind direction abbreviation"
+  },
+  "dirS": "S",
+  "@dirS": {
+    "description": "Cardinal wind direction abbreviation"
+  },
+  "dirSW": "SW",
+  "@dirSW": {
+    "description": "Cardinal wind direction abbreviation"
+  },
+  "dirW": "W",
+  "@dirW": {
+    "description": "Cardinal wind direction abbreviation"
+  },
+  "dirNW": "NW",
+  "@dirNW": {
+    "description": "Cardinal wind direction abbreviation"
+  },
   "currentConditions": "Current Conditions",
   "calm": "Calm",
   "moderate": "Moderate",
