@@ -9,6 +9,7 @@ import 'package:navis_mobile/features/boat/domain/repositories/boat_repository.d
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/boat_dashboard_screen.dart';
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
+import 'package:navis_mobile/features/readiness/presentation/widgets/readiness_card.dart';
 import 'package:navis_mobile/features/weather/presentation/providers/weather_provider.dart';
 
 import '../../helpers/helpers.dart';
@@ -238,6 +239,18 @@ void main() {
       expect(find.text('Anchor watch'), findsNothing);
       expect(find.text('Documents'), findsNothing);
       expect(find.text('Logbook'), findsNothing);
+    });
+
+    testWidgets('the list carries no readiness banner', (tester) async {
+      setPhoneSize(tester);
+      // Single boat: the one shape that used to show it. Readiness is the
+      // boat's headline status and belongs inside the boat, not repeated in a
+      // list that would carry one banner per boat.
+      await tester.pumpWidget(buildSubject(boats: [makeBoat()]));
+      await pumpScreen(tester);
+
+      expect(find.byType(ReadinessCard), findsNothing);
+      expect(find.text('READINESS'), findsNothing);
     });
 
     testWidgets('single boat card navigates to detail from anywhere',

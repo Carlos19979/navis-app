@@ -18,7 +18,6 @@ class NavisScaffold extends StatelessWidget {
     this.appBarBottom,
     this.floatingActionButton,
     this.transparentAppBar = false,
-    this.showProfileAction = true,
     this.safeAreaBottom = true,
     this.bottomNavClearance = false,
   });
@@ -30,10 +29,6 @@ class NavisScaffold extends StatelessWidget {
   final PreferredSizeWidget? appBarBottom;
   final Widget? floatingActionButton;
   final bool transparentAppBar;
-
-  /// Whether the app bar appends the profile shortcut. Set false once Profile
-  /// is a first-class tab (phase 2).
-  final bool showProfileAction;
   final bool safeAreaBottom;
 
   /// When true, pads the body bottom by [Dimens.navClearance] so its last item
@@ -64,7 +59,6 @@ class NavisScaffold extends StatelessWidget {
         actions: actions,
         transparent: transparentAppBar,
         bottom: appBarBottom,
-        showProfileAction: showProfileAction,
       ),
       floatingActionButton: fab,
       body: GradientBackground(

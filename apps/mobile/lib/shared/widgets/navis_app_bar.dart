@@ -15,7 +15,6 @@ class NavisAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.actions,
     this.transparent = false,
     this.bottom,
-    this.showProfileAction = false,
   });
 
   final String title;
@@ -23,10 +22,6 @@ class NavisAppBar extends StatelessWidget implements PreferredSizeWidget {
   final List<Widget>? actions;
   final bool transparent;
   final PreferredSizeWidget? bottom;
-
-  /// Whether to append the circular profile shortcut. False once Profile is a
-  /// bottom-nav tab.
-  final bool showProfileAction;
 
   @override
   Size get preferredSize =>
@@ -47,7 +42,7 @@ class NavisAppBar extends StatelessWidget implements PreferredSizeWidget {
         backgroundColor: Colors.transparent,
         automaticallyImplyLeading: false,
         leading: showBack ? _buildBackButton(context) : null,
-        actions: _buildActions(context),
+        actions: actions,
         bottom: bottom,
       );
     }
@@ -84,7 +79,7 @@ class NavisAppBar extends StatelessWidget implements PreferredSizeWidget {
             backgroundColor: Colors.transparent,
             automaticallyImplyLeading: false,
             leading: showBack ? _buildBackButton(context) : null,
-            actions: _buildActions(context),
+            actions: actions,
             bottom: bottom,
           ),
         ),
@@ -104,28 +99,5 @@ class NavisAppBar extends StatelessWidget implements PreferredSizeWidget {
         }
       },
     );
-  }
-
-  List<Widget> _buildActions(BuildContext context) {
-    if (!showProfileAction) {
-      return [...?actions];
-    }
-    return [
-      ...?actions,
-      Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: Container(
-          decoration: BoxDecoration(
-            color: context.glassBg,
-            shape: BoxShape.circle,
-          ),
-          child: IconButton(
-            icon: const Icon(Icons.person_outline_rounded, size: 22),
-            tooltip: AppLocalizations.of(context)!.profile,
-            onPressed: () => context.go('/profile'),
-          ),
-        ),
-      ),
-    ];
   }
 }

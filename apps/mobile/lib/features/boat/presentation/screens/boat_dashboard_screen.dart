@@ -19,7 +19,6 @@ import 'package:navis_mobile/features/profile/data/account_provider.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 import 'package:navis_mobile/features/boat/presentation/widgets/boat_header.dart';
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
-import 'package:navis_mobile/features/readiness/presentation/widgets/readiness_card.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/trip_recording_provider.dart';
 import 'package:navis_mobile/features/anchor/presentation/providers/anchor_watch_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -295,8 +294,9 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
                   Dimens.navClearance,
                 ),
                 children: [
-                  ReadinessCard(boatId: boats.first.id),
-                  const SizedBox(height: 12),
+                  // No readiness card here. It is the boat's headline status,
+                  // so it lives inside the boat (once) instead of being
+                  // repeated in a list that would show one per boat.
                   _BoatCard(boat: boats.first, index: 0),
                 ],
               ),
