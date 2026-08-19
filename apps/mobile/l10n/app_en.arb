@@ -784,7 +784,7 @@
   "requestAction": "Request",
   "notInAnyGroup": "You're not in any group yet.",
   "noPublicGroups": "No public groups to discover.",
-  "cancelTrip": "Cancel trip",
+  "cancelTrip": "Discard trip",
   "cancelTripRegattaWarning": "The regatta will return to \"scheduled\" and the recording will be discarded.",
   "cancelTripWarning": "This trip will be discarded without saving.",
   "exitWithoutSaving": "Exit without saving",

@@ -712,7 +712,7 @@
   "requestAction": "Solicitar",
   "notInAnyGroup": "Aún no estás en ningún grupo.",
   "noPublicGroups": "No hay grupos públicos para descubrir.",
-  "cancelTrip": "Cancelar viaje",
+  "cancelTrip": "Descartar viaje",
   "cancelTripRegattaWarning": "La regata volverá a \"programada\" y se descartará la grabación.",
   "cancelTripWarning": "Se descartará este viaje sin guardarlo.",
   "exitWithoutSaving": "Salir sin guardar",
