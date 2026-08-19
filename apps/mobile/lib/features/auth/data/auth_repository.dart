@@ -58,18 +58,32 @@ class AuthRepository {
     await _auth.signOut();
   }
 
-  /// Sends the password-recovery email. On mobile we pass a [redirectTo] deep
-  /// link so the recovery link returns to the app; Supabase appends the
-  /// recovery token and fires an [AuthChangeEvent.passwordRecovery] event on
-  /// arrival. Reuses the already-registered `navis://login-callback` scheme.
+  /// Where a recovery link comes back to. Same registered scheme as OAuth,
+  /// plus a marker of our own — because GoTrue does not keep its.
   ///
-  /// NOTE: `navis://login-callback` must be listed under Supabase Dashboard >
-  /// Authentication > URL Configuration > Redirect URLs for the link to open
-  /// the app.
+  /// The app is on the PKCE flow, where the verified link redirects to
+  /// `<redirect_to>?code=…` and `type=recovery` is dropped along the way. The
+  /// arriving session is then indistinguishable from a normal sign-in, so the
+  /// app has no reason to show the "set a new password" screen and silently
+  /// lands the user in the boat list instead. GoTrue *does* preserve whatever
+  /// query the redirect already carries and appends `code` next to it, so the
+  /// marker survives the round trip.
+  ///
+  /// NOTE: this exact value must be allow-listed under Supabase Dashboard >
+  /// Authentication > URL Configuration > Redirect URLs — a `?*` wildcard
+  /// entry, since it carries a query. An unlisted redirect is not rejected:
+  /// GoTrue silently falls back to the project's Site URL.
+  static const _recoveryRedirect = 'navis://login-callback?type=recovery';
+
+  /// Sends the password-recovery email.
+  ///
+  /// Answers the same whether or not the address belongs to an account —
+  /// Supabase will not say, so that the form cannot be used to test which
+  /// emails are registered. Callers must not claim a mail was sent.
   Future<void> resetPassword(String email) async {
     await _auth.resetPasswordForEmail(
       email,
-      redirectTo: kIsWeb ? null : _oauthRedirect,
+      redirectTo: kIsWeb ? null : _recoveryRedirect,
     );
   }
 

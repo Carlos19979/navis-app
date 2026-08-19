@@ -1250,5 +1250,8 @@
   "bgRecordingTitle": "Navis is recording your trip",
   "bgRecordingBody": "GPS tracking active - tap to open",
   "bgAnchorWatchTitle": "Anchor watch active",
-  "bgAnchorWatchBody": "Watching your position - tap to open"
+  "bgAnchorWatchBody": "Watching your position - tap to open",
+  "authLinkOpening": "Opening Navis...",
+  "authLinkExpiredTitle": "This link no longer works",
+  "authLinkExpiredBody": "Links expire after an hour and can only be used once. Ask for a new one from \"Forgot Password?\"."
 }
