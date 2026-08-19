@@ -47,6 +47,17 @@ int? _parseInt(String s) => int.tryParse(s.trim());
 
 double? _parseDouble(String s) => double.tryParse(s.trim());
 
+/// The plan entry a service belongs to when its name says so (case- and
+/// whitespace-insensitive). Typing the name of an existing entry means the
+/// same job, so the service must count as servicing it.
+MaintenanceTask? _taskByName(List<MaintenanceTask> tasks, String name) {
+  final needle = name.trim().toLowerCase();
+  for (final t in tasks) {
+    if (t.name.trim().toLowerCase() == needle) return t;
+  }
+  return null;
+}
+
 /// Maps an expense category API value to its localized display label.
 String _categoryLabel(AppLocalizations l, String category) =>
     switch (category) {
@@ -667,6 +678,10 @@ class _MaintenanceTabState extends ConsumerState<_MaintenanceTab> {
   }) async {
     final l = AppLocalizations.of(context)!;
     final caption = TextStyle(color: context.txtSecondary, fontSize: 12);
+    // The maintenance-due cron is Plus+ (`CanUseMaintenanceSchedules`), while
+    // creating the plan entry is free. So Free keeps the plan and the in-app
+    // due state — it just must not be promised a reminder nobody will send.
+    final canRemind = ref.read(effectiveTierProvider).canMaintenanceSchedules;
     final typeCtrl = TextEditingController(text: existing?.type ?? '');
     final engineCtrl =
         TextEditingController(text: existing?.engineHours?.toString() ?? '');
@@ -850,7 +865,25 @@ class _MaintenanceTabState extends ConsumerState<_MaintenanceTab> {
                   ],
                 ),
                 const SizedBox(height: 6),
-                Text(l.maintenanceRepeatHint, style: caption),
+                Text(
+                  canRemind
+                      ? l.maintenanceRepeatHint
+                      : l.maintenanceRepeatHintFree,
+                  style: caption,
+                ),
+                if (!canRemind)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton(
+                      onPressed: () => showPaywall(
+                        ctx,
+                        ref,
+                        reason: l.paywallReasonMaintenanceReminders,
+                        requiredTier: PlanTier.plus,
+                      ),
+                      child: Text(l.maintenanceRemindersPlus),
+                    ),
+                  ),
                 const SizedBox(height: 16),
                 NavisButton(
                   label: l.save,
@@ -893,9 +926,34 @@ class _MaintenanceTabState extends ConsumerState<_MaintenanceTab> {
     final repo = ref.read(maintenanceRepositoryProvider);
     final task = linked;
     try {
+      final typedInterval = months != null || everyHours != null;
       var taskId = task?.id;
-      if (task == null) {
-        if (months != null || everyHours != null) {
+      if (task != null) {
+        // Linked from a chip: the fields came prefilled with this entry's
+        // schedule, so whatever they hold now is the intent — empty included.
+        if (months != task.intervalMonths || everyHours != task.intervalHours) {
+          await repo.updateTask(boatId, task.id, {
+            'name': task.name,
+            'interval_months': months,
+            'interval_hours': everyHours,
+          });
+        }
+      } else {
+        final match = _taskByName(tasks, type);
+        if (match != null) {
+          taskId = match.id;
+          // Here empty means "said nothing", not "clear the schedule" — the
+          // fields were never prefilled, so they must not wipe the entry.
+          if (typedInterval &&
+              (months != match.intervalMonths ||
+                  everyHours != match.intervalHours)) {
+            await repo.updateTask(boatId, match.id, {
+              'name': match.name,
+              'interval_months': months,
+              'interval_hours': everyHours,
+            });
+          }
+        } else if (typedInterval) {
           // "Repeats every ..." on an unlinked service IS how a plan entry
           // is created — no separate form, no second trip through the UI.
           final created = await repo.addTask(boatId, {
@@ -905,14 +963,6 @@ class _MaintenanceTabState extends ConsumerState<_MaintenanceTab> {
           });
           taskId = created.id;
         }
-      } else if (months != task.intervalMonths ||
-          everyHours != task.intervalHours) {
-        // Editing the interval here re-schedules the plan entry itself.
-        await repo.updateTask(boatId, task.id, {
-          'name': task.name,
-          'interval_months': months,
-          'interval_hours': everyHours,
-        });
       }
       final provider = providerCtrl.text.trim();
       final body = <String, dynamic>{
@@ -933,6 +983,10 @@ class _MaintenanceTabState extends ConsumerState<_MaintenanceTab> {
       ref.invalidate(maintenanceLogsProvider(boatId));
       ref.invalidate(maintenanceTasksProvider(boatId));
     } catch (_) {
+      // The plan entry may have been written before the log failed. Refetch so
+      // a retry sees it and links to it instead of creating a twin.
+      ref.invalidate(maintenanceTasksProvider(boatId));
+      ref.invalidate(maintenanceLogsProvider(boatId));
       if (context.mounted) NavisSnackbar.error(context, l.couldNotSave);
     }
   }

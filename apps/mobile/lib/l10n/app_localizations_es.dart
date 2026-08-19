@@ -496,6 +496,17 @@ class AppLocalizationsEs extends AppLocalizations {
       'Déjalo vacío si es puntual. Con un intervalo entra en el plan y te avisamos cuando toque.';
 
   @override
+  String get maintenanceRepeatHintFree =>
+      'Déjalo vacío si es puntual. Con un intervalo entra en el plan y la app te muestra cuándo toca.';
+
+  @override
+  String get maintenanceRemindersPlus => 'Que te avisemos es de Navis Plus';
+
+  @override
+  String get paywallReasonMaintenanceReminders =>
+      'Recibe recordatorios de mantenimiento con Navis Plus';
+
+  @override
   String maintenanceEveryMonths(int months) {
     return 'cada $months meses';
   }

@@ -230,6 +230,9 @@
   "maintenanceIntervalMonths": "Meses",
   "maintenanceIntervalHours": "Horas de motor",
   "maintenanceRepeatHint": "Déjalo vacío si es puntual. Con un intervalo entra en el plan y te avisamos cuando toque.",
+  "maintenanceRepeatHintFree": "Déjalo vacío si es puntual. Con un intervalo entra en el plan y la app te muestra cuándo toca.",
+  "maintenanceRemindersPlus": "Que te avisemos es de Navis Plus",
+  "paywallReasonMaintenanceReminders": "Recibe recordatorios de mantenimiento con Navis Plus",
   "maintenanceEveryMonths": "cada {months} meses",
   "@maintenanceEveryMonths": {
     "placeholders": {

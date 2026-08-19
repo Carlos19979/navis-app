@@ -998,6 +998,24 @@ abstract class AppLocalizations {
   /// **'Leave empty for a one-off service. With an interval it joins the plan and we remind you when it is due.'**
   String get maintenanceRepeatHint;
 
+  /// No description provided for @maintenanceRepeatHintFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty for a one-off service. With an interval it joins the plan and the app shows you when it is due.'**
+  String get maintenanceRepeatHintFree;
+
+  /// No description provided for @maintenanceRemindersPlus.
+  ///
+  /// In en, this message translates to:
+  /// **'Get reminded with Navis Plus'**
+  String get maintenanceRemindersPlus;
+
+  /// No description provided for @paywallReasonMaintenanceReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Get maintenance reminders with Navis Plus'**
+  String get paywallReasonMaintenanceReminders;
+
   /// No description provided for @maintenanceEveryMonths.
   ///
   /// In en, this message translates to:

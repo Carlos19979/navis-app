@@ -230,6 +230,9 @@
   "maintenanceIntervalMonths": "Months",
   "maintenanceIntervalHours": "Engine hours",
   "maintenanceRepeatHint": "Leave empty for a one-off service. With an interval it joins the plan and we remind you when it is due.",
+  "maintenanceRepeatHintFree": "Leave empty for a one-off service. With an interval it joins the plan and the app shows you when it is due.",
+  "maintenanceRemindersPlus": "Get reminded with Navis Plus",
+  "paywallReasonMaintenanceReminders": "Get maintenance reminders with Navis Plus",
   "maintenanceEveryMonths": "every {months} mo",
   "@maintenanceEveryMonths": {
     "placeholders": {
