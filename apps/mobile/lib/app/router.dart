@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' as supa;
 
 import 'package:navis_mobile/core/network/supabase_client.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
+import 'package:navis_mobile/features/auth/presentation/screens/auth_link_screen.dart';
 import 'package:navis_mobile/features/auth/presentation/screens/check_email_screen.dart';
 import 'package:navis_mobile/features/auth/presentation/screens/login_screen.dart';
 import 'package:navis_mobile/features/auth/presentation/screens/register_screen.dart';
@@ -79,6 +80,12 @@ final routerProvider = Provider<GoRouter>((ref) {
     navigatorKey: rootNavigatorKey,
     initialLocation: '/boats',
     refreshListenable: authNotifier,
+    // An auth email opens the app on `navis://login-callback?code=…`: a host
+    // and a query, no path, so nothing here matches it and GoRouter falls
+    // through to its default "Page Not Found". That is where password
+    // recovery used to die — session already exchanged, user staring at an
+    // error. AuthLinkScreen waits for the redirect below to take over.
+    errorBuilder: (context, state) => AuthLinkScreen(uri: state.uri),
     redirect: (context, state) {
       final session = supabaseClient.auth.currentSession;
       final isAuthenticated = session != null && !session.isExpired;

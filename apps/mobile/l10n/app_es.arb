@@ -1126,5 +1126,8 @@
   "bgRecordingTitle": "Navis está grabando tu viaje",
   "bgRecordingBody": "Seguimiento GPS activo - toca para abrir",
   "bgAnchorWatchTitle": "Guardia de fondeo activa",
-  "bgAnchorWatchBody": "Vigilando tu posición - toca para abrir"
+  "bgAnchorWatchBody": "Vigilando tu posición - toca para abrir",
+  "authLinkOpening": "Abriendo Navis...",
+  "authLinkExpiredTitle": "El enlace ya no vale",
+  "authLinkExpiredBody": "Los enlaces caducan al cabo de una hora y solo se pueden usar una vez. Pide uno nuevo desde «Olvidaste tu contraseña»."
 }
