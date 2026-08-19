@@ -193,7 +193,10 @@ func TestReadinessService_Get_MaintenancePendingWhenNeverLogged(t *testing.T) {
 	}
 }
 
-func TestReadinessService_Get_MaintenanceNoPlanWhenNoTasks(t *testing.T) {
+// A boat with no maintenance plan must not be penalized: defining a schedule is
+// opt-in, and the old "set a plan" nudge cost 10 points, so every new boat
+// opened on "needs attention · 90" with nothing the owner had done wrong.
+func TestReadinessService_Get_NoMaintenancePlanIsReadyAndUnpenalized(t *testing.T) {
 	t.Parallel()
 	docs := readinessDocs(domain.Document{Type: domain.DocumentTypeITB, ExpiryDate: daysFromNow(200)})
 	maint := &mockMaintenanceRepo{}
@@ -203,14 +206,30 @@ func TestReadinessService_Get_MaintenanceNoPlanWhenNoTasks(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	var found bool
-	for _, it := range r.Attention {
-		if it.Ref == "engine_service" && it.Reason == "no_plan" {
-			found = true
+	if r.Score != 100 {
+		t.Errorf("score = %d, want 100 (an empty plan costs nothing)", r.Score)
+	}
+	if r.Status != domain.ReadinessReady {
+		t.Errorf("status = %q, want ready", r.Status)
+	}
+	if len(r.Attention) != 0 {
+		t.Errorf("attention = %+v, want 0 (no plan is not a finding)", r.Attention)
+	}
+	var maintCat *domain.ReadinessCategory
+	for i := range r.Categories {
+		if r.Categories[i].Key == domain.ReadinessCatMaintenance {
+			maintCat = &r.Categories[i]
 		}
 	}
-	if !found {
-		t.Errorf("attention = %+v, want a no_plan engine_service item", r.Attention)
+	if maintCat == nil {
+		t.Fatalf("categories = %+v, want a maintenance category", r.Categories)
+	}
+	// 0/0, so the breakdown reads "nothing scheduled" instead of "1 critical".
+	if maintCat.Total != 0 || maintCat.OK != 0 || maintCat.Critical != 0 {
+		t.Errorf("maintenance = %+v, want an empty 0/0 category", *maintCat)
+	}
+	if maintCat.Status != domain.ReadinessReady {
+		t.Errorf("maintenance status = %q, want ready", maintCat.Status)
 	}
 }
 
@@ -231,6 +250,9 @@ func TestReadinessService_Get_HistoryOnlyTaskIsIgnored(t *testing.T) {
 	}
 	if len(r.Attention) != 0 {
 		t.Errorf("attention = %+v, want 0 (history-only task)", r.Attention)
+	}
+	if r.Score != 100 {
+		t.Errorf("score = %d, want 100 (history-only task costs nothing)", r.Score)
 	}
 }
 
@@ -260,8 +282,7 @@ func TestReadinessService_Get_FreePlanIsDocumentsOnly(t *testing.T) {
 	docs := readinessDocs(
 		domain.Document{Type: domain.DocumentTypeITB, ExpiryDate: daysFromNow(200)},
 	)
-	// No tasks: on Pro this would flag a no_plan nudge, but Free must not even
-	// include the maintenance category.
+	// Free must not include the maintenance category at all.
 	maint := &mockMaintenanceRepo{}
 	svc := NewReadinessService(docs, maint, taskRepo(), &mockBoatRepo{}, &testutil.FakeProfileRepo{Plan: domain.PlanFree})
 

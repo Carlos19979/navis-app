@@ -954,7 +954,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get certificates => 'Certificados, seguros, inspecciones';
 
   @override
-  String get tripHistory => 'Historial de viajes y estadísticas';
+  String get tripHistory => 'Historial de viajes e iniciar uno nuevo';
 
   @override
   String get modifyBoatDetails => 'Modificar detalles del barco';
@@ -967,9 +967,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get type => 'Tipo';
-
-  @override
-  String get statistics => 'Estadísticas';
 
   @override
   String get recordTrip => 'Registrar viaje';

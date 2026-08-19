@@ -1865,7 +1865,7 @@ abstract class AppLocalizations {
   /// No description provided for @tripHistory.
   ///
   /// In en, this message translates to:
-  /// **'Trip history and statistics'**
+  /// **'Trip history and start a new one'**
   String get tripHistory;
 
   /// No description provided for @modifyBoatDetails.
@@ -1891,12 +1891,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Type'**
   String get type;
-
-  /// No description provided for @statistics.
-  ///
-  /// In en, this message translates to:
-  /// **'Statistics'**
-  String get statistics;
 
   /// No description provided for @recordTrip.
   ///

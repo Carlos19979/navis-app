@@ -947,7 +947,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get certificates => 'Certificates, insurance, inspections';
 
   @override
-  String get tripHistory => 'Trip history and statistics';
+  String get tripHistory => 'Trip history and start a new one';
 
   @override
   String get modifyBoatDetails => 'Modify boat details';
@@ -960,9 +960,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get type => 'Type';
-
-  @override
-  String get statistics => 'Statistics';
 
   @override
   String get recordTrip => 'Record Trip';

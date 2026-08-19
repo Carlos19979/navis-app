@@ -22,22 +22,56 @@ Future<void> showBoatMembersSheet(
   BuildContext context, {
   required String boatId,
   VoidCallback? onShare,
-}) {
-  return showModalBottomSheet<void>(
-    context: context,
-    useRootNavigator: true,
-    isScrollControlled: true,
-    backgroundColor: context.dialogSurface,
-    builder: (_) => _BoatMembersSheet(boatId: boatId, onShare: onShare),
+}) async {
+  // The crew is fetched BEFORE the sheet slides in. Opening first meant the
+  // request landed mid-animation and the sheet swapped its skeleton for the
+  // "share this boat" CTA halfway up — the flick this fixes.
+  //
+  // The subscription is held until the sheet closes because the provider is
+  // autoDispose: a bare read would be collected before the sheet could watch
+  // it and the whole thing would be fetched twice. Holding it also means the
+  // cache from the last visit is still there, so the refresh this provider
+  // exists for (a member joins on someone else's device) is asked for
+  // explicitly rather than left to disposal timing.
+  final container = ProviderScope.containerOf(context, listen: false);
+  container.invalidate(boatMembersProvider(boatId));
+  final warm = container.listen<AsyncValue<List<BoatMember>>>(
+    boatMembersProvider(boatId),
+    (_, __) {},
   );
+  try {
+    await Future.any<void>([
+      // Errors are not swallowed, just not awaited here: the sheet reads the
+      // same provider and renders its error branch with a retry.
+      container
+          .read(boatMembersProvider(boatId).future)
+          .then<void>((_) {}, onError: (_, __) {}),
+      Future<void>.delayed(_crewWarmup),
+    ]);
+    if (!context.mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      backgroundColor: context.dialogSurface,
+      builder: (_) => _BoatMembersSheet(boatId: boatId, onShare: onShare),
+    );
+  } finally {
+    warm.close();
+  }
 }
+
+/// How long the crew request gets before the sheet opens anyway. Short enough
+/// that the tap still feels immediate (the tile's ripple covers it), long
+/// enough that a warm API answers inside it and the sheet opens settled.
+const _crewWarmup = Duration(milliseconds: 300);
 
 class _BoatMembersSheet extends ConsumerWidget {
   const _BoatMembersSheet({required this.boatId, this.onShare});
 
-  /// Floor for the content area while the crew loads, so the sheet is already
-  /// about the size it will end up being before it finishes sliding in. A
-  /// minimum rather than a fixed height: the skeleton must not be squeezed.
+  /// Floor for the content area, applied to every branch so the sheet keeps
+  /// one height whether it shows a skeleton, an error, the share CTA or the
+  /// crew. A minimum rather than a fixed height: nothing gets squeezed.
   static const _contentMinHeight = 128.0;
 
   final String boatId;
@@ -82,66 +116,64 @@ class _BoatMembersSheet extends ConsumerWidget {
             const SizedBox(height: Dimens.spaceLg),
             Flexible(
               child: SingleChildScrollView(
-                child: membersAsync.when(
-                  // Same height as a couple of rows, so the sheet does not
-                  // resize when the crew arrives. A thin progress bar made it
-                  // open short and then jump taller mid-animation — the flash
-                  // that made this feel broken.
-                  loading: () => ConstrainedBox(
-                    constraints:
-                        const BoxConstraints(minHeight: _contentMinHeight),
-                    child: const NavisShimmer(
+                // One floor for every branch — skeleton, error, empty CTA and
+                // crew alike — so the sheet keeps its height whatever arrives.
+                child: ConstrainedBox(
+                  constraints:
+                      const BoxConstraints(minHeight: _contentMinHeight),
+                  child: membersAsync.when(
+                    loading: () => const NavisShimmer(
                       itemCount: 2,
                       padding: EdgeInsets.symmetric(vertical: 6),
                     ),
-                  ),
-                  error: (e, _) => Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: Dimens.spaceSm),
-                      Text(
-                        l.somethingWentWrong,
-                        style: TextStyle(color: context.txtSecondary),
-                      ),
-                      const SizedBox(height: Dimens.spaceSm),
-                      TextButton.icon(
-                        onPressed: () =>
-                            ref.invalidate(boatMembersProvider(boatId)),
-                        icon: const Icon(Icons.refresh, size: Dimens.iconSm),
-                        label: Text(l.retry),
-                      ),
-                    ],
-                  ),
-                  data: (members) {
-                    if (members.isEmpty) {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            l.notSharedYet,
-                            style: TextStyle(color: context.txtSecondary),
-                          ),
-                          if (onShare != null) ...[
-                            const SizedBox(height: Dimens.spaceLg),
-                            NavisButton(
-                              label: l.shareBoat,
-                              icon: Icons.ios_share_rounded,
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                                onShare!();
-                              },
+                    error: (e, _) => Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: Dimens.spaceSm),
+                        Text(
+                          l.somethingWentWrong,
+                          style: TextStyle(color: context.txtSecondary),
+                        ),
+                        const SizedBox(height: Dimens.spaceSm),
+                        TextButton.icon(
+                          onPressed: () =>
+                              ref.invalidate(boatMembersProvider(boatId)),
+                          icon: const Icon(Icons.refresh, size: Dimens.iconSm),
+                          label: Text(l.retry),
+                        ),
+                      ],
+                    ),
+                    data: (members) {
+                      if (members.isEmpty) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              l.notSharedYet,
+                              style: TextStyle(color: context.txtSecondary),
                             ),
+                            if (onShare != null) ...[
+                              const SizedBox(height: Dimens.spaceLg),
+                              NavisButton(
+                                label: l.shareBoat,
+                                icon: Icons.ios_share_rounded,
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                  onShare!();
+                                },
+                              ),
+                            ],
                           ],
+                        );
+                      }
+                      return Column(
+                        children: [
+                          for (final m in members)
+                            _MemberPermissionsTile(boatId: boatId, member: m),
                         ],
                       );
-                    }
-                    return Column(
-                      children: [
-                        for (final m in members)
-                          _MemberPermissionsTile(boatId: boatId, member: m),
-                      ],
-                    );
-                  },
+                    },
+                  ),
                 ),
               ),
             ),

@@ -26,7 +26,6 @@ import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/boat/presentation/boat_type_label.dart';
 import 'package:navis_mobile/shared/widgets/join_by_code_sheet.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
-import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_empty_state.dart';
@@ -394,7 +393,13 @@ class _BoatCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
-    final summaryAsync = ref.watch(boatDocumentSummaryProvider(boat.id));
+    // Null until there is something worth a badge. It is also the row that
+    // closes the card when present, so the chips above it only carry the gap
+    // in between.
+    final summary = switch (ref.watch(boatDocumentSummaryProvider(boat.id))) {
+      AsyncData(:final value) when value.total > 0 => value,
+      _ => null,
+    };
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -409,7 +414,8 @@ class _BoatCard extends ConsumerWidget {
             BoatHeader(boat: boat),
             // Info chips
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              padding:
+                  EdgeInsets.fromLTRB(16, 12, 16, summary != null ? 8 : 14),
               child: Wrap(
                 spacing: 8,
                 runSpacing: 6,
@@ -432,70 +438,46 @@ class _BoatCard extends ConsumerWidget {
             ),
             // Document status badges. Tapping them opens the documents they
             // are warning about, instead of the boat detail.
-            if (summaryAsync case AsyncData(:final value))
-              if (value.total > 0)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                  child: GestureDetector(
-                    onTap: () => context.push('/boats/${boat.id}/documents'),
-                    child: Wrap(
-                      spacing: 6,
-                      runSpacing: 4,
-                      children: [
-                        // Worst status first: what needs doing leads, and if
-                        // the row wraps it is the "all good" badge that drops
-                        // to the second line.
-                        if (value.expired > 0)
-                          _StatusBadge(
-                            count: value.expired,
-                            label: l.expired,
-                            color: AppColors.red,
-                          ),
-                        if (value.critical > 0)
-                          _StatusBadge(
-                            count: value.critical,
-                            label: l.critical,
-                            color: AppColors.red,
-                          ),
-                        if (value.warning > 0)
-                          _StatusBadge(
-                            count: value.warning,
-                            label: l.warning,
-                            color: AppColors.amber,
-                          ),
-                        if (value.ok > 0)
-                          _StatusBadge(
-                            count: value.ok,
-                            label: l.valid,
-                            color: AppColors.green,
-                          ),
-                      ],
-                    ),
+            if (summary != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                child: GestureDetector(
+                  onTap: () => context.push('/boats/${boat.id}/documents'),
+                  child: Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: [
+                      // Worst status first: what needs doing leads, and if the
+                      // row wraps it is the "all good" badge that drops to the
+                      // second line.
+                      if (summary.expired > 0)
+                        _StatusBadge(
+                          count: summary.expired,
+                          label: l.expired,
+                          color: AppColors.red,
+                        ),
+                      if (summary.critical > 0)
+                        _StatusBadge(
+                          count: summary.critical,
+                          label: l.critical,
+                          color: AppColors.red,
+                        ),
+                      if (summary.warning > 0)
+                        _StatusBadge(
+                          count: summary.warning,
+                          label: l.warning,
+                          color: AppColors.amber,
+                        ),
+                      if (summary.ok > 0)
+                        _StatusBadge(
+                          count: summary.ok,
+                          label: l.valid,
+                          color: AppColors.green,
+                        ),
+                    ],
                   ),
                 ),
-            // Action buttons
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _CardAction(
-                      label: l.documents,
-                      icon: Icons.description_outlined,
-                      onTap: () => context.push('/boats/${boat.id}/documents'),
-                    ),
-                  ),
-                  const SizedBox(width: Dimens.spaceSm),
-                  Expanded(
-                    child: _CardAction(
-                      label: l.logbook,
-                      icon: Icons.route_outlined,
-                      onTap: () => context.push('/boats/${boat.id}/trips'),
-                    ),
-                  ),
-                ],
               ),
-            ),
           ],
         ),
       ),
@@ -551,62 +533,6 @@ class _InfoChip extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// Half-width action inside a boat card, styled like a secondary [NavisButton]
-/// but with room for its label: the shared button reserves 24 px of padding on
-/// each side, which at half a card's width truncated "Documents" to "Docume…".
-class _CardAction extends StatelessWidget {
-  const _CardAction({
-    required this.label,
-    required this.icon,
-    required this.onTap,
-  });
-
-  final String label;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: label,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          height: Dimens.minTouchTarget,
-          padding: const EdgeInsets.symmetric(horizontal: Dimens.spaceSm),
-          decoration: BoxDecoration(
-            color: context.glassBg,
-            borderRadius: BorderRadius.circular(Dimens.radiusLg),
-            border: Border.all(color: context.glassBorderColor),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: Dimens.iconSm, color: AppColors.cyan),
-              const SizedBox(width: Dimens.spaceXs),
-              Flexible(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.cyan,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

@@ -5,6 +5,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:navis_mobile/features/boat/data/boat_share_repository.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
 import 'package:navis_mobile/features/boat/presentation/widgets/boat_members_sheet.dart';
+import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
 
 import '../../helpers/helpers.dart';
 
@@ -141,6 +142,62 @@ void main() {
     // Refused: the switch must not keep claiming a permission the member
     // does not have.
     expect(find.text('0 permissions'), findsOneWidget);
+  });
+
+  testWidgets(
+      'opens already settled instead of swapping a skeleton for the CTA',
+      (tester) async {
+    // The flick: the sheet used to open on a skeleton and replace it with the
+    // share CTA while it was still sliding up. The crew is now fetched first,
+    // so no skeleton is ever drawn for a request that answers in time.
+    when(() => repo.listMembers(boatId)).thenAnswer((_) async {
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      return const <BoatMember>[];
+    });
+
+    await tester.pumpWidget(subject());
+    await tester.tap(find.text('open'));
+
+    // Inside the grace period: nothing has opened yet, and crucially the
+    // skeleton is not on screen.
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.text('Crew and permissions'), findsNothing);
+    expect(find.byType(NavisShimmer), findsNothing);
+
+    // The crew lands, then the sheet slides in with its final content.
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Crew and permissions'), findsOneWidget);
+    expect(find.byType(NavisShimmer), findsNothing);
+    expect(find.text("You haven't shared with anyone yet."), findsOneWidget);
+    // Warmed once and watched by the sheet: the wait must not cost a
+    // second request against the autoDispose provider.
+    verify(() => repo.listMembers(boatId)).called(1);
+  });
+
+  testWidgets('a slow crew request does not hold the sheet shut',
+      (tester) async {
+    when(() => repo.listMembers(boatId)).thenAnswer((_) async {
+      await Future<void>.delayed(const Duration(seconds: 2));
+      return const <BoatMember>[];
+    });
+
+    await tester.pumpWidget(subject());
+    await tester.tap(find.text('open'));
+    // Past the grace period the sheet opens anyway, skeleton and all: a dead
+    // network must not make the tap look ignored.
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Crew and permissions'), findsOneWidget);
+    expect(find.byType(NavisShimmer), findsOneWidget);
+
+    // Let the pending request finish so no timer outlives the test.
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pump();
+    expect(find.text("You haven't shared with anyone yet."), findsOneWidget);
   });
 
   testWidgets('an empty crew offers the share flow', (tester) async {

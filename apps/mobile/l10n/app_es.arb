@@ -430,12 +430,11 @@
     }
   },
   "certificates": "Certificados, seguros, inspecciones",
-  "tripHistory": "Historial de viajes y estadísticas",
+  "tripHistory": "Historial de viajes e iniciar uno nuevo",
   "modifyBoatDetails": "Modificar detalles del barco",
   "removePermanently": "Eliminar este barco permanentemente",
   "details": "Detalles",
   "type": "Tipo",
-  "statistics": "Estadísticas",
   "recordTrip": "Registrar viaje",
   "boat": "Barco",
   "boatPhoto": "Foto del barco",
