@@ -1,7 +1,7 @@
 name: navis_mobile
 description: Navis — boat management app for recreational owners
 publish_to: 'none'
-version: 1.1.0+9
+version: 1.1.0+10
 
 environment:
   sdk: ^3.4.0
