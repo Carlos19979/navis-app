@@ -227,6 +227,34 @@ that (1) drops categories the user muted and (2) stores what was delivered.
   `PUT /notifications/:id/read`, `PUT /notifications/read-all`,
   `GET|PUT /me/notification-preferences`. See `docs/api-spec.md`.
 
+## Maintenance tab: one action instead of two entities (2026-08-19)
+The tab exposed the data model, not the job: a FAB that created **tasks** and a
+second `+` inside a section called "Other records" that created **logs**, with a
+task's own history hidden inside its detail sheet. An owner had to understand
+what a "task" was before being able to write down that the oil was changed.
+- **One FAB — "Record service".** A plan entry is no longer something you
+  create: the record sheet carries *Repeats every [months] [engine hours]*, and
+  filling it creates the task and links the log in the same save
+  (`MaintenanceRepository.addTask` now returns the created task, so the log gets
+  its `task_id` without a re-fetch). On an already-linked service those same
+  fields re-schedule the plan entry.
+- **Linking is a chip, not a dropdown.** Tapping a plan chip names the service,
+  links it and shows that entry's interval — one tap fills three fields.
+- **One history.** "Other records" (= the logs that failed to link) is gone; the
+  tab lists every service newest-first, 5 + "See all". Plan entries are sorted
+  by urgency (overdue → due soon → pending → ok → no schedule).
+- **Suggestions are onboarding.** The template chips (oil, filters, anodes…) now
+  show only while the plan is empty.
+- A plan entry's form survives only for rename / re-schedule / delete, reached
+  from its detail sheet. "Add task" as a UI concept is gone, and with it the
+  strings `maintenancePlanTitle`, `maintenanceOtherTitle`, `addTask`,
+  `noTaskOption`, `taskField`, `maintenanceTypeHint`.
+- **The API is untouched**: the same `POST /maintenance/tasks` + `POST
+  /maintenance`, now reached through one flow instead of two.
+- Golden baselines for the maintenance screen are stale until regenerated
+  locally (`flutter test --update-goldens --tags golden`); goldens are excluded
+  from CI.
+
 ## Cron jobs (all UTC)
 - `0 8 * * *` document-expiry (`ExpirationChecker`) → owners; plan reminder quota (Free=1 nearest doc); dedup `notification_logs`.
 - `15 8 * * *` maintenance-due (`MaintenanceChecker`, #47) → Pro owners; dedup `maintenance_notification_logs`.

@@ -884,35 +884,35 @@ abstract class AppLocalizations {
   /// **'in {hours} h'**
   String readinessMaintInHours(int hours);
 
-  /// No description provided for @maintenancePlanTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Maintenance plan'**
-  String get maintenancePlanTitle;
-
-  /// No description provided for @maintenanceOtherTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Other records'**
-  String get maintenanceOtherTitle;
-
   /// No description provided for @noMaintenanceTasks.
   ///
   /// In en, this message translates to:
   /// **'No maintenance tasks yet'**
   String get noMaintenanceTasks;
 
+  /// No description provided for @maintenanceUpcomingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming'**
+  String get maintenanceUpcomingTitle;
+
+  /// No description provided for @maintenanceHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get maintenanceHistoryTitle;
+
+  /// No description provided for @maintenanceSeeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'See all'**
+  String get maintenanceSeeAll;
+
   /// No description provided for @suggestedTasksLabel.
   ///
   /// In en, this message translates to:
   /// **'Suggested'**
   String get suggestedTasksLabel;
-
-  /// No description provided for @addTask.
-  ///
-  /// In en, this message translates to:
-  /// **'Add task'**
-  String get addTask;
 
   /// No description provided for @editTask.
   ///
@@ -962,17 +962,41 @@ abstract class AppLocalizations {
   /// **'No services recorded yet'**
   String get maintenanceHistoryEmpty;
 
-  /// No description provided for @noTaskOption.
+  /// No description provided for @maintenancePartOfPlan.
   ///
   /// In en, this message translates to:
-  /// **'No task (one-off)'**
-  String get noTaskOption;
+  /// **'Part of the plan (optional)'**
+  String get maintenancePartOfPlan;
 
-  /// No description provided for @taskField.
+  /// No description provided for @maintenanceWhatWasDone.
   ///
   /// In en, this message translates to:
-  /// **'Task'**
-  String get taskField;
+  /// **'What was done? (e.g. oil change)'**
+  String get maintenanceWhatWasDone;
+
+  /// No description provided for @maintenanceRepeatEvery.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeats every'**
+  String get maintenanceRepeatEvery;
+
+  /// No description provided for @maintenanceIntervalMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'Months'**
+  String get maintenanceIntervalMonths;
+
+  /// No description provided for @maintenanceIntervalHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Engine hours'**
+  String get maintenanceIntervalHours;
+
+  /// No description provided for @maintenanceRepeatHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty for a one-off service. With an interval it joins the plan and we remind you when it is due.'**
+  String get maintenanceRepeatHint;
 
   /// No description provided for @maintenanceEveryMonths.
   ///
@@ -3499,12 +3523,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Invoice'**
   String get invoiceLabel;
-
-  /// No description provided for @maintenanceTypeHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Type (e.g. oil change)'**
-  String get maintenanceTypeHint;
 
   /// No description provided for @costOptional.
   ///

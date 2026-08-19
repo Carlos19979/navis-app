@@ -41,6 +41,12 @@ String _fmtDate(DateTime d) =>
 String _isoDate(DateTime d) =>
     '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
+/// Empty (or unparseable) input means "not set" — null, never zero, so an
+/// interval or a cost the user left blank is cleared server-side.
+int? _parseInt(String s) => int.tryParse(s.trim());
+
+double? _parseDouble(String s) => double.tryParse(s.trim());
+
 /// Maps an expense category API value to its localized display label.
 String _categoryLabel(AppLocalizations l, String category) =>
     switch (category) {
@@ -160,23 +166,65 @@ String _taskSubtitle(AppLocalizations l, MaintenanceTask t) {
   return parts.join(' · ');
 }
 
-class _MaintenanceTab extends ConsumerWidget {
+/// Reading order of the plan: what is late first, then what is close, then
+/// the rest. Sorting server-side would need a second query per status.
+int _urgencyRank(MaintenanceStatus s) => switch (s) {
+      MaintenanceStatus.overdue => 0,
+      MaintenanceStatus.dueSoon => 1,
+      MaintenanceStatus.pending => 2,
+      MaintenanceStatus.ok => 3,
+      MaintenanceStatus.none => 4,
+    };
+
+List<MaintenanceTask> _sortedTasks(List<MaintenanceTask> tasks) {
+  final out = List<MaintenanceTask>.of(tasks);
+  out.sort((a, b) {
+    final rank = _urgencyRank(a.status).compareTo(_urgencyRank(b.status));
+    if (rank != 0) return rank;
+    final ad = a.nextDueDays ?? 1 << 30;
+    final bd = b.nextDueDays ?? 1 << 30;
+    if (ad != bd) return ad.compareTo(bd);
+    return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+  });
+  return out;
+}
+
+/// How many services the history shows before the "see all" row.
+const _historyPreview = 5;
+
+/// The maintenance tab has ONE primary action: record what you did. A plan
+/// entry is not something you create separately — it is a service you told us
+/// repeats, so "record service" carries an optional interval and creates (or
+/// updates) the task itself. Two peer lists with two different add buttons,
+/// plus an "other records" bucket that only meant "logs I failed to link",
+/// was the confusion this replaces.
+class _MaintenanceTab extends ConsumerStatefulWidget {
   const _MaintenanceTab({required this.boatId});
+
   final String boatId;
+
+  @override
+  ConsumerState<_MaintenanceTab> createState() => _MaintenanceTabState();
+}
+
+class _MaintenanceTabState extends ConsumerState<_MaintenanceTab> {
+  bool _allHistory = false;
+
+  String get boatId => widget.boatId;
 
   /// Fail-closed: reads the permissions endpoint, not the (cacheable, possibly
   /// stale) boat entity, and treats loading/error as "not granted". Assuming
   /// "allowed" while we do not know is what let a member fill in a whole form
   /// and only then lose it to a 403 on save.
-  bool _canEdit(WidgetRef ref) => ref
+  bool get _canEdit => ref
       .watch(boatPermissionsProvider(boatId))
       .grants(BoatPermissionArea.manageMaintenance);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final tasksAsync = ref.watch(maintenanceTasksProvider(boatId));
-    final canEdit = _canEdit(ref);
+    final canEdit = _canEdit;
 
     return Stack(
       children: [
@@ -186,66 +234,7 @@ class _MaintenanceTab extends ConsumerWidget {
             message: e.toString(),
             onRetry: () => ref.invalidate(maintenanceTasksProvider(boatId)),
           ),
-          data: (tasks) {
-            final logs =
-                ref.watch(maintenanceLogsProvider(boatId)).valueOrNull ??
-                    const <MaintenanceLog>[];
-            final orphans = logs.where((x) => x.taskId == null).toList();
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-              children: [
-                // A read-only member gets the padlock and the reason, not a
-                // screen that is silently missing its buttons.
-                if (!canEdit) ...[
-                  BlockedActionCard(
-                    reason: permissionReason(
-                      l,
-                      BoatPermissionArea.manageMaintenance,
-                    ),
-                    compact: true,
-                    onRetry: () =>
-                        ref.invalidate(boatPermissionsProvider(boatId)),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-                _sectionHeader(context, l.maintenancePlanTitle),
-                if (canEdit) _SuggestedChips(boatId: boatId, tasks: tasks),
-                if (tasks.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 20),
-                    child: Text(l.noMaintenanceTasks,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: context.txtSecondary)),
-                  ),
-                for (final t in tasks) _taskCard(context, ref, t, canEdit),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                        child: _sectionHeaderText(
-                            context, l.maintenanceOtherTitle)),
-                    if (canEdit)
-                      IconButton(
-                        icon: const Icon(Icons.add, size: 20),
-                        tooltip: l.recordService,
-                        onPressed: () =>
-                            _editMaintenance(context, ref, tasks: tasks),
-                      ),
-                  ],
-                ),
-                if (orphans.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Text(l.maintenanceHistoryEmpty,
-                        style: TextStyle(
-                            color: context.txtSecondary, fontSize: 13)),
-                  )
-                else
-                  for (final m in orphans)
-                    _logCard(context, ref, m, canEdit, tasks),
-              ],
-            );
-          },
+          data: (tasks) => _content(context, l, tasks, canEdit),
         ),
         if (canEdit)
           Positioned(
@@ -253,35 +242,112 @@ class _MaintenanceTab extends ConsumerWidget {
             bottom: 16,
             child: NavisGradientFab(
               icon: Icons.add,
-              tooltip: l.addTask,
-              onPressed: () => _editTask(context, ref),
+              tooltip: l.recordService,
+              onPressed: () => _editMaintenance(
+                context,
+                tasks: tasksAsync.valueOrNull ?? const [],
+              ),
             ),
           ),
       ],
     );
   }
 
+  Widget _content(
+    BuildContext context,
+    AppLocalizations l,
+    List<MaintenanceTask> tasks,
+    bool canEdit,
+  ) {
+    final logs = ref.watch(maintenanceLogsProvider(boatId)).valueOrNull ??
+        const <MaintenanceLog>[];
+    // One history for the whole boat: a service linked to a plan entry used to
+    // be visible only inside that entry, so the owner had two places to look.
+    final history = List<MaintenanceLog>.of(logs)
+      ..sort((a, b) => b.performedAt.compareTo(a.performedAt));
+    final shown = _allHistory || history.length <= _historyPreview
+        ? history
+        : history.take(_historyPreview).toList();
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+      children: [
+        // A read-only member gets the padlock and the reason, not a screen
+        // that is silently missing its buttons.
+        if (!canEdit) ...[
+          BlockedActionCard(
+            reason: permissionReason(l, BoatPermissionArea.manageMaintenance),
+            compact: true,
+            onRetry: () => ref.invalidate(boatPermissionsProvider(boatId)),
+          ),
+          const SizedBox(height: 12),
+        ],
+        if (tasks.isEmpty) ...[
+          // Nothing planned yet: the suggestions ARE the plan section.
+          if (canEdit) _SuggestedChips(boatId: boatId, tasks: tasks),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Text(
+              l.noMaintenanceTasks,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: context.txtSecondary),
+            ),
+          ),
+        ] else ...[
+          _sectionHeader(context, l.maintenanceUpcomingTitle),
+          for (final t in _sortedTasks(tasks))
+            _taskCard(context, t, canEdit, tasks),
+        ],
+        const SizedBox(height: 16),
+        _sectionHeader(context, l.maintenanceHistoryTitle),
+        if (history.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Text(
+              l.maintenanceHistoryEmpty,
+              style: TextStyle(color: context.txtSecondary, fontSize: 13),
+            ),
+          )
+        else ...[
+          for (final m in shown) _logCard(context, m, canEdit, tasks),
+          if (history.length > shown.length)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                onPressed: () => setState(() => _allHistory = true),
+                child: Text(l.maintenanceSeeAll),
+              ),
+            ),
+        ],
+      ],
+    );
+  }
+
   Widget _sectionHeader(BuildContext context, String text) => Padding(
         padding: const EdgeInsets.only(bottom: 8),
-        child: _sectionHeaderText(context, text),
-      );
-
-  Widget _sectionHeaderText(BuildContext context, String text) => Text(
-        text,
-        style: TextStyle(
+        child: Text(
+          text,
+          style: TextStyle(
             color: context.txtPrimary,
             fontSize: 16,
-            fontWeight: FontWeight.w700),
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       );
 
   Widget _taskCard(
-      BuildContext context, WidgetRef ref, MaintenanceTask t, bool canEdit) {
+    BuildContext context,
+    MaintenanceTask t,
+    bool canEdit,
+    List<MaintenanceTask> tasks,
+  ) {
     final l = AppLocalizations.of(context)!;
     final (color, _) = _taskVisuals(context, t.status);
     final subtitle = _taskSubtitle(l, t);
+    final caption = TextStyle(color: context.txtSecondary, fontSize: 13);
     return NavisCard(
       margin: const EdgeInsets.only(bottom: 12),
-      onTap: () => _taskDetail(context, ref, t, canEdit),
+      onTap: () => _taskDetail(context, t, canEdit, tasks),
       child: Row(
         children: [
           Icon(Icons.circle, size: 10, color: color),
@@ -290,35 +356,45 @@ class _MaintenanceTab extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(t.name,
-                    style: TextStyle(
-                        color: context.txtPrimary,
-                        fontWeight: FontWeight.w600)),
+                Text(
+                  t.name,
+                  style: TextStyle(
+                    color: context.txtPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 if (subtitle.isNotEmpty) ...[
                   const SizedBox(height: 2),
-                  Text(subtitle,
-                      style:
-                          TextStyle(color: context.txtSecondary, fontSize: 13)),
+                  Text(subtitle, style: caption),
                 ],
               ],
             ),
           ),
           const SizedBox(width: 8),
-          Text(_taskStatusLabel(l, t),
-              style: TextStyle(
-                  color: color, fontSize: 13, fontWeight: FontWeight.w600)),
+          Text(
+            _taskStatusLabel(l, t),
+            style: TextStyle(
+              color: color,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _logCard(BuildContext context, WidgetRef ref, MaintenanceLog m,
-      bool canEdit, List<MaintenanceTask> tasks) {
+  Widget _logCard(
+    BuildContext context,
+    MaintenanceLog m,
+    bool canEdit,
+    List<MaintenanceTask> tasks,
+  ) {
     final l = AppLocalizations.of(context)!;
     return NavisCard(
       margin: const EdgeInsets.only(bottom: 12),
       onTap: canEdit
-          ? () => _editMaintenance(context, ref, existing: m, tasks: tasks)
+          ? () => _editMaintenance(context, existing: m, tasks: tasks)
           : null,
       child: Row(
         children: [
@@ -328,10 +404,13 @@ class _MaintenanceTab extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(m.type,
-                    style: TextStyle(
-                        color: context.txtPrimary,
-                        fontWeight: FontWeight.w600)),
+                Text(
+                  m.type,
+                  style: TextStyle(
+                    color: context.txtPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 const SizedBox(height: 2),
                 Text(
                   [
@@ -346,12 +425,19 @@ class _MaintenanceTab extends ConsumerWidget {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.attach_file,
-                          size: 14, color: AppColors.cyan),
+                      const Icon(
+                        Icons.attach_file,
+                        size: 14,
+                        color: AppColors.cyan,
+                      ),
                       const SizedBox(width: 2),
-                      Text(l.invoiceLabel,
-                          style: const TextStyle(
-                              color: AppColors.cyan, fontSize: 12)),
+                      Text(
+                        l.invoiceLabel,
+                        style: const TextStyle(
+                          color: AppColors.cyan,
+                          fontSize: 12,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -364,11 +450,14 @@ class _MaintenanceTab extends ConsumerWidget {
           ),
           if (m.cost != null) ...[
             const SizedBox(width: 8),
-            Text('${m.cost!.toStringAsFixed(0)} €',
-                style: const TextStyle(
-                    color: AppColors.cyan,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800)),
+            Text(
+              '${m.cost!.toStringAsFixed(0)} €',
+              style: const TextStyle(
+                color: AppColors.cyan,
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
           ],
         ],
       ),
@@ -376,8 +465,14 @@ class _MaintenanceTab extends ConsumerWidget {
   }
 
   Future<void> _taskDetail(
-      BuildContext context, WidgetRef ref, MaintenanceTask t, bool canEdit) {
+    BuildContext context,
+    MaintenanceTask t,
+    bool canEdit,
+    List<MaintenanceTask> tasks,
+  ) {
     final l = AppLocalizations.of(context)!;
+    final caption = TextStyle(color: context.txtSecondary, fontSize: 13);
+    final subtitle = _taskSubtitle(l, t);
     return showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
@@ -405,46 +500,53 @@ class _MaintenanceTab extends ConsumerWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(t.name,
-                            style: TextStyle(
-                                color: context.txtPrimary,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700)),
+                        child: Text(
+                          t.name,
+                          style: TextStyle(
+                            color: context.txtPrimary,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
                       if (canEdit)
                         IconButton(
                           icon: const Icon(Icons.edit, size: 20),
+                          tooltip: l.editTask,
                           onPressed: () {
                             Navigator.of(ctx).pop();
-                            _editTask(context, ref, existing: t);
+                            _editTask(context, t);
                           },
                         ),
                     ],
                   ),
-                  if (_taskSubtitle(l, t).isNotEmpty) ...[
+                  if (subtitle.isNotEmpty) ...[
                     const SizedBox(height: 2),
-                    Text(_taskSubtitle(l, t),
-                        style: TextStyle(
-                            color: context.txtSecondary, fontSize: 13)),
+                    Text(subtitle, style: caption),
                   ],
                   const SizedBox(height: 12),
                   if (history.isEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      child: Text(l.maintenanceHistoryEmpty,
-                          style: TextStyle(color: context.txtSecondary)),
+                      child: Text(
+                        l.maintenanceHistoryEmpty,
+                        style: TextStyle(color: context.txtSecondary),
+                      ),
                     )
                   else
                     for (final m in history)
-                      _logCard(context, ref, m, canEdit, [t]),
+                      _logCard(context, m, canEdit, tasks),
                   const SizedBox(height: 12),
                   if (canEdit)
                     NavisButton(
                       label: l.recordService,
                       onPressed: () {
                         Navigator.of(ctx).pop();
-                        _editMaintenance(context, ref,
-                            presetTaskId: t.id, tasks: [t]);
+                        _editMaintenance(
+                          context,
+                          presetTaskId: t.id,
+                          tasks: tasks,
+                        );
                       },
                     ),
                 ],
@@ -456,14 +558,17 @@ class _MaintenanceTab extends ConsumerWidget {
     );
   }
 
-  Future<void> _editTask(BuildContext context, WidgetRef ref,
-      {MaintenanceTask? existing}) async {
+  /// Rename / re-schedule / delete an existing plan entry. Creating one is not
+  /// here on purpose: a plan entry is born from a recorded service (or a
+  /// suggestion chip), never from a separate "add task" form.
+  Future<void> _editTask(BuildContext context, MaintenanceTask existing) async {
     final l = AppLocalizations.of(context)!;
-    final nameCtrl = TextEditingController(text: existing?.name ?? '');
+    final nameCtrl = TextEditingController(text: existing.name);
     final monthsCtrl =
-        TextEditingController(text: existing?.intervalMonths?.toString() ?? '');
+        TextEditingController(text: existing.intervalMonths?.toString() ?? '');
     final hoursCtrl = TextEditingController(
-        text: existing?.intervalHours?.toStringAsFixed(0) ?? '');
+      text: existing.intervalHours?.toStringAsFixed(0) ?? '',
+    );
 
     final saved = await showModalBottomSheet<bool>(
       context: context,
@@ -482,11 +587,14 @@ class _MaintenanceTab extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(existing == null ? l.addTask : l.editTask,
-                  style: TextStyle(
-                      color: context.txtPrimary,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700)),
+              Text(
+                l.editTask,
+                style: TextStyle(
+                  color: context.txtPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               const SizedBox(height: 12),
               NavisTextField(controller: nameCtrl, label: l.taskName),
               const SizedBox(height: 10),
@@ -506,27 +614,28 @@ class _MaintenanceTab extends ConsumerWidget {
                 label: l.save,
                 onPressed: () => Navigator.of(ctx).pop(true),
               ),
-              if (existing != null)
-                TextButton(
-                  onPressed: () async {
-                    final ok = await NavisConfirmDialog.show(
-                      ctx,
-                      title: l.delete,
-                      message: l.deleteConfirm,
-                      confirmLabel: l.delete,
-                      destructive: true,
-                    );
-                    if (!ok) return;
-                    await ref
-                        .read(maintenanceRepositoryProvider)
-                        .deleteTask(boatId, existing.id);
-                    ref.invalidate(maintenanceTasksProvider(boatId));
-                    ref.invalidate(maintenanceLogsProvider(boatId));
-                    if (ctx.mounted) Navigator.of(ctx).pop(false);
-                  },
-                  child: Text(l.delete,
-                      style: const TextStyle(color: AppColors.red)),
+              TextButton(
+                onPressed: () async {
+                  final ok = await NavisConfirmDialog.show(
+                    ctx,
+                    title: l.delete,
+                    message: l.deleteConfirm,
+                    confirmLabel: l.delete,
+                    destructive: true,
+                  );
+                  if (!ok) return;
+                  await ref
+                      .read(maintenanceRepositoryProvider)
+                      .deleteTask(boatId, existing.id);
+                  ref.invalidate(maintenanceTasksProvider(boatId));
+                  ref.invalidate(maintenanceLogsProvider(boatId));
+                  if (ctx.mounted) Navigator.of(ctx).pop(false);
+                },
+                child: Text(
+                  l.delete,
+                  style: const TextStyle(color: AppColors.red),
                 ),
+              ),
             ],
           ),
         ),
@@ -534,35 +643,32 @@ class _MaintenanceTab extends ConsumerWidget {
     );
 
     if (saved != true || nameCtrl.text.trim().isEmpty) return;
-    final body = <String, dynamic>{
-      'name': nameCtrl.text.trim(),
-      'interval_months': monthsCtrl.text.trim().isEmpty
-          ? null
-          : int.tryParse(monthsCtrl.text.trim()),
-      'interval_hours': hoursCtrl.text.trim().isEmpty
-          ? null
-          : double.tryParse(hoursCtrl.text.trim()),
-    };
     try {
       final repo = ref.read(maintenanceRepositoryProvider);
-      if (existing == null) {
-        await repo.addTask(boatId, body);
-      } else {
-        await repo.updateTask(boatId, existing.id, body);
-      }
+      await repo.updateTask(boatId, existing.id, {
+        'name': nameCtrl.text.trim(),
+        'interval_months': _parseInt(monthsCtrl.text),
+        'interval_hours': _parseDouble(hoursCtrl.text),
+      });
       ref.invalidate(maintenanceTasksProvider(boatId));
     } catch (_) {
       if (context.mounted) NavisSnackbar.error(context, l.couldNotSave);
     }
   }
 
-  Future<void> _editMaintenance(BuildContext context, WidgetRef ref,
-      {MaintenanceLog? existing,
-      String? presetTaskId,
-      List<MaintenanceTask> tasks = const []}) async {
+  /// The single write flow of the tab: what was done, when, what it cost —
+  /// and, optionally, how often it repeats. The interval is what turns the
+  /// service into a plan entry, so the user never meets "task" as a concept.
+  Future<void> _editMaintenance(
+    BuildContext context, {
+    MaintenanceLog? existing,
+    String? presetTaskId,
+    List<MaintenanceTask> tasks = const [],
+  }) async {
     final l = AppLocalizations.of(context)!;
+    final caption = TextStyle(color: context.txtSecondary, fontSize: 12);
     final typeCtrl = TextEditingController(text: existing?.type ?? '');
-    final hoursCtrl =
+    final engineCtrl =
         TextEditingController(text: existing?.engineHours?.toString() ?? '');
     final costCtrl =
         TextEditingController(text: existing?.cost?.toStringAsFixed(0) ?? '');
@@ -570,11 +676,37 @@ class _MaintenanceTab extends ConsumerWidget {
     var date = existing?.performedAt ?? DateTime.now();
     String? invoiceUrl = existing?.invoiceUrl;
     var photoUrls = List<String>.of(existing?.photoUrls ?? const []);
-    // Only keep a selected task id that still exists in the list.
-    final taskIds = tasks.map((t) => t.id).toSet();
-    var selectedTaskId = existing?.taskId ?? presetTaskId;
-    if (selectedTaskId != null && !taskIds.contains(selectedTaskId)) {
-      selectedTaskId = null;
+
+    MaintenanceTask? taskById(String? id) {
+      for (final t in tasks) {
+        if (t.id == id) return t;
+      }
+      return null;
+    }
+
+    // A stale task id (the entry was deleted meanwhile) resolves to null.
+    // `linked` is reassigned from the sheet, so the setup reads `initial`:
+    // a local captured by a closure cannot be type-promoted.
+    final initial = taskById(existing?.taskId ?? presetTaskId);
+    var linked = initial;
+    final monthsCtrl = TextEditingController(
+      text: initial?.intervalMonths?.toString() ?? '',
+    );
+    final everyHoursCtrl = TextEditingController(
+      text: initial?.intervalHours?.toStringAsFixed(0) ?? '',
+    );
+
+    // Linking to a plan entry also names the service and shows the entry's
+    // current interval, so one tap fills three fields.
+    void selectTask(MaintenanceTask? t) {
+      linked = t;
+      monthsCtrl.text = t?.intervalMonths?.toString() ?? '';
+      everyHoursCtrl.text = t?.intervalHours?.toStringAsFixed(0) ?? '';
+      if (t != null) typeCtrl.text = t.name;
+    }
+
+    if (initial != null && typeCtrl.text.trim().isEmpty) {
+      typeCtrl.text = initial.name;
     }
 
     final saved = await showModalBottomSheet<bool>(
@@ -590,45 +722,65 @@ class _MaintenanceTab extends ConsumerWidget {
           bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
         ),
         child: StatefulBuilder(
-          builder: (ctx, setState) => SingleChildScrollView(
+          builder: (ctx, setSheetState) => SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(existing == null ? l.recordService : l.edit,
-                    style: TextStyle(
-                        color: context.txtPrimary,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700)),
+                Text(
+                  existing == null ? l.recordService : l.edit,
+                  style: TextStyle(
+                    color: context.txtPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
                 const SizedBox(height: 12),
+                // Tapping a plan entry both names the service and links it —
+                // the old dropdown asked for the link as a separate decision.
                 if (tasks.isNotEmpty) ...[
-                  Text(l.taskField,
-                      style:
-                          TextStyle(color: context.txtSecondary, fontSize: 12)),
-                  DropdownButton<String?>(
-                    value: selectedTaskId,
-                    isExpanded: true,
-                    items: [
-                      DropdownMenuItem<String?>(
-                        child: Text(l.noTaskOption),
-                      ),
+                  Text(l.maintenancePartOfPlan, style: caption),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
                       for (final t in tasks)
-                        DropdownMenuItem<String?>(
-                          value: t.id,
-                          child: Text(t.name),
+                        ChoiceChip(
+                          label: Text(t.name),
+                          selected: linked?.id == t.id,
+                          onSelected: (on) => setSheetState(
+                            () => selectTask(on ? t : null),
+                          ),
                         ),
                     ],
-                    onChanged: (v) => setState(() => selectedTaskId = v),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
                 ],
                 NavisTextField(
                   controller: typeCtrl,
-                  label: l.maintenanceTypeHint,
+                  label: l.maintenanceWhatWasDone,
                 ),
                 const SizedBox(height: 10),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    l.dateWithValue(_fmtDate(date)),
+                    style: TextStyle(color: context.txtPrimary),
+                  ),
+                  trailing: const Icon(Icons.calendar_today, size: 18),
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: ctx,
+                      initialDate: date,
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2100),
+                    );
+                    if (picked != null) setSheetState(() => date = picked);
+                  },
+                ),
                 NavisTextField(
-                  controller: hoursCtrl,
+                  controller: engineCtrl,
                   keyboardType: TextInputType.number,
                   label: l.engineHoursOptional,
                 ),
@@ -644,24 +796,9 @@ class _MaintenanceTab extends ConsumerWidget {
                   label: l.providerOptional,
                 ),
                 const SizedBox(height: 10),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(l.dateWithValue(_fmtDate(date)),
-                      style: TextStyle(color: context.txtPrimary)),
-                  trailing: const Icon(Icons.calendar_today, size: 18),
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: ctx,
-                      initialDate: date,
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime(2100),
-                    );
-                    if (picked != null) setState(() => date = picked);
-                  },
-                ),
                 _InvoiceField(
                   url: invoiceUrl,
-                  onPicked: (u) => setState(() => invoiceUrl = u),
+                  onPicked: (u) => setSheetState(() => invoiceUrl = u),
                 ),
                 const SizedBox(height: 8),
                 NavisPhotoStrip(
@@ -680,9 +817,41 @@ class _MaintenanceTab extends ConsumerWidget {
                         .read(storageServiceProvider)
                         .uploadMaintenancePhoto(userId: userId, file: file);
                   },
-                  onChanged: (u) => setState(() => photoUrls = u),
+                  onChanged: (u) => setSheetState(() => photoUrls = u),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
+                Divider(color: context.glassBorderColor),
+                const SizedBox(height: 4),
+                Text(
+                  l.maintenanceRepeatEvery,
+                  style: TextStyle(
+                    color: context.txtPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: NavisTextField(
+                        controller: monthsCtrl,
+                        keyboardType: TextInputType.number,
+                        label: l.maintenanceIntervalMonths,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: NavisTextField(
+                        controller: everyHoursCtrl,
+                        keyboardType: TextInputType.number,
+                        label: l.maintenanceIntervalHours,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(l.maintenanceRepeatHint, style: caption),
+                const SizedBox(height: 16),
                 NavisButton(
                   label: l.save,
                   onPressed: () => Navigator.of(ctx).pop(true),
@@ -705,8 +874,10 @@ class _MaintenanceTab extends ConsumerWidget {
                       ref.invalidate(maintenanceTasksProvider(boatId));
                       if (ctx.mounted) Navigator.of(ctx).pop(false);
                     },
-                    child: Text(l.delete,
-                        style: const TextStyle(color: AppColors.red)),
+                    child: Text(
+                      l.delete,
+                      style: const TextStyle(color: AppColors.red),
+                    ),
                   ),
               ],
             ),
@@ -715,24 +886,45 @@ class _MaintenanceTab extends ConsumerWidget {
       ),
     );
 
-    if (saved != true || typeCtrl.text.trim().isEmpty) return;
-    final body = <String, dynamic>{
-      'task_id': selectedTaskId,
-      'type': typeCtrl.text.trim(),
-      'performed_at': _isoDate(date),
-      'engine_hours': hoursCtrl.text.trim().isEmpty
-          ? null
-          : double.tryParse(hoursCtrl.text.trim()),
-      'cost': costCtrl.text.trim().isEmpty
-          ? null
-          : double.tryParse(costCtrl.text.trim()),
-      'provider':
-          providerCtrl.text.trim().isEmpty ? null : providerCtrl.text.trim(),
-      'invoice_url': invoiceUrl,
-      'photo_urls': photoUrls,
-    };
+    final type = typeCtrl.text.trim();
+    if (saved != true || type.isEmpty) return;
+    final months = _parseInt(monthsCtrl.text);
+    final everyHours = _parseDouble(everyHoursCtrl.text);
+    final repo = ref.read(maintenanceRepositoryProvider);
+    final task = linked;
     try {
-      final repo = ref.read(maintenanceRepositoryProvider);
+      var taskId = task?.id;
+      if (task == null) {
+        if (months != null || everyHours != null) {
+          // "Repeats every ..." on an unlinked service IS how a plan entry
+          // is created — no separate form, no second trip through the UI.
+          final created = await repo.addTask(boatId, {
+            'name': type,
+            'interval_months': months,
+            'interval_hours': everyHours,
+          });
+          taskId = created.id;
+        }
+      } else if (months != task.intervalMonths ||
+          everyHours != task.intervalHours) {
+        // Editing the interval here re-schedules the plan entry itself.
+        await repo.updateTask(boatId, task.id, {
+          'name': task.name,
+          'interval_months': months,
+          'interval_hours': everyHours,
+        });
+      }
+      final provider = providerCtrl.text.trim();
+      final body = <String, dynamic>{
+        'task_id': taskId,
+        'type': type,
+        'performed_at': _isoDate(date),
+        'engine_hours': _parseDouble(engineCtrl.text),
+        'cost': _parseDouble(costCtrl.text),
+        'provider': provider.isEmpty ? null : provider,
+        'invoice_url': invoiceUrl,
+        'photo_urls': photoUrls,
+      };
       if (existing == null) {
         await repo.addLog(boatId, body);
       } else {
@@ -741,9 +933,7 @@ class _MaintenanceTab extends ConsumerWidget {
       ref.invalidate(maintenanceLogsProvider(boatId));
       ref.invalidate(maintenanceTasksProvider(boatId));
     } catch (_) {
-      if (context.mounted) {
-        NavisSnackbar.error(context, l.couldNotSave);
-      }
+      if (context.mounted) NavisSnackbar.error(context, l.couldNotSave);
     }
   }
 }

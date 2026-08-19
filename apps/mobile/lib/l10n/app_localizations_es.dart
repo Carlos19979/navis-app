@@ -437,19 +437,19 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get maintenancePlanTitle => 'Plan de mantenimiento';
-
-  @override
-  String get maintenanceOtherTitle => 'Otros registros';
-
-  @override
   String get noMaintenanceTasks => 'Aún no hay tareas de mantenimiento';
 
   @override
-  String get suggestedTasksLabel => 'Sugeridas';
+  String get maintenanceUpcomingTitle => 'Próximos';
 
   @override
-  String get addTask => 'Añadir tarea';
+  String get maintenanceHistoryTitle => 'Historial';
+
+  @override
+  String get maintenanceSeeAll => 'Ver todo';
+
+  @override
+  String get suggestedTasksLabel => 'Sugeridas';
 
   @override
   String get editTask => 'Editar tarea';
@@ -476,10 +476,24 @@ class AppLocalizationsEs extends AppLocalizations {
   String get maintenanceHistoryEmpty => 'Aún no hay servicios registrados';
 
   @override
-  String get noTaskOption => 'Sin tarea (puntual)';
+  String get maintenancePartOfPlan => 'Del plan (opcional)';
 
   @override
-  String get taskField => 'Tarea';
+  String get maintenanceWhatWasDone =>
+      '¿Qué se ha hecho? (ej. cambio de aceite)';
+
+  @override
+  String get maintenanceRepeatEvery => 'Se repite cada';
+
+  @override
+  String get maintenanceIntervalMonths => 'Meses';
+
+  @override
+  String get maintenanceIntervalHours => 'Horas de motor';
+
+  @override
+  String get maintenanceRepeatHint =>
+      'Déjalo vacío si es puntual. Con un intervalo entra en el plan y te avisamos cuando toque.';
 
   @override
   String maintenanceEveryMonths(int months) {
@@ -1825,9 +1839,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get invoiceLabel => 'Factura';
-
-  @override
-  String get maintenanceTypeHint => 'Tipo (ej. cambio de aceite)';
 
   @override
   String get costOptional => 'Coste € (opc.)';

@@ -211,11 +211,11 @@
       }
     }
   },
-  "maintenancePlanTitle": "Maintenance plan",
-  "maintenanceOtherTitle": "Other records",
   "noMaintenanceTasks": "No maintenance tasks yet",
+  "maintenanceUpcomingTitle": "Upcoming",
+  "maintenanceHistoryTitle": "History",
+  "maintenanceSeeAll": "See all",
   "suggestedTasksLabel": "Suggested",
-  "addTask": "Add task",
   "editTask": "Edit task",
   "taskName": "Task name",
   "taskIntervalMonthsLabel": "Every (months)",
@@ -224,8 +224,12 @@
   "maintenanceDueSoonLabel": "due soon",
   "maintenanceNoInterval": "no schedule",
   "maintenanceHistoryEmpty": "No services recorded yet",
-  "noTaskOption": "No task (one-off)",
-  "taskField": "Task",
+  "maintenancePartOfPlan": "Part of the plan (optional)",
+  "maintenanceWhatWasDone": "What was done? (e.g. oil change)",
+  "maintenanceRepeatEvery": "Repeats every",
+  "maintenanceIntervalMonths": "Months",
+  "maintenanceIntervalHours": "Engine hours",
+  "maintenanceRepeatHint": "Leave empty for a one-off service. With an interval it joins the plan and we remind you when it is due.",
   "maintenanceEveryMonths": "every {months} mo",
   "@maintenanceEveryMonths": {
     "placeholders": {
@@ -789,7 +793,6 @@
   "keepGoing": "Keep going",
   "noMaintenanceRecords": "No maintenance records",
   "invoiceLabel": "Invoice",
-  "maintenanceTypeHint": "Type (e.g. oil change)",
   "costOptional": "Cost € (opt.)",
   "providerOptional": "Provider (opt.)",
   "dateWithValue": "Date: {date}",
