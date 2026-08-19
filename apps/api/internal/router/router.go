@@ -33,6 +33,7 @@ func New(
 	webhookH *handler.WebhookHandler,
 	legalH *handler.LegalHandler,
 	joinH *handler.JoinHandler,
+	authCbH *handler.AuthCallbackHandler,
 	moderationH *handler.ModerationHandler,
 	notificationH *handler.NotificationHandler,
 	jwtSecret string,
@@ -110,6 +111,15 @@ func New(
 	// other unauthenticated pages anyone with a link can reach.
 	r.With(middleware.PublicPageCSP, middleware.RateLimit(60, time.Minute)).
 		Get("/join", joinH.Join)
+
+	// Auth email landing page (no auth) — where a Supabase recovery or
+	// confirmation link lands when it has no deep link of its own to go to
+	// (dashboard-triggered emails carry no redirect_to). Forwards the token to
+	// the app client-side. This is the URL the Supabase project's Site URL must
+	// point at; before it existed the fallback was /support, which left the
+	// recipient on a page that could not finish the reset.
+	r.With(middleware.PublicPageCSP, middleware.RateLimit(60, time.Minute)).
+		Get("/auth/callback", authCbH.Callback)
 
 	// Public ports (no auth) — global read-only nautical map data. The ports
 	// table is public-read (RLS `USING (true)`), so the bbox map feed needs no

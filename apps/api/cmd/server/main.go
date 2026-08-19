@@ -194,6 +194,10 @@ func main() {
 		IOS:     cfg.AppStoreURL,
 		Android: cfg.PlayStoreURL,
 	})
+	authCbH := handler.NewAuthCallbackHandler(handler.StoreLinks{
+		IOS:     cfg.AppStoreURL,
+		Android: cfg.PlayStoreURL,
+	})
 	moderationH := handler.NewModerationHandler(moderationSvc)
 	notificationH := handler.NewNotificationHandler(notificationSvc)
 
@@ -210,6 +214,7 @@ func main() {
 		webhookH,
 		legalH,
 		joinH,
+		authCbH,
 		moderationH,
 		notificationH,
 		cfg.SupabaseJWTSecret,

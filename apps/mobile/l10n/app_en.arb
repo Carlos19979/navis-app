@@ -450,7 +450,7 @@
   "moderate": "Moderate",
   "rough": "Rough",
   "sendResetLink": "Send Reset Link",
-  "passwordResetSent": "Password reset email sent. Check your inbox.",
+  "passwordResetSent": "If an account exists for that address, we have sent it a link. Check your spam folder too.",
   "failedToSendResetEmail": "Failed to send reset email",
   "newPasswordTitle": "Set a new password",
   "newPasswordSubtitle": "Choose a strong password to secure your account.",
