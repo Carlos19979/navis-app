@@ -398,6 +398,21 @@ Use these Dart 3.x features everywhere they apply:
   alarm) comes from `BackgroundCopy`, seeded from `NavisApp.builder` the way
   `NavisDateUtils.useLocale` is — a notifier has no `BuildContext` and these
   used to be hardcoded English in a Spanish-first app.
+- ⚠️ **flutter_map 7.0.2 crashes on a non-finite camera zoom.** Sentry has 144
+  events across 5 issues (`_TileLayerState._clampToNativeZoom`,
+  `PointExtension.floor`, `ProjectionSimplificationManagement.build`) whose
+  stacks contain **no Navis frames at all** — `zoom.round()` on `NaN`/`Infinity`
+  inside the tile-update stream. The breadcrumbs are always the same:
+  `background → foreground` with a map mounted, which is the moment the widget
+  can be laid out at zero size. All 144 came from **one user/device between
+  2026-07-28 and 2026-08-01** and it has not recurred since (builds 7, 8, 9).
+  Upstream hardened exactly this in **8.2.2** ("assert that `MapCamera.zoom` is
+  finite, to prevent confusing errors within layers") and 8.3.x for non-finite
+  `LatLng`. Do **not** patch around it in app code — our code is not in the
+  stack. If it recurs, upgrade flutter_map rather than guessing; note the
+  background-GPS work (trips + anchor watch surviving minimisation) makes the
+  triggering scenario far more common than it was in July, so treat a
+  reappearance as a signal to migrate.
 - **Anchor watch** (Pro): `features/anchor/` — drop an anchor position + swing
   radius (`CircleLayer`) and get a loud drift alarm. Reuses the trip-recording
   GPS/persistence pattern (background-capable `getPositionStream`, singleton
