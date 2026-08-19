@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:navis_mobile/core/config/settings_service.dart';
 import 'package:navis_mobile/features/auth/data/auth_repository.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
 import 'package:navis_mobile/features/auth/presentation/screens/reset_password_screen.dart';
@@ -14,9 +16,16 @@ class MockAuthRepository extends Mock implements AuthRepository {}
 
 void main() {
   late MockAuthRepository mockAuthRepository;
+  late SharedPreferences prefs;
 
-  setUp(() {
+  setUp(() async {
     mockAuthRepository = MockAuthRepository();
+    // The pending recovery is read from storage, not injected: that *is* the
+    // behaviour under test, since it has to survive the app being killed.
+    SharedPreferences.setMockInitialValues({
+      'auth_password_recovery_pending': true,
+    });
+    prefs = await SharedPreferences.getInstance();
   });
 
   Widget buildResetPasswordScreen() {
@@ -38,7 +47,7 @@ void main() {
     return ProviderScope(
       overrides: [
         authRepositoryProvider.overrideWithValue(mockAuthRepository),
-        passwordRecoveryProvider.overrideWith((ref) => true),
+        sharedPreferencesProvider.overrideWithValue(prefs),
       ],
       child: MaterialApp.router(
         routerConfig: router,

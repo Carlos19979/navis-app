@@ -1952,6 +1952,54 @@ abstract class AppLocalizations {
   /// **'Humidity'**
   String get humidity;
 
+  /// Cardinal wind direction abbreviation
+  ///
+  /// In en, this message translates to:
+  /// **'N'**
+  String get dirN;
+
+  /// Cardinal wind direction abbreviation
+  ///
+  /// In en, this message translates to:
+  /// **'NE'**
+  String get dirNE;
+
+  /// Cardinal wind direction abbreviation
+  ///
+  /// In en, this message translates to:
+  /// **'E'**
+  String get dirE;
+
+  /// Cardinal wind direction abbreviation
+  ///
+  /// In en, this message translates to:
+  /// **'SE'**
+  String get dirSE;
+
+  /// Cardinal wind direction abbreviation
+  ///
+  /// In en, this message translates to:
+  /// **'S'**
+  String get dirS;
+
+  /// Cardinal wind direction abbreviation
+  ///
+  /// In en, this message translates to:
+  /// **'SW'**
+  String get dirSW;
+
+  /// Cardinal wind direction abbreviation
+  ///
+  /// In en, this message translates to:
+  /// **'W'**
+  String get dirW;
+
+  /// Cardinal wind direction abbreviation
+  ///
+  /// In en, this message translates to:
+  /// **'NW'**
+  String get dirNW;
+
   /// No description provided for @currentConditions.
   ///
   /// In en, this message translates to:

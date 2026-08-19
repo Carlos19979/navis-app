@@ -992,6 +992,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get humidity => 'Humidity';
 
   @override
+  String get dirN => 'N';
+
+  @override
+  String get dirNE => 'NE';
+
+  @override
+  String get dirE => 'E';
+
+  @override
+  String get dirSE => 'SE';
+
+  @override
+  String get dirS => 'S';
+
+  @override
+  String get dirSW => 'SW';
+
+  @override
+  String get dirW => 'W';
+
+  @override
+  String get dirNW => 'NW';
+
+  @override
   String get currentConditions => 'Current Conditions';
 
   @override

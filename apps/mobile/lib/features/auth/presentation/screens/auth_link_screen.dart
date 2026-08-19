@@ -54,7 +54,7 @@ class _AuthLinkScreenState extends ConsumerState<AuthLinkScreen> {
     if (!_failed && isPasswordRecoveryUri(widget.uri)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          ref.read(passwordRecoveryProvider.notifier).state = true;
+          ref.read(passwordRecoveryProvider.notifier).begin();
         }
       });
     }

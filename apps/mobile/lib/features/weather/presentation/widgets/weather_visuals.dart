@@ -84,9 +84,35 @@ Color waveColor(double meters) {
   return AppColors.red;
 }
 
-/// Converts wind direction degrees to an 8-point cardinal label.
-String cardinalDirection(double degrees) {
-  const labels = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+/// Converts wind direction degrees to a localized 8-point cardinal label.
+/// Localized because the letters are not universal: west is W in English and
+/// O (oeste) in Spanish.
+String cardinalDirection(AppLocalizations l, double degrees) {
+  final labels = [
+    l.dirN,
+    l.dirNE,
+    l.dirE,
+    l.dirSE,
+    l.dirS,
+    l.dirSW,
+    l.dirW,
+    l.dirNW
+  ];
   final index = ((degrees + 22.5) / 45).floor() % 8;
   return labels[index];
 }
+
+/// Qualitative reading of a wind speed in knots, on the same thresholds as
+/// [windColor] so the word and the color never disagree.
+String windScaleLabel(AppLocalizations l, double knots) => switch (knots) {
+      < 10 => l.calm,
+      < 20 => l.moderate,
+      _ => l.rough,
+    };
+
+/// Qualitative reading of a wave height in meters, on [waveColor]'s thresholds.
+String waveScaleLabel(AppLocalizations l, double meters) => switch (meters) {
+      < 0.5 => l.calm,
+      < 1.5 => l.moderate,
+      _ => l.rough,
+    };

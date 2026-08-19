@@ -1,15 +1,23 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/logbook/domain/entities/trip.dart';
 import 'package:navis_mobile/shared/widgets/navis_pulse_budget.dart';
 
-/// Control labels sit directly over the map, so a soft dark shadow keeps white
-/// text legible on both light and dark tiles.
+/// The start button floats bare over the map, so a soft dark shadow keeps its
+/// white label legible on both light and dark tiles. Everything else lives
+/// inside the glass dock, which supplies its own contrast.
 const _labelShadows = [
   Shadow(color: Colors.black54, blurRadius: 4, offset: Offset(0, 1)),
 ];
+
+/// Lightened red for the discard row: [AppColors.red] itself only reaches ~2.9:1
+/// against the red-tinted glass, this clears WCAG AA.
+const _discardTint = Color(0xFFFF8E80);
 
 class RecordingControls extends StatelessWidget {
   const RecordingControls({
@@ -36,77 +44,169 @@ class RecordingControls extends StatelessWidget {
       case TripStatus.completed:
         return _StartButton(onPressed: onStart);
       case TripStatus.recording:
-        return _controlsColumn(
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _GradientControlButton(
-                icon: Icons.pause,
-                label: l.pauseTrip,
-                gradient: AppColors.amberGradient,
-                glowColor: AppColors.amber,
-                onPressed: onPause,
-              ),
-              const SizedBox(width: 24),
-              _GradientControlButton(
-                icon: Icons.stop,
-                label: l.stopTrip,
-                gradient: AppColors.redGradient,
-                glowColor: AppColors.red,
-                onPressed: onStop,
-              ),
-            ],
-          ),
+        return _dock(
           l,
+          primary: _GradientControlButton(
+            icon: Icons.pause,
+            label: l.pauseTrip,
+            gradient: AppColors.amberGradient,
+            glowColor: AppColors.amber,
+            onPressed: onPause,
+          ),
+          secondary: _GradientControlButton(
+            icon: Icons.stop,
+            label: l.stopTrip,
+            gradient: AppColors.redGradient,
+            glowColor: AppColors.red,
+            onPressed: onStop,
+          ),
         );
       case TripStatus.paused:
-        return _controlsColumn(
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _GradientControlButton(
-                icon: Icons.play_arrow,
-                label: l.resumeTrip,
-                gradient: AppColors.greenGradient,
-                glowColor: AppColors.green,
-                onPressed: onResume,
-              ),
-              const SizedBox(width: 24),
-              _GradientControlButton(
-                icon: Icons.stop,
-                label: l.stopTrip,
-                gradient: AppColors.redGradient,
-                glowColor: AppColors.red,
-                onPressed: onStop,
-              ),
-            ],
-          ),
+        return _dock(
           l,
+          primary: _GradientControlButton(
+            icon: Icons.play_arrow,
+            label: l.resumeTrip,
+            gradient: AppColors.greenGradient,
+            glowColor: AppColors.green,
+            onPressed: onResume,
+          ),
+          secondary: _GradientControlButton(
+            icon: Icons.stop,
+            label: l.stopTrip,
+            gradient: AppColors.redGradient,
+            glowColor: AppColors.red,
+            onPressed: onStop,
+          ),
         );
     }
   }
 
-  Widget _controlsColumn(Widget mainRow, AppLocalizations l) {
-    if (onCancel == null) return mainRow;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        mainRow,
-        const SizedBox(height: 6),
-        TextButton.icon(
-          onPressed: onCancel,
-          icon: const Icon(Icons.close, size: 16, color: Colors.white),
-          label: Text(
-            l.cancelTrip,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              shadows: _labelShadows,
+  /// One glass panel holds every in-trip action. Discard used to be a bare
+  /// white `TextButton` floating on the tiles, which disappeared over light
+  /// coastline and read as decoration next to two 72dp gradient circles. Inside
+  /// the dock it gets a guaranteed backdrop, a 48dp target and a bordered
+  /// destructive treatment: still clearly subordinate to pause/stop (outlined,
+  /// not filled), but impossible to miss.
+  Widget _dock(
+    AppLocalizations l, {
+    required Widget primary,
+    required Widget secondary,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: Dimens.spaceLg),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(Dimens.radiusXxl),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(
+            sigmaX: Dimens.blurControls,
+            sigmaY: Dimens.blurControls,
+          ),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(
+              Dimens.spaceLg,
+              Dimens.spaceLg,
+              Dimens.spaceLg,
+              Dimens.spaceMd,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.navy.withValues(alpha: 0.78),
+              borderRadius: BorderRadius.circular(Dimens.radiusXxl),
+              border: Border.all(color: AppColors.glassBorder, width: 0.5),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    primary,
+                    const SizedBox(width: Dimens.spaceXl),
+                    secondary,
+                  ],
+                ),
+                if (onCancel != null) ...[
+                  const SizedBox(height: Dimens.spaceLg),
+                  const Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: AppColors.glassOverlay,
+                  ),
+                  const SizedBox(height: Dimens.spaceMd),
+                  _DiscardButton(label: l.cancelTrip, onPressed: onCancel!),
+                ],
+              ],
             ),
           ),
         ),
-      ],
+      ),
+    );
+  }
+}
+
+/// Full-width outlined destructive row. Outlined instead of filled so it never
+/// competes with the stop button, red-tinted so it never reads as "confirm".
+class _DiscardButton extends StatefulWidget {
+  const _DiscardButton({required this.label, required this.onPressed});
+
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  State<_DiscardButton> createState() => _DiscardButtonState();
+}
+
+class _DiscardButtonState extends State<_DiscardButton> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: widget.label,
+      child: GestureDetector(
+        onTapDown: (_) => setState(() => _pressed = true),
+        onTapUp: (_) => setState(() => _pressed = false),
+        onTapCancel: () => setState(() => _pressed = false),
+        onTap: widget.onPressed,
+        child: AnimatedScale(
+          scale: _pressed ? 0.97 : 1.0,
+          duration: const Duration(milliseconds: 100),
+          child: Container(
+            height: Dimens.minTouchTarget,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: AppColors.red.withValues(alpha: _pressed ? 0.28 : 0.16),
+              borderRadius: BorderRadius.circular(Dimens.radiusLg),
+              border: Border.all(
+                color: AppColors.red.withValues(alpha: 0.55),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.delete_outline,
+                  size: Dimens.iconSm,
+                  color: _discardTint,
+                ),
+                const SizedBox(width: Dimens.spaceSm),
+                Flexible(
+                  child: Text(
+                    widget.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: _discardTint,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -257,7 +357,7 @@ class _GradientControlButtonState extends State<_GradientControlButton> {
             ),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: Dimens.spaceSm),
         Text(
           widget.label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(

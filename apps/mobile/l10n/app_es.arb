@@ -445,6 +445,38 @@
   "wind": "Viento",
   "waves": "Olas",
   "humidity": "Humedad",
+  "dirN": "N",
+  "@dirN": {
+    "description": "Cardinal wind direction abbreviation"
+  },
+  "dirNE": "NE",
+  "@dirNE": {
+    "description": "Cardinal wind direction abbreviation"
+  },
+  "dirE": "E",
+  "@dirE": {
+    "description": "Cardinal wind direction abbreviation"
+  },
+  "dirSE": "SE",
+  "@dirSE": {
+    "description": "Cardinal wind direction abbreviation"
+  },
+  "dirS": "S",
+  "@dirS": {
+    "description": "Cardinal wind direction abbreviation"
+  },
+  "dirSW": "SO",
+  "@dirSW": {
+    "description": "Cardinal wind direction abbreviation"
+  },
+  "dirW": "O",
+  "@dirW": {
+    "description": "Cardinal wind direction abbreviation"
+  },
+  "dirNW": "NO",
+  "@dirNW": {
+    "description": "Cardinal wind direction abbreviation"
+  },
   "currentConditions": "Condiciones Actuales",
   "calm": "Calma",
   "moderate": "Moderado",
@@ -715,7 +747,7 @@
   "requestAction": "Solicitar",
   "notInAnyGroup": "Aún no estás en ningún grupo.",
   "noPublicGroups": "No hay grupos públicos para descubrir.",
-  "cancelTrip": "Cancelar viaje",
+  "cancelTrip": "Descartar viaje",
   "cancelTripRegattaWarning": "La regata volverá a \"programada\" y se descartará la grabación.",
   "cancelTripWarning": "Se descartará este viaje sin guardarlo.",
   "exitWithoutSaving": "Salir sin guardar",
