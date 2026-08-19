@@ -10,14 +10,13 @@ import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/weather/domain/entities/weather_overview.dart';
 import 'package:navis_mobile/features/weather/presentation/providers/weather_provider.dart';
+import 'package:navis_mobile/features/weather/presentation/widgets/current_conditions.dart';
 import 'package:navis_mobile/features/weather/presentation/widgets/daily_forecast_list.dart';
 import 'package:navis_mobile/features/weather/presentation/widgets/weather_visuals.dart';
-import 'package:navis_mobile/features/weather/presentation/widgets/wind_indicator.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
-import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
 
@@ -202,10 +201,20 @@ class _OverviewBody extends StatelessWidget {
                 style: TextStyle(color: secondary),
               ),
             ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 20),
 
-          // Current conditions detail card.
-          _CurrentDetailsCard(overview: overview).animate().fadeIn(
+          // Current conditions, as a grid of metric tiles.
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 12),
+            child: Text(
+              l.currentConditions,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+          ),
+          CurrentConditions(current: current).animate().fadeIn(
                 delay: 400.ms,
                 duration: 500.ms,
               ),
@@ -227,103 +236,6 @@ class _OverviewBody extends StatelessWidget {
           ],
         ],
       ),
-    );
-  }
-}
-
-class _CurrentDetailsCard extends StatelessWidget {
-  const _CurrentDetailsCard({required this.overview});
-
-  final WeatherOverview overview;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
-    final current = overview.current;
-
-    return NavisCard(
-      child: Row(
-        children: [
-          Expanded(
-            child: Center(
-              child: WindIndicator(
-                direction: current.windDirection,
-                speed: current.windSpeed,
-              ),
-            ),
-          ),
-          Container(width: 1, height: 70, color: context.glassBorderColor),
-          Expanded(
-            child: Column(
-              children: [
-                _DetailPill(
-                  icon: Icons.waves_rounded,
-                  label: l.waves,
-                  value: '${current.waveHeight.toStringAsFixed(1)} m',
-                  color: waveColor(current.waveHeight),
-                ),
-                const SizedBox(height: 8),
-                _DetailPill(
-                  icon: Icons.water_drop_rounded,
-                  label: l.humidity,
-                  value:
-                      current.humidity != null ? '${current.humidity}%' : '—',
-                  color: AppColors.cyan,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DetailPill extends StatelessWidget {
-  const _DetailPill({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primary = isDark ? context.txtPrimary : AppColors.textLight;
-    final secondary =
-        isDark ? context.txtSecondary : AppColors.textLightSecondary;
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(icon, color: color, size: 18),
-        const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              value,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: primary,
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: secondary,
-                  ),
-            ),
-          ],
-        ),
-      ],
     );
   }
 }
