@@ -389,6 +389,107 @@ void main() {
     });
   });
 
+  group('MaintenanceScreen plan matching', () {
+    testWidgets('a service named like a plan entry links to it',
+        (tester) async {
+      setPhoneSize(tester);
+      when(() => mockRepo.addLog(boatId, any())).thenAnswer((_) async {});
+      await tester.pumpWidget(
+        buildSubject(
+          tasks: () async =>
+              [makeMaintenanceTask(id: 'task-9', name: 'Antifouling')],
+        ),
+      );
+      await pumpScreen(tester);
+
+      await tester.tap(find.byTooltip('Record service'));
+      await pumpScreen(tester);
+      await tester.enterText(
+        find.widgetWithText(TextField, 'What was done? (e.g. oil change)'),
+        '  antifouling ',
+      );
+      await tester.ensureVisible(find.text('Save'));
+      await tester.tap(find.text('Save'));
+      await pumpScreen(tester);
+
+      // No twin entry, and the plan's schedule is left alone: the interval
+      // fields were never prefilled, so empty means "said nothing".
+      verifyNever(() => mockRepo.addTask(any(), any()));
+      verifyNever(() => mockRepo.updateTask(any(), any(), any()));
+      final log = verify(() => mockRepo.addLog(boatId, captureAny()))
+          .captured
+          .single as Map<String, dynamic>;
+      expect(log['task_id'], 'task-9');
+    });
+
+    testWidgets('typing an interval on a matched entry reschedules it',
+        (tester) async {
+      setPhoneSize(tester);
+      when(() => mockRepo.addLog(boatId, any())).thenAnswer((_) async {});
+      when(() => mockRepo.updateTask(boatId, any(), any()))
+          .thenAnswer((_) async {});
+      await tester.pumpWidget(
+        buildSubject(
+          // The factory already schedules it every 12 months.
+          tasks: () async =>
+              [makeMaintenanceTask(id: 'task-9', name: 'Antifouling')],
+        ),
+      );
+      await pumpScreen(tester);
+
+      await tester.tap(find.byTooltip('Record service'));
+      await pumpScreen(tester);
+      await tester.enterText(
+        find.widgetWithText(TextField, 'What was done? (e.g. oil change)'),
+        'Antifouling',
+      );
+      await tester.enterText(find.widgetWithText(TextField, 'Months'), '24');
+      await tester.ensureVisible(find.text('Save'));
+      await tester.tap(find.text('Save'));
+      await pumpScreen(tester);
+
+      verifyNever(() => mockRepo.addTask(any(), any()));
+      final body = verify(
+        () => mockRepo.updateTask(boatId, 'task-9', captureAny()),
+      ).captured.single as Map<String, dynamic>;
+      expect(body['interval_months'], 24);
+    });
+  });
+
+  group('MaintenanceScreen reminder gating', () {
+    testWidgets('Free is told reminders are a Plus feature', (tester) async {
+      setPhoneSize(tester);
+      await tester.pumpWidget(buildSubject(pro: false));
+      await pumpScreen(tester);
+
+      await tester.tap(find.byTooltip('Record service'));
+      await pumpScreen(tester);
+      await tester.ensureVisible(find.text('Get reminded with Navis Plus'));
+
+      // The cron is Plus+, so Free must not read a promise of a reminder.
+      expect(find.text('Get reminded with Navis Plus'), findsOneWidget);
+      expect(
+        find.textContaining('we remind you when it is due'),
+        findsNothing,
+      );
+    });
+
+    testWidgets('a paid plan keeps the reminder promise', (tester) async {
+      setPhoneSize(tester);
+      await tester.pumpWidget(buildSubject());
+      await pumpScreen(tester);
+
+      await tester.tap(find.byTooltip('Record service'));
+      await pumpScreen(tester);
+
+      expect(find.text('Get reminded with Navis Plus'), findsNothing);
+      expect(
+        find.textContaining('we remind you when it is due'),
+        findsOneWidget,
+      );
+    });
+  });
+
   group('MaintenanceScreen history', () {
     testWidgets('lists linked services too', (tester) async {
       setPhoneSize(tester);

@@ -491,6 +491,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Leave empty for a one-off service. With an interval it joins the plan and we remind you when it is due.';
 
   @override
+  String get maintenanceRepeatHintFree =>
+      'Leave empty for a one-off service. With an interval it joins the plan and the app shows you when it is due.';
+
+  @override
+  String get maintenanceRemindersPlus => 'Get reminded with Navis Plus';
+
+  @override
+  String get paywallReasonMaintenanceReminders =>
+      'Get maintenance reminders with Navis Plus';
+
+  @override
   String maintenanceEveryMonths(int months) {
     return 'every $months mo';
   }
