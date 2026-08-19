@@ -48,7 +48,7 @@ final authDeepLinkListenerProvider = Provider<void>((ref) {
 
   void handle(Uri uri) {
     if (!isPasswordRecoveryUri(uri)) return;
-    ref.read(passwordRecoveryProvider.notifier).state = true;
+    ref.read(passwordRecoveryProvider.notifier).begin();
   }
 
   StreamSubscription<Uri>? subscription;

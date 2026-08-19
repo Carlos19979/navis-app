@@ -52,7 +52,7 @@ class _AuthNotifier extends ChangeNotifier {
   _AuthNotifier(this._ref) {
     _subscription = supabaseClient.auth.onAuthStateChange.listen((data) {
       if (data.event == supa.AuthChangeEvent.passwordRecovery) {
-        _ref.read(passwordRecoveryProvider.notifier).state = true;
+        _ref.read(passwordRecoveryProvider.notifier).begin();
       }
       notifyListeners();
     });
@@ -93,8 +93,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       final location = state.matchedLocation;
 
       // A password-recovery session must land on the reset screen (never on
-      // /boats) until the new password is set and the flag is cleared.
-      if (isRecovering) {
+      // /boats) until the new password is set and the flag is cleared. Only
+      // while there *is* a session: the flag outlives a restart now, and a
+      // pending recovery with no session left would otherwise strand the user
+      // on a screen whose only button cannot work.
+      if (isRecovering && isAuthenticated) {
         return location == '/reset-password' ? null : '/reset-password';
       }
 
