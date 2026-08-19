@@ -531,7 +531,12 @@ void main() {
             .called(1);
       });
 
-      testWidgets('shows snackbar on successful reset email', (tester) async {
+      // Supabase answers 200 whether or not the address belongs to an
+      // account, so the snackbar must not claim a mail was sent: for a typo'd
+      // address none ever is, and looking like it worked is what makes the
+      // flow feel broken.
+      testWidgets('the snackbar does not promise a mail we cannot confirm',
+          (tester) async {
         suppressDisposedControllerErrors();
         addTearDown(restoreErrorHandler);
 
@@ -557,7 +562,8 @@ void main() {
         await tester.pump(const Duration(seconds: 1));
 
         expect(
-          find.text('Password reset email sent. Check your inbox.'),
+          find.text('If an account exists for that address, we have sent it '
+              'a link. Check your spam folder too.'),
           findsOneWidget,
         );
       });
