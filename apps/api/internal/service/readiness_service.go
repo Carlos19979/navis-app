@@ -148,22 +148,21 @@ const maxMaintenancePenalty = 40
 // maintenanceCategory evaluates the boat's per-component maintenance plan. Each
 // task with an interval flags due_soon (amber) / overdue (red) / pending (never
 // logged), whichever limit — date or hours — comes first. Tasks with no interval
-// are history-only and ignored. A boat with no tasks gets a single "set a plan"
-// nudge. Returns the category, the attention items, and the score penalty.
+// are history-only and ignored. Returns the category, the attention items, and
+// the score penalty.
+//
+// A boat with no plan is **ready with 0/0**, not flagged: defining a maintenance
+// schedule is opt-in, and charging a brand-new boat 10 points for not having one
+// meant every owner's first look at readiness said "needs attention · 90".
 func (s *ReadinessService) maintenanceCategory(ctx context.Context, boat *domain.Boat) (domain.ReadinessCategory, []domain.ReadinessItem, int) {
 	cat := domain.ReadinessCategory{Key: domain.ReadinessCatMaintenance}
 	tasks, _ := s.tasks.ListByBoat(ctx, boat.ID)
 	logs, _ := s.maint.ListByBoat(ctx, boat.ID)
 
-	// No plan at all: a single nudge to set one up.
+	// No plan at all: nothing to judge, so nothing to deduct.
 	if len(tasks) == 0 {
-		cat.Total = 1
-		cat.Critical = 1
-		cat.Status = domain.ReadinessAttention
-		return cat, []domain.ReadinessItem{{
-			Category: domain.ReadinessCatMaintenance, Ref: "engine_service",
-			Reason: "no_plan", Status: domain.ReadinessAttention,
-		}}, 10
+		cat.Status = domain.ReadinessReady
+		return cat, nil, 0
 	}
 
 	now := s.now()
@@ -195,10 +194,8 @@ func (s *ReadinessService) maintenanceCategory(ctx context.Context, boat *domain
 		}
 	}
 
-	// Only history-only tasks existed: nothing to flag.
+	// Only history-only tasks existed: nothing to flag, same as no plan.
 	if cat.Total == 0 {
-		cat.Total = 1
-		cat.OK = 1
 		cat.Status = domain.ReadinessReady
 		return cat, nil, 0
 	}

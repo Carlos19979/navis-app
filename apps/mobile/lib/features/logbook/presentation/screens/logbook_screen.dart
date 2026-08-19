@@ -29,17 +29,9 @@ class LogbookScreen extends ConsumerWidget {
     return GradientBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: NavisAppBar(
-          title: l.logbook,
-          showBack: true,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.bar_chart_outlined),
-              tooltip: l.statistics,
-              onPressed: () => context.push('/boats/$boatId/stats'),
-            ),
-          ],
-        ),
+        // Trip statistics live on the boat detail screen only; the logbook
+        // used to duplicate that entry point in its app bar.
+        appBar: NavisAppBar(title: l.logbook, showBack: true),
         body: tripsAsync.when(
           loading: () => const NavisShimmer(itemCount: 4, itemHeight: 100),
           error: (error, stack) => NavisErrorWidget(

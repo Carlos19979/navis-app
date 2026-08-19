@@ -437,12 +437,11 @@
     }
   },
   "certificates": "Certificates, insurance, inspections",
-  "tripHistory": "Trip history and statistics",
+  "tripHistory": "Trip history and start a new one",
   "modifyBoatDetails": "Modify boat details",
   "removePermanently": "Remove this boat permanently",
   "details": "Details",
   "type": "Type",
-  "statistics": "Statistics",
   "recordTrip": "Record Trip",
   "boat": "Boat",
   "boatPhoto": "Boat photo",

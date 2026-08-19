@@ -137,13 +137,16 @@ void main() {
       expect(find.text('Palma de Mallorca'), findsNWidgets(2));
     });
 
-    testWidgets('shows Documents and Logbook buttons per card', (tester) async {
+    testWidgets('a card carries no Documents/Logbook shortcuts',
+        (tester) async {
       setPhoneSize(tester);
       await tester.pumpWidget(buildSubject(boats: testBoats));
       await pumpScreen(tester);
 
-      expect(find.text('Documents'), findsNWidgets(2));
-      expect(find.text('Logbook'), findsNWidgets(2));
+      // The card is the boat, nothing else: both sections live one tap deeper,
+      // on the boat detail screen.
+      expect(find.text('Documents'), findsNothing);
+      expect(find.text('Logbook'), findsNothing);
     });
 
     testWidgets('shows FAB with add tooltip', (tester) async {
@@ -229,12 +232,12 @@ void main() {
       await tester.pumpWidget(buildSubject(boats: [makeBoat()]));
       await pumpScreen(tester);
 
-      // The card is the same one the list renders: only Documents + Logbook.
+      // The card is the same one the list renders: boat identity only.
       expect(find.text('Manage boat'), findsNothing);
       expect(find.text('Maintenance'), findsNothing);
       expect(find.text('Anchor watch'), findsNothing);
-      expect(find.text('Documents'), findsOneWidget);
-      expect(find.text('Logbook'), findsOneWidget);
+      expect(find.text('Documents'), findsNothing);
+      expect(find.text('Logbook'), findsNothing);
     });
 
     testWidgets('single boat card navigates to detail from anywhere',
@@ -291,25 +294,6 @@ void main() {
       await pumpScreen(tester);
 
       expect(spy.last, '/boats/boat-1/documents');
-    });
-
-    testWidgets('card actions leave room for their label on a narrow phone',
-        (tester) async {
-      setNarrowPhoneSize(tester);
-      await tester.pumpWidget(buildSubject(boats: testBoats));
-      await pumpScreen(tester);
-
-      expect(tester.takeException(), isNull);
-      // Regression: the shared compact button reserved 24 px of padding a side,
-      // which at half a card's width truncated "Documents" to "Docume…".
-      for (final label in ['Documents', 'Logbook']) {
-        final text = find.text(label).first;
-        expectRoomForLabel(
-          tester,
-          text,
-          find.ancestor(of: text, matching: find.byType(GestureDetector)).first,
-        );
-      }
     });
 
     testWidgets('a long home port shortens its chip instead of overflowing',
@@ -398,30 +382,6 @@ void main() {
       await pumpScreen(tester);
 
       expect(spy.last, '/boats/boat-1');
-    });
-
-    testWidgets('Documents button navigates to documents page', (tester) async {
-      setPhoneSize(tester);
-      final spy = RouteSpy();
-      await tester.pumpWidget(buildSubject(boats: testBoats, spy: spy));
-      await pumpScreen(tester);
-
-      await tester.tap(find.text('Documents').first);
-      await pumpScreen(tester);
-
-      expect(spy.last, '/boats/boat-1/documents');
-    });
-
-    testWidgets('Logbook button navigates to trips page', (tester) async {
-      setPhoneSize(tester);
-      final spy = RouteSpy();
-      await tester.pumpWidget(buildSubject(boats: testBoats, spy: spy));
-      await pumpScreen(tester);
-
-      await tester.tap(find.text('Logbook').first);
-      await pumpScreen(tester);
-
-      expect(spy.last, '/boats/boat-1/trips');
     });
 
     testWidgets('shows document summary badges when available', (tester) async {

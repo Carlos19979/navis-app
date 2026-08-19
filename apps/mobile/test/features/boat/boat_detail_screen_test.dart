@@ -287,7 +287,10 @@ void main() {
       await pumpScreen(tester);
 
       expect(find.text('Logbook'), findsOneWidget);
-      expect(find.text('Trip history and statistics'), findsOneWidget);
+      expect(
+        find.text('Trip history and start a new one'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('shows Trip Statistics action tile', (tester) async {

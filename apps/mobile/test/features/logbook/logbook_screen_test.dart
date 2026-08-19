@@ -152,7 +152,7 @@ void main() {
       );
     });
 
-    testWidgets('app bar has Statistics button', (tester) async {
+    testWidgets('app bar has no Statistics shortcut', (tester) async {
       final trips = [makeTrip()];
 
       await tester.pumpWidget(
@@ -170,8 +170,9 @@ void main() {
       );
       await pumpFrames(tester);
 
-      expect(find.byTooltip('Statistics'), findsOneWidget);
-      expect(find.byIcon(Icons.bar_chart_outlined), findsOneWidget);
+      // Trip statistics are reachable from the boat detail screen only.
+      expect(find.byTooltip('Statistics'), findsNothing);
+      expect(find.byIcon(Icons.bar_chart_outlined), findsNothing);
     });
 
     testWidgets('shows error state with retry button', (tester) async {
@@ -328,31 +329,6 @@ void main() {
       await pumpFrames(tester);
 
       expect(spy.last, '/trips/trip-1');
-    });
-
-    testWidgets('Statistics button navigates to the stats page',
-        (tester) async {
-      final spy = RouteSpy();
-      await tester.pumpWidget(
-        buildRoutedTestApp(
-          const LogbookScreen(boatId: boatId),
-          spy: spy,
-          overrides: [
-            boatTripsProvider.overrideWith(
-              (ref, boatId) async => [makeTrip()],
-            ),
-            tripStatsProvider.overrideWith(
-              (ref, trips) => makeTripStats(),
-            ),
-          ],
-        ),
-      );
-      await pumpFrames(tester);
-
-      await tester.tap(find.byTooltip('Statistics'));
-      await pumpFrames(tester);
-
-      expect(spy.last, '/boats/$boatId/stats');
     });
 
     testWidgets('empty state CTA navigates to the trip precheck',
