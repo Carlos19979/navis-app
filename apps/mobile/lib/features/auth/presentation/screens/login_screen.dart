@@ -109,9 +109,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       await ref.read(authRepositoryProvider).resetPassword(email);
       if (mounted) {
+        // Deliberately non-committal: Supabase answers 200 whether or not the
+        // address belongs to an account, so it will not tell us — and must not,
+        // or the form becomes a way to test which emails are registered. The
+        // old copy ("email sent, check your inbox") therefore promised a mail
+        // that, for a typo'd or never-registered address, was never sent.
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AppLocalizations.of(context)!.passwordResetSent),
+            duration: const Duration(seconds: 6),
           ),
         );
       }

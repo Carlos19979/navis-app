@@ -443,7 +443,7 @@
   "moderate": "Moderado",
   "rough": "Fuerte",
   "sendResetLink": "Enviar enlace",
-  "passwordResetSent": "Email de restablecimiento enviado. Revisa tu bandeja.",
+  "passwordResetSent": "Si existe una cuenta con ese correo, le hemos enviado un enlace. Mira también en spam.",
   "failedToSendResetEmail": "Error al enviar email de restablecimiento",
   "newPasswordTitle": "Establece una nueva contraseña",
   "newPasswordSubtitle": "Elige una contraseña segura para proteger tu cuenta.",

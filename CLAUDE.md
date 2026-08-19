@@ -52,7 +52,7 @@ Dependency flow: `handler → service → port ← adapter`
 ### Go — HTTP & Routing
 
 - Chi v5 router. Versioned: `/api/v1/boats`, `/api/v1/documents`, etc.
-- Beyond CRUD resources, notable endpoints (see `internal/router/router.go`): `GET /boats/{id}/readiness`, `GET /boats/{id}/cost-analytics`, `GET /boats/{id}/anomalies`, maintenance tasks under `/boats/{id}/maintenance/tasks`, bookings under `/boats/{id}/bookings`, expense splits under `/expenses/{expenseId}/splits` (+ `/settle`, + `/boats/{id}/expense-splits-summary`), `POST /webhooks/revenuecat`, and public (no JWT) `GET /legal/privacy` + `GET /legal/terms`.
+- Beyond CRUD resources, notable endpoints (see `internal/router/router.go`): `GET /boats/{id}/readiness`, `GET /boats/{id}/cost-analytics`, `GET /boats/{id}/anomalies`, maintenance tasks under `/boats/{id}/maintenance/tasks`, bookings under `/boats/{id}/bookings`, expense splits under `/expenses/{expenseId}/splits` (+ `/settle`, + `/boats/{id}/expense-splits-summary`), `POST /webhooks/revenuecat`, and public (no JWT) `GET /legal/privacy` + `GET /legal/terms` + `GET /auth/callback` (the landing page every Supabase Auth email falls back to; it forwards the token to `navis://login-callback` — the project's Site URL must point here).
 - Use `response.go` helpers: `response.JSON(w, status, data)`, `response.Error(w, status, err)`.
 - Status codes: 201 create, 204 delete, 400 validation, 401 auth, 403 forbidden, 404 not found, 409 conflict, 422 unprocessable, 429 rate limit, 500 only for unexpected internal errors.
 - Pagination: return `next_cursor` in response. Never use offset.

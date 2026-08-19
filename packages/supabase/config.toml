@@ -37,7 +37,13 @@ file_size_limit = "50MiB"
 
 [auth]
 enabled = true
-site_url = "http://127.0.0.1:3000"
+# Where GoTrue sends anyone whose email link carries no usable `redirect_to` —
+# which is every mail triggered from the Supabase dashboard, since those pass
+# none at all. It must be the API's /auth/callback landing page, which forwards
+# the token on to the app: point it at any other page (it used to be /support)
+# and the recipient lands somewhere that cannot finish the reset, with the
+# recovery token sitting unused in the URL fragment.
+site_url = "http://127.0.0.1:8080/auth/callback"
 # `navis://login-callback` is the deep link the app passes as `redirect_to` for
 # password recovery and for OAuth. GoTrue does NOT reject an unlisted redirect —
 # it silently falls back to `site_url`, so the symptom is an email link that
