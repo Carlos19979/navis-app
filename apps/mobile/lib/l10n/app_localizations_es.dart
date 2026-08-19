@@ -241,6 +241,113 @@ class AppLocalizationsEs extends AppLocalizations {
   String get costMonthlySpend => 'Gasto mensual';
 
   @override
+  String get costTotalForPeriod => 'Coste total';
+
+  @override
+  String get costBreakdownExpenses => 'Gastos';
+
+  @override
+  String get costBreakdownMaintenance => 'Mantenimiento';
+
+  @override
+  String get costBreakdownDocuments => 'Renovaciones de documentos';
+
+  @override
+  String costPeriodUsage(String nm, int trips) {
+    String _temp0 = intl.Intl.pluralLogic(
+      trips,
+      locale: localeName,
+      other: '$trips viajes',
+      one: '1 viaje',
+    );
+    return '$nm MN · $_temp0';
+  }
+
+  @override
+  String costVsPrevious(String delta, String period) {
+    return '$delta vs. $period';
+  }
+
+  @override
+  String get costRunRateTitle => 'Ritmo de coste';
+
+  @override
+  String costPerMonthValue(String value) {
+    return '$value/mes';
+  }
+
+  @override
+  String costPerYearValue(String value) {
+    return '$value/año';
+  }
+
+  @override
+  String costRunRateBasis(int months) {
+    String _temp0 = intl.Intl.pluralLogic(
+      months,
+      locale: localeName,
+      other: 'Sobre $months meses con registros',
+      one: 'Sobre 1 mes con registros',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get costPerEngineHourLabel => 'Coste / h motor';
+
+  @override
+  String get costLitersPurchased => 'Litros comprados';
+
+  @override
+  String get costFixedVsVariable => 'Fijos y variables';
+
+  @override
+  String get costFixed => 'Fijos';
+
+  @override
+  String get costVariable => 'Variables';
+
+  @override
+  String get costFixedExplainer =>
+      'Los fijos (amarre, seguro, documentos) los pagas aunque el barco no salga.';
+
+  @override
+  String get costTrend => 'Tendencia';
+
+  @override
+  String costTrendAverage(String value) {
+    return 'Media: $value';
+  }
+
+  @override
+  String get costViewExpenses => 'Ver gastos';
+
+  @override
+  String get costEmptyMessage => 'Todavía no hay costes';
+
+  @override
+  String get costEmptyDescription =>
+      'Apunta un gasto, un mantenimiento con coste o la renovación de un documento y aquí verás lo que cuesta tu barco.';
+
+  @override
+  String get costEmptyAction => 'Añadir un gasto';
+
+  @override
+  String get costLoadError => 'No se han podido cargar los costes';
+
+  @override
+  String get costNoSpendInPeriod => 'Sin costes en este periodo';
+
+  @override
+  String anomalyExcessCost(String value) {
+    return '$value de combustible de más';
+  }
+
+  @override
+  String get anomaliesExplainer =>
+      'Viajes que gastaron mucho más por milla que la media del barco.';
+
+  @override
   String get paywallReasonCostAnalytics =>
       'Desbloquea la inteligencia de costes con Navis Pro';
 
@@ -682,7 +789,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get hoursLabel => 'Horas';
 
   @override
-  String get allTime => 'Total Histórico';
+  String get allTime => 'Todo el tiempo';
 
   @override
   String get totalDistance => 'Distancia Total';
@@ -1036,7 +1143,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get passwordResetSent =>
-      'Email de restablecimiento enviado. Revisa tu bandeja.';
+      'Si existe una cuenta con ese correo, le hemos enviado un enlace. Mira también en spam.';
 
   @override
   String get failedToSendResetEmail =>
@@ -1843,7 +1950,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get noPublicGroups => 'No hay grupos públicos para descubrir.';
 
   @override
-  String get cancelTrip => 'Cancelar viaje';
+  String get cancelTrip => 'Descartar viaje';
 
   @override
   String get cancelTripRegattaWarning =>
@@ -2515,7 +2622,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get costAvgPricePerLiter => 'Precio medio combustible';
+  String get costAvgPricePerLiter => 'Precio medio';
 
   @override
   String get moderationReport => 'Reportar';
@@ -2830,7 +2937,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String deleteAreaConfirm(String name) {
-    return 'Se borrarán del dispositivo las cartas guardadas de "$name".';
+    return 'Se borrarán del dispositivo las cartas guardadas de \"$name\".';
   }
 
   @override
@@ -2847,4 +2954,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get bgAnchorWatchBody => 'Vigilando tu posición - toca para abrir';
+
+  @override
+  String get authLinkOpening => 'Abriendo Navis...';
+
+  @override
+  String get authLinkExpiredTitle => 'El enlace ya no vale';
+
+  @override
+  String get authLinkExpiredBody =>
+      'Los enlaces caducan al cabo de una hora y solo se pueden usar una vez. Pide uno nuevo desde «Olvidaste tu contraseña».';
 }

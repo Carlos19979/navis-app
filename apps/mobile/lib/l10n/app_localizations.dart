@@ -530,6 +530,162 @@ abstract class AppLocalizations {
   /// **'Monthly spend'**
   String get costMonthlySpend;
 
+  /// No description provided for @costTotalForPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Total cost'**
+  String get costTotalForPeriod;
+
+  /// No description provided for @costBreakdownExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses'**
+  String get costBreakdownExpenses;
+
+  /// No description provided for @costBreakdownMaintenance.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance'**
+  String get costBreakdownMaintenance;
+
+  /// No description provided for @costBreakdownDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'Document renewals'**
+  String get costBreakdownDocuments;
+
+  /// No description provided for @costPeriodUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'{nm} NM · {trips, plural, =1{1 trip} other{{trips} trips}}'**
+  String costPeriodUsage(String nm, int trips);
+
+  /// No description provided for @costVsPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'{delta} vs. {period}'**
+  String costVsPrevious(String delta, String period);
+
+  /// No description provided for @costRunRateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost run rate'**
+  String get costRunRateTitle;
+
+  /// No description provided for @costPerMonthValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{value}/month'**
+  String costPerMonthValue(String value);
+
+  /// No description provided for @costPerYearValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{value}/year'**
+  String costPerYearValue(String value);
+
+  /// No description provided for @costRunRateBasis.
+  ///
+  /// In en, this message translates to:
+  /// **'{months, plural, =1{Over 1 month with records} other{Over {months} months with records}}'**
+  String costRunRateBasis(int months);
+
+  /// No description provided for @costPerEngineHourLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost / engine h'**
+  String get costPerEngineHourLabel;
+
+  /// No description provided for @costLitersPurchased.
+  ///
+  /// In en, this message translates to:
+  /// **'Litres bought'**
+  String get costLitersPurchased;
+
+  /// No description provided for @costFixedVsVariable.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed and variable'**
+  String get costFixedVsVariable;
+
+  /// No description provided for @costFixed.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed'**
+  String get costFixed;
+
+  /// No description provided for @costVariable.
+  ///
+  /// In en, this message translates to:
+  /// **'Variable'**
+  String get costVariable;
+
+  /// No description provided for @costFixedExplainer.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed costs (berth, insurance, paperwork) are owed even if the boat never leaves the dock.'**
+  String get costFixedExplainer;
+
+  /// No description provided for @costTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Trend'**
+  String get costTrend;
+
+  /// No description provided for @costTrendAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Average: {value}'**
+  String costTrendAverage(String value);
+
+  /// No description provided for @costViewExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'View expenses'**
+  String get costViewExpenses;
+
+  /// No description provided for @costEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No costs yet'**
+  String get costEmptyMessage;
+
+  /// No description provided for @costEmptyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Log an expense, a maintenance job with a cost or a document renewal and you will see what your boat costs here.'**
+  String get costEmptyDescription;
+
+  /// No description provided for @costEmptyAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an expense'**
+  String get costEmptyAction;
+
+  /// No description provided for @costLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load costs'**
+  String get costLoadError;
+
+  /// No description provided for @costNoSpendInPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'No costs in this period'**
+  String get costNoSpendInPeriod;
+
+  /// No description provided for @anomalyExcessCost.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} of extra fuel'**
+  String anomalyExcessCost(String value);
+
+  /// No description provided for @anomaliesExplainer.
+  ///
+  /// In en, this message translates to:
+  /// **'Trips that burned far more fuel per mile than this boat\'s average.'**
+  String get anomaliesExplainer;
+
   /// No description provided for @paywallReasonCostAnalytics.
   ///
   /// In en, this message translates to:
@@ -1349,7 +1505,7 @@ abstract class AppLocalizations {
   /// No description provided for @allTime.
   ///
   /// In en, this message translates to:
-  /// **'All Time'**
+  /// **'All time'**
   String get allTime;
 
   /// No description provided for @totalDistance.
@@ -2027,7 +2183,7 @@ abstract class AppLocalizations {
   /// No description provided for @passwordResetSent.
   ///
   /// In en, this message translates to:
-  /// **'Password reset email sent. Check your inbox.'**
+  /// **'If an account exists for that address, we have sent it a link. Check your spam folder too.'**
   String get passwordResetSent;
 
   /// No description provided for @failedToSendResetEmail.
@@ -3533,7 +3689,7 @@ abstract class AppLocalizations {
   /// No description provided for @cancelTrip.
   ///
   /// In en, this message translates to:
-  /// **'Cancel trip'**
+  /// **'Discard trip'**
   String get cancelTrip;
 
   /// No description provided for @cancelTripRegattaWarning.
@@ -4757,7 +4913,7 @@ abstract class AppLocalizations {
   /// No description provided for @costAvgPricePerLiter.
   ///
   /// In en, this message translates to:
-  /// **'Avg fuel price'**
+  /// **'Avg price'**
   String get costAvgPricePerLiter;
 
   /// No description provided for @moderationReport.
@@ -5285,7 +5441,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteAreaConfirm.
   ///
   /// In en, this message translates to:
-  /// **'The charts saved for "{name}" will be removed from this device.'**
+  /// **'The charts saved for \"{name}\" will be removed from this device.'**
   String deleteAreaConfirm(String name);
 
   /// No description provided for @areaDeleted.
@@ -5317,6 +5473,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Watching your position - tap to open'**
   String get bgAnchorWatchBody;
+
+  /// No description provided for @authLinkOpening.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening Navis...'**
+  String get authLinkOpening;
+
+  /// No description provided for @authLinkExpiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This link no longer works'**
+  String get authLinkExpiredTitle;
+
+  /// No description provided for @authLinkExpiredBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Links expire after an hour and can only be used once. Ask for a new one from \"Forgot Password?\".'**
+  String get authLinkExpiredBody;
 }
 
 class _AppLocalizationsDelegate

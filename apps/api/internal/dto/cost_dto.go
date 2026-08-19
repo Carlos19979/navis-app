@@ -14,8 +14,25 @@ type CostMonthlyResponse struct {
 	Amount float64 `json:"amount"`
 }
 
-// CostAnalyticsResponse is the cost-intelligence payload.
+// CostMonthResponse mirrors domain.CostMonth.
+type CostMonthResponse struct {
+	Month       string             `json:"month"`
+	ByCategory  map[string]float64 `json:"by_category"`
+	Fixed       float64            `json:"fixed"`
+	Variable    float64            `json:"variable"`
+	FuelAmount  float64            `json:"fuel_amount"`
+	FuelLiters  float64            `json:"fuel_liters"`
+	Trips       int                `json:"trips"`
+	DistanceNM  float64            `json:"distance_nm"`
+	FuelL       float64            `json:"fuel_l"`
+	EngineHours float64            `json:"engine_hours"`
+	Hours       float64            `json:"hours"`
+}
+
+// CostAnalyticsResponse is the cost-intelligence payload. Months is the series
+// the app slices; everything after it is kept for pre-rework clients.
 type CostAnalyticsResponse struct {
+	Months              []CostMonthResponse         `json:"months"`
 	TotalSpend          float64                     `json:"total_spend"`
 	ExpenseSpend        float64                     `json:"expense_spend"`
 	MaintenanceSpend    float64                     `json:"maintenance_spend"`
@@ -41,7 +58,24 @@ func CostAnalyticsResponseFromDomain(c *domain.CostAnalytics) CostAnalyticsRespo
 	for i, m := range c.Monthly {
 		months[i] = CostMonthlyResponse{Month: m.Month, Amount: m.Amount}
 	}
+	series := make([]CostMonthResponse, len(c.Months))
+	for i, m := range c.Months {
+		series[i] = CostMonthResponse{
+			Month:       m.Month,
+			ByCategory:  m.ByCategory,
+			Fixed:       m.Fixed,
+			Variable:    m.Variable,
+			FuelAmount:  m.FuelAmount,
+			FuelLiters:  m.FuelLiters,
+			Trips:       m.Trips,
+			DistanceNM:  m.DistanceNM,
+			FuelL:       m.FuelL,
+			EngineHours: m.EngineHours,
+			Hours:       m.Hours,
+		}
+	}
 	return CostAnalyticsResponse{
+		Months:              series,
 		TotalSpend:          c.TotalSpend,
 		ExpenseSpend:        c.ExpenseSpend,
 		MaintenanceSpend:    c.MaintenanceSpend,

@@ -141,7 +141,8 @@ func main() {
 	notificationSvc := service.NewNotificationService(notificationFeedRepo, notificationPrefsRepo)
 	profileSvc := service.NewProfileService(profileRepo, boatRepo)
 	readinessSvc := service.NewReadinessService(docRepo, maintenanceRepo, maintenanceTaskRepo, boatRepo, profileRepo)
-	costSvc := service.NewCostService(expenseRepo, maintenanceRepo, tripRepo, boatRepo, profileRepo)
+	costSvc := service.NewCostService(expenseRepo, maintenanceRepo, tripRepo, docRepo,
+		boatRepo, profileRepo)
 	sharedSvc := service.NewSharedService(bookingRepo, expenseSplitRepo, expenseRepo, boatRepo, profileRepo, notifySvc)
 	anomalySvc := service.NewAnomalyService(tripRepo, boatRepo, profileRepo)
 	maintenanceSvc := service.NewMaintenanceService(maintenanceRepo, maintenanceTaskRepo, expenseRepo, boatRepo, profileRepo, notifySvc)

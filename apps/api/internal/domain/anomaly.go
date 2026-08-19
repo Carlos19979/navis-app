@@ -11,4 +11,9 @@ type Anomaly struct {
 	Value        float64 // this trip's ratio
 	Baseline     float64 // the boat's historical ratio
 	DeviationPct float64 // percent over baseline (e.g. 30 = +30%)
+	DistanceNM   float64 // the trip's distance, the ratios' denominator
+	// ExcessLiters is the fuel this trip burned beyond the baseline. The client
+	// turns it into money with the period's €/L, which this service has no
+	// expenses to know.
+	ExcessLiters float64
 }

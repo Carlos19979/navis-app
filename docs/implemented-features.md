@@ -73,6 +73,7 @@ Six Pro-gated features built on the plan-gating pattern (`domain/profile.go` cap
 - **Cost intelligence** (`GET /boats/{id}/cost-analytics`, `features/cost/`, Pro
   `CanUseCostAnalytics`): total/category spend, last-12-months, cost/NM, cost/trip, fuel L/NM.
   Entry = insights action in the maintenance app bar (paywall for Free).
+  **Reworked 2026-08-20 — see the Cost intelligence rework section below.**
 - **Boat passport (PDF)** (`features/passport/`, dep `pdf`, Pro `CanExportPassport`): exportable
   dossier (boat, documents+expiry, maintenance history, expenses) shared via `share_plus`.
 - **Shared-boat coordination** (migration `00030_shared_boat`, `features/shared/`, Pro
@@ -91,6 +92,85 @@ product config pending; webhook already maps `pro`). New entitlements in `/me`:
 **Scrapped (2026-07-12):** float plan (Phase 4) and auto trip detection (Phase 7) were dropped
 entirely — float plan's shore-contact alert needs external email/SMS infra (Resend/Novu/Twilio)
 that wasn't worth the payoff; auto-detection's background geofencing wasn't a priority.
+
+## Cost intelligence rework (2026-08-20)
+
+The screen answered one question badly. `CostService` computed **everything
+all-time with no period**, so "gasto total" meant *every record ever* with
+nothing on screen saying so, and `CostPerNM` divided that lifetime total by a
+lifetime of miles — a made-up figure on any boat whose expenses predate its
+logbook. `Monthly` was the only windowed field (12 months), so the chart and the
+headline described different spans without a word. Six fields already in the JSON
+(`expense_spend`, `maintenance_spend`, `total_distance_nm`, `completed_trips`,
+`total_fuel_l`, `fuel_liters_purchased`) were never drawn, `trips.engine_hours` /
+`duration_minutes` were loaded and thrown away, and `documents.last_renewal_cost`
+— real money — counted nowhere.
+
+**API** (no migration, no new SQL — the service already loaded every expense,
+log and trip in memory):
+- `domain.CostMonth`: money *and* use per calendar month (`by_category`,
+  `fixed`/`variable`, `fuel_amount`/`fuel_liters`, `trips`, `distance_nm`,
+  `fuel_l`, `engine_hours`, `hours`). `CostAnalytics.Months` is the whole
+  history, chronological, **zero-filled** from the first dated record to the
+  current month, capped at `costMaxMonths = 180` from the recent end.
+- **Document renewals count**: a fourth source, filed under the synthetic
+  `documents` key on `last_renewal_date` (skipped when either date or cost is
+  nil). Imputation dates: expenses `incurred_on`, logs `performed_at`, docs
+  `last_renewal_date`, trips `departure_time` (**not** `created_at`, which is
+  only how the repo paginates).
+- **Fixed vs variable**: `domain.IsFixedCost` — berth, insurance and paperwork
+  renewals are owed whether the boat sails; everything else, including categories
+  the owner invented, is variable. The rest of the canonical category vocabulary
+  is now `const` in `domain/maintenance.go` (only `combustible` was before).
+- The pre-rework fields are **kept and derived from the series**, deliberately
+  excluding `documents`, so an app already in the wild does not see its numbers
+  move. New clients read `months` and ignore them.
+- Anomalies gained `distance_nm` + `excess_liters` (`(ratio − baseline) × dist`),
+  are sorted newest-first and capped at `anomalyMaxResults = 20`. The client
+  prices the litres with the period's €/L — the anomaly service has no expenses.
+- `NewCostService` now takes `port.DocumentRepository` (one generous page, as
+  readiness does).
+
+**Mobile.** One request per visit; the period control is arithmetic over the
+series, so no chip tap hits the network. The feature also moved onto the
+project's Clean Architecture (`domain/entities` + `domain/repositories` +
+`data/models` + `data/repositories`) — its entities used to live inside the
+repository file with no `domain/` at all.
+- `features/cost/domain/cost_period_stats.dart` is the whole risk surface and is
+  pure Dart: `costStatsFor(analytics, period)` plus `yearsWithCosts` /
+  `monthsWithCosts`, mirroring `logbook/domain/trip_period_stats.dart`.
+- **Run rate** divides by the months *on record* in the period, not the months
+  with spend — the series is already zero-filled to now, so counting its entries
+  inside the period is the count of elapsed months, no clock and no test seam.
+  Dividing by months-with-spend would inflate a boat that only spends in summer.
+- Screen order: period chips → headline (period named, **breakdown by source
+  always visible**, ▲/▼ vs. the comparable previous period) → run rate (€/mes,
+  €/año) → six ratio tiles (€/NM, €/viaje, **€/hora motor**, L/NM, €/L, litres),
+  each `—` when its denominator is missing → fixed vs variable → per-category
+  rows with their own hue and per-category delta → trend (a bar per year on all
+  time, per month inside a year, tappable, with an average line) → anomalies in
+  euros, newest first, max 5, tapping through to `/trips/{id}`. A boat with
+  nothing recorded now gets a `NavisEmptyState`, not `0 €` and three dashes.
+
+**Shared groundwork** (all extracted from real duplication; features may not
+import each other, and the period model lived inside `features/logbook/`):
+`shared/models/analytics_period.dart` (`AnalyticsPeriod`, was `StatsPeriod`),
+`NavisPeriodChip`, `NavisPeriodPicker`, `NavisStatTile`/`NavisStatGrid` (was
+`_StatCard` + `_Kpi`), `NavisBarChart`/`NavisBar` (was two drifted
+`_MonthlyChart` copies — only one labelled its values or was reachable with a
+screen reader), `core/utils/money_utils.dart` (`Money`, locale-aware: `1.250 €`
+in Spanish, where six files hand-rolled `toStringAsFixed(0)` and `NumberFormat`
+was unused anywhere in `lib/`), and `core/theme/chart_colors.dart` (there was no
+categorical palette; cyan/green/amber all carry meaning, and every category bar
+was the same cyan). `trip_stats_screen.dart` adopts all of them.
+
+Still no charting package — the bars stay plain widgets.
+
+**Known limits, unchanged by this work:** a repair logged *both* as a
+maintenance log with a cost and as a `reparación` expense is counted twice (the
+visible per-source breakdown is what makes the overlap obvious; deduping needs a
+log↔expense link), the anomaly baseline is still lifetime and self-contaminating,
+and everything is implicitly EUR.
 
 ## Product round vs sector (2026-07-17, PRs #46–#51)
 

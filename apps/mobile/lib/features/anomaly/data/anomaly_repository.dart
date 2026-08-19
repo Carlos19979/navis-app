@@ -11,6 +11,8 @@ class Anomaly {
     required this.value,
     required this.baseline,
     required this.deviationPct,
+    this.distanceNm = 0,
+    this.excessLiters = 0,
   });
 
   factory Anomaly.fromJson(Map<String, dynamic> j) => Anomaly(
@@ -20,6 +22,8 @@ class Anomaly {
         value: (j['value'] as num?)?.toDouble() ?? 0,
         baseline: (j['baseline'] as num?)?.toDouble() ?? 0,
         deviationPct: (j['deviation_pct'] as num?)?.toDouble() ?? 0,
+        distanceNm: (j['distance_nm'] as num?)?.toDouble() ?? 0,
+        excessLiters: (j['excess_liters'] as num?)?.toDouble() ?? 0,
       );
 
   final String tripId;
@@ -28,6 +32,11 @@ class Anomaly {
   final double value;
   final double baseline;
   final double deviationPct;
+  final double distanceNm;
+
+  /// Litres burned beyond the boat's baseline on this trip. Priced with the
+  /// period's €/L to say what the deviation actually cost.
+  final double excessLiters;
 }
 
 class AnomalyRepository {

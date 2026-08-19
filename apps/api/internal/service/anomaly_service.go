@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	"github.com/Carlos19979/navis-app/apps/api/internal/domain"
 	"github.com/Carlos19979/navis-app/apps/api/internal/port"
@@ -15,6 +16,9 @@ const (
 	anomalyThreshold = 0.30
 	// Ignore very short hops where ratios are noisy.
 	anomalyMinDistanceNM = 1.0
+	// Cap the list: the screen shows the recent ones, and a boat with years of
+	// logbook should not ship its whole history of bad passages.
+	anomalyMaxResults = 20
 )
 
 // AnomalyService detects trips whose fuel efficiency deviates from a boat's
@@ -80,8 +84,21 @@ func (s *AnomalyService) ForBoat(ctx context.Context, userID, boatID string) ([]
 				Value:        ratio,
 				Baseline:     baseline,
 				DeviationPct: (ratio/baseline - 1) * 100,
+				DistanceNM:   *t.DistanceNM,
+				// The litres this passage burned over the baseline. The client
+				// prices them with the period's €/L — this service has no
+				// expenses to know it.
+				ExcessLiters: (ratio - baseline) * *t.DistanceNM,
 			})
 		}
+	}
+	// Most recent first: the repo pages by created_at, which is not the order an
+	// owner reads a list of incidents in.
+	sort.Slice(anomalies, func(i, j int) bool {
+		return anomalies[i].Date.After(anomalies[j].Date)
+	})
+	if len(anomalies) > anomalyMaxResults {
+		anomalies = anomalies[:anomalyMaxResults]
 	}
 	return anomalies, nil
 }

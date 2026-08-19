@@ -9,28 +9,21 @@ import 'package:navis_mobile/features/logbook/domain/entities/trip.dart';
 import 'package:navis_mobile/features/logbook/domain/trip_period_stats.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
+import 'package:navis_mobile/shared/models/analytics_period.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
+import 'package:navis_mobile/shared/widgets/navis_bar_chart.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_empty_state.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
+import 'package:navis_mobile/shared/widgets/navis_period_picker.dart';
 import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
-
-/// Abbreviated month names in the app's language.
-///
-/// The locale is passed explicitly: a bare `DateFormat.MMM()` follows
-/// `Intl.defaultLocale`, which the app never sets, so the chart labelled its
-/// months in English while the rest of the screen was in Spanish.
-/// `flutter_localizations` has already registered the symbols for every locale.
-List<String> _shortMonthNames(BuildContext context) =>
-    DateFormat.MMM(Localizations.localeOf(context).languageCode)
-        .dateSymbols
-        .SHORTMONTHS;
+import 'package:navis_mobile/shared/widgets/navis_stat_tile.dart';
 
 /// Which slice of the logbook is on screen. Per boat, and reset when the screen
 /// is left: coming back to "everything" is the useful default.
-final _periodProvider = StateProvider.autoDispose<StatsPeriod>(
-  (ref) => const StatsPeriod.allTime(),
+final _periodProvider = StateProvider.autoDispose<AnalyticsPeriod>(
+  (ref) => const AnalyticsPeriod.allTime(),
 );
 
 /// The logbook in figures, for any period the owner picks.
@@ -88,7 +81,7 @@ class _StatsBody extends ConsumerWidget {
 
     // A year can disappear from under the selection when the list reloads.
     if (period.year != null && !years.contains(period.year)) {
-      period = const StatsPeriod.allTime();
+      period = const AnalyticsPeriod.allTime();
     }
 
     final selected = trips.where((t) => period.contains(t.departureTime));
@@ -97,7 +90,7 @@ class _StatsBody extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, Dimens.spaceXxl),
       children: [
-        _PeriodPicker(
+        NavisPeriodPicker(
           period: period,
           years: years,
           monthsWithData: period.year == null
@@ -108,39 +101,39 @@ class _StatsBody extends ConsumerWidget {
         const SizedBox(height: 16),
         _HeadlineCard(period: period, stats: stats),
         const SizedBox(height: 12),
-        _StatsGrid(children: [
-          _StatCard(
+        NavisStatGrid(children: [
+          NavisStatTile(
             icon: Icons.route_rounded,
             value: stats.trips.toString(),
             label: l.totalTrips,
             color: AppColors.cyan,
           ),
-          _StatCard(
+          NavisStatTile(
             icon: Icons.anchor_rounded,
             value: stats.portCount.toString(),
             label: l.portsVisited,
             color: AppColors.cyan,
           ),
-          _StatCard(
+          NavisStatTile(
             icon: Icons.speed_rounded,
             value: _knots(stats.topSpeedKn),
             label: l.topSpeed,
             color: AppColors.red,
           ),
-          _StatCard(
+          NavisStatTile(
             icon: Icons.trending_up_rounded,
             value: stats.avgSpeedKn == null ? '—' : _knots(stats.avgSpeedKn!),
             label: l.averageSpeed,
             color: AppColors.green,
           ),
-          _StatCard(
+          NavisStatTile(
             icon: Icons.local_gas_station_rounded,
             value:
                 stats.fuelL > 0 ? '${stats.fuelL.toStringAsFixed(0)} L' : '—',
             label: l.fuelConsumed,
             color: AppColors.amber,
           ),
-          _StatCard(
+          NavisStatTile(
             icon: Icons.engineering_rounded,
             value: stats.engineHours > 0
                 ? '${stats.engineHours.toStringAsFixed(1)} h'
@@ -153,12 +146,13 @@ class _StatsBody extends ConsumerWidget {
         _AveragesCard(stats: stats),
         if (!period.isAllTime && period.month == null) ...[
           const SizedBox(height: 12),
-          _MonthlyChart(
-            countsByMonth: stats.tripsByMonth,
-            year: period.year!,
-            onMonthTap: (month) => ref.read(_periodProvider.notifier).state =
-                StatsPeriod.month(period.year!, month),
-          ),
+          _monthlyChart(
+              context,
+              l,
+              stats,
+              period.year!,
+              (month) => ref.read(_periodProvider.notifier).state =
+                  AnalyticsPeriod.month(period.year!, month)),
         ],
         if (stats.ports.isNotEmpty) ...[
           const SizedBox(height: 12),
@@ -170,130 +164,29 @@ class _StatsBody extends ConsumerWidget {
 
   static String _knots(double value) =>
       value > 0 ? '${value.toStringAsFixed(1)} kn' : '—';
-}
 
-/// Year row, plus a month row once a year is chosen. Only periods that have
-/// trips are offered, so there is nothing to tap that leads to an empty screen.
-class _PeriodPicker extends StatelessWidget {
-  const _PeriodPicker({
-    required this.period,
-    required this.years,
-    required this.monthsWithData,
-    required this.onChanged,
-  });
-
-  final StatsPeriod period;
-  final List<int> years;
-  final Set<int> monthsWithData;
-  final ValueChanged<StatsPeriod> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
-    final monthNames = _shortMonthNames(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              _PeriodChip(
-                label: l.allTime,
-                selected: period.isAllTime,
-                onTap: () => onChanged(const StatsPeriod.allTime()),
-              ),
-              for (final year in years) ...[
-                const SizedBox(width: 8),
-                _PeriodChip(
-                  label: '$year',
-                  selected: period.year == year,
-                  onTap: () => onChanged(StatsPeriod.year(year)),
-                ),
-              ],
-            ],
+  /// Trips per month for the selected year. Tapping a bar drills into that
+  /// month, which is also the discoverable way into the month filter.
+  static Widget _monthlyChart(
+    BuildContext context,
+    AppLocalizations l,
+    TripPeriodStats stats,
+    int year,
+    ValueChanged<int> onMonthTap,
+  ) {
+    final monthNames = navisShortMonthNames(context);
+    return NavisBarChart(
+      title: l.monthlyActivity,
+      bars: [
+        for (var i = 0; i < 12; i++)
+          NavisBar(
+            label: monthNames[i],
+            value: stats.tripsByMonth[i].toDouble(),
+            valueLabel: '${stats.tripsByMonth[i]}',
+            semanticsLabel: '${monthNames[i]} $year: ${stats.tripsByMonth[i]}',
+            onTap: () => onMonthTap(i + 1),
           ),
-        ),
-        if (period.year != null) ...[
-          const SizedBox(height: 8),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _PeriodChip(
-                  label: l.wholeYear,
-                  selected: period.month == null,
-                  onTap: () => onChanged(period.withMonth(null)),
-                  compact: true,
-                ),
-                for (var month = 1; month <= 12; month++)
-                  if (monthsWithData.contains(month)) ...[
-                    const SizedBox(width: 6),
-                    _PeriodChip(
-                      label: monthNames[month - 1],
-                      selected: period.month == month,
-                      onTap: () => onChanged(period.withMonth(month)),
-                      compact: true,
-                    ),
-                  ],
-              ],
-            ),
-          ),
-        ],
       ],
-    );
-  }
-}
-
-class _PeriodChip extends StatelessWidget {
-  const _PeriodChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-    this.compact = false,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  final bool compact;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      selected: selected,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(Dimens.radiusLg),
-        child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: compact ? 12 : 16,
-            vertical: compact ? 7 : 9,
-          ),
-          decoration: BoxDecoration(
-            color: selected
-                ? AppColors.cyan.withValues(alpha: 0.18)
-                : context.glassBg,
-            borderRadius: BorderRadius.circular(Dimens.radiusLg),
-            border: Border.all(
-              color: selected
-                  ? AppColors.cyan.withValues(alpha: 0.55)
-                  : context.glassBorderColor,
-              width: selected ? 1 : 0.5,
-            ),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: selected ? AppColors.cyan : context.txtSecondary,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-              fontSize: compact ? 13 : 14,
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
@@ -303,7 +196,7 @@ class _PeriodChip extends StatelessWidget {
 class _HeadlineCard extends StatelessWidget {
   const _HeadlineCard({required this.period, required this.stats});
 
-  final StatsPeriod period;
+  final AnalyticsPeriod period;
   final TripPeriodStats stats;
 
   @override
@@ -367,7 +260,7 @@ class _HeadlineCard extends StatelessWidget {
   static String _periodLabel(
     BuildContext context,
     AppLocalizations l,
-    StatsPeriod period,
+    AnalyticsPeriod period,
   ) {
     if (period.isAllTime) return l.allTime.toUpperCase();
     if (period.month == null) return '${period.year}';
@@ -525,195 +418,6 @@ class _PortsCard extends StatelessWidget {
                   ),
                 ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatsGrid extends StatelessWidget {
-  const _StatsGrid({required this.children});
-
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    final rows = <Widget>[];
-    for (var i = 0; i < children.length; i += 3) {
-      final end = (i + 3).clamp(0, children.length);
-      final slice = children.sublist(i, end);
-      // No CrossAxisAlignment.stretch: inside a ListView the row's height is
-      // unbounded and stretching asks children for an infinite height.
-      rows.add(Row(
-        children: [
-          for (var j = 0; j < 3; j++) ...[
-            if (j > 0) const SizedBox(width: 10),
-            Expanded(
-              child: j < slice.length ? slice[j] : const SizedBox.shrink(),
-            ),
-          ],
-        ],
-      ));
-      if (end < children.length) {
-        rows.add(const SizedBox(height: 10));
-      }
-    }
-    return Column(children: rows);
-  }
-}
-
-class _StatCard extends StatelessWidget {
-  const _StatCard({
-    required this.icon,
-    required this.value,
-    required this.label,
-    required this.color,
-  });
-
-  final IconData icon;
-  final String value;
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return NavisCard(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
-      child: Column(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, size: 16, color: color),
-          ),
-          const SizedBox(height: Dimens.spaceSm),
-          // Scale the value down to fit the card at large text sizes instead
-          // of overriding the type scale with a fixed fontSize.
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              value,
-              maxLines: 1,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w700,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: context.txtSecondary,
-                  fontSize: 10,
-                ),
-            textAlign: TextAlign.center,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Trips per month for the selected year. Tapping a bar drills into that month,
-/// which is also the discoverable way into the month filter.
-class _MonthlyChart extends StatelessWidget {
-  const _MonthlyChart({
-    required this.countsByMonth,
-    required this.year,
-    required this.onMonthTap,
-  });
-
-  final List<int> countsByMonth;
-  final int year;
-  final ValueChanged<int> onMonthTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
-    final maxCount =
-        countsByMonth.reduce((a, b) => a > b ? a : b).clamp(1, 999);
-    final monthNames = _shortMonthNames(context);
-
-    return NavisCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            l.monthlyActivity,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            height: 108,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: List.generate(12, (i) {
-                final count = countsByMonth[i];
-                final fraction = count / maxCount;
-                return Expanded(
-                  child: Semantics(
-                    button: count > 0,
-                    label: '${monthNames[i]} $year: $count',
-                    child: InkWell(
-                      onTap: count > 0 ? () => onMonthTap(i + 1) : null,
-                      borderRadius: BorderRadius.circular(6),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 2),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            if (count > 0)
-                              Text(
-                                '$count',
-                                style: const TextStyle(
-                                  fontSize: 9,
-                                  color: AppColors.cyan,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            const SizedBox(height: 2),
-                            Container(
-                              height: (fraction * 60).clamp(4.0, 60.0),
-                              decoration: BoxDecoration(
-                                gradient:
-                                    count > 0 ? AppColors.cyanGradient : null,
-                                color: count > 0
-                                    ? null
-                                    : context.txtSecondary
-                                        .withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Text(
-                                monthNames[i],
-                                maxLines: 1,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: context.txtSecondary,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }),
-            ),
           ),
         ],
       ),

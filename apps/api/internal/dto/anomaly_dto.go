@@ -14,6 +14,8 @@ type AnomalyResponse struct {
 	Value        float64 `json:"value"`
 	Baseline     float64 `json:"baseline"`
 	DeviationPct float64 `json:"deviation_pct"`
+	DistanceNM   float64 `json:"distance_nm"`
+	ExcessLiters float64 `json:"excess_liters"`
 }
 
 // AnomalyListFromDomain converts a slice of anomalies.
@@ -27,6 +29,8 @@ func AnomalyListFromDomain(as []domain.Anomaly) []AnomalyResponse {
 			Value:        a.Value,
 			Baseline:     a.Baseline,
 			DeviationPct: a.DeviationPct,
+			DistanceNM:   a.DistanceNM,
+			ExcessLiters: a.ExcessLiters,
 		}
 	}
 	return out

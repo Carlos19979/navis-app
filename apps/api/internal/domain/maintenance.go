@@ -104,5 +104,14 @@ type Expense struct {
 	UpdatedAt time.Time
 }
 
-// ExpenseCategoryFuel is the canonical (Spanish) category value for fuel.
-const ExpenseCategoryFuel = "combustible"
+// Canonical (Spanish) expense categories: the quick picks the app offers. The
+// column is free text — an owner can invent a category — but these are the ones
+// the API has to recognise, e.g. for €/L and the fixed/variable cost split.
+const (
+	ExpenseCategoryFuel      = "combustible"
+	ExpenseCategoryMooring   = "amarre"
+	ExpenseCategoryInsurance = "seguro"
+	ExpenseCategoryRepair    = "reparación"
+	ExpenseCategoryCleaning  = "limpieza"
+	ExpenseCategoryOther     = "otros"
+)
