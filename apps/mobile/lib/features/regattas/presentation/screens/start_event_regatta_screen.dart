@@ -57,7 +57,7 @@ class _StartEventRegattaScreenState
     final boat = _boatById(boats);
     final departurePort = (boat?.homePort != null && boat!.homePort!.isNotEmpty)
         ? boat.homePort!
-        : (event?.locationName ?? 'Puerto de salida');
+        : (event?.locationName ?? AppLocalizations.of(context)!.departurePort);
 
     setState(() => _saving = true);
     try {

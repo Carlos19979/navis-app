@@ -5,15 +5,9 @@ enum PortType {
   commercial,
   fishing,
   other;
-
-  String get label => switch (this) {
-        marina => 'Marina',
-        anchorage => 'Anchorage',
-        fuel => 'Fuel Station',
-        commercial => 'Commercial',
-        fishing => 'Fishing Port',
-        other => 'Other',
-      };
+  // No `label` here on purpose: it returned English display text from the
+  // domain layer, which the presentation layer already localizes
+  // (`port_info_sheet`), and nothing called it.
 }
 
 class Port {

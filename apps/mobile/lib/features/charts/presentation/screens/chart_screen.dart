@@ -539,6 +539,7 @@ class _HomePortMarkers extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return MarkerLayer(
       markers: [
         for (final boat in boats)
@@ -564,7 +565,7 @@ class _HomePortMarkers extends StatelessWidget {
                 child: Tooltip(
                   message: '${boat.name}'
                       ' \u2014 '
-                      '${boat.homePort ?? "Home port"}',
+                      '${boat.homePort ?? l.homePort}',
                   child: Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,

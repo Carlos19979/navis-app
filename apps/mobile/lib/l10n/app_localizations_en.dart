@@ -1481,13 +1481,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nearbyPorts => 'Nearby ports';
 
   @override
+  String planChangedTo(String plan) {
+    return 'Plan changed to $plan';
+  }
+
+  @override
+  String get planChangeFailed => 'Could not change the plan';
+
+  @override
   String get portTypeMarina => 'Marina';
 
   @override
   String get portTypeAnchorage => 'Anchorage';
 
   @override
-  String get portTypeFuel => 'Fuel Station';
+  String get portTypeFuel => 'Fuel station';
 
   @override
   String get portTypeCommercial => 'Commercial';

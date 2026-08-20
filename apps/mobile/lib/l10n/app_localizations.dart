@@ -2828,6 +2828,18 @@ abstract class AppLocalizations {
   /// **'Nearby ports'**
   String get nearbyPorts;
 
+  /// No description provided for @planChangedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan changed to {plan}'**
+  String planChangedTo(String plan);
+
+  /// No description provided for @planChangeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not change the plan'**
+  String get planChangeFailed;
+
   /// No description provided for @portTypeMarina.
   ///
   /// In en, this message translates to:
@@ -2843,7 +2855,7 @@ abstract class AppLocalizations {
   /// No description provided for @portTypeFuel.
   ///
   /// In en, this message translates to:
-  /// **'Fuel Station'**
+  /// **'Fuel station'**
   String get portTypeFuel;
 
   /// No description provided for @portTypeCommercial.

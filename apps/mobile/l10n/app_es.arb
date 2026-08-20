@@ -636,6 +636,8 @@
   "previousMonth": "Mes anterior",
   "nextMonth": "Mes siguiente",
   "nearbyPorts": "Puertos cercanos",
+  "planChangedTo": "Plan cambiado a {plan}",
+  "planChangeFailed": "No se pudo cambiar el plan",
   "portTypeMarina": "Marina",
   "portTypeAnchorage": "Fondeo",
   "portTypeFuel": "Gasolinera",

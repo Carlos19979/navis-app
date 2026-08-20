@@ -81,12 +81,11 @@ class AccountSettingsSections extends ConsumerWidget {
                             ref.invalidate(accountProvider);
                             if (context.mounted) {
                               NavisSnackbar.success(
-                                  context, 'Plan cambiado a $label');
+                                  context, l.planChangedTo(label));
                             }
                           } catch (_) {
                             if (context.mounted) {
-                              NavisSnackbar.error(
-                                  context, 'No se pudo cambiar el plan');
+                              NavisSnackbar.error(context, l.planChangeFailed);
                             }
                           }
                         },

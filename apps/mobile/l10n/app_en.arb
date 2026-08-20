@@ -653,9 +653,14 @@
   "previousMonth": "Previous month",
   "nextMonth": "Next month",
   "nearbyPorts": "Nearby ports",
+  "planChangedTo": "Plan changed to {plan}",
+  "@planChangedTo": {
+    "placeholders": { "plan": { "type": "String" } }
+  },
+  "planChangeFailed": "Could not change the plan",
   "portTypeMarina": "Marina",
   "portTypeAnchorage": "Anchorage",
-  "portTypeFuel": "Fuel Station",
+  "portTypeFuel": "Fuel station",
   "portTypeCommercial": "Commercial",
   "portTypeFishing": "Fishing port",
   "portTypeOther": "Other",

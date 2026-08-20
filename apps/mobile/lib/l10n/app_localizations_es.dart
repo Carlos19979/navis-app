@@ -1493,6 +1493,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get nearbyPorts => 'Puertos cercanos';
 
   @override
+  String planChangedTo(String plan) {
+    return 'Plan cambiado a $plan';
+  }
+
+  @override
+  String get planChangeFailed => 'No se pudo cambiar el plan';
+
+  @override
   String get portTypeMarina => 'Marina';
 
   @override

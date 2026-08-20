@@ -647,11 +647,11 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                                             Image.file(
                                               File(_photoPath!),
                                               fit: BoxFit.cover,
-                                              semanticLabel: 'Document scan',
+                                              semanticLabel: l.documentScan,
                                             )
                                           else
                                             Semantics(
-                                              label: 'Document scan',
+                                              label: l.documentScan,
                                               child: CachedNetworkImage(
                                                 imageUrl: _existingPhotoUrl!,
                                                 memCacheWidth: 1200,

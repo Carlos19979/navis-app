@@ -259,7 +259,9 @@ void main() {
       verify(() => mockRepo.schedule(
             groupId: any(named: 'groupId'),
             boatId: any(named: 'boatId'),
-            departurePort: 'Puerto de salida',
+            // Localized now: the fallback was a Spanish literal in code, so
+            // an English-locale user sent «Puerto de salida» to the API.
+            departurePort: 'Departure port',
             title: any(named: 'title'),
             scheduledAt: any(named: 'scheduledAt'),
           )).called(1);
