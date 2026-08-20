@@ -48,7 +48,7 @@ class NavisBottomNav extends ConsumerWidget {
     // gets a translucent surface tint so it doesn't read as a black slab.
     final pillColor = isDark
         ? AppColors.navy.withValues(alpha: 0.85)
-        : AppColors.lightSurface.withValues(alpha: 0.9);
+        : context.surfaceRaised.withValues(alpha: 0.9);
 
     return GradientBackground(
       child: Scaffold(
@@ -144,13 +144,13 @@ class _NavBarItem extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: isActive
-                      ? AppColors.cyan.withValues(alpha: 0.15)
+                      ? context.accent.withValues(alpha: 0.15)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(Dimens.radiusMd),
                 ),
                 child: Icon(
                   isActive ? item.activeIcon : item.icon,
-                  color: isActive ? AppColors.cyan : inactiveColor,
+                  color: isActive ? context.accent : inactiveColor,
                   size: 24,
                 ),
               ),
@@ -160,7 +160,7 @@ class _NavBarItem extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                  color: isActive ? AppColors.cyan : inactiveColor,
+                  color: isActive ? context.accent : inactiveColor,
                 ),
                 child: Text(item.label),
               ),

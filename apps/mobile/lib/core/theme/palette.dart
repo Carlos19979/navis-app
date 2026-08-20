@@ -65,6 +65,19 @@ abstract final class Palette {
   static const criticalInk = Color(0xFFB3261E);
   static const criticalBright = Color(0xFFE74C3C);
 
+  // ── Loading skeletons ───────────────────────────────────────────────────
+  // A skeleton has to be visible against the canvas it sits on, which the
+  // surface ramp is not: `surfaceSunkenLight` (#F7F8FA) on `canvasLight`
+  // (#FFFFFF) is a 1.03:1 difference — the shimmer was there and nobody could
+  // see it. These are a step further from the canvas, with a sheen that moves
+  // *towards* it on light and away from it on dark.
+  static const skeletonLight = Color(0xFFE9EDF2);
+  static const skeletonSheenLight = Color(0xFFF6F8FA);
+  static const skeletonBarLight = Color(0xFFD7DEE7);
+  static const skeletonDark = Color(0xFF17273B);
+  static const skeletonSheenDark = Color(0xFF20344E);
+  static const skeletonBarDark = Color(0xFF2B3F5B);
+
   // ── Brand ───────────────────────────────────────────────────────────────
   /// The identity navy. Still used for the nav pill, map overlays and the
   /// photo-header scrim — surfaces that are dark in both themes.

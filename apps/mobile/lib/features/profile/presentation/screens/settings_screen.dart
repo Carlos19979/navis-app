@@ -8,7 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:navis_mobile/core/config/checklist_preference.dart';
 import 'package:navis_mobile/core/config/settings_service.dart';
 import 'package:navis_mobile/core/database/local_database.dart';
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/app_typography.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/byte_utils.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
@@ -68,8 +68,8 @@ class SettingsScreen extends ConsumerWidget {
                               title: Text(label),
                               subtitle: Text(sub),
                               trailing: current == value
-                                  ? const Icon(Icons.check_circle,
-                                      color: AppColors.cyan)
+                                  ? Icon(Icons.check_circle,
+                                      color: context.accent)
                                   : null,
                               onTap: () async {
                                 if (current == value) return;
@@ -124,8 +124,8 @@ class SettingsScreen extends ConsumerWidget {
                             : l.lightThemeActive,
                       ),
                       value: themeMode == ThemeMode.dark,
-                      activeTrackColor: AppColors.cyan.withValues(alpha: 0.5),
-                      activeThumbColor: AppColors.cyan,
+                      activeTrackColor: context.accent.withValues(alpha: 0.5),
+                      activeThumbColor: context.accent,
                       onChanged: (value) {
                         ref.read(themeModeProvider.notifier).set(
                               value ? ThemeMode.dark : ThemeMode.light,
@@ -183,8 +183,8 @@ class SettingsScreen extends ConsumerWidget {
                         PreTripChecklistMode.skip => l.preTripChecklistSkipped,
                       }),
                       value: checklistMode != PreTripChecklistMode.skip,
-                      activeTrackColor: AppColors.cyan.withValues(alpha: 0.5),
-                      activeThumbColor: AppColors.cyan,
+                      activeTrackColor: context.accent.withValues(alpha: 0.5),
+                      activeThumbColor: context.accent,
                       onChanged: (value) {
                         ref.read(preTripChecklistModeProvider.notifier).set(
                               value
@@ -286,13 +286,13 @@ class SettingsScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               NavisCard(
                 padding: EdgeInsets.zero,
-                borderColor: AppColors.red.withValues(alpha: 0.2),
+                borderColor: context.critical.withValues(alpha: 0.2),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _SectionHeader(
                       label: l.account.toUpperCase(),
-                      color: AppColors.red.withValues(alpha: 0.8),
+                      color: context.critical.withValues(alpha: 0.8),
                     ),
                     Padding(
                       padding: const EdgeInsets.all(16),
@@ -314,7 +314,7 @@ class SettingsScreen extends ConsumerWidget {
                                 TextButton(
                                   onPressed: () => Navigator.pop(ctx, true),
                                   style: TextButton.styleFrom(
-                                    foregroundColor: AppColors.red,
+                                    foregroundColor: context.critical,
                                   ),
                                   child: Text(l.logout),
                                 ),
@@ -337,13 +337,13 @@ class SettingsScreen extends ConsumerWidget {
                       endIndent: 16,
                     ),
                     ListTile(
-                      leading: const Icon(
+                      leading: Icon(
                         Icons.delete_forever,
-                        color: AppColors.red,
+                        color: context.critical,
                       ),
                       title: Text(
                         l.deleteAccount,
-                        style: const TextStyle(color: AppColors.red),
+                        style: TextStyle(color: context.critical),
                       ),
                       subtitle: Text(l.deleteAccountSubtitle),
                       onTap: () => _confirmDeleteAccount(context, ref),
@@ -376,7 +376,7 @@ class SettingsScreen extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.red),
+            style: TextButton.styleFrom(foregroundColor: context.critical),
             child: Text(l.delete),
           ),
         ],
@@ -415,7 +415,7 @@ class SettingsScreen extends ConsumerWidget {
               onPressed: controller.text.trim() == confirmWord
                   ? () => Navigator.pop(ctx, true)
                   : null,
-              style: TextButton.styleFrom(foregroundColor: AppColors.red),
+              style: TextButton.styleFrom(foregroundColor: context.critical),
               child: Text(l.delete),
             ),
           ],
@@ -504,22 +504,19 @@ class SettingsScreen extends ConsumerWidget {
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({
     required this.label,
-    this.color = AppColors.cyan,
+    this.color,
   });
 
   final String label;
-  final Color color;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: color,
-              letterSpacing: 1.2,
-            ),
+        label.toUpperCase(),
+        style: NavisType.overline.copyWith(color: color ?? context.inkMuted),
       ),
     );
   }
@@ -552,9 +549,9 @@ class _LanguageOption extends StatelessWidget {
             ),
       title: Text(label),
       trailing: selected
-          ? const Icon(
+          ? Icon(
               Icons.check_circle,
-              color: AppColors.cyan,
+              color: context.accent,
             )
           : null,
       onTap: onTap,

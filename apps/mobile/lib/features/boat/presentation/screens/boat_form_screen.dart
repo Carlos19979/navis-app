@@ -252,7 +252,7 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                                         fit: BoxFit.cover,
                                         placeholder: (context, url) =>
                                             Container(
-                                          color: AppColors.darkCard,
+                                          color: context.surfaceRaised,
                                         ),
                                         errorWidget: (_, __, ___) => Center(
                                           child: Icon(
@@ -330,10 +330,10 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                                             width: 0.5,
                                           ),
                                         ),
-                                        child: const Icon(
+                                        child: Icon(
                                           Icons.add_photo_alternate_outlined,
                                           size: 28,
-                                          color: AppColors.cyan,
+                                          color: context.accent,
                                         ),
                                       ),
                                       const SizedBox(height: 10),

@@ -3,7 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/documents/domain/entities/document.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_permissions_provider.dart';
@@ -98,7 +98,7 @@ class _DocumentList extends ConsumerWidget {
           ..sort((a, b) => a.expiryDate.compareTo(b.expiryDate));
 
         return RefreshIndicator(
-          color: AppColors.cyan,
+          color: context.accent,
           onRefresh: () async {
             ref.invalidate(boatDocumentsProvider(boatId));
             ref.invalidate(boatPermissionsProvider(boatId));

@@ -1,9 +1,9 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/app_typography.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_pulse_budget.dart';
@@ -18,44 +18,35 @@ class DocumentStatusBadge extends StatelessWidget {
     final l = AppLocalizations.of(context)!;
     final status = NavisDateUtils.statusFor(expiryDate);
     final (Color color, String label) = switch (status) {
-      DocExpiryStatus.expired => (AppColors.red, l.expired),
-      DocExpiryStatus.critical => (AppColors.red, l.critical),
-      DocExpiryStatus.warning => (AppColors.amber, l.warning),
-      DocExpiryStatus.ok => (AppColors.green, l.valid),
+      DocExpiryStatus.expired => (context.critical, l.expired),
+      DocExpiryStatus.critical => (context.critical, l.critical),
+      DocExpiryStatus.warning => (context.caution, l.warning),
+      DocExpiryStatus.ok => (context.positive, l.valid),
     };
 
     final shouldGlow =
         status == DocExpiryStatus.expired || status == DocExpiryStatus.critical;
 
-    Widget badge = ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: color.withValues(alpha: 0.5),
-            ),
-            boxShadow: shouldGlow
-                ? [
-                    BoxShadow(
-                      color: color.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                    ),
-                  ]
-                : null,
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontWeight: FontWeight.w600,
-              fontSize: 12,
-              letterSpacing: 0.3,
-            ),
+    // No BackdropFilter. This badge is drawn once per row: a document list of
+    // ten paid ten blur passes a frame, on a page canvas where a blur returns
+    // the pixels it was given. Same reasoning as NavisCard — it just took
+    // longer to be noticed here, because the badge is small.
+    Widget badge = DecoratedBox(
+      decoration: BoxDecoration(
+        color: context.wash(color),
+        borderRadius: BorderRadius.circular(Dimens.radiusPill),
+        border: Border.all(color: context.washBorder(color)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: Dimens.spaceMd,
+          vertical: Dimens.spaceXs,
+        ),
+        child: Text(
+          label,
+          style: NavisType.caption.copyWith(
+            color: color,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),

@@ -70,6 +70,10 @@ class NavisMetric extends StatelessWidget {
                 child: Text(
                   label,
                   style: NavisType.caption.copyWith(color: context.inkMuted),
+                  // Two lines, not one: at three columns a phone gives each
+                  // label ~110px, and "Combustible / MN" or "Coste / h motor"
+                  // ellipsized down to "Combustibl…", which names nothing.
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),

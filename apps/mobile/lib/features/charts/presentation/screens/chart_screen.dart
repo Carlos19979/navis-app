@@ -249,17 +249,17 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.amber.withValues(alpha: 0.15),
+                      color: context.caution.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: AppColors.amber.withValues(alpha: 0.4),
+                        color: context.caution.withValues(alpha: 0.4),
                         width: 0.5,
                       ),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.location_off,
-                            size: 16, color: AppColors.amber),
+                        Icon(Icons.location_off,
+                            size: 16, color: context.caution),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
@@ -272,7 +272,7 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                           onPressed: Geolocator.openLocationSettings,
                           child: Text(
                             AppLocalizations.of(context)!.openSettings,
-                            style: const TextStyle(color: AppColors.cyan),
+                            style: TextStyle(color: context.accent),
                           ),
                         ),
                       ],
@@ -310,8 +310,8 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                         Container(
                           width: 8,
                           height: 8,
-                          decoration: const BoxDecoration(
-                            color: AppColors.green,
+                          decoration: BoxDecoration(
+                            color: context.positive,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -319,8 +319,8 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                         Text(
                           '${_currentPosition!.latitude.toStringAsFixed(4)}, '
                           '${_currentPosition!.longitude.toStringAsFixed(4)}',
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
+                          style: TextStyle(
+                            color: context.ink,
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
                           ),
@@ -333,8 +333,7 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                           builder: (context, zoom, _) => Text(
                             'z${zoom.toStringAsFixed(0)}',
                             style: TextStyle(
-                              color: AppColors.textSecondary
-                                  .withValues(alpha: 0.7),
+                              color: context.inkMuted.withValues(alpha: 0.7),
                               fontSize: 11,
                             ),
                           ),
@@ -378,8 +377,8 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.zoom_in,
-                                  size: 16, color: AppColors.cyan),
+                              Icon(Icons.zoom_in,
+                                  size: 16, color: context.accent),
                               const SizedBox(width: 8),
                               Text(
                                 AppLocalizations.of(context)!.portsZoomInHint,
@@ -457,7 +456,7 @@ class _TripTracksLayer extends ConsumerWidget {
                   for (final pt in points) LatLng(pt.latitude, pt.longitude),
                 ],
                 strokeWidth: 3,
-                color: AppColors.cyan.withValues(alpha: 0.7),
+                color: context.accent.withValues(alpha: 0.7),
               ),
             );
           }
@@ -528,21 +527,21 @@ class _HomePortMarkers extends StatelessWidget {
                       shape: BoxShape.circle,
                       color: AppColors.navy.withValues(alpha: 0.85),
                       border: Border.all(
-                        color: AppColors.amber.withValues(alpha: 0.8),
+                        color: context.caution.withValues(alpha: 0.8),
                         width: 2,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.amber.withValues(alpha: 0.3),
+                          color: context.caution.withValues(alpha: 0.3),
                           blurRadius: 8,
                           spreadRadius: 1,
                         ),
                       ],
                     ),
-                    child: const Center(
+                    child: Center(
                       child: Icon(
                         Icons.sailing,
-                        color: AppColors.amber,
+                        color: context.caution,
                         size: 22,
                       ),
                     ),

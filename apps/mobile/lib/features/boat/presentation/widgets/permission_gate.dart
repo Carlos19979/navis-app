@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
@@ -49,7 +48,7 @@ class BlockedActionCard extends StatelessWidget {
     return Semantics(
       label: '${l.permBlockedTitle}. $reason',
       child: NavisCard(
-        borderColor: AppColors.amber.withValues(alpha: 0.35),
+        borderColor: context.caution.withValues(alpha: 0.35),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -60,16 +59,16 @@ class BlockedActionCard extends StatelessWidget {
                   height: Dimens.iconXl,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.amber.withValues(alpha: 0.15),
+                    color: context.caution.withValues(alpha: 0.15),
                     border: Border.all(
-                      color: AppColors.amber.withValues(alpha: 0.35),
+                      color: context.caution.withValues(alpha: 0.35),
                       width: 0.5,
                     ),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.lock_outline_rounded,
                     size: Dimens.iconSm,
-                    color: AppColors.amber,
+                    color: context.caution,
                   ),
                 ),
                 const SizedBox(width: Dimens.spaceMd),
@@ -94,8 +93,8 @@ class BlockedActionCard extends StatelessWidget {
               const SizedBox(height: Dimens.spaceSm),
               Text(
                 l.permBlockedAskOwner,
-                style: const TextStyle(
-                  color: AppColors.cyan,
+                style: TextStyle(
+                  color: context.accent,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),

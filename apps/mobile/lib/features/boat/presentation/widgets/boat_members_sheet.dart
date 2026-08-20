@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/data/boat_share_repository.dart';
@@ -238,7 +237,7 @@ class _MemberPermissionsTileState
       contentPadding: EdgeInsets.zero,
       dense: true,
       visualDensity: VisualDensity.compact,
-      activeThumbColor: AppColors.cyan,
+      activeThumbColor: context.accent,
       title: Text(label,
           style: TextStyle(color: context.txtPrimary, fontSize: 13)),
       value: value,
@@ -276,10 +275,10 @@ class _MemberPermissionsTileState
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
               onPressed: _remove,
-              icon: const Icon(Icons.remove_circle_outline,
-                  color: AppColors.red, size: Dimens.iconSm),
+              icon: Icon(Icons.remove_circle_outline,
+                  color: context.critical, size: Dimens.iconSm),
               label: Text(l.removeAccess,
-                  style: const TextStyle(color: AppColors.red)),
+                  style: TextStyle(color: context.critical)),
             ),
           ),
         ],

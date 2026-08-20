@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 
 /// A weather condition derived from a WMO weather code, with an icon and color.
@@ -40,16 +40,18 @@ enum WeatherCondition {
         WeatherCondition.unknown => Icons.cloud_outlined,
       };
 
-  Color get color => switch (this) {
-        WeatherCondition.clear => AppColors.amber,
-        WeatherCondition.partlyCloudy => AppColors.cyanLight,
-        WeatherCondition.cloudy => AppColors.cyanLight,
-        WeatherCondition.fog => AppColors.cyanLight,
-        WeatherCondition.drizzle => AppColors.cyan,
-        WeatherCondition.rain => AppColors.cyan,
-        WeatherCondition.snow => AppColors.cyanLight,
-        WeatherCondition.thunderstorm => AppColors.amber,
-        WeatherCondition.unknown => AppColors.cyanLight,
+  /// Takes a context because each accent has a light and a dark value; a
+  /// const getter could only ever be right in one theme.
+  Color color(BuildContext context) => switch (this) {
+        WeatherCondition.clear => context.caution,
+        WeatherCondition.partlyCloudy => context.inkMuted,
+        WeatherCondition.cloudy => context.inkMuted,
+        WeatherCondition.fog => context.inkMuted,
+        WeatherCondition.drizzle => context.accent,
+        WeatherCondition.rain => context.accent,
+        WeatherCondition.snow => context.accent,
+        WeatherCondition.thunderstorm => context.caution,
+        WeatherCondition.unknown => context.inkMuted,
       };
 
   String label(AppLocalizations l) => switch (this) {
@@ -68,21 +70,6 @@ enum WeatherCondition {
 /// Returns a localized weather description for a WMO weather [code].
 String weatherDescription(AppLocalizations l, int code) =>
     WeatherCondition.fromCode(code).label(l);
-
-/// Color scale for wind speed in knots (calm → strong).
-Color windColor(double knots) {
-  if (knots < 10) return AppColors.green;
-  if (knots < 20) return AppColors.amber;
-  return AppColors.red;
-}
-
-/// Color scale for wave height in meters (calm → rough).
-Color waveColor(double meters) {
-  if (meters < 0.5) return AppColors.green;
-  if (meters < 1.5) return AppColors.cyan;
-  if (meters < 2.5) return AppColors.amber;
-  return AppColors.red;
-}
 
 /// Converts wind direction degrees to a localized 8-point cardinal label.
 /// Localized because the letters are not universal: west is W in English and

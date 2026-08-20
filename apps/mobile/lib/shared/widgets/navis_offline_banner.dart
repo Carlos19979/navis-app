@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:navis_mobile/core/database/mutation_queue.dart';
 import 'package:navis_mobile/core/network/connectivity_provider.dart';
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 
 class NavisOfflineBanner extends ConsumerWidget {
@@ -36,7 +36,7 @@ class NavisOfflineBanner extends ConsumerWidget {
                     filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: (isOnline ? AppColors.cyan : AppColors.amber)
+                        color: (isOnline ? context.accent : context.caution)
                             .withValues(alpha: 0.15),
                         borderRadius: const BorderRadius.only(
                           bottomLeft: Radius.circular(12),
@@ -44,7 +44,7 @@ class NavisOfflineBanner extends ConsumerWidget {
                         ),
                         border: Border(
                           bottom: BorderSide(
-                            color: (isOnline ? AppColors.cyan : AppColors.amber)
+                            color: (isOnline ? context.accent : context.caution)
                                 .withValues(alpha: 0.3),
                             width: 0.5,
                           ),
@@ -60,7 +60,7 @@ class NavisOfflineBanner extends ConsumerWidget {
                                   : Icons.cloud_off_rounded,
                               size: 16,
                               color:
-                                  isOnline ? AppColors.cyan : AppColors.amber,
+                                  isOnline ? context.accent : context.caution,
                             ),
                             const SizedBox(width: 8),
                             Text(
@@ -71,7 +71,7 @@ class NavisOfflineBanner extends ConsumerWidget {
                               ),
                               style: TextStyle(
                                 color:
-                                    isOnline ? AppColors.cyan : AppColors.amber,
+                                    isOnline ? context.accent : context.caution,
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
                               ),

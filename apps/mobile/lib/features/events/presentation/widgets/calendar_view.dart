@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/events/domain/entities/event.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -166,11 +165,11 @@ class _CalendarViewState extends State<CalendarView> {
                         : hasEvent
                             ? context.glassBg
                             : Colors.transparent,
-                    gradient: isToday ? AppColors.cyanGradient : null,
+                    gradient: isToday ? context.accentGradient : null,
                     borderRadius: BorderRadius.circular(10),
                     border: isToday
                         ? Border.all(
-                            color: AppColors.cyan,
+                            color: context.accent,
                             width: 1.5,
                           )
                         : hasEvent
@@ -182,7 +181,7 @@ class _CalendarViewState extends State<CalendarView> {
                     boxShadow: isToday
                         ? [
                             BoxShadow(
-                              color: AppColors.cyan.withValues(alpha: 0.25),
+                              color: context.accent.withValues(alpha: 0.25),
                               blurRadius: 8,
                             ),
                           ]
@@ -211,11 +210,11 @@ class _CalendarViewState extends State<CalendarView> {
                           width: 6,
                           height: 6,
                           decoration: BoxDecoration(
-                            color: isToday ? Colors.white : AppColors.cyan,
+                            color: isToday ? Colors.white : context.accent,
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: (isToday ? Colors.white : AppColors.cyan)
+                                color: (isToday ? Colors.white : context.accent)
                                     .withValues(alpha: 0.5),
                                 blurRadius: 4,
                               ),

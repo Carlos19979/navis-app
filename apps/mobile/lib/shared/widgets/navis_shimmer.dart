@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/shared/widgets/navis_pulse_budget.dart';
 
@@ -94,7 +93,7 @@ class _ShimmerItem extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: context.glassBg,
+              color: context.skeletonBar,
               borderRadius: BorderRadius.circular(12),
             ),
           ),
@@ -108,7 +107,7 @@ class _ShimmerItem extends StatelessWidget {
                   height: 14,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: context.glassBg,
+                    color: context.skeletonBar,
                     borderRadius: BorderRadius.circular(6),
                   ),
                 ),
@@ -117,7 +116,7 @@ class _ShimmerItem extends StatelessWidget {
                   height: 10,
                   width: 120,
                   decoration: BoxDecoration(
-                    color: context.glassBg,
+                    color: context.skeletonBar,
                     borderRadius: BorderRadius.circular(6),
                   ),
                 ),
@@ -135,15 +134,12 @@ class _ShimmerItem extends StatelessWidget {
               begin: Alignment(animation.value - 1, 0),
               end: Alignment(animation.value, 0),
               colors: [
-                context.glassBg,
-                AppColors.glassHighlight,
-                context.glassBg,
+                context.skeleton,
+                context.skeletonSheen,
+                context.skeleton,
               ],
             ),
-            border: Border.all(
-              color: context.glassBorderColor,
-              width: 0.5,
-            ),
+            border: Border.all(color: context.hairline),
           ),
           padding: const EdgeInsets.all(16),
           child: child,

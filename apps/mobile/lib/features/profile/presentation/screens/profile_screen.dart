@@ -6,7 +6,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:navis_mobile/core/config/env.dart';
 import 'package:navis_mobile/core/network/notification_service.dart';
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
@@ -54,10 +53,10 @@ class ProfileScreen extends ConsumerWidget {
                   padding: const EdgeInsets.all(3),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: AppColors.cyanGlowGradient,
+                    gradient: context.accentGradient,
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.cyan.withValues(alpha: 0.3),
+                        color: context.accent.withValues(alpha: 0.3),
                         blurRadius: 16,
                         spreadRadius: 2,
                       ),
@@ -65,11 +64,11 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   child: CircleAvatar(
                     radius: 48,
-                    backgroundColor: AppColors.darkSurfaceElevated,
+                    backgroundColor: context.surfaceRaised,
                     child: Text(
                       profile.initial,
                       style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                            color: AppColors.cyan,
+                            color: context.accent,
                             fontWeight: FontWeight.w700,
                           ),
                     ),
@@ -125,10 +124,10 @@ class ProfileScreen extends ConsumerWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 5),
                         decoration: BoxDecoration(
-                          color: AppColors.cyan.withValues(alpha: 0.15),
+                          color: context.accent.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: AppColors.cyan.withValues(alpha: 0.4),
+                            color: context.accent.withValues(alpha: 0.4),
                             width: 0.5,
                           ),
                         ),
@@ -137,17 +136,17 @@ class ProfileScreen extends ConsumerWidget {
                           children: [
                             Text(
                               'Plan ${account.planLabel}',
-                              style: const TextStyle(
-                                color: AppColors.cyan,
+                              style: TextStyle(
+                                color: context.accent,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
                             const SizedBox(width: 4),
-                            const Icon(
+                            Icon(
                               Icons.chevron_right_rounded,
                               size: 14,
-                              color: AppColors.cyan,
+                              color: context.accent,
                             ),
                           ],
                         ),
@@ -305,7 +304,7 @@ class ProfileScreen extends ConsumerWidget {
               }
             },
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.red,
+              backgroundColor: context.critical,
             ),
             child: Text(l.logout),
           ),

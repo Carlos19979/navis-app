@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/readiness/data/readiness_repository.dart';
 import 'package:navis_mobile/features/readiness/presentation/providers/readiness_provider.dart';
 import 'package:navis_mobile/features/readiness/presentation/screens/readiness_screen.dart';
@@ -121,8 +121,12 @@ void main() {
 
       expect(find.text('Ready to sail'), findsOneWidget);
       expect(find.text('Score 95 / 100'), findsOneWidget);
-      final icon = tester.widget<Icon>(find.byIcon(Icons.check_circle_rounded));
-      expect(icon.color, AppColors.green);
+      final finder = find.byIcon(Icons.check_circle_rounded);
+      final icon = tester.widget<Icon>(finder);
+      // Resolved from the pumped context, not hard-coded: each accent has a
+      // light and a dark value, and asserting one of them would pin the test
+      // to whichever theme the helper happens to build.
+      expect(icon.color, tester.element(finder).positive);
     });
 
     testWidgets('attention shows the amber warning header', (tester) async {
@@ -133,8 +137,9 @@ void main() {
 
       expect(find.text('Needs attention'), findsOneWidget);
       expect(find.text('Score 60 / 100'), findsOneWidget);
-      final icon = tester.widget<Icon>(find.byIcon(Icons.warning_rounded));
-      expect(icon.color, AppColors.amber);
+      final finder = find.byIcon(Icons.warning_rounded);
+      final icon = tester.widget<Icon>(finder);
+      expect(icon.color, tester.element(finder).caution);
     });
 
     testWidgets('not ready shows the red error header', (tester) async {
@@ -145,8 +150,9 @@ void main() {
 
       expect(find.text('Not ready'), findsOneWidget);
       expect(find.text('Score 20 / 100'), findsOneWidget);
-      final icon = tester.widget<Icon>(find.byIcon(Icons.error_rounded));
-      expect(icon.color, AppColors.red);
+      final finder = find.byIcon(Icons.error_rounded);
+      final icon = tester.widget<Icon>(finder);
+      expect(icon.color, tester.element(finder).critical);
     });
   });
 

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
@@ -98,7 +97,7 @@ class _StartEventRegattaScreenState
             NavisCard(
               child: Row(
                 children: [
-                  const Icon(Icons.emoji_events, color: AppColors.cyan),
+                  Icon(Icons.emoji_events, color: context.accent),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -117,10 +116,10 @@ class _StartEventRegattaScreenState
           _Label(l.groupLabel),
           const SizedBox(height: 8),
           groupsAsync.when(
-            loading: () => const Center(
-                child: CircularProgressIndicator(color: AppColors.cyan)),
+            loading: () =>
+                Center(child: CircularProgressIndicator(color: context.accent)),
             error: (e, _) => Text(l.errorWithMessage(e.toString()),
-                style: const TextStyle(color: AppColors.red)),
+                style: TextStyle(color: context.critical)),
             data: (groups) {
               final owned =
                   groups.where((g) => g.isOwner).toList(growable: false);
@@ -157,10 +156,10 @@ class _StartEventRegattaScreenState
           _Label(l.boat),
           const SizedBox(height: 8),
           boatsAsync.when(
-            loading: () => const Center(
-                child: CircularProgressIndicator(color: AppColors.cyan)),
+            loading: () =>
+                Center(child: CircularProgressIndicator(color: context.accent)),
             error: (e, _) => Text(l.errorWithMessage(e.toString()),
-                style: const TextStyle(color: AppColors.red)),
+                style: TextStyle(color: context.critical)),
             data: (boats) {
               if (boats.isEmpty) {
                 return NavisCard(

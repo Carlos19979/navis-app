@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/events/presentation/providers/event_provider.dart';
@@ -93,7 +92,7 @@ class _EventsBodyState extends ConsumerState<EventsBody> {
               child: _showCalendar
                   ? CalendarView(events: regattas)
                   : RefreshIndicator(
-                      color: AppColors.cyan,
+                      color: context.accent,
                       backgroundColor: context.dialogSurface,
                       onRefresh: () async => ref.invalidate(eventsProvider),
                       child: ListView.builder(

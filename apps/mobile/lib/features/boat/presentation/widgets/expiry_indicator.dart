@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/shared/widgets/navis_pulse_budget.dart';
+import 'package:navis_mobile/shared/utils/status_colors.dart';
 
 class ExpiryIndicator extends StatelessWidget {
   const ExpiryIndicator({super.key, required this.expiryDate, this.size = 12});
@@ -11,12 +11,7 @@ class ExpiryIndicator extends StatelessWidget {
   final DateTime expiryDate;
   final double size;
 
-  Color get _color {
-    if (NavisDateUtils.isExpired(expiryDate)) return AppColors.red;
-    if (NavisDateUtils.isCritical(expiryDate)) return AppColors.red;
-    if (NavisDateUtils.isWarning(expiryDate)) return AppColors.amber;
-    return AppColors.green;
-  }
+  Color _color(BuildContext context) => context.expiryColor(expiryDate);
 
   IconData get _icon {
     if (NavisDateUtils.isExpired(expiryDate)) return Icons.error;
@@ -39,15 +34,15 @@ class ExpiryIndicator extends StatelessWidget {
       height: containerSize,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: _color.withValues(alpha: 0.12),
+        color: _color(context).withValues(alpha: 0.12),
         border: Border.all(
-          color: _color.withValues(alpha: 0.25),
+          color: _color(context).withValues(alpha: 0.25),
         ),
       ),
       child: Center(
         child: Icon(
           _icon,
-          color: _color,
+          color: _color(context),
           size: iconSize,
         ),
       ),

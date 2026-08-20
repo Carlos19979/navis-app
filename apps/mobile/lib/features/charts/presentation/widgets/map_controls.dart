@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 
 class MapControls extends StatelessWidget {
@@ -176,7 +177,7 @@ class _ControlButtonState extends State<_ControlButton> {
                 ? BoxDecoration(
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.cyan.withValues(alpha: 0.25),
+                        color: context.accent.withValues(alpha: 0.25),
                         blurRadius: 8,
                         spreadRadius: 1,
                       ),
@@ -185,7 +186,7 @@ class _ControlButtonState extends State<_ControlButton> {
                 : null,
             child: Icon(
               widget.icon,
-              color: widget.isActive ? AppColors.cyan : AppColors.textPrimary,
+              color: widget.isActive ? context.accent : context.ink,
               size: 22,
             ),
           ),

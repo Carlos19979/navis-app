@@ -5,7 +5,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/auth/domain/auth_state.dart';
@@ -85,7 +84,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.cyan.withValues(alpha: 0.2),
+                              color: context.accent.withValues(alpha: 0.2),
                               blurRadius: 40,
                               spreadRadius: 8,
                             ),
@@ -97,10 +96,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               sigmaX: 12,
                               sigmaY: 12,
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.sailing,
                               size: 100,
-                              color: AppColors.cyan,
+                              color: context.accent,
                             ),
                           ),
                         ),
@@ -278,8 +277,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           children: [
                             TextSpan(
                               text: l.login,
-                              style: const TextStyle(
-                                color: AppColors.cyan,
+                              style: TextStyle(
+                                color: context.accent,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -346,7 +345,7 @@ class _GlassTextField extends StatelessWidget {
           ),
           child: Icon(
             prefixIconData,
-            color: AppColors.cyan,
+            color: context.accent,
             size: 20,
           ),
         ),

@@ -23,6 +23,7 @@ import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
+import 'package:navis_mobile/shared/utils/status_colors.dart';
 
 class TripDetailScreen extends ConsumerWidget {
   const TripDetailScreen({super.key, required this.tripId});
@@ -59,9 +60,9 @@ class TripDetailScreen extends ConsumerWidget {
                 onPressed: () => context.push('/trips/$tripId/edit'),
               ),
               IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.delete_outlined,
-                  color: AppColors.red,
+                  color: context.critical,
                 ),
                 tooltip: l.deleteTrip,
                 onPressed: () => _confirmDelete(context, ref),
@@ -164,7 +165,7 @@ class TripDetailScreen extends ConsumerWidget {
                       children: [
                         OpenSeaMapTileProvider.baseLayer(),
                         PolylineLayer(
-                          polylines: _buildSpeedPolylines(trackPoints),
+                          polylines: _buildSpeedPolylines(context, trackPoints),
                         ),
                         MarkerLayer(
                           markers: [
@@ -177,7 +178,7 @@ class TripDetailScreen extends ConsumerWidget {
                               height: 14,
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: AppColors.green,
+                                  color: context.positive,
                                   shape: BoxShape.circle,
                                   border: Border.all(
                                     color: Colors.white,
@@ -185,7 +186,7 @@ class TripDetailScreen extends ConsumerWidget {
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: AppColors.green
+                                      color: context.positive
                                           .withValues(alpha: 0.4),
                                       blurRadius: 6,
                                     ),
@@ -202,7 +203,7 @@ class TripDetailScreen extends ConsumerWidget {
                               height: 14,
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: AppColors.red,
+                                  color: context.critical,
                                   shape: BoxShape.circle,
                                   border: Border.all(
                                     color: Colors.white,
@@ -210,8 +211,8 @@ class TripDetailScreen extends ConsumerWidget {
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color:
-                                          AppColors.red.withValues(alpha: 0.4),
+                                      color: context.critical
+                                          .withValues(alpha: 0.4),
                                       blurRadius: 6,
                                     ),
                                   ],
@@ -253,7 +254,7 @@ class TripDetailScreen extends ConsumerWidget {
       MaterialPageRoute<void>(
         builder: (_) => _TripMapFullScreen(
           trackPoints: trackPoints,
-          polylines: _buildSpeedPolylines(trackPoints),
+          polylines: _buildSpeedPolylines(context, trackPoints),
         ),
       ),
     );
@@ -388,6 +389,7 @@ class TripDetailScreen extends ConsumerWidget {
   }
 
   List<Polyline> _buildSpeedPolylines(
+    BuildContext context,
     List<TrackPoint> trackPoints,
   ) {
     if (trackPoints.length < 2) return [];
@@ -395,12 +397,7 @@ class TripDetailScreen extends ConsumerWidget {
     final polylines = <Polyline>[];
     for (int i = 0; i < trackPoints.length - 1; i++) {
       final speed = trackPoints[i].speedKnots ?? 0;
-      final color = switch (speed) {
-        < 3 => AppColors.cyan,
-        < 6 => AppColors.green,
-        < 12 => AppColors.amber,
-        _ => AppColors.red,
-      };
+      final color = context.speedColor(speed);
 
       polylines.add(
         Polyline(
@@ -458,13 +455,13 @@ class TripDetailScreen extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.link, color: AppColors.cyan),
+              leading: Icon(Icons.link, color: context.accent),
               title: Text(l.shareTripLink),
               subtitle: Text(l.shareTripLinkSubtitle),
               onTap: () => Navigator.of(sheetCtx).pop(_ShareChoice.link),
             ),
             ListTile(
-              leading: const Icon(Icons.short_text, color: AppColors.cyan),
+              leading: Icon(Icons.short_text, color: context.accent),
               title: Text(l.shareTripSummary),
               subtitle: Text(l.shareTripSummarySubtitle),
               onTap: () => Navigator.of(sheetCtx).pop(_ShareChoice.summary),
@@ -561,16 +558,16 @@ class _SpeedLegend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _LegendDot(color: AppColors.cyan, label: '<3 kt'),
-        SizedBox(width: 12),
-        _LegendDot(color: AppColors.green, label: '3-6 kt'),
-        SizedBox(width: 12),
-        _LegendDot(color: AppColors.amber, label: '6-12 kt'),
-        SizedBox(width: 12),
-        _LegendDot(color: AppColors.red, label: '>12 kt'),
+        _LegendDot(color: context.accent, label: '<3 kt'),
+        const SizedBox(width: 12),
+        _LegendDot(color: context.positive, label: '3-6 kt'),
+        const SizedBox(width: 12),
+        _LegendDot(color: context.caution, label: '6-12 kt'),
+        const SizedBox(width: 12),
+        _LegendDot(color: context.critical, label: '>12 kt'),
       ],
     );
   }
@@ -640,7 +637,7 @@ class _DetailRow extends StatelessWidget {
               width: 0.5,
             ),
           ),
-          child: Icon(icon, size: 16, color: AppColors.cyan),
+          child: Icon(icon, size: 16, color: context.accent),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -681,13 +678,13 @@ class _StatBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Icon(icon, size: 18, color: AppColors.cyan),
+        Icon(icon, size: 18, color: context.accent),
         const SizedBox(height: 6),
         Text(
           value,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
-                color: AppColors.cyan,
+                color: context.accent,
               ),
           textAlign: TextAlign.center,
         ),
@@ -755,8 +752,8 @@ class _TripMapFullScreen extends StatelessWidget {
               PolylineLayer(polylines: polylines),
               MarkerLayer(
                 markers: [
-                  _endpointMarker(points.first, AppColors.green),
-                  _endpointMarker(points.last, AppColors.red),
+                  _endpointMarker(points.first, context.positive),
+                  _endpointMarker(points.last, context.critical),
                 ],
               ),
             ],

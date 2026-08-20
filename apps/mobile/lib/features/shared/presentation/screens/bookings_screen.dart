@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import 'package:navis_mobile/core/network/supabase_client.dart';
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
@@ -364,16 +363,16 @@ class _DayCell extends StatelessWidget {
           margin: const EdgeInsets.all(2),
           decoration: BoxDecoration(
             color: selected
-                ? AppColors.cyan.withValues(alpha: 0.18)
+                ? context.accent.withValues(alpha: 0.18)
                 : occupied
-                    ? AppColors.cyan.withValues(alpha: 0.07)
+                    ? context.accent.withValues(alpha: 0.07)
                     : null,
             borderRadius: BorderRadius.circular(Dimens.radiusSm),
             // Amber ring: two bookings overlap on this day.
             border: info.overlap
-                ? Border.all(color: AppColors.amber, width: 1.5)
+                ? Border.all(color: context.caution, width: 1.5)
                 : selected
-                    ? Border.all(color: AppColors.cyan)
+                    ? Border.all(color: context.accent)
                     : null,
           ),
           child: Column(
@@ -384,7 +383,7 @@ class _DayCell extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: today ? FontWeight.w800 : FontWeight.w500,
-                  color: today ? AppColors.cyan : context.txtPrimary,
+                  color: today ? context.accent : context.txtPrimary,
                 ),
               ),
               const SizedBox(height: 2),
@@ -394,7 +393,7 @@ class _DayCell extends StatelessWidget {
                   if (info.mine)
                     _Dot(
                       key: ValueKey('calendar-day-${day.day}-mine'),
-                      color: AppColors.cyan,
+                      color: context.accent,
                     ),
                   if (info.others)
                     _Dot(
@@ -404,7 +403,7 @@ class _DayCell extends StatelessWidget {
                   if (info.overlap)
                     _Dot(
                       key: ValueKey('calendar-day-${day.day}-overlap'),
-                      color: AppColors.amber,
+                      color: context.caution,
                     ),
                 ],
               ),
@@ -462,10 +461,10 @@ class _BookingCard extends ConsumerWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: AppColors.cyan.withValues(alpha: 0.15),
+              color: context.accent.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.event, color: AppColors.cyan, size: 22),
+            child: Icon(Icons.event, color: context.accent, size: 22),
           ),
           const SizedBox(width: Dimens.spaceMd),
           Expanded(
@@ -498,15 +497,15 @@ class _BookingCard extends ConsumerWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.warning_amber_rounded,
-                            size: 14, color: AppColors.amber),
+                        Icon(Icons.warning_amber_rounded,
+                            size: 14, color: context.caution),
                         const SizedBox(width: 4),
                         Text(
                           l.bookingOverlapsBadge,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.amber,
+                            color: context.caution,
                           ),
                         ),
                       ],

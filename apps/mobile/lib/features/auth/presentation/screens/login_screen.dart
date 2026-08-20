@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/network/notification_service.dart';
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/auth/domain/auth_state.dart';
@@ -98,7 +97,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.cyan,
+              backgroundColor: context.accent,
             ),
             onPressed: () => Navigator.of(ctx).pop(emailCtrl.text.trim()),
             child: Text(AppLocalizations.of(context)!.sendResetLink),
@@ -175,7 +174,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.cyan.withValues(alpha: 0.2),
+                              color: context.accent.withValues(alpha: 0.2),
                               blurRadius: 40,
                               spreadRadius: 8,
                             ),
@@ -353,7 +352,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         l.forgotPassword,
                         textAlign: TextAlign.center,
                         style: textTheme.bodyMedium?.copyWith(
-                          color: AppColors.cyan,
+                          color: context.accent,
                         ),
                       ),
                     ).animate().fadeIn(delay: 700.ms, duration: 500.ms),
@@ -371,8 +370,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           children: [
                             TextSpan(
                               text: l.register,
-                              style: const TextStyle(
-                                color: AppColors.cyan,
+                              style: TextStyle(
+                                color: context.accent,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -439,7 +438,7 @@ class _GlassTextField extends StatelessWidget {
           ),
           child: Icon(
             prefixIconData,
-            color: AppColors.cyan,
+            color: context.accent,
             size: 20,
           ),
         ),

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/money_utils.dart';
@@ -188,19 +187,19 @@ class _RatioGrid extends StatelessWidget {
           icon: Icons.straighten_rounded,
           value: money(stats.costPerNm),
           label: l.costPerNmLabel,
-          color: AppColors.cyan,
+          color: context.accent,
         ),
         NavisMetric(
           icon: Icons.route_rounded,
           value: money(stats.costPerTrip),
           label: l.costPerTripLabel,
-          color: AppColors.green,
+          color: context.positive,
         ),
         NavisMetric(
           icon: Icons.engineering_rounded,
           value: money(stats.costPerEngineHour),
           label: l.costPerEngineHourLabel,
-          color: AppColors.amber,
+          color: context.caution,
         ),
         NavisMetric(
           icon: Icons.opacity_rounded,
@@ -208,7 +207,7 @@ class _RatioGrid extends StatelessWidget {
               ? '—'
               : '${stats.litresPerNm!.toStringAsFixed(2)} L/NM',
           label: l.costFuelEfficiency,
-          color: AppColors.cyan,
+          color: context.accent,
         ),
         NavisMetric(
           icon: Icons.local_gas_station_rounded,
@@ -216,7 +215,7 @@ class _RatioGrid extends StatelessWidget {
               ? '—'
               : Money.perUnit(locale, stats.pricePerLiter!, 'L', precise: true),
           label: l.costAvgPricePerLiter,
-          color: AppColors.amber,
+          color: context.caution,
         ),
         NavisMetric(
           icon: Icons.water_drop_outlined,
@@ -224,7 +223,7 @@ class _RatioGrid extends StatelessWidget {
               ? '${stats.fuelLiters.toStringAsFixed(0)} L'
               : '—',
           label: l.costLitersPurchased,
-          color: AppColors.green,
+          color: context.positive,
         ),
       ],
     );
@@ -344,20 +343,20 @@ class _Anomalies extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        NavisSectionHeader(label: l.anomaliesTitle, color: AppColors.amber),
+        NavisSectionHeader(label: l.anomaliesTitle, color: context.caution),
         for (final a in anomalies)
           Padding(
             padding: const EdgeInsets.only(bottom: Dimens.spaceSm),
             child: NavisCard(
-              borderColor: AppColors.amber.withValues(alpha: 0.4),
+              borderColor: context.caution.withValues(alpha: 0.4),
               onTap: a.tripId.isEmpty
                   ? null
                   : () => context.push('/trips/${a.tripId}'),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.local_gas_station_rounded,
-                    color: AppColors.amber,
+                    color: context.caution,
                     size: Dimens.iconMd,
                   ),
                   const SizedBox(width: Dimens.spaceMd),
@@ -390,9 +389,9 @@ class _Anomalies extends ConsumerWidget {
                                 a.excessLiters * pricePerLiter,
                               ),
                             ),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
-                              color: AppColors.amber,
+                              color: context.caution,
                               fontWeight: FontWeight.w700,
                             ),
                           ),

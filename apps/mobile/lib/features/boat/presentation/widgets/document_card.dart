@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/boat/presentation/widgets/expiry_indicator.dart';
 import 'package:navis_mobile/features/documents/domain/entities/document.dart';
 import 'package:navis_mobile/features/documents/presentation/widgets/document_status_badge.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
+import 'package:navis_mobile/shared/utils/status_colors.dart';
 
 class DocumentCard extends StatelessWidget {
   const DocumentCard({super.key, required this.document, this.onTap});
@@ -18,13 +18,8 @@ class DocumentCard extends StatelessWidget {
   /// documents list passes `context.push` so back returns to the list.
   final VoidCallback? onTap;
 
-  Color get _statusColor {
-    final daysLeft = NavisDateUtils.daysUntil(document.expiryDate);
-    if (daysLeft < 0) return AppColors.red;
-    if (daysLeft <= 30) return AppColors.red;
-    if (daysLeft <= 90) return AppColors.amber;
-    return AppColors.green;
-  }
+  Color _statusColor(BuildContext context) =>
+      context.expiryColor(document.expiryDate);
 
   /// Prettifies a stored document type for display: snake_case → Title Case
   /// (e.g. `safety_certificate` → `Safety Certificate`). Already-nice values
@@ -63,8 +58,8 @@ class DocumentCard extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    _statusColor,
-                    _statusColor.withValues(alpha: 0.4),
+                    _statusColor(context),
+                    _statusColor(context).withValues(alpha: 0.4),
                   ],
                 ),
                 borderRadius: const BorderRadius.only(

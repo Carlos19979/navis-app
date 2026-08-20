@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/distance_utils.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
@@ -26,7 +25,7 @@ class TripCard extends StatelessWidget {
             children: [
               ShaderMask(
                 shaderCallback: (bounds) =>
-                    AppColors.cyanGradient.createShader(bounds),
+                    context.accentGradient.createShader(bounds),
                 child: const Icon(
                   Icons.flight_takeoff,
                   size: 16,
@@ -43,24 +42,16 @@ class TripCard extends StatelessWidget {
                 ),
               ),
               if (trip.arrivalPort != null) ...[
-                ShaderMask(
-                  shaderCallback: (bounds) =>
-                      AppColors.cyanGlowGradient.createShader(bounds),
-                  child: const Icon(
-                    Icons.arrow_forward,
-                    size: 14,
-                    color: Colors.white,
-                  ),
+                Icon(
+                  Icons.arrow_forward,
+                  size: 14,
+                  color: context.accent,
                 ),
                 const SizedBox(width: 4),
-                ShaderMask(
-                  shaderCallback: (bounds) =>
-                      AppColors.greenGradient.createShader(bounds),
-                  child: const Icon(
-                    Icons.flight_land,
-                    size: 16,
-                    color: Colors.white,
-                  ),
+                Icon(
+                  Icons.flight_land,
+                  size: 16,
+                  color: context.positive,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -130,7 +121,7 @@ class _GlassPill extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 12, color: AppColors.cyan),
+            Icon(icon, size: 12, color: context.accent),
             const SizedBox(width: 4),
             Text(
               label,

@@ -13,7 +13,6 @@ import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
 import 'package:navis_mobile/features/shared/data/shared_repository.dart';
 import 'package:navis_mobile/features/shared/presentation/widgets/split_sheet.dart';
 import 'package:navis_mobile/core/network/supabase_client.dart';
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_permissions_provider.dart';
@@ -125,13 +124,13 @@ List<_TaskTemplate> _taskTemplates(AppLocalizations l) => [
 
 (Color, IconData) _taskVisuals(BuildContext context, MaintenanceStatus s) =>
     switch (s) {
-      MaintenanceStatus.overdue => (AppColors.red, Icons.error_rounded),
-      MaintenanceStatus.dueSoon => (AppColors.amber, Icons.schedule_rounded),
+      MaintenanceStatus.overdue => (context.critical, Icons.error_rounded),
+      MaintenanceStatus.dueSoon => (context.caution, Icons.schedule_rounded),
       MaintenanceStatus.pending => (
-          AppColors.amber,
+          context.caution,
           Icons.help_outline_rounded
         ),
-      MaintenanceStatus.ok => (AppColors.green, Icons.check_circle_rounded),
+      MaintenanceStatus.ok => (context.positive, Icons.check_circle_rounded),
       MaintenanceStatus.none => (context.txtSecondary, Icons.history_rounded),
     };
 
@@ -409,7 +408,7 @@ class _MaintenanceTabState extends ConsumerState<_MaintenanceTab> {
           : null,
       child: Row(
         children: [
-          const Icon(Icons.build, color: AppColors.cyan),
+          Icon(Icons.build, color: context.accent),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -436,16 +435,16 @@ class _MaintenanceTabState extends ConsumerState<_MaintenanceTab> {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.attach_file,
                         size: 14,
-                        color: AppColors.cyan,
+                        color: context.accent,
                       ),
                       const SizedBox(width: 2),
                       Text(
                         l.invoiceLabel,
-                        style: const TextStyle(
-                          color: AppColors.cyan,
+                        style: TextStyle(
+                          color: context.accent,
                           fontSize: 12,
                         ),
                       ),
@@ -463,8 +462,8 @@ class _MaintenanceTabState extends ConsumerState<_MaintenanceTab> {
             const SizedBox(width: 8),
             Text(
               '${m.cost!.toStringAsFixed(0)} €',
-              style: const TextStyle(
-                color: AppColors.cyan,
+              style: TextStyle(
+                color: context.accent,
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
               ),
@@ -644,7 +643,7 @@ class _MaintenanceTabState extends ConsumerState<_MaintenanceTab> {
                 },
                 child: Text(
                   l.delete,
-                  style: const TextStyle(color: AppColors.red),
+                  style: TextStyle(color: context.critical),
                 ),
               ),
             ],
@@ -909,7 +908,7 @@ class _MaintenanceTabState extends ConsumerState<_MaintenanceTab> {
                     },
                     child: Text(
                       l.delete,
-                      style: const TextStyle(color: AppColors.red),
+                      style: TextStyle(color: context.critical),
                     ),
                   ),
               ],
@@ -1196,8 +1195,8 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
           Text(l.expensesPeriodTotal,
               style: TextStyle(color: context.txtSecondary)),
           Text('${total.toStringAsFixed(0)} €',
-              style: const TextStyle(
-                  color: AppColors.cyan,
+              style: TextStyle(
+                  color: context.accent,
                   fontSize: 22,
                   fontWeight: FontWeight.w800)),
         ],
@@ -1231,8 +1230,8 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
                   style: TextStyle(
                       color: context.txtPrimary, fontWeight: FontWeight.w600)),
               Text('${byMonth[m]!.toStringAsFixed(0)} €',
-                  style: const TextStyle(
-                      color: AppColors.cyan, fontWeight: FontWeight.w800)),
+                  style: TextStyle(
+                      color: context.accent, fontWeight: FontWeight.w800)),
             ],
           ),
         ),
@@ -1251,7 +1250,7 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
       onTap: canManage ? () => _editExpense(context, ref, existing: e) : null,
       child: Row(
         children: [
-          const Icon(Icons.euro, color: AppColors.cyan),
+          Icon(Icons.euro, color: context.accent),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -1275,7 +1274,7 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
                       (e.pricePerLiter ?? (e.amount / e.liters!))
                           .toStringAsFixed(2),
                     ),
-                    style: const TextStyle(color: AppColors.cyan, fontSize: 12),
+                    style: TextStyle(color: context.accent, fontSize: 12),
                   ),
                 ],
                 if (splits[e.id] case final s?) ...[
@@ -1286,7 +1285,7 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
                       Icon(Icons.groups,
                           size: 14,
                           color:
-                              s.mySettled ? AppColors.green : AppColors.cyan),
+                              s.mySettled ? context.positive : context.accent),
                       const SizedBox(width: 4),
                       Text(
                         s.mySettled
@@ -1296,7 +1295,7 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
                                 : l.splitSharedAmong(s.count)),
                         style: TextStyle(
                             color:
-                                s.mySettled ? AppColors.green : AppColors.cyan,
+                                s.mySettled ? context.positive : context.accent,
                             fontSize: 12,
                             fontWeight: FontWeight.w600),
                       ),
@@ -1308,12 +1307,11 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.attach_file,
-                          size: 14, color: AppColors.cyan),
+                      Icon(Icons.attach_file, size: 14, color: context.accent),
                       const SizedBox(width: 2),
                       Text(l.invoiceLabel,
-                          style: const TextStyle(
-                              color: AppColors.cyan, fontSize: 12)),
+                          style:
+                              TextStyle(color: context.accent, fontSize: 12)),
                     ],
                   ),
                 ],
@@ -1322,8 +1320,8 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
           ),
           const SizedBox(width: 8),
           Text('${e.amount.toStringAsFixed(0)} €',
-              style: const TextStyle(
-                  color: AppColors.cyan,
+              style: TextStyle(
+                  color: context.accent,
                   fontSize: 22,
                   fontWeight: FontWeight.w800)),
           IconButton(
@@ -1458,8 +1456,8 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
                       padding: const EdgeInsets.only(top: 6, bottom: 10),
                       child: Text(
                         l.pricePerLiterValue((a / li).toStringAsFixed(2)),
-                        style: const TextStyle(
-                          color: AppColors.cyan,
+                        style: TextStyle(
+                          color: context.accent,
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1510,7 +1508,7 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
                       if (ctx.mounted) Navigator.of(ctx).pop(false);
                     },
                     child: Text(l.delete,
-                        style: const TextStyle(color: AppColors.red)),
+                        style: TextStyle(color: context.critical)),
                   ),
               ],
             ),
@@ -1630,7 +1628,7 @@ class _InvoiceFieldState extends ConsumerState<_InvoiceField> {
     }
     return Row(
       children: [
-        const Icon(Icons.receipt_long, color: AppColors.cyan, size: 18),
+        Icon(Icons.receipt_long, color: context.accent, size: 18),
         const SizedBox(width: 8),
         Text(l.invoiceAttached, style: TextStyle(color: context.txtPrimary)),
         const Spacer(),
@@ -1649,7 +1647,7 @@ class _InvoiceFieldState extends ConsumerState<_InvoiceField> {
           },
         ),
         IconButton(
-          icon: const Icon(Icons.close, size: 18, color: AppColors.red),
+          icon: Icon(Icons.close, size: 18, color: context.critical),
           tooltip: l.remove,
           onPressed: () => widget.onPicked(null),
         ),

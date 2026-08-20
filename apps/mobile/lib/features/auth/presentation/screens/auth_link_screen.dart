@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/deeplinks/auth_deep_link.dart';
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -89,7 +88,7 @@ class _AuthLinkScreenState extends ConsumerState<AuthLinkScreen> {
                         Icon(
                           Icons.link_off,
                           size: 56,
-                          color: AppColors.amber,
+                          color: context.caution,
                           semanticLabel: l.authLinkExpiredTitle,
                         ),
                         const SizedBox(height: 20),
@@ -119,8 +118,8 @@ class _AuthLinkScreenState extends ConsumerState<AuthLinkScreen> {
                   : Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const CircularProgressIndicator(
-                          color: AppColors.cyan,
+                        CircularProgressIndicator(
+                          color: context.accent,
                         ),
                         const SizedBox(height: 20),
                         Text(

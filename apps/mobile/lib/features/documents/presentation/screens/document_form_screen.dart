@@ -186,7 +186,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: Theme.of(context).colorScheme.copyWith(
-                  primary: AppColors.cyan,
+                  primary: context.accent,
                 ),
           ),
           child: child!,
@@ -538,7 +538,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                                     .textTheme
                                     .labelLarge
                                     ?.copyWith(
-                                      color: AppColors.cyan,
+                                      color: context.accent,
                                       letterSpacing: 0.8,
                                     ),
                               ),
@@ -620,7 +620,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                                     .textTheme
                                     .labelLarge
                                     ?.copyWith(
-                                      color: AppColors.cyan,
+                                      color: context.accent,
                                       letterSpacing: 0.8,
                                     ),
                               ),
@@ -654,7 +654,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                                       .textTheme
                                       .labelLarge
                                       ?.copyWith(
-                                        color: AppColors.cyan,
+                                        color: context.accent,
                                         letterSpacing: 0.8,
                                       ),
                                 ),

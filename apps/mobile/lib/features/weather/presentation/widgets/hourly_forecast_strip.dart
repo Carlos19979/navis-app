@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/weather/domain/entities/hourly_weather.dart';
 import 'package:navis_mobile/features/weather/presentation/widgets/weather_visuals.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
+import 'package:navis_mobile/shared/utils/status_colors.dart';
 
 /// A horizontally-scrolling strip of hourly forecast cells (iOS-style).
 class HourlyForecastStrip extends StatelessWidget {
@@ -33,9 +33,8 @@ class HourlyForecastStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primary = isDark ? context.txtPrimary : AppColors.textLight;
-    final secondary =
-        isDark ? context.txtSecondary : AppColors.textLightSecondary;
+    final primary = isDark ? context.txtPrimary : context.ink;
+    final secondary = isDark ? context.txtSecondary : context.inkMuted;
 
     final strip = SizedBox(
       height: 164,
@@ -137,14 +136,14 @@ class _HourCell extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 8),
-          Icon(condition.icon, color: condition.color, size: 24),
+          Icon(condition.icon, color: condition.color(context), size: 24),
           SizedBox(
             height: 14,
             child: (precip != null && precip > 0)
                 ? Text(
                     '$precip%',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: AppColors.cyan,
+                          color: context.accent,
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
                         ),
@@ -164,13 +163,13 @@ class _HourCell extends StatelessWidget {
             _MiniStat(
               icon: Icons.waves_rounded,
               value: '${hour.waveHeight!.toStringAsFixed(1)}m',
-              color: waveColor(hour.waveHeight!),
+              color: context.waveColor(hour.waveHeight!),
             ),
           const SizedBox(height: 3),
           _MiniStat(
             icon: Icons.air_rounded,
             value: '${hour.windSpeed.round()}kt',
-            color: windColor(hour.windSpeed),
+            color: context.windColor(hour.windSpeed),
           ),
         ],
       ),

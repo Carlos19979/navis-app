@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
@@ -36,10 +35,10 @@ class NavisSelectableCard extends StatelessWidget {
                 width: Dimens.minTouchTarget,
                 height: Dimens.minTouchTarget,
                 decoration: BoxDecoration(
-                  color: AppColors.cyan.withValues(alpha: selected ? 0.2 : 0.1),
+                  color: context.accent.withValues(alpha: selected ? 0.2 : 0.1),
                   borderRadius: BorderRadius.circular(Dimens.radiusMd),
                 ),
-                child: Icon(icon, color: AppColors.cyan, size: Dimens.iconMd),
+                child: Icon(icon, color: context.accent, size: Dimens.iconMd),
               )
             : null);
 
@@ -47,7 +46,7 @@ class NavisSelectableCard extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: Dimens.spaceSm),
       child: NavisCard(
         onTap: onTap,
-        borderColor: selected ? AppColors.cyan.withValues(alpha: 0.6) : null,
+        borderColor: selected ? context.accent.withValues(alpha: 0.6) : null,
         padding: const EdgeInsets.all(Dimens.spaceMd),
         child: Row(
           children: [
@@ -81,7 +80,7 @@ class NavisSelectableCard extends StatelessWidget {
               selected
                   ? Icons.check_circle_rounded
                   : Icons.radio_button_unchecked_rounded,
-              color: selected ? AppColors.cyan : context.txtSecondary,
+              color: selected ? context.accent : context.txtSecondary,
             ),
           ],
         ),

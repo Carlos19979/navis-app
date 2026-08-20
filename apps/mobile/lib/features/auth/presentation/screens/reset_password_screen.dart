@@ -3,7 +3,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -82,10 +81,10 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.lock_reset_outlined,
                       size: 72,
-                      color: AppColors.cyan,
+                      color: context.accent,
                     ).animate().fadeIn(duration: 500.ms),
                     const SizedBox(height: 24),
                     Text(
@@ -251,7 +250,7 @@ class _GlassTextField extends StatelessWidget {
             color: context.glassBg,
             border: Border.all(color: context.glassBorderColor),
           ),
-          child: Icon(prefixIconData, color: AppColors.cyan, size: 20),
+          child: Icon(prefixIconData, color: context.accent, size: 20),
         ),
         prefixIconConstraints: const BoxConstraints(
           minWidth: 52,

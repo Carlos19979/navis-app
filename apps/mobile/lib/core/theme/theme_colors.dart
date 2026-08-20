@@ -72,6 +72,19 @@ extension ThemeColorsX on BuildContext {
   LinearGradient get accentGradient =>
       _dark ? Palette.accentGradientDark : Palette.accentGradient;
 
+  /// Base fill of a loading skeleton.
+  Color get skeleton => _dark ? Palette.skeletonDark : Palette.skeletonLight;
+
+  /// The travelling highlight of a loading skeleton.
+  Color get skeletonSheen =>
+      _dark ? Palette.skeletonSheenDark : Palette.skeletonSheenLight;
+
+  /// The placeholder bars inside a skeleton row. A step *further* from the
+  /// canvas than [skeleton], so they read as stand-in content rather than
+  /// dissolving into the row they sit on.
+  Color get skeletonBar =>
+      _dark ? Palette.skeletonBarDark : Palette.skeletonBarLight;
+
   // ── Helpers ─────────────────────────────────────────────────────────────
 
   /// A tinted background derived from [color], for the circle behind an icon

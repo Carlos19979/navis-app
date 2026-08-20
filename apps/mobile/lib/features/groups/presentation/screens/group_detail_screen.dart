@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/network/supabase_client.dart';
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/groups/domain/entities/group.dart';
@@ -22,6 +21,7 @@ import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
+import 'package:navis_mobile/shared/utils/status_colors.dart';
 
 class GroupDetailScreen extends ConsumerWidget {
   const GroupDetailScreen({required this.groupId, super.key});
@@ -59,7 +59,7 @@ class GroupDetailScreen extends ConsumerWidget {
               onRetry: () => ref.invalidate(groupProvider(groupId)),
             ),
             data: (group) => RefreshIndicator(
-              color: AppColors.cyan,
+              color: context.accent,
               backgroundColor: context.dialogSurface,
               onRefresh: () async {
                 ref.invalidate(groupProvider(groupId));
@@ -80,10 +80,10 @@ class GroupDetailScreen extends ConsumerWidget {
                       children: [
                         Expanded(child: _SectionTitle(l.regattasAndOutings)),
                         TextButton.icon(
-                          icon: const Icon(Icons.add,
-                              color: AppColors.cyan, size: 18),
+                          icon:
+                              Icon(Icons.add, color: context.accent, size: 18),
                           label: Text(l.scheduleAction,
-                              style: const TextStyle(color: AppColors.cyan)),
+                              style: TextStyle(color: context.accent)),
                           onPressed: () =>
                               context.push('/groups/$groupId/schedule'),
                         ),
@@ -119,7 +119,7 @@ class GroupDetailScreen extends ConsumerWidget {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              gradient: AppColors.cyanGradient,
+              gradient: context.accentGradient,
               borderRadius: BorderRadius.circular(16),
             ),
             child: const Icon(Icons.groups, color: Colors.white, size: 30),
@@ -164,7 +164,7 @@ class GroupDetailScreen extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
-          const Icon(Icons.vpn_key, color: AppColors.cyan),
+          Icon(Icons.vpn_key, color: context.accent),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -212,9 +212,8 @@ class GroupDetailScreen extends ConsumerWidget {
     }
     if (group.isActiveMember) {
       return TextButton.icon(
-        icon: const Icon(Icons.logout, color: AppColors.amber),
-        label:
-            Text(l.leaveGroup, style: const TextStyle(color: AppColors.amber)),
+        icon: Icon(Icons.logout, color: context.caution),
+        label: Text(l.leaveGroup, style: TextStyle(color: context.caution)),
         onPressed: () => _leave(context, ref),
       );
     }
@@ -306,7 +305,7 @@ class _RequestsSection extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          const Icon(Icons.person_add_alt, color: AppColors.amber),
+          Icon(Icons.person_add_alt, color: context.caution),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -317,12 +316,12 @@ class _RequestsSection extends ConsumerWidget {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.check_circle, color: AppColors.green),
+            icon: Icon(Icons.check_circle, color: context.positive),
             tooltip: l.admit,
             onPressed: () => _act(context, ref, m, approve: true),
           ),
           IconButton(
-            icon: const Icon(Icons.cancel, color: AppColors.red),
+            icon: Icon(Icons.cancel, color: context.critical),
             tooltip: l.rejectAction,
             onPressed: () => _act(context, ref, m, approve: false),
           ),
@@ -366,20 +365,13 @@ class _RegattasSection extends ConsumerWidget {
         'cancelled' => l.statusCancelled,
         _ => status,
       };
-  static const _statusColors = {
-    'planned': AppColors.cyan,
-    'recording': AppColors.green,
-    'completed': AppColors.textSecondary,
-    'cancelled': AppColors.red,
-  };
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(groupRegattasProvider(groupId));
     return async.when(
-      loading: () => const Padding(
-        padding: EdgeInsets.all(12),
-        child: Center(child: CircularProgressIndicator(color: AppColors.cyan)),
+      loading: () => Padding(
+        padding: const EdgeInsets.all(12),
+        child: Center(child: CircularProgressIndicator(color: context.accent)),
       ),
       error: (e, _) => NavisErrorWidget(
         message: e.toString(),
@@ -401,7 +393,9 @@ class _RegattasSection extends ConsumerWidget {
   }
 
   Widget _tile(BuildContext context, Regatta r) {
-    final color = _statusColors[r.status] ?? context.txtSecondary;
+    // Unknown statuses fall back to muted ink inside the resolver, so
+    // there is nothing left to guard here.
+    final color = context.tripStatusColor(r.status);
     return NavisCard(
       margin: const EdgeInsets.only(bottom: 8),
       onTap: () => context.push('/regattas/${r.id}'),
@@ -409,7 +403,7 @@ class _RegattasSection extends ConsumerWidget {
         children: [
           Icon(
             r.kind == 'regatta' ? Icons.emoji_events_outlined : Icons.sailing,
-            color: AppColors.cyan,
+            color: context.accent,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -463,9 +457,9 @@ class _MembersSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(groupMembersProvider(groupId));
     return async.when(
-      loading: () => const Padding(
-        padding: EdgeInsets.all(16),
-        child: Center(child: CircularProgressIndicator(color: AppColors.cyan)),
+      loading: () => Padding(
+        padding: const EdgeInsets.all(16),
+        child: Center(child: CircularProgressIndicator(color: context.accent)),
       ),
       error: (e, _) => NavisErrorWidget(
         message: e.toString(),
@@ -487,7 +481,7 @@ class _MembersSection extends ConsumerWidget {
         children: [
           Icon(
             m.isOwner ? Icons.star : Icons.person,
-            color: m.isOwner ? AppColors.amber : context.txtSecondary,
+            color: m.isOwner ? context.caution : context.txtSecondary,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -498,8 +492,8 @@ class _MembersSection extends ConsumerWidget {
           ),
           if (isOwner && !m.isOwner)
             IconButton(
-              icon: const Icon(Icons.remove_circle_outline,
-                  color: AppColors.red, size: 20),
+              icon: Icon(Icons.remove_circle_outline,
+                  color: context.critical, size: 20),
               tooltip: l.expelMember,
               onPressed: () async {
                 try {

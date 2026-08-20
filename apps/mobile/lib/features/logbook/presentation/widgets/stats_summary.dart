@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
@@ -75,13 +74,13 @@ class _StatItem extends StatelessWidget {
               width: 0.5,
             ),
           ),
-          child: Icon(icon, size: 18, color: AppColors.cyan),
+          child: Icon(icon, size: 18, color: context.accent),
         ),
         const SizedBox(height: 8),
         Text(
           value,
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: AppColors.cyan,
+                color: context.accent,
                 fontWeight: FontWeight.w700,
               ),
         ),

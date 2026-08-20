@@ -106,7 +106,7 @@ class _BoatDetailView extends ConsumerWidget {
                       icon: Icons.description_outlined,
                       title: l.documents,
                       subtitle: l.certificates,
-                      color: AppColors.cyan,
+                      color: context.accent,
                       onTap: () => context.push('/boats/${boat.id}/documents'),
                     ),
                     const SizedBox(height: 10),
@@ -114,7 +114,7 @@ class _BoatDetailView extends ConsumerWidget {
                       icon: Icons.route_outlined,
                       title: l.logbook,
                       subtitle: l.tripHistory,
-                      color: AppColors.green,
+                      color: context.positive,
                       onTap: () => context.push('/boats/${boat.id}/trips'),
                     ),
                     const SizedBox(height: 10),
@@ -124,7 +124,7 @@ class _BoatDetailView extends ConsumerWidget {
                       icon: Icons.query_stats_rounded,
                       title: l.tripStatistics,
                       subtitle: l.tripStatisticsSubtitle,
-                      color: AppColors.green,
+                      color: context.positive,
                       onTap: () => context.push('/boats/${boat.id}/stats'),
                     ),
                     const SizedBox(height: 10),
@@ -132,7 +132,7 @@ class _BoatDetailView extends ConsumerWidget {
                       icon: Icons.build_outlined,
                       title: l.maintenanceAndExpenses,
                       subtitle: l.maintenanceAndExpensesSubtitle,
-                      color: AppColors.amber,
+                      color: context.caution,
                       onTap: () =>
                           context.push('/boats/${boat.id}/maintenance'),
                     ),
@@ -141,7 +141,7 @@ class _BoatDetailView extends ConsumerWidget {
                       icon: Icons.insights_rounded,
                       title: l.costTitle,
                       subtitle: l.costAnalyticsSubtitle,
-                      color: AppColors.cyan,
+                      color: context.accent,
                       badge: ref.watch(effectiveTierProvider).canCostAnalytics
                           ? null
                           : l.proBadge,
@@ -152,7 +152,7 @@ class _BoatDetailView extends ConsumerWidget {
                       icon: Icons.calendar_month_outlined,
                       title: l.bookingsTitle,
                       subtitle: l.bookingsSubtitle,
-                      color: AppColors.cyan,
+                      color: context.accent,
                       badge:
                           ref.watch(effectiveTierProvider).canSharedCoordination
                               ? null
@@ -164,7 +164,7 @@ class _BoatDetailView extends ConsumerWidget {
                       icon: Icons.anchor_rounded,
                       title: l.anchorAlarmTitle,
                       subtitle: l.anchorWatchSubtitle,
-                      color: AppColors.amber,
+                      color: context.caution,
                       badge: ref.watch(effectiveTierProvider).canAnchorAlarm
                           ? null
                           : l.plusBadge,
@@ -175,7 +175,7 @@ class _BoatDetailView extends ConsumerWidget {
                       icon: Icons.workspace_premium_outlined,
                       title: l.passportExport,
                       subtitle: l.passportTitle,
-                      color: AppColors.green,
+                      color: context.positive,
                       badge: ref.watch(effectiveTierProvider).canExportPassport
                           ? null
                           : l.proBadge,
@@ -189,7 +189,7 @@ class _BoatDetailView extends ConsumerWidget {
                       icon: Icons.groups_outlined,
                       title: l.boatCrewTitle,
                       subtitle: l.boatCrewSubtitle,
-                      color: AppColors.green,
+                      color: context.positive,
                       onTap: () => showBoatMembersSheet(
                         context,
                         boatId: boat.id,
@@ -201,7 +201,7 @@ class _BoatDetailView extends ConsumerWidget {
                       icon: Icons.ios_share_rounded,
                       title: l.shareBoat,
                       subtitle: l.shareBoatSubtitle,
-                      color: AppColors.cyan,
+                      color: context.accent,
                       onTap: () => _shareBoat(context, ref, boat),
                     ),
                     const SizedBox(height: 10),
@@ -209,7 +209,7 @@ class _BoatDetailView extends ConsumerWidget {
                       icon: Icons.edit_outlined,
                       title: l.editBoat,
                       subtitle: l.modifyBoatDetails,
-                      color: AppColors.amber,
+                      color: context.caution,
                       onTap: () => context.push('/boats/${boat.id}/edit'),
                     ),
                     const SizedBox(height: 10),
@@ -217,15 +217,15 @@ class _BoatDetailView extends ConsumerWidget {
                       icon: Icons.delete_outlined,
                       title: l.deleteBoat,
                       subtitle: l.removePermanently,
-                      color: AppColors.red,
+                      color: context.critical,
                       onTap: () => _confirmDelete(context, ref),
                     ),
                   ] else ...[
                     NavisCard(
                       child: Row(
                         children: [
-                          const Icon(Icons.visibility_outlined,
-                              color: AppColors.cyan),
+                          Icon(Icons.visibility_outlined,
+                              color: context.accent),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
@@ -252,7 +252,7 @@ class _BoatDetailView extends ConsumerWidget {
                         icon: Icons.description_outlined,
                         title: l.documents,
                         subtitle: l.certificates,
-                        color: AppColors.cyan,
+                        color: context.accent,
                         onTap: () =>
                             context.push('/boats/${boat.id}/documents'),
                       ),
@@ -262,7 +262,7 @@ class _BoatDetailView extends ConsumerWidget {
                       icon: Icons.route_outlined,
                       title: l.logbook,
                       subtitle: l.tripHistory,
-                      color: AppColors.green,
+                      color: context.positive,
                       onTap: () => context.push('/boats/${boat.id}/trips'),
                     ),
                     const SizedBox(height: 10),
@@ -270,7 +270,7 @@ class _BoatDetailView extends ConsumerWidget {
                       icon: Icons.query_stats_rounded,
                       title: l.tripStatistics,
                       subtitle: l.tripStatisticsSubtitle,
-                      color: AppColors.green,
+                      color: context.positive,
                       onTap: () => context.push('/boats/${boat.id}/stats'),
                     ),
                     const SizedBox(height: 10),
@@ -278,7 +278,7 @@ class _BoatDetailView extends ConsumerWidget {
                       icon: Icons.build_outlined,
                       title: l.maintenanceAndExpenses,
                       subtitle: l.maintenanceAndExpensesSubtitle,
-                      color: AppColors.amber,
+                      color: context.caution,
                       onTap: () =>
                           context.push('/boats/${boat.id}/maintenance'),
                     ),
@@ -287,7 +287,7 @@ class _BoatDetailView extends ConsumerWidget {
                       icon: Icons.logout,
                       title: l.leaveSharedBoat,
                       subtitle: l.leaveSharedBoatSubtitle,
-                      color: AppColors.red,
+                      color: context.critical,
                       onTap: () => _leaveBoat(context, ref, boat),
                     ),
                   ],
@@ -459,17 +459,17 @@ class _ShareBoatSheet extends ConsumerWidget {
               width: double.infinity,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: AppColors.cyan.withValues(alpha: 0.12),
+                  color: context.accent.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                      color: AppColors.cyan.withValues(alpha: 0.4), width: 0.5),
+                      color: context.accent.withValues(alpha: 0.4), width: 0.5),
                 ),
                 child: Center(
                   child: switch (codeAsync) {
                     AsyncData(:final value) => Text(
                         value,
-                        style: const TextStyle(
-                          color: AppColors.cyan,
+                        style: TextStyle(
+                          color: context.accent,
                           fontSize: 26,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 4,
@@ -481,12 +481,12 @@ class _ShareBoatSheet extends ConsumerWidget {
                         icon: const Icon(Icons.refresh, size: Dimens.iconSm),
                         label: Text(l.couldNotGetCode),
                       ),
-                    _ => const SizedBox(
+                    _ => SizedBox(
                         width: 22,
                         height: 22,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: AppColors.cyan,
+                          color: context.accent,
                         ),
                       ),
                   },
@@ -515,7 +515,7 @@ class _ShareBoatSheet extends ConsumerWidget {
                     // button, which is what iOS wants as the source rect.
                     builder: (buttonCtx) => FilledButton.icon(
                       style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.cyan),
+                          backgroundColor: context.accent),
                       onPressed: code == null
                           ? null
                           : () => shareNavisText(
@@ -613,7 +613,7 @@ class _BoatSliverAppBar extends StatelessWidget {
                   memCacheWidth: 1200,
                   fit: BoxFit.cover,
                   placeholder: (context, url) => Container(
-                    color: AppColors.darkCard,
+                    color: context.surfaceRaised,
                   ),
                   errorWidget: (context, url, error) => _placeholderImage(),
                 ),
@@ -773,7 +773,7 @@ class _DetailRow extends StatelessWidget {
             color: context.glassBg,
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, size: 16, color: AppColors.cyan),
+          child: Icon(icon, size: 16, color: context.accent),
         ),
         const SizedBox(width: 12),
         Text(
@@ -967,7 +967,7 @@ class _PermissionRow extends StatelessWidget {
           Icon(
             granted ? Icons.check_circle_rounded : Icons.lock_outline_rounded,
             size: 16,
-            color: granted ? AppColors.green : AppColors.amber,
+            color: granted ? context.positive : context.caution,
           ),
           const SizedBox(width: 8),
           Expanded(

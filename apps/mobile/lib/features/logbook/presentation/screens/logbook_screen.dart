@@ -3,7 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
 import 'package:navis_mobile/features/logbook/presentation/widgets/stats_summary.dart';
@@ -51,8 +51,8 @@ class LogbookScreen extends ConsumerWidget {
             final stats = ref.watch(tripStatsProvider(trips));
 
             return RefreshIndicator(
-              color: AppColors.cyan,
-              backgroundColor: AppColors.darkSurface,
+              color: context.accent,
+              backgroundColor: context.surfaceRaised,
               onRefresh: () async {
                 ref.invalidate(boatTripsProvider(boatId));
               },

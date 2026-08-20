@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/readiness/data/readiness_repository.dart';
@@ -77,7 +76,7 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final (color, icon) = ReadinessCard.visuals(readiness.status);
+    final (color, icon) = ReadinessCard.visuals(context, readiness.status);
     return NavisCard(
       child: Column(
         children: [
@@ -111,7 +110,7 @@ class _CategoryRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final (color, icon) = ReadinessCard.visuals(category.status);
+    final (color, icon) = ReadinessCard.visuals(context, category.status);
     final label = switch (category.key) {
       'documents' => l.readinessCatDocuments,
       'safety_gear' => l.readinessCatSafetyGear,
@@ -143,8 +142,8 @@ class _AttentionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final color = item.status == ReadinessStatus.notReady
-        ? AppColors.red
-        : AppColors.amber;
+        ? context.critical
+        : context.caution;
     final route = readinessRoute(
       boatId: boatId,
       category: item.category,
@@ -244,10 +243,10 @@ class _UpsellCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     return NavisCard(
-      borderColor: AppColors.cyan.withValues(alpha: 0.4),
+      borderColor: context.accent.withValues(alpha: 0.4),
       child: Row(
         children: [
-          const Icon(Icons.lock_rounded, color: AppColors.cyan, size: 22),
+          Icon(Icons.lock_rounded, color: context.accent, size: 22),
           const SizedBox(width: Dimens.spaceMd),
           Expanded(
             child: Text(

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/events/domain/entities/event.dart';
@@ -30,11 +29,11 @@ class EventCard extends StatelessWidget {
             width: 56,
             padding: const EdgeInsets.symmetric(vertical: 10),
             decoration: BoxDecoration(
-              gradient: AppColors.cyanGradient,
+              gradient: context.accentGradient,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.cyan.withValues(alpha: 0.25),
+                  color: context.accent.withValues(alpha: 0.25),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -89,7 +88,7 @@ class EventCard extends StatelessWidget {
                     Icon(
                       Icons.location_on_outlined,
                       size: 14,
-                      color: AppColors.cyan.withValues(alpha: 0.7),
+                      color: context.accent.withValues(alpha: 0.7),
                     ),
                     const SizedBox(width: 4),
                     Expanded(
@@ -117,11 +116,11 @@ class EventCard extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: AppColors.amber.withValues(alpha: 0.15),
+                      color: context.caution.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.amber.withValues(alpha: 0.2),
+                          color: context.caution.withValues(alpha: 0.2),
                           blurRadius: 6,
                         ),
                       ],
@@ -129,7 +128,7 @@ class EventCard extends StatelessWidget {
                     child: Icon(
                       Icons.star,
                       size: 16,
-                      color: AppColors.amber,
+                      color: context.caution,
                       semanticLabel: l.featured,
                     ),
                   ),
@@ -141,17 +140,17 @@ class EventCard extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.green.withValues(alpha: 0.12),
+                    color: context.positive.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: AppColors.green.withValues(alpha: 0.3),
+                      color: context.positive.withValues(alpha: 0.3),
                       width: 0.5,
                     ),
                   ),
                   child: Text(
                     l.interested,
-                    style: const TextStyle(
-                      color: AppColors.green,
+                    style: TextStyle(
+                      color: context.positive,
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
                     ),

@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
 import 'package:navis_mobile/core/error/exceptions.dart';
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/weather/domain/entities/weather_overview.dart';
@@ -67,7 +66,7 @@ class WeatherScreen extends ConsumerWidget {
           // state is exactly where the user needs a way to try again after
           // granting the permission in Settings. Both children scroll.
           data: (data) => RefreshIndicator(
-            color: AppColors.cyan,
+            color: context.accent,
             backgroundColor: context.dialogSurface,
             onRefresh: () async => _refresh(ref),
             child: data == null
@@ -92,9 +91,8 @@ class _OverviewBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primary = isDark ? context.txtPrimary : AppColors.textLight;
-    final secondary =
-        isDark ? context.txtSecondary : AppColors.textLightSecondary;
+    final primary = isDark ? context.txtPrimary : context.ink;
+    final secondary = isDark ? context.txtSecondary : context.inkMuted;
 
     final current = overview.current;
     final today = overview.daily.isNotEmpty ? overview.daily.first : null;
@@ -115,7 +113,7 @@ class _OverviewBody extends StatelessWidget {
           Center(
             child: Column(
               children: [
-                Icon(condition.icon, color: condition.color, size: 52)
+                Icon(condition.icon, color: condition.color(context), size: 52)
                     .animate()
                     .fadeIn(duration: 500.ms)
                     .scale(begin: const Offset(0.8, 0.8)),
@@ -123,7 +121,7 @@ class _OverviewBody extends StatelessWidget {
                 Text(
                   '${current.temperature.round()}°',
                   style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                        color: AppColors.cyan,
+                        color: context.accent,
                         fontWeight: FontWeight.w200,
                         fontSize: 92,
                         height: 1.0,
@@ -346,17 +344,17 @@ class _NavWindowBadge extends StatelessWidget {
 
     final (color, label, icon) = switch (null) {
       _ when wind <= 12 && wave <= 0.5 => (
-          AppColors.green,
+          context.positive,
           l.sailConditionsGood,
           Icons.check_circle,
         ),
       _ when wind <= 20 && wave <= 1.2 => (
-          AppColors.amber,
+          context.caution,
           l.sailConditionsModerate,
           Icons.info,
         ),
       _ => (
-          AppColors.red,
+          context.critical,
           l.sailConditionsAdverse,
           Icons.warning_amber_rounded,
         ),
@@ -431,7 +429,7 @@ class _TidesCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.waves, color: AppColors.cyan, size: 20),
+              Icon(Icons.waves, color: context.accent, size: 20),
               const SizedBox(width: 8),
               Text(
                 l.tides,
@@ -443,8 +441,8 @@ class _TidesCard extends StatelessWidget {
               const Spacer(),
               Text(
                 l.tideRange(range.toStringAsFixed(1)),
-                style: const TextStyle(
-                  color: AppColors.cyan,
+                style: TextStyle(
+                  color: context.accent,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
@@ -459,7 +457,7 @@ class _TidesCard extends StatelessWidget {
                 children: [
                   Icon(
                     e.isHigh ? Icons.arrow_upward : Icons.arrow_downward,
-                    color: e.isHigh ? AppColors.cyan : AppColors.amber,
+                    color: e.isHigh ? context.accent : context.caution,
                     size: 18,
                   ),
                   const SizedBox(width: 8),

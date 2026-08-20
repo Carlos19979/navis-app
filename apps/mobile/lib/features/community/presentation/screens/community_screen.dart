@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/billing/billing.dart';
@@ -104,9 +103,9 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
       title: l.community,
       appBarBottom: TabBar(
         controller: _tabs,
-        labelColor: AppColors.cyan,
+        labelColor: context.accent,
         unselectedLabelColor: context.txtSecondary,
-        indicatorColor: AppColors.cyan,
+        indicatorColor: context.accent,
         isScrollable: true,
         tabAlignment: TabAlignment.center,
         tabs: [
@@ -122,14 +121,14 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
             padding: const EdgeInsets.only(right: Dimens.spaceSm),
             child: TextButton.icon(
               onPressed: _joinByCode,
-              icon: const Icon(
+              icon: Icon(
                 Icons.vpn_key_outlined,
                 size: Dimens.iconSm,
-                color: AppColors.cyan,
+                color: context.accent,
               ),
               label: Text(
                 l.joinByCode,
-                style: const TextStyle(color: AppColors.cyan),
+                style: TextStyle(color: context.accent),
               ),
             ),
           ),
@@ -378,14 +377,14 @@ class _GroupList extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: Dimens.navClearance),
                 child: TextButton.icon(
                   onPressed: onEmptyJoin,
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.vpn_key_outlined,
                     size: Dimens.iconSm,
-                    color: AppColors.cyan,
+                    color: context.accent,
                   ),
                   label: Text(
                     emptyJoinLabel!,
-                    style: const TextStyle(color: AppColors.cyan),
+                    style: TextStyle(color: context.accent),
                   ),
                 ),
               ),
@@ -393,7 +392,7 @@ class _GroupList extends StatelessWidget {
           );
         }
         return RefreshIndicator(
-          color: AppColors.cyan,
+          color: context.accent,
           backgroundColor: context.dialogSurface,
           onRefresh: () async => onRefresh(),
           child: ListView.builder(
@@ -427,7 +426,7 @@ class _JoinButton extends ConsumerWidget {
     if (group.isPending) {
       return Text(
         l.pendingLabel,
-        style: const TextStyle(color: AppColors.amber, fontSize: 13),
+        style: TextStyle(color: context.caution, fontSize: 13),
       );
     }
     return TextButton(
@@ -441,8 +440,7 @@ class _JoinButton extends ConsumerWidget {
           NavisSnackbar.error(context, l.couldNotRequest);
         }
       },
-      child:
-          Text(l.requestAction, style: const TextStyle(color: AppColors.cyan)),
+      child: Text(l.requestAction, style: TextStyle(color: context.accent)),
     );
   }
 }

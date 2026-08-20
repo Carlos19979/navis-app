@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/network/supabase_client.dart';
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/groups/presentation/providers/group_provider.dart';
@@ -18,6 +17,7 @@ import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
+import 'package:navis_mobile/shared/utils/status_colors.dart';
 
 String _statusLabel(AppLocalizations l, String status) => switch (status) {
       'planned' => l.statusScheduled,
@@ -26,13 +26,6 @@ String _statusLabel(AppLocalizations l, String status) => switch (status) {
       'cancelled' => l.statusCancelled,
       _ => status,
     };
-
-const _statusColors = {
-  'planned': AppColors.cyan,
-  'recording': AppColors.green,
-  'completed': AppColors.textSecondary,
-  'cancelled': AppColors.red,
-};
 
 class RegattaDetailScreen extends ConsumerWidget {
   const RegattaDetailScreen({required this.regattaId, super.key});
@@ -94,7 +87,9 @@ class RegattaDetailScreen extends ConsumerWidget {
 
   Widget _summary(BuildContext context, Regatta r) {
     final l = AppLocalizations.of(context)!;
-    final color = _statusColors[r.status] ?? context.txtSecondary;
+    // Unknown statuses fall back to muted ink inside the resolver, so
+    // there is nothing left to guard here.
+    final color = context.tripStatusColor(r.status);
     return NavisCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -163,9 +158,9 @@ class RegattaDetailScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           TextButton.icon(
-            icon: const Icon(Icons.cancel_outlined, color: AppColors.red),
+            icon: Icon(Icons.cancel_outlined, color: context.critical),
             label: Text(l.cancelRegatta,
-                style: const TextStyle(color: AppColors.red)),
+                style: TextStyle(color: context.critical)),
             onPressed: () => _cancel(context, ref, r),
           ),
         ],
@@ -175,7 +170,7 @@ class RegattaDetailScreen extends ConsumerWidget {
       return NavisCard(
         child: Row(
           children: [
-            const Icon(Icons.sailing, color: AppColors.green),
+            Icon(Icons.sailing, color: context.positive),
             const SizedBox(width: 12),
             Expanded(
               child: Text(l.regattaInProgress,
@@ -300,9 +295,9 @@ class _RsvpRow extends ConsumerWidget {
 
     return Row(
       children: [
-        pill('going', l.rsvpGoing, Icons.check_circle, AppColors.green),
-        pill('maybe', l.rsvpMaybe, Icons.help_outline, AppColors.amber),
-        pill('not_going', l.rsvpNotGoing, Icons.cancel, AppColors.red),
+        pill('going', l.rsvpGoing, Icons.check_circle, context.positive),
+        pill('maybe', l.rsvpMaybe, Icons.help_outline, context.caution),
+        pill('not_going', l.rsvpNotGoing, Icons.cancel, context.critical),
       ],
     );
   }
@@ -327,9 +322,9 @@ class _Participants extends ConsumerWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _count(context, l.rsvpGoingCount, going, AppColors.green),
-              _count(context, l.rsvpMaybe, maybe, AppColors.amber),
-              _count(context, l.rsvpNotGoingCount, notGoing, AppColors.red),
+              _count(context, l.rsvpGoingCount, going, context.positive),
+              _count(context, l.rsvpMaybe, maybe, context.caution),
+              _count(context, l.rsvpNotGoingCount, notGoing, context.critical),
             ],
           ),
         );
@@ -416,9 +411,9 @@ class _MemberRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (color, icon) = switch (rsvp) {
-      'going' => (AppColors.green, Icons.check_circle),
-      'maybe' => (AppColors.amber, Icons.help_outline),
-      'not_going' => (AppColors.red, Icons.cancel),
+      'going' => (context.positive, Icons.check_circle),
+      'maybe' => (context.caution, Icons.help_outline),
+      'not_going' => (context.critical, Icons.cancel),
       _ => (context.txtSecondary, Icons.remove_circle_outline),
     };
 
@@ -428,11 +423,11 @@ class _MemberRow extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 16,
-            backgroundColor: AppColors.cyan.withValues(alpha: 0.15),
+            backgroundColor: context.accent.withValues(alpha: 0.15),
             child: Text(
               name.isNotEmpty ? name[0].toUpperCase() : '?',
-              style: const TextStyle(
-                  color: AppColors.cyan, fontWeight: FontWeight.w700),
+              style:
+                  TextStyle(color: context.accent, fontWeight: FontWeight.w700),
             ),
           ),
           const SizedBox(width: 12),
@@ -448,7 +443,7 @@ class _MemberRow extends StatelessWidget {
                 ),
                 if (isOwner) ...[
                   const SizedBox(width: 6),
-                  const Icon(Icons.star, size: 13, color: AppColors.amber),
+                  Icon(Icons.star, size: 13, color: context.caution),
                 ],
               ],
             ),

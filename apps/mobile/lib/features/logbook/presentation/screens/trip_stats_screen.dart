@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/logbook/domain/entities/trip.dart';
@@ -106,32 +105,32 @@ class _StatsBody extends ConsumerWidget {
             icon: Icons.route_rounded,
             value: stats.trips.toString(),
             label: l.totalTrips,
-            color: AppColors.cyan,
+            color: context.accent,
           ),
           NavisMetric(
             icon: Icons.anchor_rounded,
             value: stats.portCount.toString(),
             label: l.portsVisited,
-            color: AppColors.cyan,
+            color: context.accent,
           ),
           NavisMetric(
             icon: Icons.speed_rounded,
             value: _knots(stats.topSpeedKn),
             label: l.topSpeed,
-            color: AppColors.red,
+            color: context.critical,
           ),
           NavisMetric(
             icon: Icons.trending_up_rounded,
             value: stats.avgSpeedKn == null ? '—' : _knots(stats.avgSpeedKn!),
             label: l.averageSpeed,
-            color: AppColors.green,
+            color: context.positive,
           ),
           NavisMetric(
             icon: Icons.local_gas_station_rounded,
             value:
                 stats.fuelL > 0 ? '${stats.fuelL.toStringAsFixed(0)} L' : '—',
             label: l.fuelConsumed,
-            color: AppColors.amber,
+            color: context.caution,
           ),
           NavisMetric(
             icon: Icons.engineering_rounded,
@@ -139,7 +138,7 @@ class _StatsBody extends ConsumerWidget {
                 ? '${stats.engineHours.toStringAsFixed(1)} h'
                 : '—',
             label: l.totalEngineHours,
-            color: AppColors.amber,
+            color: context.caution,
           ),
         ]),
         const SizedBox(height: 12),
@@ -226,7 +225,7 @@ class _HeadlineCard extends StatelessWidget {
                     stats.distanceNm.toStringAsFixed(1),
                     maxLines: 1,
                     style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                          color: AppColors.cyan,
+                          color: context.accent,
                           fontWeight: FontWeight.w800,
                         ),
                   ),
@@ -236,7 +235,7 @@ class _HeadlineCard extends StatelessWidget {
               Text(
                 'NM',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppColors.cyan.withValues(alpha: 0.8),
+                      color: context.accent.withValues(alpha: 0.8),
                       fontWeight: FontWeight.w700,
                     ),
               ),
@@ -314,7 +313,7 @@ class _AveragesCard extends StatelessWidget {
                   height: 18, color: context.glassBorderColor, thickness: 0.5),
             Row(
               children: [
-                Icon(row.$1, size: 18, color: AppColors.cyan),
+                Icon(row.$1, size: 18, color: context.accent),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -399,8 +398,8 @@ class _PortsCard extends StatelessWidget {
                         const SizedBox(width: 6),
                         Text(
                           '×${port.visits}',
-                          style: const TextStyle(
-                            color: AppColors.cyan,
+                          style: TextStyle(
+                            color: context.accent,
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
                           ),

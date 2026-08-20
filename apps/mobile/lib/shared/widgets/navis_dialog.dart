@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 
@@ -35,7 +34,7 @@ class NavisConfirmDialog {
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: destructive
-                ? TextButton.styleFrom(foregroundColor: AppColors.red)
+                ? TextButton.styleFrom(foregroundColor: context.critical)
                 : null,
             child: Text(confirmLabel ?? l.confirm),
           ),
@@ -149,7 +148,7 @@ class _InputDialogState extends State<_InputDialog> {
           child: Text(widget.cancelLabel ?? l.cancel),
         ),
         FilledButton(
-          style: FilledButton.styleFrom(backgroundColor: AppColors.cyan),
+          style: FilledButton.styleFrom(backgroundColor: context.accent),
           onPressed: _submit,
           child: Text(widget.confirmLabel ?? l.confirm),
         ),

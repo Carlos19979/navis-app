@@ -1,27 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 
 class NavisSnackbar {
   NavisSnackbar._();
 
   static void success(BuildContext context, String message) {
     HapticFeedback.lightImpact();
-    _show(context, message, AppColors.green, Icons.check_circle_rounded);
+    _show(context, message, context.positive, Icons.check_circle_rounded);
   }
 
   static void error(BuildContext context, String message) {
     HapticFeedback.heavyImpact();
-    _show(context, message, AppColors.red, Icons.error_rounded);
+    _show(context, message, context.critical, Icons.error_rounded);
   }
 
   static void info(BuildContext context, String message) {
-    _show(context, message, AppColors.cyan, Icons.info_rounded);
+    _show(context, message, context.accent, Icons.info_rounded);
   }
 
   static void warning(BuildContext context, String message) {
-    _show(context, message, AppColors.amber, Icons.warning_rounded);
+    _show(context, message, context.caution, Icons.warning_rounded);
   }
 
   static void _show(

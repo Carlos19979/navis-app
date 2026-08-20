@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 
@@ -27,10 +28,10 @@ class BoatHeader extends StatelessWidget {
                   memCacheWidth: 1200,
                   fit: BoxFit.cover,
                   placeholder: (context, url) => Container(
-                    color: AppColors.darkCard,
-                    child: const Center(
+                    color: context.surfaceRaised,
+                    child: Center(
                       child: CircularProgressIndicator(
-                        color: AppColors.cyan,
+                        color: context.accent,
                         strokeWidth: 2,
                       ),
                     ),
@@ -127,7 +128,7 @@ class _PlaceholderImage extends StatelessWidget {
         child: Icon(
           Icons.sailing,
           size: 48,
-          color: AppColors.cyan.withValues(alpha: 0.3),
+          color: context.accent.withValues(alpha: 0.3),
         ),
       ),
     );

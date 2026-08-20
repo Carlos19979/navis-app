@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/config/checklist_preference.dart';
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/regattas/data/repositories/regatta_repository.dart';
@@ -327,7 +326,7 @@ class _PreTripChecklistScreenState
                     children: [
                       Checkbox(
                         value: item.isChecked,
-                        activeColor: AppColors.green,
+                        activeColor: context.positive,
                         onChanged: (v) => _toggle(item, v ?? false),
                       ),
                       Expanded(
@@ -365,8 +364,7 @@ class _PreTripChecklistScreenState
                   child: Text(
                     AppLocalizations.of(context)!.checklistSkipHint,
                     textAlign: TextAlign.center,
-                    style:
-                        const TextStyle(color: AppColors.amber, fontSize: 13),
+                    style: TextStyle(color: context.caution, fontSize: 13),
                   ),
                 ),
               NavisButton(
@@ -422,7 +420,7 @@ class _ChecklistPromptDialogState extends State<_ChecklistPromptDialog> {
           CheckboxListTile(
             value: _remember,
             onChanged: (v) => setState(() => _remember = v ?? false),
-            activeColor: AppColors.cyan,
+            activeColor: context.accent,
             contentPadding: EdgeInsets.zero,
             controlAffinity: ListTileControlAffinity.leading,
             title: Text(
@@ -438,7 +436,7 @@ class _ChecklistPromptDialogState extends State<_ChecklistPromptDialog> {
           child: Text(l.skipChecklist),
         ),
         FilledButton(
-          style: FilledButton.styleFrom(backgroundColor: AppColors.cyan),
+          style: FilledButton.styleFrom(backgroundColor: context.accent),
           onPressed: () => _answer(review: true),
           child: Text(l.reviewChecklist),
         ),

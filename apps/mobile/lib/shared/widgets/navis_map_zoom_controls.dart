@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 
 class NavisMapZoomControls extends StatelessWidget {
@@ -90,7 +91,7 @@ class _ZoomButton extends StatelessWidget {
         child: SizedBox(
           width: 48,
           height: 48,
-          child: Icon(icon, color: AppColors.textPrimary, size: 22),
+          child: Icon(icon, color: context.ink, size: 22),
         ),
       ),
     );

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/charts/data/tile_provider.dart';
 import 'package:navis_mobile/features/ports/domain/entities/port.dart';
 import 'package:navis_mobile/features/ports/presentation/controllers/viewport_ports_controller.dart';
@@ -118,7 +119,7 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
               tooltip: l.confirmLocation,
               icon: Icon(
                 Icons.check,
-                color: canConfirm ? AppColors.green : AppColors.textSecondary,
+                color: canConfirm ? context.positive : context.inkMuted,
               ),
             ),
         ],
@@ -173,12 +174,12 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
                             shape: BoxShape.circle,
                             color: AppColors.navy.withValues(alpha: 0.6),
                             border: Border.all(
-                              color: AppColors.cyan.withValues(alpha: 0.6),
+                              color: context.accent.withValues(alpha: 0.6),
                               width: 1.5,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.cyan.withValues(alpha: 0.3),
+                                color: context.accent.withValues(alpha: 0.3),
                                 blurRadius: 10,
                                 spreadRadius: 2,
                               ),
@@ -186,7 +187,7 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
                           ),
                           child: Icon(
                             Icons.anchor,
-                            color: AppColors.cyan,
+                            color: context.accent,
                             size: 28,
                             semanticLabel: l.selectLocation,
                           ),
@@ -229,11 +230,11 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
                               height: 32,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: AppColors.cyan.withValues(alpha: 0.15),
+                                color: context.accent.withValues(alpha: 0.15),
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.location_on,
-                                color: AppColors.cyan,
+                                color: context.accent,
                                 size: 18,
                               ),
                             ),
@@ -332,8 +333,7 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
                           children: [
                             Icon(
                               Icons.touch_app,
-                              color: AppColors.textSecondary
-                                  .withValues(alpha: 0.6),
+                              color: context.inkMuted.withValues(alpha: 0.6),
                               size: 18,
                             ),
                             const SizedBox(width: 8),
@@ -345,7 +345,7 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
                                   .textTheme
                                   .bodyMedium
                                   ?.copyWith(
-                                    color: AppColors.textSecondary,
+                                    color: context.inkMuted,
                                   ),
                             ),
                           ],

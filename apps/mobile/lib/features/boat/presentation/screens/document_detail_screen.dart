@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/network/storage_service.dart';
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
@@ -68,12 +67,12 @@ class DocumentDetailScreen extends ConsumerWidget {
               final alertDays = doc.alertDays ??
                   [if (doc.alertDaysBefore != null) doc.alertDaysBefore!];
               final statusColor = daysLeft < 0
-                  ? AppColors.red
+                  ? context.critical
                   : daysLeft <= 30
-                      ? AppColors.red
+                      ? context.critical
                       : daysLeft <= 90
-                          ? AppColors.amber
-                          : AppColors.green;
+                          ? context.caution
+                          : context.positive;
 
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
@@ -167,7 +166,7 @@ class DocumentDetailScreen extends ConsumerWidget {
                                 .textTheme
                                 .titleSmall
                                 ?.copyWith(
-                                  color: AppColors.cyan,
+                                  color: context.accent,
                                   letterSpacing: 0.5,
                                 ),
                           ),
@@ -223,7 +222,7 @@ class DocumentDetailScreen extends ConsumerWidget {
                                   .textTheme
                                   .titleSmall
                                   ?.copyWith(
-                                    color: AppColors.cyan,
+                                    color: context.accent,
                                     letterSpacing: 0.5,
                                   ),
                             ),
@@ -287,12 +286,11 @@ class DocumentDetailScreen extends ConsumerWidget {
                                   imageUrl: value,
                                   memCacheWidth: 1200,
                                   fit: BoxFit.cover,
-                                  placeholder: (context, url) =>
-                                      const AspectRatio(
+                                  placeholder: (context, url) => AspectRatio(
                                     aspectRatio: 4 / 3,
                                     child: Center(
                                       child: CircularProgressIndicator(
-                                        color: AppColors.cyan,
+                                        color: context.accent,
                                         strokeWidth: 2,
                                       ),
                                     ),
@@ -309,11 +307,11 @@ class DocumentDetailScreen extends ConsumerWidget {
                                     ),
                                   ),
                                 ),
-                              AsyncLoading() => const AspectRatio(
+                              AsyncLoading() => AspectRatio(
                                   aspectRatio: 4 / 3,
                                   child: Center(
                                     child: CircularProgressIndicator(
-                                      color: AppColors.cyan,
+                                      color: context.accent,
                                       strokeWidth: 2,
                                     ),
                                   ),
@@ -384,13 +382,13 @@ class _DocumentActions extends ConsumerWidget {
               context.push('/documents/$documentId/edit?boatId=$boatId'),
         ),
         IconButton(
-          icon: const Icon(Icons.autorenew, color: AppColors.cyan),
+          icon: Icon(Icons.autorenew, color: context.accent),
           tooltip: l.renewDocument,
           onPressed: () => context
               .push('/documents/$documentId/edit?boatId=$boatId&renew=true'),
         ),
         IconButton(
-          icon: const Icon(Icons.delete_outlined, color: AppColors.red),
+          icon: Icon(Icons.delete_outlined, color: context.critical),
           tooltip: l.delete,
           onPressed: () => _confirmDelete(context, ref, l),
         ),

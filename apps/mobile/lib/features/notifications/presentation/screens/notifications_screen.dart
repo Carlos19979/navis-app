@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
@@ -37,7 +36,7 @@ class NotificationsScreen extends ConsumerWidget {
             onPressed: () => _markAllRead(context, ref),
             child: Text(
               l.markAllRead,
-              style: const TextStyle(color: AppColors.cyan),
+              style: TextStyle(color: context.accent),
             ),
           ),
       ],
@@ -133,15 +132,15 @@ class _NotificationTile extends StatelessWidget {
                   height: 36,
                   decoration: BoxDecoration(
                     color:
-                        AppColors.cyan.withValues(alpha: unread ? 0.18 : 0.08),
+                        context.accent.withValues(alpha: unread ? 0.18 : 0.08),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     _iconFor(notification.category),
                     size: Dimens.iconSm,
                     color: unread
-                        ? AppColors.cyan
-                        : AppColors.cyan.withValues(alpha: 0.6),
+                        ? context.accent
+                        : context.accent.withValues(alpha: 0.6),
                   ),
                 ),
                 const SizedBox(width: Dimens.spaceMd),
@@ -186,8 +185,8 @@ class _NotificationTile extends StatelessWidget {
                           const EdgeInsets.only(left: Dimens.spaceSm, top: 4),
                       width: 8,
                       height: 8,
-                      decoration: const BoxDecoration(
-                        color: AppColors.cyan,
+                      decoration: BoxDecoration(
+                        color: context.accent,
                         shape: BoxShape.circle,
                       ),
                     ),

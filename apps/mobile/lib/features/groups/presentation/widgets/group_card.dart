@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/groups/domain/entities/group.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -31,7 +30,7 @@ class GroupCard extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              gradient: AppColors.cyanGradient,
+              gradient: context.accentGradient,
               borderRadius: BorderRadius.circular(14),
             ),
             child: const Icon(Icons.groups, color: Colors.white, size: 26),
@@ -84,13 +83,13 @@ class GroupCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: AppColors.amber.withValues(alpha: 0.2),
+                          color: context.caution.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
                           l.pendingCountShort(group.pendingCount),
-                          style: const TextStyle(
-                            color: AppColors.amber,
+                          style: TextStyle(
+                            color: context.caution,
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                           ),

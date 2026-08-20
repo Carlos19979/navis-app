@@ -4,7 +4,9 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
+import 'package:navis_mobile/shared/utils/status_colors.dart';
 
 class NavigationHud extends StatelessWidget {
   const NavigationHud({
@@ -37,12 +39,8 @@ class NavigationHud extends StatelessWidget {
     return '${heading!.toStringAsFixed(0)}\u00b0';
   }
 
-  Color get _gpsColor {
-    if (gpsAccuracy == null) return AppColors.textSecondary;
-    if (gpsAccuracy! < 10) return AppColors.green;
-    if (gpsAccuracy! < 25) return AppColors.amber;
-    return AppColors.red;
-  }
+  Color _gpsColor(BuildContext context) =>
+      context.gpsAccuracyColor(gpsAccuracy);
 
   @override
   Widget build(BuildContext context) {
@@ -85,7 +83,7 @@ class NavigationHud extends StatelessWidget {
                         label: l.speedAbbr,
                         value: speedKnots.toStringAsFixed(1),
                         unit: 'kn',
-                        valueColor: AppColors.cyan,
+                        valueColor: context.accent,
                       ),
                     ),
                     _divider(),
@@ -94,7 +92,7 @@ class NavigationHud extends StatelessWidget {
                         label: l.headingAbbr,
                         value: _headingLabel,
                         unit: '',
-                        valueColor: AppColors.textPrimary,
+                        valueColor: context.ink,
                       ),
                     ),
                     _divider(),
@@ -103,7 +101,7 @@ class NavigationHud extends StatelessWidget {
                         label: l.distanceAbbr,
                         value: distanceNm.toStringAsFixed(2),
                         unit: 'nm',
-                        valueColor: AppColors.green,
+                        valueColor: context.positive,
                       ),
                     ),
                     _divider(),
@@ -123,13 +121,13 @@ class NavigationHud extends StatelessWidget {
                       Icon(
                         Icons.gps_fixed,
                         size: 10,
-                        color: _gpsColor,
+                        color: _gpsColor(context),
                       ),
                       const SizedBox(width: 4),
                       Text(
                         '\u00b1${gpsAccuracy!.toStringAsFixed(0)}m',
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: _gpsColor,
+                              color: _gpsColor(context),
                               fontSize: 10,
                             ),
                       ),
@@ -168,15 +166,15 @@ class _HudCloseButton extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
-        child: const Padding(
-          padding: EdgeInsets.only(right: 12),
+        child: Padding(
+          padding: const EdgeInsets.only(right: 12),
           child: SizedBox(
             width: 32,
             height: 40,
             child: Icon(
               Icons.close,
               size: 22,
-              color: AppColors.textPrimary,
+              color: context.ink,
             ),
           ),
         ),
@@ -232,7 +230,7 @@ class _ElapsedClockState extends State<_ElapsedClock> {
       label: widget.label,
       value: _formatted,
       unit: '',
-      valueColor: AppColors.textPrimary,
+      valueColor: context.ink,
     );
   }
 }
@@ -258,7 +256,7 @@ class _HudStat extends StatelessWidget {
         Text(
           label,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: AppColors.textSecondary,
+                color: context.inkMuted,
                 fontSize: 9,
                 letterSpacing: 1.2,
               ),
@@ -287,7 +285,7 @@ class _HudStat extends StatelessWidget {
                   TextSpan(
                     text: ' $unit',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.inkMuted,
                           fontSize: 10,
                         ),
                   ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 
@@ -91,9 +90,9 @@ class _CrewChipsFieldState extends State<CrewChipsField> {
                   label: Text(name),
                   labelStyle:
                       TextStyle(color: context.txtPrimary, fontSize: 13),
-                  backgroundColor: AppColors.cyan.withValues(alpha: 0.12),
+                  backgroundColor: context.accent.withValues(alpha: 0.12),
                   side: BorderSide(
-                    color: AppColors.cyan.withValues(alpha: 0.35),
+                    color: context.accent.withValues(alpha: 0.35),
                     width: 0.5,
                   ),
                   deleteIconColor: context.txtSecondary,

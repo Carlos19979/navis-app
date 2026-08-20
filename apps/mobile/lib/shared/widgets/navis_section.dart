@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/app_typography.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
 
 /// A consistent section header (small uppercase cyan label), replacing the
@@ -11,12 +12,16 @@ class NavisSectionHeader extends StatelessWidget {
     super.key,
     required this.label,
     this.trailing,
-    this.color = AppColors.cyan,
+    this.color,
   });
 
   final String label;
   final Widget? trailing;
-  final Color color;
+
+  /// Defaults to muted ink. The header used to be a cyan accent label, which
+  /// put an accent on every section of every screen and left nothing for the
+  /// accent to actually mean.
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -32,10 +37,9 @@ class NavisSectionHeader extends StatelessWidget {
           Expanded(
             child: Text(
               label.toUpperCase(),
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: color,
-                    letterSpacing: 1.2,
-                  ),
+              style: NavisType.overline.copyWith(
+                color: color ?? context.inkMuted,
+              ),
             ),
           ),
           if (trailing != null) trailing!,

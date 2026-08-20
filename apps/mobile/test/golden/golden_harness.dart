@@ -8,6 +8,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:navis_mobile/core/theme/app_theme.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 
+import '../helpers/test_helpers.dart';
+
 /// Loads every font declared in the test asset bundle (Inter + MaterialIcons +
 /// CupertinoIcons) so golden renders show real glyphs instead of empty boxes.
 Future<void> loadTestFonts() async {
@@ -50,7 +52,12 @@ Future<void> pumpGolden(
 
   await tester.pumpWidget(
     ProviderScope(
-      overrides: overrides,
+      // The same baseline world the widget tests get. Without it a golden sees
+      // `boatPermissionsProvider` in its fail-closed state and renders a
+      // padlock: that is how the documents baseline came to show "action
+      // unavailable" instead of a document list, and stayed that way — goldens
+      // are out of CI, so nothing was watching.
+      overrides: [...defaultTestOverrides, ...overrides],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: brightness == Brightness.dark ? AppTheme.dark : AppTheme.light,
@@ -68,13 +75,28 @@ Future<void> pumpGolden(
   }
 }
 
-/// Pumps the fixed frame sequence used for screens that never settle:
-/// one frame to start async providers, one for entrance animations and a
-/// final one-second frame so staggered effects reach a stable state.
+/// Pumps the frame sequence used for screens that never settle.
+///
+/// Deliberately many small frames rather than three big ones. Two things need
+/// them, and the old three-frame version served neither:
+///
+///  * **Chained async providers.** A screen like the document list resolves
+///    `boatPermissionsProvider` first and only then mounts the subtree that
+///    watches `boatDocumentsProvider`, so the content needs one frame per link
+///    in the chain before it exists at all.
+///  * **Entrance animations.** A widget created on the *last* pumped frame has
+///    a controller sitting at zero, so it is captured fully transparent. That
+///    is how the documents baseline came to be a blank page with a working app
+///    bar: the cards were in the tree, at opacity 0.0, and no frame was left to
+///    advance them.
+///
+/// Four seconds of 100 ms frames covers both, and stays deterministic because
+/// the test clock is fake — the same elapsed time gives the same pixels on
+/// every run.
 Future<void> pumpGoldenFrames(WidgetTester tester) async {
-  await tester.pump();
-  await tester.pump(const Duration(milliseconds: 400));
-  await tester.pump(const Duration(seconds: 1));
+  for (var i = 0; i < 40; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
 }
 
 /// Golden file path for a screen in a given theme:

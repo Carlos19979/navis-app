@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/charts/data/tile_provider.dart';
@@ -129,9 +128,9 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                     ),
                                     width: 40,
                                     height: 40,
-                                    child: const Icon(
+                                    child: Icon(
                                       Icons.location_on,
-                                      color: AppColors.cyan,
+                                      color: context.accent,
                                       size: 40,
                                     ),
                                   ),
@@ -170,11 +169,11 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                 padding: const EdgeInsets.all(6),
                                 decoration: BoxDecoration(
                                   color:
-                                      AppColors.amber.withValues(alpha: 0.15),
+                                      context.caution.withValues(alpha: 0.15),
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: AppColors.amber
+                                      color: context.caution
                                           .withValues(alpha: 0.3),
                                       blurRadius: 8,
                                     ),
@@ -182,7 +181,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                 ),
                                 child: Icon(
                                   Icons.star,
-                                  color: AppColors.amber,
+                                  color: context.caution,
                                   size: 20,
                                   semanticLabel: l.featured,
                                 ),
@@ -311,20 +310,20 @@ class _EventTypeBadge extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.cyan.withValues(alpha: 0.2),
-            AppColors.cyan.withValues(alpha: 0.1),
+            context.accent.withValues(alpha: 0.2),
+            context.accent.withValues(alpha: 0.1),
           ],
         ),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.cyan.withValues(alpha: 0.3),
+          color: context.accent.withValues(alpha: 0.3),
           width: 0.5,
         ),
       ),
       child: Text(
         type[0].toUpperCase() + type.substring(1),
-        style: const TextStyle(
-          color: AppColors.cyan,
+        style: TextStyle(
+          color: context.accent,
           fontSize: 12,
           fontWeight: FontWeight.w600,
           letterSpacing: 0.3,
@@ -351,7 +350,7 @@ class _InfoRow extends StatelessWidget {
             color: context.glassBg,
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, size: 16, color: AppColors.cyan),
+          child: Icon(icon, size: 16, color: context.accent),
         ),
         const SizedBox(width: 12),
         Expanded(

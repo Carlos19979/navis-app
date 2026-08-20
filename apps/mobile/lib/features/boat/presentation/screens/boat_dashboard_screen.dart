@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/deeplinks/join_deep_link.dart';
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
@@ -84,7 +83,7 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(
               l.discardRecording,
-              style: const TextStyle(color: AppColors.red),
+              style: TextStyle(color: context.critical),
             ),
           ),
           FilledButton(
@@ -245,14 +244,14 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
             padding: const EdgeInsets.only(right: Dimens.spaceSm),
             child: TextButton.icon(
               onPressed: _joinBoat,
-              icon: const Icon(
+              icon: Icon(
                 Icons.group_add_outlined,
                 size: Dimens.iconSm,
-                color: AppColors.cyan,
+                color: context.accent,
               ),
               label: Text(
                 l.joinBoat,
-                style: const TextStyle(color: AppColors.cyan),
+                style: TextStyle(color: context.accent),
               ),
             ),
           ),
@@ -281,7 +280,7 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
           // one-item list to tap through.
           if (boats.length == 1 && shared.isEmpty) {
             return RefreshIndicator(
-              color: AppColors.cyan,
+              color: context.accent,
               onRefresh: () async {
                 ref.invalidate(boatsProvider);
                 ref.invalidate(sharedBoatsProvider);
@@ -308,7 +307,7 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
           final total = boats.length + headerCount + shared.length;
 
           return RefreshIndicator(
-            color: AppColors.cyan,
+            color: context.accent,
             onRefresh: () async {
               ref.invalidate(boatsProvider);
               ref.invalidate(sharedBoatsProvider);
@@ -351,11 +350,11 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
         padding: const EdgeInsets.only(bottom: Dimens.navClearance),
         child: Container(
           decoration: BoxDecoration(
-            gradient: AppColors.cyanGradient,
+            gradient: context.accentGradient,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: AppColors.cyan.withValues(alpha: 0.4),
+                color: context.accent.withValues(alpha: 0.4),
                 blurRadius: 16,
                 offset: const Offset(0, 4),
               ),
@@ -454,25 +453,25 @@ class _BoatCard extends ConsumerWidget {
                         _StatusBadge(
                           count: summary.expired,
                           label: l.expired,
-                          color: AppColors.red,
+                          color: context.critical,
                         ),
                       if (summary.critical > 0)
                         _StatusBadge(
                           count: summary.critical,
                           label: l.critical,
-                          color: AppColors.red,
+                          color: context.critical,
                         ),
                       if (summary.warning > 0)
                         _StatusBadge(
                           count: summary.warning,
                           label: l.warning,
-                          color: AppColors.amber,
+                          color: context.caution,
                         ),
                       if (summary.ok > 0)
                         _StatusBadge(
                           count: summary.ok,
                           label: l.valid,
-                          color: AppColors.green,
+                          color: context.positive,
                         ),
                     ],
                   ),

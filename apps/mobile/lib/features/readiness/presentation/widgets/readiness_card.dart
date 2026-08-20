@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/readiness/data/readiness_repository.dart';
@@ -17,10 +16,11 @@ class ReadinessCard extends ConsumerWidget {
 
   final String boatId;
 
-  static (Color, IconData) visuals(ReadinessStatus s) => switch (s) {
-        ReadinessStatus.ready => (AppColors.green, Icons.check_circle_rounded),
-        ReadinessStatus.attention => (AppColors.amber, Icons.warning_rounded),
-        ReadinessStatus.notReady => (AppColors.red, Icons.error_rounded),
+  static (Color, IconData) visuals(BuildContext context, ReadinessStatus s) =>
+      switch (s) {
+        ReadinessStatus.ready => (context.positive, Icons.check_circle_rounded),
+        ReadinessStatus.attention => (context.caution, Icons.warning_rounded),
+        ReadinessStatus.notReady => (context.critical, Icons.error_rounded),
       };
 
   static String statusLabel(AppLocalizations l, ReadinessStatus s) =>
@@ -44,7 +44,7 @@ class ReadinessCard extends ConsumerWidget {
       ),
       error: (_, __) => const SizedBox.shrink(),
       data: (r) {
-        final (color, icon) = visuals(r.status);
+        final (color, icon) = visuals(context, r.status);
         final count = r.attention.length;
         final subtitle = count == 0
             ? l.readinessAllGood

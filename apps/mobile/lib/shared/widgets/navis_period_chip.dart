@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 
@@ -41,12 +40,12 @@ class NavisPeriodChip extends StatelessWidget {
           ),
           decoration: BoxDecoration(
             color: selected
-                ? AppColors.cyan.withValues(alpha: 0.18)
+                ? context.accent.withValues(alpha: 0.18)
                 : context.glassBg,
             borderRadius: BorderRadius.circular(Dimens.radiusLg),
             border: Border.all(
               color: selected
-                  ? AppColors.cyan.withValues(alpha: 0.55)
+                  ? context.accent.withValues(alpha: 0.55)
                   : context.glassBorderColor,
               width: selected ? 1 : 0.5,
             ),
@@ -54,7 +53,7 @@ class NavisPeriodChip extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-              color: selected ? AppColors.cyan : context.txtSecondary,
+              color: selected ? context.accent : context.txtSecondary,
               fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
               fontSize: compact ? 13 : 14,
             ),
