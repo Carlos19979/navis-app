@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -303,10 +302,10 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.navy.withValues(alpha: 0.6),
+                      color: context.onMedia,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: AppColors.glassBorder,
+                        color: context.onMediaBorder,
                         width: 0.5,
                       ),
                     ),
@@ -373,10 +372,10 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.navy.withValues(alpha: 0.6),
+                            color: context.onMedia,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: AppColors.glassBorder,
+                              color: context.onMediaBorder,
                               width: 0.5,
                             ),
                           ),
@@ -569,7 +568,7 @@ class _HomePortMarkers extends StatelessWidget {
                   child: Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppColors.navy.withValues(alpha: 0.85),
+                      color: context.onMedia,
                       border: Border.all(
                         color: context.caution.withValues(alpha: 0.8),
                         width: 2,

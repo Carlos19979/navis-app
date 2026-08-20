@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import 'package:navis_mobile/core/network/supabase_client.dart';
+import 'package:navis_mobile/core/theme/app_typography.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
@@ -454,19 +455,15 @@ class _BookingCard extends ConsumerWidget {
     // A single-day slot fits one line; a range spells out both ends so nobody
     // has to guess which day the boat comes back.
     final singleDay = DateUtils.isSameDay(start, end);
-    return NavisCard(
+    // Row with a hairline, not a card with a 44 dp tinted disc: a month of
+    // bookings was a stack of framed boxes each opening with the same icon,
+    // which carried no information — every row here is a booking.
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: context.hairline)),
+      ),
       child: Row(
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: context.accent.withValues(alpha: 0.15),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.event, color: context.accent, size: 22),
-          ),
-          const SizedBox(width: Dimens.spaceMd),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -476,10 +473,7 @@ class _BookingCard extends ConsumerWidget {
                     '${NavisDateUtils.formatDate(start)}  '
                     '${NavisDateUtils.formatTime(start)}–'
                     '${NavisDateUtils.formatTime(end)}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: context.txtPrimary,
-                    ),
+                    style: NavisType.title3.copyWith(color: context.ink),
                   )
                 else ...[
                   _RangeEnd(label: l.bookingDeparture, value: start),
@@ -489,7 +483,7 @@ class _BookingCard extends ConsumerWidget {
                   booking.purpose != null && booking.purpose!.isNotEmpty
                       ? '$bookerName · ${booking.purpose!}'
                       : bookerName,
-                  style: TextStyle(fontSize: 13, color: context.txtSecondary),
+                  style: NavisType.caption.copyWith(color: context.inkMuted),
                 ),
                 if (overlaps)
                   Padding(
@@ -502,10 +496,8 @@ class _BookingCard extends ConsumerWidget {
                         const SizedBox(width: 4),
                         Text(
                           l.bookingOverlapsBadge,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: context.caution,
+                          style: NavisType.caption.copyWith(
+                            color: context.inkMuted,
                           ),
                         ),
                       ],
@@ -515,7 +507,11 @@ class _BookingCard extends ConsumerWidget {
             ),
           ),
           IconButton(
-            icon: Icon(Icons.close, size: 18, color: context.txtSecondary),
+            icon: Icon(
+              Icons.close_rounded,
+              size: Dimens.iconSm,
+              color: context.inkFaint,
+            ),
             tooltip: l.delete,
             onPressed: () async {
               final ok = await NavisConfirmDialog.show(

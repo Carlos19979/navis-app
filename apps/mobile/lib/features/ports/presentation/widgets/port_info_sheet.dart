@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/distance_utils.dart';
 import 'package:navis_mobile/features/ports/domain/entities/port.dart';
@@ -16,7 +15,7 @@ void showPortInfoSheet(
   showModalBottomSheet<void>(
     context: context,
     useRootNavigator: true,
-    backgroundColor: AppColors.navy,
+    backgroundColor: context.surfaceRaised,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
@@ -78,7 +77,7 @@ class _PortInfoContent extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.glassBorder,
+                color: context.hairline,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -90,12 +89,9 @@ class _PortInfoContent extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppColors.glassWhite,
+                  color: context.surfaceSunken,
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: AppColors.glassBorder,
-                    width: 0.5,
-                  ),
+                  border: Border.all(color: context.hairline),
                 ),
                 child: Icon(
                   _iconForType(port.portType),
@@ -154,11 +150,8 @@ class _PortInfoContent extends StatelessWidget {
                   .map(
                     (f) => Chip(
                       label: Text(f, style: const TextStyle(fontSize: 11)),
-                      backgroundColor: AppColors.glassWhite,
-                      side: const BorderSide(
-                        color: AppColors.glassBorder,
-                        width: 0.5,
-                      ),
+                      backgroundColor: context.surfaceSunken,
+                      side: BorderSide(color: context.hairline),
                       padding: EdgeInsets.zero,
                       visualDensity: VisualDensity.compact,
                     ),

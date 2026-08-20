@@ -12,7 +12,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/network/storage_service.dart';
 import 'package:navis_mobile/core/network/supabase_client.dart';
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
@@ -312,7 +311,7 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                                       end: Alignment.bottomRight,
                                       colors: [
                                         context.glassBg,
-                                        AppColors.glassOverlay,
+                                        context.onMedia,
                                       ],
                                     ),
                                     borderRadius: BorderRadius.circular(16),

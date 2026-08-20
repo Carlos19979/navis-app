@@ -10,7 +10,6 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:navis_mobile/core/network/storage_service.dart';
 import 'package:navis_mobile/core/network/supabase_client.dart';
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/boat/data/permission_errors.dart';
@@ -703,8 +702,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                                               width: 36,
                                               height: 36,
                                               decoration: BoxDecoration(
-                                                color: AppColors.navy
-                                                    .withValues(alpha: 0.7),
+                                                color: context.onMedia,
                                                 shape: BoxShape.circle,
                                                 border: Border.all(
                                                   color:

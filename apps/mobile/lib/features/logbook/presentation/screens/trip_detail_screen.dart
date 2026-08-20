@@ -8,7 +8,6 @@ import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 
 import 'package:navis_mobile/app/routes.dart';
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -175,7 +174,7 @@ class TripDetailScreen extends ConsumerWidget {
                         maxZoom: 18,
                         // Navy while tiles load, instead of flutter_map's
                         // default light grey flashing inside a dark card.
-                        backgroundColor: AppColors.navy,
+                        backgroundColor: OpenSeaMapTileProvider.waterBackground,
                         interactionOptions: const InteractionOptions(
                           flags: InteractiveFlag.none,
                         ),
@@ -251,7 +250,7 @@ class TripDetailScreen extends ConsumerWidget {
               child: Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: AppColors.navy.withValues(alpha: 0.7),
+                  color: context.onMedia,
                   shape: BoxShape.circle,
                 ),
                 child:
@@ -649,7 +648,7 @@ class _TripMapFullScreen extends StatelessWidget {
         .toList(growable: false);
 
     return Scaffold(
-      backgroundColor: AppColors.navy,
+      backgroundColor: OpenSeaMapTileProvider.waterBackground,
       body: Stack(
         children: [
           FlutterMap(
@@ -662,7 +661,7 @@ class _TripMapFullScreen extends StatelessWidget {
               // grey backgroundColor. Capping the fit keeps tiles on screen.
               minZoom: _minZoom,
               maxZoom: _maxZoom,
-              backgroundColor: AppColors.navy,
+              backgroundColor: OpenSeaMapTileProvider.waterBackground,
               initialCameraFit: CameraFit.bounds(
                 bounds: LatLngBounds.fromPoints(points),
                 padding: const EdgeInsets.all(48),
@@ -693,7 +692,7 @@ class _TripMapFullScreen extends StatelessWidget {
                 filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: AppColors.navy.withValues(alpha: 0.6),
+                    color: context.onMedia,
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(

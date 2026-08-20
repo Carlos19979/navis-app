@@ -2,7 +2,6 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -46,6 +45,7 @@ class RecordingControls extends StatelessWidget {
         return _StartButton(onPressed: onStart);
       case TripStatus.recording:
         return _dock(
+          context,
           l,
           primary: _ControlButton(
             icon: Icons.pause,
@@ -62,6 +62,7 @@ class RecordingControls extends StatelessWidget {
         );
       case TripStatus.paused:
         return _dock(
+          context,
           l,
           primary: _ControlButton(
             icon: Icons.play_arrow,
@@ -86,6 +87,7 @@ class RecordingControls extends StatelessWidget {
   /// destructive treatment: still clearly subordinate to pause/stop (outlined,
   /// not filled), but impossible to miss.
   Widget _dock(
+    BuildContext context,
     AppLocalizations l, {
     required Widget primary,
     required Widget secondary,
@@ -107,9 +109,9 @@ class RecordingControls extends StatelessWidget {
               Dimens.spaceMd,
             ),
             decoration: BoxDecoration(
-              color: AppColors.navy.withValues(alpha: 0.78),
+              color: context.onMedia,
               borderRadius: BorderRadius.circular(Dimens.radiusXxl),
-              border: Border.all(color: AppColors.glassBorder, width: 0.5),
+              border: Border.all(color: context.onMediaBorder),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -124,10 +126,10 @@ class RecordingControls extends StatelessWidget {
                 ),
                 if (onCancel != null) ...[
                   const SizedBox(height: Dimens.spaceLg),
-                  const Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: AppColors.glassOverlay,
+                  Divider(
+                    height: Dimens.hairline,
+                    thickness: Dimens.hairline,
+                    color: context.onMediaBorder,
                   ),
                   const SizedBox(height: Dimens.spaceMd),
                   _DiscardButton(label: l.cancelTrip, onPressed: onCancel!),

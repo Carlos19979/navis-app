@@ -5,7 +5,6 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/charts/data/tile_provider.dart';
 import 'package:navis_mobile/features/ports/domain/entities/port.dart';
@@ -172,7 +171,7 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
                         child: Container(
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: AppColors.navy.withValues(alpha: 0.6),
+                            color: context.onMedia,
                             border: Border.all(
                               color: context.accent.withValues(alpha: 0.6),
                               width: 1.5,
@@ -216,11 +215,10 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
                           vertical: 14,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.navy.withValues(alpha: 0.7),
+                          color: context.onMedia,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: AppColors.glassBorder,
-                            width: 0.5,
+                            color: context.onMediaBorder,
                           ),
                         ),
                         child: Row(
@@ -270,11 +268,10 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
                           vertical: 10,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.navy.withValues(alpha: 0.7),
+                          color: context.onMedia,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: AppColors.glassBorder,
-                            width: 0.5,
+                            color: context.onMediaBorder,
                           ),
                         ),
                         child: Row(
@@ -321,11 +318,10 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
                           vertical: 14,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.navy.withValues(alpha: 0.7),
+                          color: context.onMedia,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: AppColors.glassBorder,
-                            width: 0.5,
+                            color: context.onMediaBorder,
                           ),
                         ),
                         child: Row(

@@ -3,7 +3,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/utils/status_colors.dart';
@@ -59,11 +59,10 @@ class NavigationHud extends StatelessWidget {
               vertical: 10,
             ),
             decoration: BoxDecoration(
-              color: AppColors.navy.withValues(alpha: 0.8),
+              color: context.onMedia,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: AppColors.glassBorder,
-                width: 0.5,
+                color: context.onMediaBorder,
               ),
             ),
             child: Column(
@@ -76,7 +75,7 @@ class NavigationHud extends StatelessWidget {
                         onTap: onClose!,
                         semanticLabel: closeSemanticLabel,
                       ),
-                      _divider(),
+                      _divider(context),
                     ],
                     Expanded(
                       child: _HudStat(
@@ -86,7 +85,7 @@ class NavigationHud extends StatelessWidget {
                         valueColor: context.accent,
                       ),
                     ),
-                    _divider(),
+                    _divider(context),
                     Expanded(
                       child: _HudStat(
                         label: l.headingAbbr,
@@ -95,7 +94,7 @@ class NavigationHud extends StatelessWidget {
                         valueColor: context.ink,
                       ),
                     ),
-                    _divider(),
+                    _divider(context),
                     Expanded(
                       child: _HudStat(
                         label: l.distanceAbbr,
@@ -104,7 +103,7 @@ class NavigationHud extends StatelessWidget {
                         valueColor: context.positive,
                       ),
                     ),
-                    _divider(),
+                    _divider(context),
                     Expanded(
                       child: _ElapsedClock(
                         label: l.timeAbbr,
@@ -142,11 +141,11 @@ class NavigationHud extends StatelessWidget {
     );
   }
 
-  Widget _divider() {
+  Widget _divider(BuildContext context) {
     return Container(
-      width: 0.5,
+      width: Dimens.hairline,
       height: 32,
-      color: AppColors.glassBorder,
+      color: context.onMediaBorder,
     );
   }
 }

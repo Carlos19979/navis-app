@@ -151,8 +151,10 @@ void main() {
       await tester.pumpWidget(buildSubject(document: doc));
       await pumpScreen(tester);
 
-      expect(find.text('Last Renewal'), findsOneWidget);
-      expect(find.text('€120.50'), findsOneWidget);
+      // Heading, tracked uppercase; amount through Money, so the symbol and
+      // the separators follow the locale instead of being glued on by hand.
+      expect(find.text('LAST RENEWAL'), findsOneWidget);
+      expect(find.text('120.50 €'), findsOneWidget);
       expect(find.text('Marina Insurance SL'), findsOneWidget);
     });
 
@@ -162,7 +164,7 @@ void main() {
       await tester.pumpWidget(buildSubject(document: makeDocument()));
       await pumpScreen(tester);
 
-      expect(find.text('Last Renewal'), findsNothing);
+      expect(find.text('LAST RENEWAL'), findsNothing);
     });
   });
 
