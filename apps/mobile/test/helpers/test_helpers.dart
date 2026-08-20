@@ -25,6 +25,7 @@ import 'package:navis_mobile/features/weather/domain/entities/weather_overview.d
 import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_permissions_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/active_boat_provider.dart';
+import 'package:navis_mobile/features/notifications/presentation/providers/notification_feed_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/profile/presentation/providers/profile_provider.dart';
 
@@ -105,6 +106,29 @@ class FakeActiveBoatNotifier extends Notifier<String?>
   void select(String? boatId) => state = boatId;
 }
 
+/// The bell's badge, answered locally.
+///
+/// It is on the app bar of every root tab, so any test that pumps one used to
+/// reach `ApiClient` for the unread count and end with a pending Dio timer —
+/// a screen test failing as a network test.
+final _defaultUnreadCountOverride =
+    unreadNotificationCountProvider.overrideWith(_ZeroUnread.new);
+
+class _ZeroUnread extends AsyncNotifier<int>
+    implements UnreadNotificationCountNotifier {
+  @override
+  Future<int> build() async => 0;
+
+  @override
+  Future<void> refresh() async {}
+
+  @override
+  void decrement() {}
+
+  @override
+  void clear() {}
+}
+
 /// Overrides applied by every test app builder ([buildTestApp],
 /// [buildTestAppWithScaffold] and `buildRoutedTestApp` in router.dart).
 final defaultTestOverrides = <Override>[
@@ -113,6 +137,7 @@ final defaultTestOverrides = <Override>[
   _defaultBoatsOverride,
   _defaultSharedBoatsOverride,
   _defaultActiveBoatIdOverride,
+  _defaultUnreadCountOverride,
 ];
 
 Widget buildTestApp(

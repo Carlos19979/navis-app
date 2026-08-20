@@ -2,10 +2,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:navis_mobile/features/events/presentation/providers/event_provider.dart';
-import 'package:navis_mobile/features/events/presentation/screens/events_screen.dart';
+import 'package:navis_mobile/features/community/presentation/screens/community_screen.dart';
+import 'package:navis_mobile/features/groups/domain/entities/group.dart';
+import 'package:navis_mobile/features/groups/presentation/providers/group_provider.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
 import 'package:navis_mobile/features/logbook/presentation/screens/trip_stats_screen.dart';
-import 'package:navis_mobile/shared/widgets/navis_empty_state.dart';
 
 import '../helpers/helpers.dart';
 
@@ -21,25 +22,34 @@ import '../helpers/helpers.dart';
 void main() {
   setUpAll(() => registerFallbackValue(FakeRoute()));
 
-  testWidgets('an empty regatta feed points at the clubs', (tester) async {
+  testWidgets('an empty regatta feed has the clubs right below it',
+      (tester) async {
     setPhoneSize(tester);
-    final spy = RouteSpy();
     await tester.pumpWidget(
-      buildRoutedTestApp(
-        const EventsScreen(),
-        spy: spy,
-        overrides: [eventsProvider.overrideWith((ref) async => const [])],
+      buildTestApp(
+        const CommunityScreen(),
+        overrides: [
+          eventsProvider.overrideWith((ref) async => const []),
+          myGroupsProvider.overrideWith((ref) async => const <Group>[]),
+          discoverGroupsProvider.overrideWith((ref) async => const <Group>[]),
+          ...planOverrides(),
+        ],
       ),
     );
-    await pumpFrames(tester, frames: 6);
+    final labels = await scrollAndCollectText(
+      tester,
+      find.byKey(communityScrollKey),
+    );
 
-    // Not «create a regatta»: a regatta is scheduled from a club, so this
-    // screen cannot offer one. The clubs are the only honest way out.
-    final state = tester.widget<NavisEmptyState>(find.byType(NavisEmptyState));
-    expect(state.onAction, isNotNull);
-    await tester.tap(find.text('Explore clubs'));
-    await pumpFrames(tester, frames: 4);
-    expect(spy.locations, contains('/community'));
+    // This one stopped needing an exit. The old feed was its own tab, so an
+    // empty one had to send the user to «Explore clubs»; in a single feed the
+    // clubs are the next thing down the page, which is better than a button
+    // that navigates to what you are already looking at.
+    expect(
+      labels.any((t) => t.contains('Regattas are scheduled by a club')),
+      isTrue,
+    );
+    expect(labels, containsAll(['MY CLUBS', 'DISCOVER CLUBS']));
   });
 
   testWidgets('statistics with no trips offers recording one', (tester) async {
