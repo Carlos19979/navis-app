@@ -83,6 +83,20 @@ Future<void> pumpGolden(
       ),
     ),
   );
+  // Let every asset image decode before the shot.
+  //
+  // An `Image.asset` resolves asynchronously, so the *first* golden in a file
+  // that uses one captured an empty box — which is how the login screen
+  // appeared to have "lost its logo in dark mode": dark simply ran first, and
+  // by the time light ran the image was in the cache. The app was never wrong.
+  await tester.runAsync(() async {
+    for (final element in find.byType(Image).evaluate()) {
+      final image = element.widget as Image;
+      await precacheImage(image.image, element);
+    }
+  });
+  await tester.pump();
+
   if (settle) {
     await tester.pumpAndSettle();
   } else {

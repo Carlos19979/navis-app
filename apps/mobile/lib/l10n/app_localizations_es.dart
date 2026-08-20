@@ -360,6 +360,49 @@ class AppLocalizationsEs extends AppLocalizations {
       'Gasto en combustible, €/MN, tendencias de coste y anomalías';
 
   @override
+  String planFeatureBoats(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count barcos',
+      one: '1 barco',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planFeatureBasics => 'documentos, viajes y avisos básicos';
+
+  @override
+  String get planFeatureAnchor => 'alarma de fondeo';
+
+  @override
+  String get planFeatureSchedules => 'plan de mantenimiento y avisos';
+
+  @override
+  String get planFeatureReadiness => 'estado de a bordo completo';
+
+  @override
+  String planFeatureGallery(int count) {
+    return '$count fotos por barco';
+  }
+
+  @override
+  String get planFeatureAttachments => 'adjuntos sin límite';
+
+  @override
+  String get planFeatureCosts => 'inteligencia de costes';
+
+  @override
+  String get planFeatureShared => 'reservas y reparto de gastos';
+
+  @override
+  String get planFeaturePassport => 'pasaporte del barco';
+
+  @override
+  String get planFeatureClubs => 'clubes y regatas';
+
+  @override
   String get proBadge => 'PRO';
 
   @override
@@ -916,6 +959,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get renewDocument => 'Renovar documento';
+
+  @override
+  String get documentSingular => 'Documento';
 
   @override
   String get documentDetails => 'Detalles del documento';

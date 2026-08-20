@@ -84,6 +84,15 @@ abstract final class Dimens {
   /// with a hardware button.
   static const double navClearance = 120;
 
+  /// Width of a row's trailing value column.
+  ///
+  /// Fixed on purpose. It used to be a `Flexible` sharing its flex with the
+  /// title's `Expanded`, so the two split the free space 50/50 and every value
+  /// right-aligned inside a box of a different width — «sin registrar» ended at
+  /// x=374 and «en 90 d» at x=313 in *adjacent rows*. A list only reads as a
+  /// column if the column is one.
+  static const double rowValueColumn = 96;
+
   /// Hairline thickness. One physical-ish line, not the 0.5 that disappeared
   /// on some densities.
   static const double hairline = 1;

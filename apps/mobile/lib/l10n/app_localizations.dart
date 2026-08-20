@@ -698,6 +698,72 @@ abstract class AppLocalizations {
   /// **'Fuel spend, €/NM, cost trends and anomalies'**
   String get costAnalyticsSubtitle;
 
+  /// No description provided for @planFeatureBoats.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 boat} other{{count} boats}}'**
+  String planFeatureBoats(int count);
+
+  /// No description provided for @planFeatureBasics.
+  ///
+  /// In en, this message translates to:
+  /// **'documents, trips and basic reminders'**
+  String get planFeatureBasics;
+
+  /// No description provided for @planFeatureAnchor.
+  ///
+  /// In en, this message translates to:
+  /// **'anchor alarm'**
+  String get planFeatureAnchor;
+
+  /// No description provided for @planFeatureSchedules.
+  ///
+  /// In en, this message translates to:
+  /// **'maintenance plan and reminders'**
+  String get planFeatureSchedules;
+
+  /// No description provided for @planFeatureReadiness.
+  ///
+  /// In en, this message translates to:
+  /// **'full readiness check'**
+  String get planFeatureReadiness;
+
+  /// No description provided for @planFeatureGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} photos per boat'**
+  String planFeatureGallery(int count);
+
+  /// No description provided for @planFeatureAttachments.
+  ///
+  /// In en, this message translates to:
+  /// **'unlimited attachments'**
+  String get planFeatureAttachments;
+
+  /// No description provided for @planFeatureCosts.
+  ///
+  /// In en, this message translates to:
+  /// **'cost intelligence'**
+  String get planFeatureCosts;
+
+  /// No description provided for @planFeatureShared.
+  ///
+  /// In en, this message translates to:
+  /// **'bookings and expense splits'**
+  String get planFeatureShared;
+
+  /// No description provided for @planFeaturePassport.
+  ///
+  /// In en, this message translates to:
+  /// **'boat passport'**
+  String get planFeaturePassport;
+
+  /// No description provided for @planFeatureClubs.
+  ///
+  /// In en, this message translates to:
+  /// **'clubs and regattas'**
+  String get planFeatureClubs;
+
   /// No description provided for @proBadge.
   ///
   /// In en, this message translates to:
@@ -1747,6 +1813,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Renew document'**
   String get renewDocument;
+
+  /// No description provided for @documentSingular.
+  ///
+  /// In en, this message translates to:
+  /// **'Document'**
+  String get documentSingular;
 
   /// No description provided for @documentDetails.
   ///

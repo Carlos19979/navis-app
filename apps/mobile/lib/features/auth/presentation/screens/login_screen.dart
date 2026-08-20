@@ -167,13 +167,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     // circle with a glass fill, a border and a 40-blur glow
                     // around the app icon — three treatments on an asset that
                     // is already a logo.
+                    // On dark the mark needs a ground to sit on: the asset is
+                    // a navy disc with a compass in it, so on the navy canvas
+                    // the disc's edge vanishes and only the compass floats.
+                    // A hairline ring gives it back its shape without adding a
+                    // glow or a second asset.
                     Center(
-                      child: ClipOval(
-                        child: Image.asset(
-                          'assets/icon/navis_icon.png',
-                          width: 88,
-                          height: 88,
-                          fit: BoxFit.cover,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: context.isDarkMode
+                              ? Border.all(color: context.onMediaBorder)
+                              : null,
+                        ),
+                        child: ClipOval(
+                          child: Image.asset(
+                            'assets/icon/navis_icon.png',
+                            width: 88,
+                            height: 88,
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
                     ).entrance(),

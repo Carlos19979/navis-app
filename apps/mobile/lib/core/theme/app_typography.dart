@@ -40,11 +40,19 @@ abstract final class NavisType {
   /// makes both of them ordinary.
   static const numeral = TextStyle(
     fontFamily: family,
-    fontSize: 72,
-    fontWeight: FontWeight.w200,
-    letterSpacing: -2,
-    height: 1,
-    fontFeatures: _tabular,
+    // 44, not 72. At 72 «2.018 €» and «3.420 €» took a third of the screen
+    // width and read as shouting rather than as the answer — and the tight
+    // tracking pulled the decimal comma into the digit beside it. This is
+    // still unmistakably the largest thing on the page.
+    fontSize: 44,
+    fontWeight: FontWeight.w300,
+    letterSpacing: -0.5,
+    height: 1.05,
+    // Proportional figures here, unlike the rest of the scale. Tabular digits
+    // are fixed-width boxes, which is what keeps a *column* of numbers aligned
+    // — but on a single hero figure they open visible gaps inside the number
+    // itself: «57» read as «5 7». This one changes when the user picks another
+    // period, not continuously, so there is no jitter to protect against.
   );
 
   static const display = TextStyle(

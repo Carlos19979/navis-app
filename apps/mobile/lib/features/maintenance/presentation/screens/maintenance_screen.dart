@@ -115,7 +115,14 @@ String _taskSubtitle(AppLocalizations l, MaintenanceTask t) {
     parts.add(l.maintenanceEveryHours(t.intervalHours!.round()));
   }
   if (t.lastPerformedAt != null) {
-    parts.add(l.maintenanceLastDone(fmtDate(t.lastPerformedAt!)));
+    // Short date: a metadata line does not need a four-digit year, and this
+    // is what keeps «cada 12 meses · última 15/03/26» on one line beside the
+    // status column.
+    parts.add(
+      l.maintenanceLastDone(
+        NavisDateUtils.formatDateShort(t.lastPerformedAt!),
+      ),
+    );
   }
   return parts.join(' · ');
 }

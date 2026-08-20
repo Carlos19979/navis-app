@@ -100,7 +100,7 @@ class _BoatDataSheet extends StatelessWidget {
                 if (boat.homePort != null)
                   NavisRow(
                     title: l.homePort,
-                    value: boat.homePort!,
+                    subtitle: boat.homePort!,
                     dense: true,
                     showChevron: false,
                   ),

@@ -41,7 +41,10 @@ class DocumentDetailScreen extends ConsumerWidget {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: NavisAppBar(
-          title: l.documentDetails,
+          // One word: with a back button and three actions the bar has ~150 px
+          // for a title, so «Detalles del documento» truncated mid-word — and
+          // the page's own heading already names the document.
+          title: l.documentSingular,
           showBack: true,
           // Edit / renew / delete all need can_manage_documents on the
           // document's boat. The boat id only exists once the document has
@@ -83,26 +86,31 @@ class DocumentDetailScreen extends ConsumerWidget {
                     // be a card with a 4 px gradient stripe down its left edge
                     // and the days line tinted by state — amber text on the
                     // light canvas, which is brown.
+                    // The chip goes *under* the title, on the same line as the
+                    // days left. Beside it, a name like «Seguro de
+                    // responsabilidad civil» wrapped to three lines with the
+                    // chip floating in the gap — the two were reading as one
+                    // broken block.
+                    Text(
+                      title,
+                      style: NavisType.title1.copyWith(color: context.ink),
+                    ),
+                    const SizedBox(height: Dimens.spaceSm),
                     Row(
                       children: [
+                        DocumentStatusBadge(expiryDate: doc.expiryDate),
+                        const SizedBox(width: Dimens.spaceMd),
                         Expanded(
                           child: Text(
-                            title,
-                            style: NavisType.display.copyWith(
-                              color: context.ink,
+                            daysLeft < 0
+                                ? l.daysOverdue(-daysLeft)
+                                : l.daysRemaining(daysLeft),
+                            style: NavisType.bodySm.copyWith(
+                              color: context.inkMuted,
                             ),
                           ),
                         ),
-                        const SizedBox(width: Dimens.spaceMd),
-                        DocumentStatusBadge(expiryDate: doc.expiryDate),
                       ],
-                    ),
-                    const SizedBox(height: Dimens.spaceXs),
-                    Text(
-                      daysLeft < 0
-                          ? l.daysOverdue(-daysLeft)
-                          : l.daysRemaining(daysLeft),
-                      style: NavisType.bodySm.copyWith(color: context.inkMuted),
                     ),
                     const SizedBox(height: Dimens.spaceXl),
                     NavisList(
@@ -116,7 +124,7 @@ class DocumentDetailScreen extends ConsumerWidget {
                         if (alertDays.isNotEmpty)
                           NavisRow(
                             title: l.alert,
-                            value: '${alertDays.join(", ")} '
+                            subtitle: '${alertDays.join(", ")} '
                                 '${l.daysBeforeExpiry}',
                           ),
                         if (doc.notes != null && doc.notes!.isNotEmpty)
@@ -155,7 +163,7 @@ class DocumentDetailScreen extends ConsumerWidget {
                           if (doc.lastRenewalProvider != null)
                             NavisRow(
                               title: l.provider,
-                              value: doc.lastRenewalProvider,
+                              subtitle: doc.lastRenewalProvider,
                             ),
                         ],
                       ),

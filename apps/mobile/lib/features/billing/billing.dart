@@ -5,6 +5,8 @@ import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
+import 'package:navis_mobile/l10n/app_localizations.dart';
+
 import 'package:navis_mobile/core/config/env.dart';
 import 'package:navis_mobile/features/auth/domain/auth_state.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
@@ -44,6 +46,49 @@ enum PlanTier {
       };
   int get galleryLimit => atLeast(PlanTier.plus) ? 10 : 1;
   int get attachmentLimit => atLeast(PlanTier.plus) ? -1 : 1;
+
+  /// The tier's name as the user sees it. Not localized on purpose: they are
+  /// product names, the same in every language.
+  String get label => switch (this) {
+        PlanTier.free => 'Free',
+        PlanTier.plus => 'Plus',
+        PlanTier.pro => 'Pro',
+      };
+
+  /// What this tier gives, in the tier's own words.
+  ///
+  /// **Derived from the getters above, never written by hand.** The three
+  /// descriptions this replaces were hand-typed and had drifted: Plus was sold
+  /// as «2 barcos · alarma fondeo · readiness» while it also unlocks the
+  /// maintenance plan, the photo gallery, unlimited attachments and unlimited
+  /// expiry reminders — four features the user was paying for and never told
+  /// about. A list built from the capability getters cannot go stale: adding a
+  /// getter without a label is a compile error.
+  List<String> features(AppLocalizations l) => [
+        l.planFeatureBoats(maxBoats),
+        if (!atLeast(PlanTier.plus)) l.planFeatureBasics,
+        if (canAnchorAlarm) l.planFeatureAnchor,
+        if (canMaintenanceSchedules) l.planFeatureSchedules,
+        if (canFullReadiness) l.planFeatureReadiness,
+        if (galleryLimit > 1) l.planFeatureGallery(galleryLimit),
+        if (attachmentLimit < 0) l.planFeatureAttachments,
+        if (canCostAnalytics) l.planFeatureCosts,
+        if (canSharedCoordination) l.planFeatureShared,
+        if (canExportPassport) l.planFeaturePassport,
+        if (canCreateGroups) l.planFeatureClubs,
+      ];
+
+  /// What this tier adds over the one below it.
+  ///
+  /// The tiers are cumulative, so listing everything makes Pro four lines of
+  /// text that repeats Plus. This is the plan-table reading: only the
+  /// difference — and it is still complete, because it is derived from the same
+  /// getters.
+  List<String> additions(AppLocalizations l) {
+    if (index == 0) return features(l);
+    final below = PlanTier.values[index - 1].features(l).toSet();
+    return features(l).where((f) => !below.contains(f)).toList();
+  }
 }
 
 /// Thin wrapper around the RevenueCat SDK. This is the ONLY file that imports

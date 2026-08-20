@@ -12,6 +12,7 @@ import 'package:navis_mobile/core/database/local_database.dart';
 import 'package:navis_mobile/core/network/notification_service.dart';
 import 'package:navis_mobile/core/theme/app_typography.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
+import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/core/utils/byte_utils.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
 import 'package:navis_mobile/features/charts/presentation/providers/offline_charts_provider.dart';
@@ -92,13 +93,17 @@ class AccountSettingsSections extends ConsumerWidget {
                       );
                     }
 
+                    // Each subtitle is generated from that tier's own
+                    // capability getters, so a plan can never be described
+                    // with a feature list that has fallen behind the rules.
                     return Column(
                       children: [
-                        tile('free', 'Free', '1 barco · básico'),
-                        tile('plus', 'Plus',
-                            '2 barcos · alarma fondeo · readiness'),
-                        tile('pro', 'Pro',
-                            '3 barcos · costes · splits · pasaporte'),
+                        for (final tier in PlanTier.values)
+                          tile(
+                            tier.name,
+                            tier.label,
+                            tier.additions(l).join(' · '),
+                          ),
                       ],
                     );
                   },

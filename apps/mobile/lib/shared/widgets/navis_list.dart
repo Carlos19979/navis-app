@@ -153,34 +153,44 @@ class NavisRow extends StatelessWidget {
               ),
             ] else if (value != null) ...[
               const SizedBox(width: Dimens.spaceMd),
-              // Flexible, not fixed: a long status used to squeeze the label
-              // and break it mid-word.
-              Flexible(
-                child: valueTone != null
-                    ? Align(
-                        alignment: Alignment.centerRight,
-                        child: NavisStatusChip(
-                          label: value!,
-                          tone: valueTone!,
+              // A fixed column, right-aligned, one line: that is what makes a
+              // list read as a list. Values here are short by contract — a
+              // count, a status, an amount — and anything long belongs in
+              // [subtitle], under the label, where it has the whole width.
+              SizedBox(
+                width: Dimens.rowValueColumn,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: valueTone != null
+                      ? NavisStatusChip(label: value!, tone: valueTone!)
+                      : Text(
+                          value!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.end,
+                          style: NavisType.label.copyWith(
+                            color: valueColor ?? context.inkMuted,
+                          ),
                         ),
-                      )
-                    : Text(
-                        value!,
-                        textAlign: TextAlign.end,
-                        style: NavisType.label.copyWith(
-                          color: valueColor ?? context.inkMuted,
-                        ),
+                ),
+              ),
+            ],
+            // The chevron's slot is always reserved, drawn only when the row
+            // navigates. Otherwise a list that mixes navigable rows with plain
+            // ones puts its values at two different x.
+            SizedBox(
+              width: Dimens.iconLg + Dimens.spaceXs,
+              child: chevron
+                  ? Align(
+                      alignment: Alignment.centerRight,
+                      child: Icon(
+                        Icons.chevron_right_rounded,
+                        size: Dimens.iconLg,
+                        color: context.inkFaint,
                       ),
-              ),
-            ],
-            if (chevron) ...[
-              const SizedBox(width: Dimens.spaceXs),
-              Icon(
-                Icons.chevron_right_rounded,
-                size: Dimens.iconLg,
-                color: context.inkFaint,
-              ),
-            ],
+                    )
+                  : null,
+            ),
           ],
         ),
       ),

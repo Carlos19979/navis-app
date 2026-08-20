@@ -152,6 +152,23 @@
   "anomaliesExplainer": "Trips that burned far more fuel per mile than this boat's average.",
   "paywallReasonCostAnalytics": "Unlock cost intelligence",
   "costAnalyticsSubtitle": "Fuel spend, €/NM, cost trends and anomalies",
+  "planFeatureBoats": "{count, plural, =1{1 boat} other{{count} boats}}",
+  "@planFeatureBoats": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "planFeatureBasics": "documents, trips and basic reminders",
+  "planFeatureAnchor": "anchor alarm",
+  "planFeatureSchedules": "maintenance plan and reminders",
+  "planFeatureReadiness": "full readiness check",
+  "planFeatureGallery": "{count} photos per boat",
+  "@planFeatureGallery": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "planFeatureAttachments": "unlimited attachments",
+  "planFeatureCosts": "cost intelligence",
+  "planFeatureShared": "bookings and expense splits",
+  "planFeaturePassport": "boat passport",
+  "planFeatureClubs": "clubs and regattas",
   "proBadge": "PRO",
   "plusBadge": "PLUS",
   "status": "Status",
@@ -397,6 +414,7 @@
   "newDocument": "New document",
   "editDocument": "Edit document",
   "renewDocument": "Renew document",
+  "documentSingular": "Document",
   "documentDetails": "Document details",
   "renewalCost": "Renewal cost",
   "renewalProvider": "Provider / Company",

@@ -69,7 +69,13 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
   /// an existing document.
   final List<int> _extraAlertDays = [];
 
-  static const _alertDayPresets = [30, 15, 7, 1];
+  /// Thresholds offered as chips, longest first.
+  ///
+  /// 180 and 90 are here because that is how a renewal actually works: an ITB
+  /// or an insurance policy needs an appointment booked months out, and a
+  /// reminder 30 days before is already late. «Personalizado» stays for
+  /// anything else.
+  static const _alertDayPresets = [180, 90, 30, 15, 7, 1];
 
   List<int> get _alertDayOptions =>
       {..._alertDayPresets, ..._extraAlertDays, ..._selectedAlertDays}.toList()
