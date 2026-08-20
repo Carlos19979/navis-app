@@ -1862,11 +1862,11 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get deleteGroup => 'Eliminar grupo';
+  String get deleteGroup => 'Eliminar club';
 
   @override
   String get deleteGroupConfirm =>
-      '¿Seguro que quieres eliminar este grupo? No se puede deshacer.';
+      '¿Seguro que quieres eliminar este club? No se puede deshacer.';
 
   @override
   String get leaveGroup => 'Salir del grupo';

@@ -3515,13 +3515,13 @@ abstract class AppLocalizations {
   /// No description provided for @deleteGroup.
   ///
   /// In en, this message translates to:
-  /// **'Delete group'**
+  /// **'Delete club'**
   String get deleteGroup;
 
   /// No description provided for @deleteGroupConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Are you sure you want to delete this group? This cannot be undone.'**
+  /// **'Are you sure you want to delete this club? This cannot be undone.'**
   String get deleteGroupConfirm;
 
   /// No description provided for @leaveGroup.

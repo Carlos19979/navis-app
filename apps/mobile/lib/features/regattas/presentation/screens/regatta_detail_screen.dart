@@ -4,6 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/network/supabase_client.dart';
+import 'package:navis_mobile/core/theme/app_typography.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
+import 'package:navis_mobile/core/theme/tone.dart';
+import 'package:navis_mobile/shared/widgets/navis_list.dart';
+import 'package:navis_mobile/shared/widgets/navis_status_chip.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/groups/presentation/providers/group_provider.dart';
@@ -18,7 +23,6 @@ import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
-import 'package:navis_mobile/shared/utils/status_colors.dart';
 
 String _statusLabel(AppLocalizations l, String status) => switch (status) {
       'planned' => l.statusScheduled,
@@ -85,62 +89,56 @@ class RegattaDetailScreen extends ConsumerWidget {
     );
   }
 
+  /// The regatta, as a heading with its state beside it.
   Widget _summary(BuildContext context, Regatta r) {
     final l = AppLocalizations.of(context)!;
-    // Unknown statuses fall back to muted ink inside the resolver, so
-    // there is nothing left to guard here.
-    final color = context.tripStatusColor(r.status);
-    return NavisCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  r.displayTitle,
-                  style: TextStyle(
-                    color: context.txtPrimary,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                r.displayTitle,
+                style: NavisType.title1.copyWith(color: context.ink),
               ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
+            ),
+            const SizedBox(width: Dimens.spaceMd),
+            // A filled chip only while it is actually running; «scheduled» and
+            // «completed» are states, and three filled pills in a column is
+            // noise.
+            if (r.isRecording)
+              NavisStatusChip(
+                label: _statusLabel(l, r.status),
+                tone: NavisTone.positive,
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
                 child: Text(
                   _statusLabel(l, r.status),
-                  style: TextStyle(
-                      color: color, fontSize: 12, fontWeight: FontWeight.w600),
+                  style: NavisType.label.copyWith(color: context.inkMuted),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          _row(context, Icons.place, r.departurePort),
-          if (r.scheduledAt != null)
-            _row(context, Icons.event,
-                NavisDateUtils.formatDateTime(r.scheduledAt!)),
-        ],
-      ),
-    );
-  }
-
-  Widget _row(BuildContext context, IconData icon, String text) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 6),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: context.txtSecondary),
-          const SizedBox(width: 8),
-          Text(text, style: TextStyle(color: context.txtSecondary)),
-        ],
-      ),
+          ],
+        ),
+        const SizedBox(height: Dimens.spaceMd),
+        NavisList(
+          padding: EdgeInsets.zero,
+          children: [
+            NavisRow(
+              icon: Icons.place_outlined,
+              title: r.departurePort,
+            ),
+            if (r.scheduledAt != null)
+              NavisRow(
+                icon: Icons.event_outlined,
+                title: NavisDateUtils.formatDateTime(r.scheduledAt!),
+              ),
+          ],
+        ),
+      ],
     );
   }
 

@@ -1847,11 +1847,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get deleteGroup => 'Delete group';
+  String get deleteGroup => 'Delete club';
 
   @override
   String get deleteGroupConfirm =>
-      'Are you sure you want to delete this group? This cannot be undone.';
+      'Are you sure you want to delete this club? This cannot be undone.';
 
   @override
   String get leaveGroup => 'Leave group';

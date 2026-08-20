@@ -181,7 +181,8 @@ void main() {
       await tester.pumpWidget(buildSubject(requests: [request]));
       await pumpScreen(tester);
 
-      expect(find.text('Requests (1)'), findsOneWidget);
+      // Section headings are tracked uppercase.
+      expect(find.text('REQUESTS (1)'), findsOneWidget);
       expect(find.text('Pepe'), findsOneWidget);
       expect(find.byTooltip('Admit'), findsOneWidget);
       expect(find.byTooltip('Reject'), findsOneWidget);
@@ -197,7 +198,7 @@ void main() {
       );
       await pumpScreen(tester);
 
-      expect(find.text('Requests (1)'), findsNothing);
+      expect(find.text('REQUESTS (1)'), findsNothing);
     });
 
     testWidgets('admit calls approveRequest and shows a snackbar',
@@ -314,7 +315,7 @@ void main() {
       );
       await pumpScreen(tester);
 
-      expect(find.text('Regattas & outings'), findsNothing);
+      expect(find.text('REGATTAS & OUTINGS'), findsNothing);
       expect(find.text('Schedule'), findsNothing);
     });
   });
@@ -331,9 +332,12 @@ void main() {
       await tester.pumpWidget(buildSubject(members: members));
       await pumpScreen(tester);
 
-      expect(find.text('You · Owner'), findsOneWidget);
-      expect(find.text('Maria · Member'), findsOneWidget);
-      expect(find.byIcon(Icons.star), findsOneWidget);
+      // Name and role are two lines of a row now, not one interpolated string.
+      expect(find.text('You'), findsOneWidget);
+      expect(find.text('Owner'), findsOneWidget);
+      expect(find.text('Maria'), findsOneWidget);
+      expect(find.text('Member'), findsWidgets);
+      expect(find.byIcon(Icons.star_rounded), findsOneWidget);
     });
 
     testWidgets('owner can expel a member', (tester) async {
@@ -372,14 +376,14 @@ void main() {
       await tester.pumpWidget(buildSubject());
       await pumpScreen(tester);
 
-      await tester.scrollUntilVisible(find.text('Delete group'), 200);
-      await tester.tap(find.text('Delete group'));
+      await tester.scrollUntilVisible(find.text('Delete club'), 200);
+      await tester.tap(find.text('Delete club'));
       await pumpScreen(tester);
 
       // Confirm dialog: title + confirm button share the label.
-      expect(find.text('Delete group'), findsWidgets);
+      expect(find.text('Delete club'), findsWidgets);
 
-      await tester.tap(find.text('Delete group').last);
+      await tester.tap(find.text('Delete club').last);
       await pumpScreen(tester);
 
       verify(() => mockRepo.deleteGroup(groupId)).called(1);
@@ -395,7 +399,7 @@ void main() {
       );
       await pumpScreen(tester);
 
-      expect(find.text('Delete group'), findsNothing);
+      expect(find.text('Delete club'), findsNothing);
 
       await tester.scrollUntilVisible(find.text('Leave group'), 200);
       await tester.tap(find.text('Leave group'));
@@ -442,7 +446,7 @@ void main() {
       );
       await pumpScreen(tester);
 
-      expect(find.text('Delete group'), findsNothing);
+      expect(find.text('Delete club'), findsNothing);
       expect(find.text('Leave group'), findsNothing);
     });
   });
