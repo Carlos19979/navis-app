@@ -33,8 +33,8 @@ class OfflineChartBanner extends ConsumerWidget {
       borderRadius: BorderRadius.circular(Dimens.radiusMd),
       child: BackdropFilter(
         filter: ImageFilter.blur(
-          sigmaX: Dimens.blurCard,
-          sigmaY: Dimens.blurCard,
+          sigmaX: Dimens.blurOverlay,
+          sigmaY: Dimens.blurOverlay,
         ),
         child: Container(
           padding: const EdgeInsets.symmetric(

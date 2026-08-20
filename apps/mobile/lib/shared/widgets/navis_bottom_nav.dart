@@ -77,7 +77,7 @@ class NavisBottomNav extends ConsumerWidget {
                     color: context.glassBorderColor,
                     width: 0.5,
                   ),
-                  boxShadow: Shadows.nav,
+                  boxShadow: Shadows.nav(isDark: isDark),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,

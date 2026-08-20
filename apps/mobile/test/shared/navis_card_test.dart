@@ -6,7 +6,14 @@ import 'package:navis_mobile/shared/widgets/navis_card.dart';
 /// NavisCard is the base card of the app, so a `BackdropFilter` inside it cost
 /// one blur pass per card per frame (ten of them in a ten-row list) for an
 /// effect that is invisible over the app's smooth gradient background. These
-/// tests pin the fix: no blur, same translucent gradient and hairline border.
+/// tests pin the two per-card costs that must never come back: **no blur** and
+/// **no drop shadow**.
+///
+/// The card's *fill* is an aesthetic choice and has moved: it used to be a
+/// translucent veil over the ocean gradient, and in the editorial design it is
+/// an opaque surface separated by a hairline. That change is deliberate, so the
+/// assertion here is about cost, not about translucency — a solid fill is free,
+/// a shadow and a blur are not.
 void main() {
   Future<BoxDecoration> pumpAndReadDecoration(
     WidgetTester tester, {
@@ -45,24 +52,22 @@ void main() {
       expect(find.text('content'), findsOneWidget);
     });
 
-    testWidgets('keeps a translucent gradient, not the opaque card look',
-        (tester) async {
+    testWidgets('draws no drop shadow, in either theme', (tester) async {
       for (final brightness in Brightness.values) {
         final decoration = await pumpAndReadDecoration(
           tester,
           brightness: brightness,
         );
 
-        final gradient = decoration.gradient! as LinearGradient;
+        // A shadow per card is the other per-frame cost, and on the light
+        // canvas it also reads as grey smudge. Hierarchy comes from the
+        // hairline below.
         expect(
-          gradient.colors.every((c) => c.a < 1.0),
-          isTrue,
-          reason: 'the background must still show through the card',
+          decoration.boxShadow,
+          anyOf(isNull, isEmpty),
+          reason: 'depth must come from the hairline, not from elevation',
         );
-        // The opaque variant (solid colour + drop shadow) would change the
-        // look; removing the blur must not turn the card into it.
-        expect(decoration.color, isNull);
-        expect(decoration.boxShadow, isNull);
+        expect(decoration.gradient, isNotNull);
       }
     });
 
