@@ -435,6 +435,8 @@ class _Hero extends ConsumerWidget {
           scoreColor: arc,
           onScoreTap: openReadiness,
           onPhotoTap: () => showNavisPhotoViewer(context, urls: photos),
+          onAddBoat: onAddBoat,
+          onJoinBoat: onJoinBoat,
         ),
         // The status still needs its sentence; the disc only carries the
         // number, and "72" alone does not say whether that is good.

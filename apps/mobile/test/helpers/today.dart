@@ -72,6 +72,7 @@ Future<List<Override>> todayOverrides({
   BoatsNotifier Function()? notifier,
   Readiness? readiness,
   DocumentSummary summary = const DocumentSummary(),
+  Map<String, DocumentSummary> summaries = const {},
   Map<String, Object> prefs = const {},
 }) async {
   final resolved = boats ?? [makeBoat()];
@@ -93,6 +94,10 @@ Future<List<Override>> todayOverrides({
     boatReadinessProvider.overrideWith(
       (ref, id) async => readiness ?? fakeReadiness(),
     ),
-    boatDocumentSummaryProvider.overrideWith((ref, id) async => summary),
+    // Per-boat summaries where a test needs the boats to differ — «does
+    // another one need me?» cannot be tested with one answer for every id.
+    boatDocumentSummaryProvider.overrideWith(
+      (ref, id) async => summaries[id] ?? summary,
+    ),
   ];
 }

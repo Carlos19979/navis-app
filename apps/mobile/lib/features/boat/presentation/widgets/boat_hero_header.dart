@@ -35,6 +35,8 @@ class BoatHeroHeader extends StatelessWidget {
     required this.scoreColor,
     required this.onScoreTap,
     this.onPhotoTap,
+    this.onAddBoat,
+    this.onJoinBoat,
   });
 
   final Boat boat;
@@ -47,6 +49,14 @@ class BoatHeroHeader extends StatelessWidget {
 
   final VoidCallback onScoreTap;
   final VoidCallback? onPhotoTap;
+
+  /// Forwarded to the switcher's sheet. **Not optional in practice:** without
+  /// them a boat *with a photo* had no way to add or join another one, because
+  /// the sheet's last two rows only exist when these are non-null — the same
+  /// regression as «join a boat» with no boats and «add a second» with one,
+  /// arriving a third time through a different header.
+  final VoidCallback? onAddBoat;
+  final VoidCallback? onJoinBoat;
 
   static const _height = 232.0;
   static const _discSize = 84.0;
@@ -107,7 +117,12 @@ class BoatHeroHeader extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 2),
-                BoatSwitcher(boat: boat, onDark: true),
+                BoatSwitcher(
+                  boat: boat,
+                  onDark: true,
+                  onAddBoat: onAddBoat,
+                  onJoinBoat: onJoinBoat,
+                ),
                 Text(
                   [
                     localizedBoatType(l, boat.type),

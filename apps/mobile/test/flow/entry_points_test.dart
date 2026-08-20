@@ -75,6 +75,39 @@ void main() {
     return find.text(label).evaluate().isNotEmpty;
   }
 
+  /// The photo matters, and that is the whole point of this case.
+  ///
+  /// Today has **two headers**: typographic when the boat has no photo, and the
+  /// image header when it does. They build the switcher separately, and the
+  /// image one was built without the add/join callbacks — so a user who had
+  /// uploaded a photo could not add or join a boat from Today at all. Third
+  /// instance of this exact bug, and the first two tests missed it because
+  /// `makeBoat()` has no photo: the fixture kept choosing the header that
+  /// worked.
+  group('with a photo on the boat, which is a different header', () {
+    for (final label in ['Add boat', 'Join a boat']) {
+      testWidgets('$label is still reachable', (tester) async {
+        setPhoneSize(tester);
+        await tester.pumpWidget(
+          await today(
+            boats: [
+              makeBoat(photoUrl: 'https://example.test/luna.jpg'),
+              makeBoat(id: 'boat-2', name: 'Sea Runner'),
+            ],
+            tier: PlanTier.pro,
+          ),
+        );
+        await pumpFrames(tester, frames: 8);
+
+        expect(
+          await reachable(tester, label),
+          isTrue,
+          reason: 'no way to «$label» from the image header',
+        );
+      });
+    }
+  });
+
   group('adding a boat', () {
     for (final (name, boats, shared) in [
       ('with none at all', const <Boat>[], const <Boat>[]),
