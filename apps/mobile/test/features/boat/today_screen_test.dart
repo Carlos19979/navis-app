@@ -100,7 +100,7 @@ void main() {
       await openBoatsSheet(tester);
 
       expect(find.text('MY BOATS'), findsOneWidget);
-      expect(find.text('Add Boat'), findsOneWidget);
+      expect(find.text('Add boat'), findsOneWidget);
       expect(find.text('Join a boat'), findsOneWidget);
     });
 
@@ -350,7 +350,7 @@ void main() {
       await tester.pumpWidget(await subject(boats: oneBoat, spy: spy));
       await pumpFrames(tester, frames: 8);
 
-      await tester.tap(find.text('Start Trip'));
+      await tester.tap(find.text('Start trip'));
       await pumpFrames(tester, frames: 8);
 
       expect(spy.locations, contains('/boats/boat-1/precheck'));
@@ -403,13 +403,13 @@ void main() {
         containsAll([
           'Documents',
           'Logbook',
-          'Trip Statistics',
+          'Trip statistics',
           'Maintenance & expenses',
           'Cost intelligence',
           'Bookings',
           'Crew and permissions',
           'Share boat',
-          'Edit Boat',
+          'Edit boat',
           'Boat data',
         ]),
       );
@@ -440,7 +440,7 @@ void main() {
       await tester.pumpWidget(await subject(boats: oneBoat, spy: spy));
       await pumpFrames(tester, frames: 8);
 
-      await tester.tap(find.text('Trip Statistics'));
+      await tester.tap(find.text('Trip statistics'));
       await pumpFrames(tester, frames: 8);
 
       expect(spy.locations, contains('/boats/boat-1/stats'));
@@ -509,7 +509,7 @@ void main() {
       await pumpFrames(tester, frames: 8);
 
       await openBoatsSheet(tester);
-      await tester.tap(find.text('Add Boat'));
+      await tester.tap(find.text('Add boat'));
       await pumpFrames(tester, frames: 8);
 
       expect(spy.locations, contains('/boats/new'));
@@ -523,7 +523,7 @@ void main() {
       await pumpFrames(tester, frames: 8);
 
       await openBoatsSheet(tester);
-      await tester.tap(find.text('Add Boat'));
+      await tester.tap(find.text('Add boat'));
       await pumpFrames(tester, frames: 8);
 
       expect(spy.locations, isNot(contains('/boats/new')));
@@ -538,7 +538,7 @@ void main() {
       await pumpFrames(tester, frames: 8);
 
       expect(find.textContaining('No boats yet'), findsOneWidget);
-      expect(find.text('Add Boat'), findsOneWidget);
+      expect(find.text('Add boat'), findsOneWidget);
       // Crew invited to someone else's boat have no boat of their own to add.
       // Joining lived in the old boat list's app bar, and moving it into the
       // "My boats" section — which only exists once you have a boat — made the
@@ -590,10 +590,10 @@ void main() {
 
       await scrollUntilVisible(
         tester,
-        find.text('Delete Boat'),
+        find.text('Delete boat'),
         todayScrollKey,
       );
-      await tester.tap(find.text('Delete Boat').first);
+      await tester.tap(find.text('Delete boat').first);
       await pumpFrames(tester, frames: 8);
 
       expect(find.textContaining('Luna Azul'), findsWidgets);
@@ -615,10 +615,10 @@ void main() {
 
       await scrollUntilVisible(
         tester,
-        find.text('Delete Boat'),
+        find.text('Delete boat'),
         todayScrollKey,
       );
-      await tester.tap(find.text('Delete Boat').first);
+      await tester.tap(find.text('Delete boat').first);
       await pumpFrames(tester, frames: 8);
       await tester.tap(find.text('Cancel'));
       await pumpFrames(tester, frames: 8);

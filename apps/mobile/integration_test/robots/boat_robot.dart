@@ -16,7 +16,7 @@ class BoatRobot {
 
   /// Empty-state CTA on a fresh account; also asserts the dashboard loaded.
   Future<void> expectEmptyDashboard() =>
-      pumpUntilFound(tester, find.text('Add Boat'));
+      pumpUntilFound(tester, find.text('Add boat'));
 
   Future<void> startAddBoat() async {
     await tapUntil(tester, _addBoatTrigger(), find.text('New Boat'));
@@ -43,7 +43,7 @@ class BoatRobot {
 
   /// Empty dashboards offer the empty-state CTA; populated ones the FAB.
   Finder _addBoatTrigger() {
-    final cta = find.text('Add Boat');
+    final cta = find.text('Add boat');
     if (cta.evaluate().isNotEmpty) return cta;
     return find.byType(FloatingActionButton);
   }
@@ -137,7 +137,7 @@ class BoatRobot {
   /// The tile lives at the bottom of a lazy CustomScrollView — scroll first.
   Future<void> deleteBoat(String name) async {
     await openDetail(name);
-    final tile = find.text('Delete Boat');
+    final tile = find.text('Delete boat');
     await scrollTo(tester, tile, scrollable: detailScrollable());
     await tapUntil(tester, tile, find.text('Cancel'));
     await pumpFor(tester, const Duration(milliseconds: 400));
@@ -161,11 +161,11 @@ class BoatRobot {
     String length = '9.5',
     String? homePort,
   }) async {
-    await _enterField('Boat Name', name);
-    await _enterField('Registration Number', registration);
-    await _enterField('Length (m)', length);
+    await _enterField('Boat name', name);
+    await _enterField('Registration number', registration);
+    await _enterField('Length', length);
     if (homePort != null) {
-      await _enterField('Home Port (optional)', homePort);
+      await _enterField('Home port', homePort);
     }
     // Dismiss the keyboard so the submit button is tappable, then require the
     // form to actually go away — a missed tap or validation error would
@@ -212,9 +212,9 @@ class BoatRobot {
   /// Taps a hub tile on the boat detail screen and waits for [appears].
   ///
   /// The hub is now where everything about the boat lives: 'Documents',
-  /// 'Logbook', 'Trip Statistics', 'Maintenance & expenses', 'Cost
+  /// 'Logbook', 'Trip statistics', 'Maintenance & expenses', 'Cost
   /// intelligence', 'Bookings', 'Anchor watch', 'Export passport', 'Crew and
-  /// permissions' (owner only), 'Share boat', 'Edit'/'Delete Boat'. Tiles low in
+  /// permissions' (owner only), 'Share boat', 'Edit'/'Delete boat'. Tiles low in
   /// the hub are lazy sliver children — scroll to build them.
   Future<void> openTile(String tile, Finder appears) async {
     final f = find.text(tile);

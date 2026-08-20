@@ -12,7 +12,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get appTitle => 'Navis';
 
   @override
-  String get login => 'Iniciar Sesion';
+  String get login => 'Iniciar sesión';
 
   @override
   String get register => 'Registrarse';
@@ -21,19 +21,19 @@ class AppLocalizationsEs extends AppLocalizations {
   String get email => 'Correo electronico';
 
   @override
-  String get password => 'Contrasena';
+  String get password => 'Contraseña';
 
   @override
-  String get confirmPassword => 'Confirmar Contrasena';
+  String get confirmPassword => 'Confirmar contraseña';
 
   @override
-  String get forgotPassword => 'Olvidaste tu contrasena?';
+  String get forgotPassword => '¿Olvidaste tu contraseña?';
 
   @override
-  String get noAccount => 'No tienes una cuenta?';
+  String get noAccount => '¿No tienes cuenta?';
 
   @override
-  String get hasAccount => 'Ya tienes una cuenta?';
+  String get hasAccount => '¿Ya tienes cuenta?';
 
   @override
   String get boats => 'Barcos';
@@ -87,15 +87,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get success => 'Exito';
 
   @override
-  String get noBoats => 'Aun no tienes barcos. Agrega tu primer barco!';
+  String get noBoats => 'Aún no tienes barcos';
 
   @override
-  String get noDocuments =>
-      'Aun no tienes documentos. Agrega tu primer documento!';
+  String get noDocuments => 'Aún no tienes documentos';
 
   @override
-  String get noTrips =>
-      'Aun no has registrado viajes. Comienza tu primer viaje!';
+  String get noTrips => 'Aún no has registrado viajes';
 
   @override
   String get statsEmptyDescription =>
@@ -111,7 +109,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get warning => 'Advertencia';
 
   @override
-  String get critical => 'Critico';
+  String get critical => 'Crítico';
 
   @override
   String get ok => 'OK';
@@ -121,12 +119,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String daysRemaining(int count) {
-    return '$count dias restantes';
+    return '$count días restantes';
   }
 
   @override
   String daysOverdue(int count) {
-    return '$count dias vencido';
+    return '$count días de retraso';
   }
 
   @override
@@ -675,19 +673,19 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meters => 'm';
 
   @override
-  String get boatName => 'Nombre del Barco';
+  String get boatName => 'Nombre del barco';
 
   @override
-  String get registration => 'Numero de Registro';
+  String get registration => 'Número de registro';
 
   @override
-  String get boatType => 'Tipo de Barco';
+  String get boatType => 'Tipo de barco';
 
   @override
-  String get length => 'Eslora (m)';
+  String get length => 'Eslora';
 
   @override
-  String get homePort => 'Puerto Base';
+  String get homePort => 'Puerto base';
 
   @override
   String get sailboat => 'Velero';
@@ -708,7 +706,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get expiryDate => 'Fecha de Vencimiento';
 
   @override
-  String get alertDays => 'Dias de Alerta Antes del Vencimiento';
+  String get alertDays => 'Días de aviso antes del vencimiento';
 
   @override
   String get notes => 'Notas';
@@ -729,16 +727,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get distance => 'Distancia';
 
   @override
-  String get duration => 'Duracion';
+  String get duration => 'Duración';
 
   @override
-  String get maxSpeed => 'Velocidad Maxima';
+  String get maxSpeed => 'Velocidad máxima';
 
   @override
   String get avgSpeed => 'Velocidad Promedio';
 
   @override
-  String get startTrip => 'Iniciar Viaje';
+  String get startTrip => 'Iniciar viaje';
 
   @override
   String get stopTrip => 'Detener Viaje';
@@ -756,7 +754,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get totalTrips => 'Viajes Totales';
 
   @override
-  String get tripStatistics => 'Estadísticas de Viajes';
+  String get tripStatistics => 'Estadísticas de viajes';
 
   @override
   String get tripStatisticsSubtitle => 'Distancia, horas de motor y puertos';
@@ -810,7 +808,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get windSpeed => 'Velocidad del Viento';
 
   @override
-  String get windDirection => 'Direccion del Viento';
+  String get windDirection => 'Dirección del viento';
 
   @override
   String get waveHeight => 'Altura de Olas';
@@ -822,13 +820,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get today => 'Hoy';
 
   @override
-  String get tomorrow => 'Manana';
+  String get tomorrow => 'Mañana';
 
   @override
   String get eventDate => 'Fecha del Evento';
 
   @override
-  String get eventLocation => 'Ubicacion';
+  String get eventLocation => 'Ubicación';
 
   @override
   String get registerForEvent => 'Registrarse';
@@ -849,13 +847,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get notifications => 'Notificaciones';
 
   @override
-  String get logout => 'Cerrar Sesion';
+  String get logout => 'Cerrar sesión';
 
   @override
-  String get logoutConfirm => 'Estas seguro de que deseas cerrar sesion?';
+  String get logoutConfirm => '¿Seguro que quieres cerrar sesión?';
 
   @override
-  String get deleteConfirm => 'Estas seguro de que deseas eliminar esto?';
+  String get deleteConfirm => '¿Seguro que quieres eliminar esto?';
 
   @override
   String get requiredField => 'Este campo es obligatorio';
@@ -865,7 +863,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get passwordTooShort =>
-      'La contrasena debe tener al menos 6 caracteres';
+      'La contraseña debe tener al menos 6 caracteres';
 
   @override
   String get passwordsDoNotMatch => 'Las contrasenas no coinciden';
@@ -877,7 +875,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get fuelUsed => 'Combustible Usado';
 
   @override
-  String get crew => 'Tripulacion';
+  String get crew => 'Tripulación';
 
   @override
   String get logbook => 'Bitácora';
@@ -886,13 +884,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get tripDetails => 'Detalles del Viaje';
 
   @override
-  String get editBoat => 'Editar Barco';
+  String get editBoat => 'Editar barco';
 
   @override
-  String get myBoats => 'Mis Barcos';
+  String get myBoats => 'Mis barcos';
 
   @override
-  String get addBoat => 'Agregar Barco';
+  String get addBoat => 'Añadir barco';
 
   @override
   String get newDocument => 'Nuevo Documento';
@@ -913,7 +911,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get renewalProvider => 'Proveedor / Empresa';
 
   @override
-  String get lastRenewal => 'Ultima Renovacion';
+  String get lastRenewal => 'Última renovación';
 
   @override
   String get date => 'Fecha';
@@ -929,7 +927,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get deleteDocumentConfirm =>
-      'Estas seguro de que deseas eliminar este documento?';
+      '¿Seguro que quieres eliminar este documento?';
 
   @override
   String get documentDeleted => 'Documento eliminado';
@@ -962,10 +960,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get notesOptional => 'Notas (opcional)';
 
   @override
-  String get alertDaysBeforeExpiry => 'Dias de Alerta Antes del Vencimiento';
+  String get alertDaysBeforeExpiry => 'Días de aviso antes del vencimiento';
 
   @override
-  String get validNumber => 'Por favor ingresa un numero valido';
+  String get validNumber => 'Introduce un número válido';
 
   @override
   String get uploading => 'Subiendo...';
@@ -1094,7 +1092,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get goBack => 'Volver';
 
   @override
-  String get addNewBoat => 'Agregar nuevo barco';
+  String get addNewBoat => 'Añadir barco';
 
   @override
   String get homePortOptional => 'Puerto Base (opcional)';
@@ -1354,7 +1352,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get pleaseEnterRegistration => 'Ingresa el número de registro';
 
   @override
-  String get pleaseEnterLength => 'Ingresa la eslora';
+  String get pleaseEnterLength => 'Introduce la eslora';
 
   @override
   String get pleaseEnterEmail => 'Ingresa tu correo electrónico';

@@ -123,7 +123,7 @@ void main() {
       await tester.pumpWidget(await buildLocal(spy: spy));
       await pumpScreen(tester);
 
-      await tester.tap(find.text('Start Trip'));
+      await tester.tap(find.text('Start trip'));
       await pumpScreen(tester);
 
       expect(spy.last, '/boats/b1/record?autostart=true');
@@ -138,7 +138,7 @@ void main() {
       );
       await pumpScreen(tester);
 
-      await tester.tap(find.text('Start Trip'));
+      await tester.tap(find.text('Start trip'));
       await pumpScreen(tester);
 
       expect(spy.last, '/boats/b1/record?autostart=true&port=Port%20Nou');

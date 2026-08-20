@@ -11,6 +11,7 @@ import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_list.dart';
 import 'package:navis_mobile/shared/widgets/navis_metric.dart';
 import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
+import 'package:navis_mobile/shared/widgets/navis_text_field.dart';
 
 import '../helpers/helpers.dart';
 
@@ -155,6 +156,16 @@ void main() {
         reason: 'over a map or a photograph the blur is what makes the bar '
             'legible, and there it earns its cost',
       );
+    });
+  });
+
+  group('the auth screens blur nothing', () {
+    testWidgets('the login logo is not blurred', (tester) async {
+      // It wrapped a `BackdropFilter(12)` around `assets/icon/navis_icon.png`:
+      // a blur over a static asset, so there was nothing behind it to reveal
+      // and a filter pass to pay for — on the first screen of the app.
+      await pump(tester, const NavisTextField(label: 'field'));
+      expectNoBlur('an auth field');
     });
   });
 

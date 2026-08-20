@@ -238,7 +238,7 @@ void main() {
       await pumpScreen(tester);
 
       expect(
-        find.text('No documents yet. Add your first document!'),
+        find.text('No documents yet'),
         findsOneWidget,
       );
       expect(find.text('New Document'), findsOneWidget);

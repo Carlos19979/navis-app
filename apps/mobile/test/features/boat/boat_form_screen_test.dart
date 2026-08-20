@@ -90,7 +90,7 @@ void main() {
       await pumpScreen(tester);
 
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Boat Name'),
+        find.widgetWithText(TextFormField, 'Boat name'),
         'Luna Azul',
       );
       await tester.ensureVisible(find.text('Create Boat'));
@@ -111,11 +111,11 @@ void main() {
       await pumpScreen(tester);
 
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Boat Name'),
+        find.widgetWithText(TextFormField, 'Boat name'),
         'Luna Azul',
       );
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Registration Number'),
+        find.widgetWithText(TextFormField, 'Registration number'),
         'ES-MAL-3-1234',
       );
       await tester.ensureVisible(find.text('Create Boat'));
@@ -133,15 +133,15 @@ void main() {
       await pumpScreen(tester);
 
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Boat Name'),
+        find.widgetWithText(TextFormField, 'Boat name'),
         'Luna Azul',
       );
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Registration Number'),
+        find.widgetWithText(TextFormField, 'Registration number'),
         'ES-MAL-3-1234',
       );
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Length (m)'),
+        find.widgetWithText(TextFormField, 'Length'),
         'twelve',
       );
       await tester.ensureVisible(find.text('Create Boat'));
@@ -179,15 +179,15 @@ void main() {
       await pumpScreen(tester);
 
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Boat Name'),
+        find.widgetWithText(TextFormField, 'Boat name'),
         'Luna Azul',
       );
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Registration Number'),
+        find.widgetWithText(TextFormField, 'Registration number'),
         'ES-MAL-3-1234',
       );
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Length (m)'),
+        find.widgetWithText(TextFormField, 'Length'),
         '12.5',
       );
       await tester.ensureVisible(find.text('Create Boat'));
@@ -213,15 +213,15 @@ void main() {
       await pumpScreen(tester);
 
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Boat Name'),
+        find.widgetWithText(TextFormField, 'Boat name'),
         'Luna Azul',
       );
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Registration Number'),
+        find.widgetWithText(TextFormField, 'Registration number'),
         'ES-MAL-3-1234',
       );
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Length (m)'),
+        find.widgetWithText(TextFormField, 'Length'),
         '12.5',
       );
       await tester.ensureVisible(find.text('Create Boat'));
@@ -244,13 +244,13 @@ void main() {
           .pumpWidget(buildSubject(boatId: 'boat-1', notifier: notifier));
       await pumpScreen(tester);
 
-      expect(find.text('Edit Boat'), findsOneWidget);
+      expect(find.text('Edit boat'), findsOneWidget);
       expect(find.text('Luna Azul'), findsOneWidget);
       expect(find.text('ES-MAL-3-1234'), findsOneWidget);
       expect(find.text('12.5'), findsOneWidget);
       expect(find.text('Palma de Mallorca'), findsOneWidget);
       expect(find.text('Update Boat'), findsOneWidget);
-      expect(find.text('Delete Boat'), findsOneWidget);
+      expect(find.text('Delete boat'), findsOneWidget);
     });
 
     testWidgets('delete confirm dialog cancel keeps the boat', (tester) async {
@@ -260,8 +260,8 @@ void main() {
           .pumpWidget(buildSubject(boatId: 'boat-1', notifier: notifier));
       await pumpScreen(tester);
 
-      await tester.ensureVisible(find.text('Delete Boat'));
-      await tester.tap(find.text('Delete Boat'));
+      await tester.ensureVisible(find.text('Delete boat'));
+      await tester.tap(find.text('Delete boat'));
       await pumpScreen(tester);
 
       expect(
@@ -284,8 +284,8 @@ void main() {
       );
       await pumpScreen(tester);
 
-      await tester.ensureVisible(find.text('Delete Boat'));
-      await tester.tap(find.text('Delete Boat'));
+      await tester.ensureVisible(find.text('Delete boat'));
+      await tester.tap(find.text('Delete boat'));
       await pumpScreen(tester);
       await tester.tap(find.text('Delete'));
       await pumpScreen(tester);

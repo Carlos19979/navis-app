@@ -87,13 +87,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get success => 'Success';
 
   @override
-  String get noBoats => 'No boats yet. Add your first boat!';
+  String get noBoats => 'No boats yet';
 
   @override
-  String get noDocuments => 'No documents yet. Add your first document!';
+  String get noDocuments => 'No documents yet';
 
   @override
-  String get noTrips => 'No trips recorded yet. Start your first trip!';
+  String get noTrips => 'No trips recorded yet';
 
   @override
   String get statsEmptyDescription =>
@@ -670,19 +670,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meters => 'm';
 
   @override
-  String get boatName => 'Boat Name';
+  String get boatName => 'Boat name';
 
   @override
-  String get registration => 'Registration Number';
+  String get registration => 'Registration number';
 
   @override
   String get boatType => 'Boat Type';
 
   @override
-  String get length => 'Length (m)';
+  String get length => 'Length';
 
   @override
-  String get homePort => 'Home Port';
+  String get homePort => 'Home port';
 
   @override
   String get sailboat => 'Sailboat';
@@ -703,7 +703,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get expiryDate => 'Expiry Date';
 
   @override
-  String get alertDays => 'Alert Days Before Expiry';
+  String get alertDays => 'Alert days before expiry';
 
   @override
   String get notes => 'Notes';
@@ -733,7 +733,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get avgSpeed => 'Avg Speed';
 
   @override
-  String get startTrip => 'Start Trip';
+  String get startTrip => 'Start trip';
 
   @override
   String get stopTrip => 'Stop Trip';
@@ -751,7 +751,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get totalTrips => 'Total Trips';
 
   @override
-  String get tripStatistics => 'Trip Statistics';
+  String get tripStatistics => 'Trip statistics';
 
   @override
   String get tripStatisticsSubtitle => 'Distance, engine hours and ports';
@@ -880,13 +880,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripDetails => 'Trip Details';
 
   @override
-  String get editBoat => 'Edit Boat';
+  String get editBoat => 'Edit boat';
 
   @override
-  String get myBoats => 'My Boats';
+  String get myBoats => 'My boats';
 
   @override
-  String get addBoat => 'Add Boat';
+  String get addBoat => 'Add boat';
 
   @override
   String get newDocument => 'New Document';
@@ -956,7 +956,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notesOptional => 'Notes (optional)';
 
   @override
-  String get alertDaysBeforeExpiry => 'Alert Days Before Expiry';
+  String get alertDaysBeforeExpiry => 'Alert days before expiry';
 
   @override
   String get validNumber => 'Please enter a valid number';
@@ -1049,7 +1049,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteAccountFailed => 'Could not delete the account. Try again.';
 
   @override
-  String get deleteBoat => 'Delete Boat';
+  String get deleteBoat => 'Delete boat';
 
   @override
   String deleteBoatConfirm(String name) {
@@ -1087,7 +1087,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get goBack => 'Go back';
 
   @override
-  String get addNewBoat => 'Add new boat';
+  String get addNewBoat => 'Add boat';
 
   @override
   String get homePortOptional => 'Home Port (optional)';

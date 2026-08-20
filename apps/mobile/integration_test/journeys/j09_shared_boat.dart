@@ -83,7 +83,7 @@ void j09SharedBoat() {
     // by the padlock (the gate is what decides, and it says yes here).
     expect(memberHub, contains('Documents'));
     // Owner-only: deleting the boat, and granting permissions on it.
-    expect(memberHub, isNot(contains('Delete Boat')));
+    expect(memberHub, isNot(contains('Delete boat')));
     expect(memberHub, isNot(contains('Crew and permissions')));
 
     // --- B, blocked area by area. Reopening the hub resets its scroll offset:
@@ -125,7 +125,7 @@ void j09SharedBoat() {
     // work — B used to sail a whole trip and lose it to a 403 on save.
     await tapUntil(tester, find.text('Logbook'), find.byTooltip('Statistics'));
     await pumpFor(tester, const Duration(seconds: 1));
-    expect(find.text('Start Trip'), findsNothing);
+    expect(find.text('Start trip'), findsNothing);
     // The empty-state CTA is the other entry point to the recorder. It only
     // renders while the boat has no trips (J05 gave Aurora one), so this pins
     // the intent rather than exercising it — the recorder itself blocks with
@@ -173,7 +173,7 @@ void j09SharedBoat() {
     // Record and save a real (fake-GPS) trip as the member. Saving is the step
     // that used to answer 403 after the trip was already sailed.
     await tapUntil(tester, find.text('Logbook'), find.byTooltip('Statistics'));
-    await pumpUntilFound(tester, find.text('Start Trip'));
+    await pumpUntilFound(tester, find.text('Start trip'));
     await logbook.startTripViaChecklist();
     await logbook.recordAndSave();
     await pumpUntilFound(tester, find.byTooltip('Statistics'));

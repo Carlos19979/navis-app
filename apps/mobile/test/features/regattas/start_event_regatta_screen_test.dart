@@ -138,7 +138,7 @@ void main() {
 
       expect(find.text('Add a boat first.'), findsOneWidget);
 
-      await tester.tap(find.text('Add Boat'));
+      await tester.tap(find.text('Add boat'));
       await pumpScreen(tester);
 
       expect(spy.last, '/boats/new');

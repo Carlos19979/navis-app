@@ -22,7 +22,7 @@ class LogbookRobot {
   /// every later run on this simulator would skip the prompt (and, having chosen
   /// review, the question) for good.
   Future<void> startTripViaChecklist() async {
-    final startTrip = find.widgetWithText(NavisButton, 'Start Trip');
+    final startTrip = find.widgetWithText(NavisButton, 'Start trip');
     final review = find.text('Review checklist');
 
     await tapUntil(tester, find.byType(FloatingActionButton), review);

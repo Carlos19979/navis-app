@@ -164,7 +164,7 @@ void main() {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
-      expect(find.text('Alert Days Before Expiry'), findsOneWidget);
+      expect(find.text('Alert days before expiry'), findsOneWidget);
       // Preset thresholds render as chips (plus the custom-entry chip).
       expect(find.text('30 days'), findsOneWidget);
       expect(find.text('15 days'), findsOneWidget);

@@ -118,7 +118,7 @@ void main() {
 
       expect(find.byType(NavisEmptyState), findsOneWidget);
       expect(
-        find.text('No trips recorded yet. Start your first trip!'),
+        find.text('No trips recorded yet'),
         findsOneWidget,
       );
       expect(find.text('Record Trip'), findsOneWidget);
@@ -147,7 +147,7 @@ void main() {
         findsOneWidget,
       );
       expect(
-        find.text('Start Trip'),
+        find.text('Start trip'),
         findsOneWidget,
       );
     });

@@ -96,7 +96,7 @@ void main() {
     testWidgets('displays the screen title', (tester) async {
       await pumpScreen(tester, trips: [makeTrip()]);
 
-      expect(find.text('Trip Statistics'), findsOneWidget);
+      expect(find.text('Trip statistics'), findsOneWidget);
     });
 
     testWidgets('starts on all time and totals the whole logbook',
@@ -242,7 +242,7 @@ void main() {
       await pumpScreen(tester, trips: const []);
 
       expect(
-        find.text('No trips recorded yet. Start your first trip!'),
+        find.text('No trips recorded yet'),
         findsOneWidget,
       );
     });

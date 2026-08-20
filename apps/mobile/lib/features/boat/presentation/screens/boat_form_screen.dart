@@ -479,6 +479,11 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                         textInputAction: TextInputAction.next,
                         decoration: InputDecoration(
                           labelText: l.length,
+                          // The unit as a suffix, not «Eslora (m)» in the
+                          // label: the label is shared with the read-only row
+                          // and the passport, where the value already carries
+                          // its unit.
+                          suffixText: 'm',
                           prefixIcon: const Icon(Icons.straighten),
                         ),
                         validator: (value) {

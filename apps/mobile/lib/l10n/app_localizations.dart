@@ -257,19 +257,19 @@ abstract class AppLocalizations {
   /// No description provided for @noBoats.
   ///
   /// In en, this message translates to:
-  /// **'No boats yet. Add your first boat!'**
+  /// **'No boats yet'**
   String get noBoats;
 
   /// No description provided for @noDocuments.
   ///
   /// In en, this message translates to:
-  /// **'No documents yet. Add your first document!'**
+  /// **'No documents yet'**
   String get noDocuments;
 
   /// No description provided for @noTrips.
   ///
   /// In en, this message translates to:
-  /// **'No trips recorded yet. Start your first trip!'**
+  /// **'No trips recorded yet'**
   String get noTrips;
 
   /// No description provided for @statsEmptyDescription.
@@ -1265,13 +1265,13 @@ abstract class AppLocalizations {
   /// No description provided for @boatName.
   ///
   /// In en, this message translates to:
-  /// **'Boat Name'**
+  /// **'Boat name'**
   String get boatName;
 
   /// No description provided for @registration.
   ///
   /// In en, this message translates to:
-  /// **'Registration Number'**
+  /// **'Registration number'**
   String get registration;
 
   /// No description provided for @boatType.
@@ -1283,13 +1283,13 @@ abstract class AppLocalizations {
   /// No description provided for @length.
   ///
   /// In en, this message translates to:
-  /// **'Length (m)'**
+  /// **'Length'**
   String get length;
 
   /// No description provided for @homePort.
   ///
   /// In en, this message translates to:
-  /// **'Home Port'**
+  /// **'Home port'**
   String get homePort;
 
   /// No description provided for @sailboat.
@@ -1331,7 +1331,7 @@ abstract class AppLocalizations {
   /// No description provided for @alertDays.
   ///
   /// In en, this message translates to:
-  /// **'Alert Days Before Expiry'**
+  /// **'Alert days before expiry'**
   String get alertDays;
 
   /// No description provided for @notes.
@@ -1391,7 +1391,7 @@ abstract class AppLocalizations {
   /// No description provided for @startTrip.
   ///
   /// In en, this message translates to:
-  /// **'Start Trip'**
+  /// **'Start trip'**
   String get startTrip;
 
   /// No description provided for @stopTrip.
@@ -1427,7 +1427,7 @@ abstract class AppLocalizations {
   /// No description provided for @tripStatistics.
   ///
   /// In en, this message translates to:
-  /// **'Trip Statistics'**
+  /// **'Trip statistics'**
   String get tripStatistics;
 
   /// No description provided for @tripStatisticsSubtitle.
@@ -1685,19 +1685,19 @@ abstract class AppLocalizations {
   /// No description provided for @editBoat.
   ///
   /// In en, this message translates to:
-  /// **'Edit Boat'**
+  /// **'Edit boat'**
   String get editBoat;
 
   /// No description provided for @myBoats.
   ///
   /// In en, this message translates to:
-  /// **'My Boats'**
+  /// **'My boats'**
   String get myBoats;
 
   /// No description provided for @addBoat.
   ///
   /// In en, this message translates to:
-  /// **'Add Boat'**
+  /// **'Add boat'**
   String get addBoat;
 
   /// No description provided for @newDocument.
@@ -1835,7 +1835,7 @@ abstract class AppLocalizations {
   /// No description provided for @alertDaysBeforeExpiry.
   ///
   /// In en, this message translates to:
-  /// **'Alert Days Before Expiry'**
+  /// **'Alert days before expiry'**
   String get alertDaysBeforeExpiry;
 
   /// No description provided for @validNumber.
@@ -2003,7 +2003,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteBoat.
   ///
   /// In en, this message translates to:
-  /// **'Delete Boat'**
+  /// **'Delete boat'**
   String get deleteBoat;
 
   /// No description provided for @deleteBoatConfirm.
@@ -2075,7 +2075,7 @@ abstract class AppLocalizations {
   /// No description provided for @addNewBoat.
   ///
   /// In en, this message translates to:
-  /// **'Add new boat'**
+  /// **'Add boat'**
   String get addNewBoat;
 
   /// No description provided for @homePortOptional.
