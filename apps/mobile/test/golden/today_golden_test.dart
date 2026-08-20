@@ -14,8 +14,13 @@ import 'golden_harness.dart';
 void main() {
   setUpAll(loadTestFonts);
 
+  // With a photo, because that is the composition worth reviewing: the image
+  // header, the name on it, and the score in the frosted disc. Network images
+  // do not load under test, so what renders is the navy placeholder — which is
+  // exactly what a user sees while the photo is on its way, and enough to judge
+  // the layout by.
   final boats = [
-    makeBoat(),
+    makeBoat(photoUrl: 'https://example.test/luna.jpg'),
     makeBoat(
       id: 'boat-2',
       name: 'Sea Runner',
@@ -76,6 +81,28 @@ void main() {
     await expectLater(
       find.byType(TodayScreen),
       matchesGoldenFile('goldens/today_full.png'),
+    );
+  });
+
+  // And without one, which is every boat until someone uploads a picture: the
+  // header is typographic and the score takes its own row.
+  testWidgets('today, no photo', (tester) async {
+    await pumpGolden(
+      tester,
+      const TodayScreen(),
+      settle: false,
+      overrides: [
+        ...await todayOverrides(
+          boats: [makeBoat()],
+          readiness: readiness,
+          summary: const DocumentSummary(total: 3, ok: 2, warning: 1),
+        ),
+        ...planOverrides(),
+      ],
+    );
+    await expectLater(
+      find.byType(TodayScreen),
+      matchesGoldenFile('goldens/today_no_photo.png'),
     );
   });
 

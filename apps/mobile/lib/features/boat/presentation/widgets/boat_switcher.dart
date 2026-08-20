@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:navis_mobile/core/theme/app_typography.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
+import 'package:navis_mobile/core/theme/palette.dart';
 import 'package:navis_mobile/core/theme/tone.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
@@ -18,16 +19,37 @@ import 'package:navis_mobile/shared/widgets/navis_list.dart';
 /// Replaces going back to a list to change context. With a single boat — which
 /// is most owners — it is just a title and there is nothing to discover.
 class BoatSwitcher extends ConsumerWidget {
-  const BoatSwitcher({super.key, required this.boat});
+  const BoatSwitcher({
+    super.key,
+    required this.boat,
+    this.onDark = false,
+    this.onAddBoat,
+    this.onJoinBoat,
+  });
 
   final Boat boat;
+
+  /// Drawn over the boat's photograph, so the name and chevron are on-dark.
+  final bool onDark;
+
+  /// The sheet is now the only place the other boats live, so it also carries
+  /// the two ways to get one more.
+  final VoidCallback? onAddBoat;
+  final VoidCallback? onJoinBoat;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
     final boats = ref.watch(allBoatsProvider);
-    final canSwitch = boats.length > 1;
-    final othersNeedAttention = canSwitch && _othersNeedAttention(ref, boats);
+    final hasOthers = boats.length > 1;
+    // Opens whenever there is *anything* in the sheet — and since the sheet
+    // now holds «add a boat» and «join a boat», that is almost always.
+    //
+    // Gating this on `boats.length > 1` is what briefly made adding a second
+    // boat impossible: with one boat there was no chevron, so no sheet, so no
+    // way to reach either action. Same shape of bug as joining with none.
+    final canOpen = hasOthers || onAddBoat != null || onJoinBoat != null;
+    final othersNeedAttention = hasOthers && _othersNeedAttention(ref, boats);
 
     final title = Row(
       mainAxisSize: MainAxisSize.min,
@@ -37,10 +59,12 @@ class BoatSwitcher extends ConsumerWidget {
             boat.name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: NavisType.title2.copyWith(color: context.ink),
+            style: NavisType.title2.copyWith(
+              color: onDark ? Palette.onAccent : context.ink,
+            ),
           ),
         ),
-        if (canSwitch) ...[
+        if (canOpen) ...[
           const SizedBox(width: Dimens.spaceXs),
           // A dot on the chevron when *another* boat has something pending.
           //
@@ -56,18 +80,20 @@ class BoatSwitcher extends ConsumerWidget {
             child: Icon(
               Icons.expand_more_rounded,
               size: Dimens.iconMd,
-              color: context.inkMuted,
+              color: onDark
+                  ? Palette.onAccent.withValues(alpha: 0.8)
+                  : context.inkMuted,
             ),
           ),
         ],
       ],
     );
 
-    if (!canSwitch) return title;
+    if (!canOpen) return title;
 
     return Semantics(
       button: true,
-      label: l.changeBoat,
+      label: hasOthers ? l.changeBoat : l.myBoats,
       // Spoken, not just drawn: a dot is invisible to a screen reader.
       value: othersNeedAttention
           ? '${boat.name}, ${l.otherBoatsNeedAttention}'
@@ -103,6 +129,7 @@ class BoatSwitcher extends ConsumerWidget {
     List<Boat> boats,
   ) async {
     final l = AppLocalizations.of(context)!;
+    final hasOthers = boats.length > 1;
     await showModalBottomSheet<void>(
       context: context,
       // The sheet must clear the floating nav pill, which overlays the shell.
@@ -115,29 +142,86 @@ class BoatSwitcher extends ConsumerWidget {
         child: SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: Dimens.spaceLg),
           child: NavisList(
-            title: l.changeBoat,
+            title: hasOthers ? l.changeBoat : l.myBoats,
             children: [
-              for (final option in boats)
+              if (hasOthers)
+                for (final option in boats)
+                  _BoatOption(
+                    option: option,
+                    isActive: option.id == boat.id,
+                    onPick: () {
+                      ref.read(activeBoatIdProvider.notifier).select(option.id);
+                      Navigator.of(sheetContext).pop();
+                    },
+                  ),
+              // The sheet is the only place the other boats live now, so the
+              // two ways to get one more live here too — they used to be the
+              // last rows of a "My boats" section that duplicated this list.
+              if (onAddBoat != null)
                 NavisRow(
-                  title: option.name,
-                  subtitle: [
-                    localizedBoatType(l, option.type),
-                    if (option.homePort != null) option.homePort!,
-                  ].join(' · '),
-                  icon: option.id == boat.id
-                      ? Icons.check_circle_rounded
-                      : Icons.sailing_outlined,
-                  iconColor: option.id == boat.id ? context.accent : null,
+                  title: l.addBoat,
+                  icon: Icons.add_rounded,
+                  iconColor: context.accent,
                   showChevron: false,
                   onTap: () {
-                    ref.read(activeBoatIdProvider.notifier).select(option.id);
                     Navigator.of(sheetContext).pop();
+                    onAddBoat!();
+                  },
+                ),
+              if (onJoinBoat != null)
+                NavisRow(
+                  title: l.joinBoat,
+                  icon: Icons.group_add_outlined,
+                  iconColor: context.accent,
+                  showChevron: false,
+                  onTap: () {
+                    Navigator.of(sheetContext).pop();
+                    onJoinBoat!();
                   },
                 ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+/// One boat in the picker, **with its status**.
+///
+/// The chip is what made the retired "My boats" section worth having: with three
+/// boats you need to see which one wants something before you switch to it, not
+/// after.
+class _BoatOption extends ConsumerWidget {
+  const _BoatOption({
+    required this.option,
+    required this.isActive,
+    required this.onPick,
+  });
+
+  final Boat option;
+  final bool isActive;
+  final VoidCallback onPick;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
+    final summary =
+        ref.watch(boatDocumentSummaryProvider(option.id)).valueOrNull;
+    final tone = documentsTone(summary);
+
+    return NavisRow(
+      title: option.name,
+      subtitle: [
+        localizedBoatType(l, option.type),
+        if (option.homePort != null) option.homePort!,
+      ].join(' · '),
+      icon: isActive ? Icons.check_circle_rounded : Icons.sailing_outlined,
+      iconColor: isActive ? context.accent : null,
+      value: tone == NavisTone.neutral ? null : documentsValue(l, summary),
+      valueTone: tone,
+      showChevron: false,
+      onTap: onPick,
     );
   }
 }

@@ -23,17 +23,19 @@ class NavisPlanBadge extends StatelessWidget {
           ? const EdgeInsets.symmetric(horizontal: 5, vertical: 1)
           : const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        // Solid amber, navy ink: 7.32:1, and it stays readable pinned to a
-        // photo or a FAB without needing to be blended into the surface first.
-        // The tinted-text version had to darken the amber to brown to be legible
-        // on the light canvas.
-        color: context.caution,
+        // Opaque, so it stays readable pinned to a photo or a FAB, but *quiet*.
+        // It marks availability, not urgency: a solid amber pill here shouted as
+        // loud as an expired document, and the two are not the same news.
+        color: Color.alphaBlend(
+          context.ink.withValues(alpha: 0.72),
+          Theme.of(context).colorScheme.surface,
+        ),
         borderRadius: BorderRadius.circular(Dimens.radiusSm),
       ),
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: context.onLightFill,
+              color: context.canvas,
               fontWeight: FontWeight.w700,
               fontSize: compact ? 9 : null,
               letterSpacing: compact ? 0 : 0.5,

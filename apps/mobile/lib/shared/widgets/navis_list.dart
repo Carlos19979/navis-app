@@ -31,6 +31,7 @@ class NavisRow extends StatelessWidget {
     this.value,
     this.valueColor,
     this.valueTone,
+    this.lockLabel,
     this.trailing,
     this.onTap,
     this.showChevron,
@@ -60,7 +61,15 @@ class NavisRow extends StatelessWidget {
   /// brown.
   final NavisTone? valueTone;
 
-  /// Custom trailing widget (badge, switch). Wins over [value].
+  /// Marks the row as behind a plan, with the tier's name.
+  ///
+  /// Deliberately quiet — a lock glyph and muted ink, never a filled chip. The
+  /// first version reused the caution chip for this, so «you have to pay» read
+  /// exactly as loud as «your insurance has expired». Urgency has a date on it;
+  /// availability does not.
+  final String? lockLabel;
+
+  /// Custom trailing widget (badge, switch). Wins over [value] and [lockLabel].
   final Widget? trailing;
 
   final VoidCallback? onTap;
@@ -76,6 +85,7 @@ class NavisRow extends StatelessWidget {
     final semanticValue = [
       if (subtitle != null) subtitle,
       if (value != null) value,
+      if (lockLabel != null) lockLabel,
     ].join(', ');
 
     final row = ConstrainedBox(
@@ -117,7 +127,19 @@ class NavisRow extends StatelessWidget {
             ),
             if (trailing != null)
               trailing!
-            else if (value != null) ...[
+            else if (lockLabel != null) ...[
+              const SizedBox(width: Dimens.spaceSm),
+              Icon(
+                Icons.lock_outline_rounded,
+                size: Dimens.iconSm,
+                color: context.inkFaint,
+              ),
+              const SizedBox(width: Dimens.spaceXs),
+              Text(
+                lockLabel!,
+                style: NavisType.overline.copyWith(color: context.inkMuted),
+              ),
+            ] else if (value != null) ...[
               const SizedBox(width: Dimens.spaceMd),
               // Flexible, not fixed: a long status used to squeeze the label
               // and break it mid-word.

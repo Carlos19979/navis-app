@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:navis_mobile/core/theme/app_typography.dart';
 import 'package:navis_mobile/core/theme/motion.dart';
+import 'package:navis_mobile/core/theme/palette.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 
 /// A score out of a maximum, drawn as an arc with the figure inside it.
@@ -27,6 +28,8 @@ class NavisRing extends StatelessWidget {
     this.strokeWidth = 8,
     this.caption,
     this.semanticLabel,
+    this.inkColor,
+    this.trackColor,
   });
 
   /// The score. Clamped into `0..max` so a server surprise cannot draw a ring
@@ -45,6 +48,13 @@ class NavisRing extends StatelessWidget {
   final String? caption;
 
   final String? semanticLabel;
+
+  /// Colour of the figure. Defaults to page ink; pass the on-dark ink when the
+  /// ring is drawn over a photograph.
+  final Color? inkColor;
+
+  /// Colour of the unfilled arc. Defaults to the page hairline.
+  final Color? trackColor;
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +77,7 @@ class NavisRing extends StatelessWidget {
                 painter: _RingPainter(
                   fraction: swept,
                   color: color,
-                  track: context.hairline,
+                  track: trackColor ?? context.hairline,
                   strokeWidth: strokeWidth,
                 ),
                 child: Center(
@@ -77,7 +87,7 @@ class NavisRing extends StatelessWidget {
                       Text(
                         '$value',
                         style: NavisType.display.copyWith(
-                          color: context.ink,
+                          color: inkColor ?? context.ink,
                           fontSize: size * 0.30,
                         ),
                       ),
@@ -85,7 +95,8 @@ class NavisRing extends StatelessWidget {
                         Text(
                           caption!,
                           style: NavisType.caption.copyWith(
-                            color: context.inkMuted,
+                            color: inkColor?.withValues(alpha: 0.75) ??
+                                context.inkMuted,
                           ),
                         ),
                     ],
@@ -152,4 +163,31 @@ class _RingPainter extends CustomPainter {
       old.color != color ||
       old.track != track ||
       old.strokeWidth != strokeWidth;
+}
+
+/// [NavisRing] as it appears over a photograph: on-dark ink, a translucent
+/// white track, and no caption — the disc it sits in is already small.
+class NavisRingOnMedia extends StatelessWidget {
+  const NavisRingOnMedia({
+    super.key,
+    required this.score,
+    required this.color,
+    this.size = 84,
+  });
+
+  final int score;
+  final Color color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return NavisRing(
+      value: score,
+      color: color,
+      size: size,
+      strokeWidth: 6,
+      inkColor: Palette.onAccent,
+      trackColor: Palette.onAccent.withValues(alpha: 0.28),
+    );
+  }
 }

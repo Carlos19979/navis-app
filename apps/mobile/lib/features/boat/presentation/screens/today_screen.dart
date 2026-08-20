@@ -21,6 +21,8 @@ import 'package:navis_mobile/features/boat/presentation/providers/active_boat_pr
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_permissions_provider.dart';
+import 'package:navis_mobile/features/boat/presentation/widgets/boat_data_sheet.dart';
+import 'package:navis_mobile/features/boat/presentation/widgets/boat_hero_header.dart';
 import 'package:navis_mobile/features/boat/presentation/widgets/boat_switcher.dart';
 import 'package:navis_mobile/features/boat/presentation/widgets/permission_gate.dart';
 import 'package:navis_mobile/features/boat/presentation/widgets/share_boat_sheet.dart';
@@ -42,14 +44,12 @@ import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/join_by_code_sheet.dart';
 import 'package:navis_mobile/shared/widgets/navis_danger_zone.dart';
 import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
-import 'package:navis_mobile/shared/widgets/navis_photo_strip.dart';
 import 'package:navis_mobile/shared/widgets/navis_photo_viewer.dart';
 import 'package:navis_mobile/shared/widgets/navis_empty_state.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_list.dart';
 import 'package:navis_mobile/shared/widgets/navis_ring.dart';
 import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
-import 'package:navis_mobile/shared/widgets/navis_status_chip.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 
 /// Key on the scrollable, so tests and robots can scroll Today without
@@ -350,37 +350,108 @@ class _TodayBodyState extends ConsumerState<_TodayBody> {
         controller: _scroll,
         padding: const EdgeInsets.only(bottom: Dimens.navClearance),
         children: [
-          _TodayHeader(boat: boat).entrance(),
-          if (_photosOf(boat).isNotEmpty)
-            _GalleryBlock(boat: boat).entrance(index: 1),
-          _StatusBlock(boat: boat).entrance(index: 1),
-          _ConditionsBlock(boat: boat).entrance(index: 2),
-          _ActionsBlock(boat: boat).entrance(index: 3),
-          _ComingUpBlock(boat: boat).entrance(index: 4),
-          _SectionsBlock(boat: boat).entrance(index: 5),
-          _DetailsBlock(boat: boat).entrance(index: 6),
-          if (!boat.isOwner)
-            _CrewPermissionsBlock(boat: boat).entrance(index: 7),
-          _OtherBoatsBlock(
+          // The hero carries the score when there is a photo to frost it
+          // over; without one the header is typographic and the score gets its
+          // own row underneath.
+          _Hero(
             boat: boat,
             onAddBoat: widget.onAddBoat,
             onJoinBoat: widget.onJoinBoat,
-          ).entrance(index: 8),
-          _DangerBlock(boat: boat).entrance(index: 8),
+          ).entrance(),
+          _ConditionsBlock(boat: boat).entrance(index: 1),
+          _ActionsBlock(boat: boat).entrance(index: 2),
+          _ComingUpBlock(boat: boat).entrance(index: 3),
+          _SectionsBlock(boat: boat).entrance(index: 4),
+          if (!boat.isOwner)
+            _CrewPermissionsBlock(boat: boat).entrance(index: 5),
+          _DangerBlock(boat: boat).entrance(index: 6),
         ],
       ),
     );
   }
 }
 
-/// Boat name + the two chrome affordances that used to live in an app bar.
+/// The opening of the page.
 ///
-/// Not an `AppBar`: the boat's name is the page's own heading, so it scrolls
-/// with the content instead of sitting in a fixed band above it.
-class _TodayHeader extends StatelessWidget {
-  const _TodayHeader({required this.boat});
+/// With a photo: the boat's own image, its name on it, and the readiness score
+/// in a frosted disc over the corner — the one blur on this screen that has
+/// something behind it. Without one: a typographic header and the score on its
+/// own row, which is what every boat had before anyone uploaded a picture.
+class _Hero extends ConsumerWidget {
+  const _Hero({
+    required this.boat,
+    required this.onAddBoat,
+    required this.onJoinBoat,
+  });
 
   final Boat boat;
+  final VoidCallback onAddBoat;
+  final VoidCallback onJoinBoat;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final photos = _photosOf(boat);
+    final readiness = ref.watch(boatReadinessProvider(boat.id)).valueOrNull;
+    final arc = readiness == null
+        ? context.inkFaint
+        : switch (readiness.status) {
+            ReadinessStatus.ready => context.positiveFill,
+            ReadinessStatus.attention => context.cautionFill,
+            ReadinessStatus.notReady => context.criticalFill,
+          };
+    void openReadiness() => context.push(Routes.boatReadiness(boat.id));
+
+    if (photos.isEmpty) {
+      return Column(
+        children: [
+          _PlainHeader(
+            boat: boat,
+            onAddBoat: onAddBoat,
+            onJoinBoat: onJoinBoat,
+          ),
+          _StatusRow(
+            boat: boat,
+            readiness: readiness,
+            arc: arc,
+            onTap: openReadiness,
+          ),
+        ],
+      );
+    }
+
+    return Column(
+      children: [
+        BoatHeroHeader(
+          boat: boat,
+          photoUrl: photos.first,
+          score: readiness?.score,
+          scoreColor: arc,
+          onScoreTap: openReadiness,
+          onPhotoTap: () => showNavisPhotoViewer(context, urls: photos),
+        ),
+        // The status still needs its sentence; the disc only carries the
+        // number, and "72" alone does not say whether that is good.
+        _StatusLine(
+          boat: boat,
+          readiness: readiness,
+          onTap: openReadiness,
+        ),
+      ],
+    );
+  }
+}
+
+/// The header when there is no photograph: type, and space.
+class _PlainHeader extends StatelessWidget {
+  const _PlainHeader({
+    required this.boat,
+    required this.onAddBoat,
+    required this.onJoinBoat,
+  });
+
+  final Boat boat;
+  final VoidCallback onAddBoat;
+  final VoidCallback onJoinBoat;
 
   @override
   Widget build(BuildContext context) {
@@ -390,7 +461,7 @@ class _TodayHeader extends StatelessWidget {
         Dimens.spaceLg,
         Dimens.spaceSm,
         Dimens.spaceSm,
-        Dimens.spaceLg,
+        Dimens.spaceSm,
       ),
       child: Row(
         children: [
@@ -399,11 +470,15 @@ class _TodayHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  l.today,
+                  l.today.toUpperCase(),
                   style: NavisType.overline.copyWith(color: context.inkMuted),
                 ),
                 const SizedBox(height: 2),
-                BoatSwitcher(boat: boat),
+                BoatSwitcher(
+                  boat: boat,
+                  onAddBoat: onAddBoat,
+                  onJoinBoat: onJoinBoat,
+                ),
                 Text(
                   [
                     localizedBoatType(l, boat.type),
@@ -431,54 +506,43 @@ class _TodayHeader extends StatelessWidget {
 }
 
 /// "Can I go out?", answered as a gauge.
-class _StatusBlock extends ConsumerWidget {
-  const _StatusBlock({required this.boat});
-
-  final Boat boat;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final async = ref.watch(boatReadinessProvider(boat.id));
-
-    return switch (async) {
-      AsyncData(:final value) => _StatusRow(boat: boat, readiness: value),
-      AsyncError() => const SizedBox.shrink(),
-      _ => const Padding(
-          padding: Insets.gutter,
-          child: SizedBox(
-            height: 96,
-            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-          ),
-        ),
-    };
-  }
-}
-
+/// Score, verdict and count, on the canvas. Used when there is no photograph
+/// to put the score over.
 class _StatusRow extends StatelessWidget {
-  const _StatusRow({required this.boat, required this.readiness});
+  const _StatusRow({
+    required this.boat,
+    required this.readiness,
+    required this.arc,
+    required this.onTap,
+  });
 
   final Boat boat;
-  final Readiness readiness;
+
+  /// Null while the summary is loading: the row keeps its height so the page
+  /// below it does not jump when the score lands.
+  final Readiness? readiness;
+  final Color arc;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final count = readiness.attention.length;
-    // The arc is a shape, so it takes the fill-role accent: the text-role amber
-    // is darkened to clear AA as a glyph, which reads as brown on a ring.
-    final arc = switch (readiness.status) {
-      ReadinessStatus.ready => context.positiveFill,
-      ReadinessStatus.attention => context.cautionFill,
-      ReadinessStatus.notReady => context.criticalFill,
-    };
+    final r = readiness;
+    if (r == null) {
+      return const Padding(
+        padding: Insets.gutter,
+        child: SizedBox(height: 96),
+      );
+    }
+    final count = r.attention.length;
 
     return Semantics(
       button: true,
-      label: ReadinessCard.statusLabel(l, readiness.status),
-      value: '${readiness.score}',
+      label: ReadinessCard.statusLabel(l, r.status),
+      value: '${r.score}',
       child: ExcludeSemantics(
         child: InkWell(
-          onTap: () => context.push(Routes.boatReadiness(boat.id)),
+          onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: Dimens.spaceLg,
@@ -486,11 +550,10 @@ class _StatusRow extends StatelessWidget {
             ),
             child: Row(
               children: [
-                NavisRing(
-                  value: readiness.score,
-                  color: arc,
-                  caption: '/100',
-                ),
+                // The arc is a shape, so it takes the fill-role accent: the
+                // text-role amber is darkened to clear AA as a glyph, and that
+                // reads as brown on a ring.
+                NavisRing(value: r.score, color: arc, caption: '/100'),
                 const SizedBox(width: Dimens.spaceXl),
                 Expanded(
                   child: Column(
@@ -498,7 +561,7 @@ class _StatusRow extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        ReadinessCard.statusLabel(l, readiness.status),
+                        ReadinessCard.statusLabel(l, r.status),
                         style: NavisType.title2.copyWith(color: context.ink),
                       ),
                       const SizedBox(height: Dimens.spaceXs),
@@ -523,6 +586,43 @@ class _StatusRow extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// The verdict as a single tappable line, for when the score already sits in
+/// the photo header. «72» on its own does not say whether that is good.
+class _StatusLine extends StatelessWidget {
+  const _StatusLine({
+    required this.boat,
+    required this.readiness,
+    required this.onTap,
+  });
+
+  final Boat boat;
+  final Readiness? readiness;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final r = readiness;
+    if (r == null) return const SizedBox(height: 56);
+    final count = r.attention.length;
+
+    // Wrapped in a NavisList, which is what owns the horizontal gutter — a bare
+    // NavisRow sat flush against the screen edge, out of line with every other
+    // row on the page.
+    return NavisList(
+      children: [
+        NavisRow(
+          title: ReadinessCard.statusLabel(l, r.status),
+          subtitle: count == 0
+              ? l.readinessAllGood
+              : l.readinessItemsNeedAttention(count),
+          onTap: onTap,
+        ),
+      ],
     );
   }
 }
@@ -733,9 +833,17 @@ class _Action extends StatelessWidget {
                   ),
                   if (badge != null) ...[
                     const SizedBox(width: Dimens.spaceSm),
-                    NavisStatusChip(
-                      label: badge!,
-                      tone: NavisTone.caution,
+                    Icon(
+                      Icons.lock_outline_rounded,
+                      size: Dimens.iconSm,
+                      color: context.inkFaint,
+                    ),
+                    const SizedBox(width: 2),
+                    Text(
+                      badge!,
+                      style: NavisType.overline.copyWith(
+                        color: context.inkMuted,
+                      ),
                     ),
                   ],
                 ],
@@ -843,6 +951,12 @@ class _TextAction extends StatelessWidget {
 /// This is what the twelve-row hub becomes: the same routes, but reached from
 /// the screen the user is already on, with the numbers that make a row worth
 /// tapping printed on it.
+/// Everything the boat owns, as destinations rather than as a menu.
+///
+/// One heading, not two. «Barco» and «Gestionar barco» were five headings on a
+/// page that already had three, and the split told the user nothing they could
+/// not see from the rows themselves — the management rows just come last, with
+/// a gap.
 class _SectionsBlock extends ConsumerWidget {
   const _SectionsBlock({required this.boat});
 
@@ -854,98 +968,96 @@ class _SectionsBlock extends ConsumerWidget {
     final tier = ref.watch(effectiveTierProvider);
     final summary = ref.watch(boatDocumentSummaryProvider(boat.id)).valueOrNull;
 
-    return Column(
+    return NavisList(
+      title: l.boat,
       children: [
-        NavisList(
-          title: l.boat,
-          children: [
-            NavisRow(
-              title: l.documents,
-              icon: Icons.description_outlined,
-              value: documentsValue(l, summary),
-              valueTone: documentsTone(summary),
-              onTap: () => context.push(Routes.boatDocuments(boat.id)),
-            ),
-            NavisRow(
-              title: l.logbook,
-              icon: Icons.route_outlined,
-              onTap: () => context.push(Routes.boatTrips(boat.id)),
-            ),
-            NavisRow(
-              title: l.tripStatistics,
-              icon: Icons.query_stats_rounded,
-              onTap: () => context.push(Routes.boatStats(boat.id)),
-            ),
-            NavisRow(
-              title: l.maintenanceAndExpenses,
-              icon: Icons.build_outlined,
-              onTap: () => context.push(Routes.boatMaintenance(boat.id)),
-            ),
-            NavisRow(
-              title: l.costTitle,
-              icon: Icons.insights_rounded,
-              value: tier.canCostAnalytics ? null : l.proBadge,
-              valueTone: NavisTone.caution,
-              onTap: () => _openGated(
-                context,
-                ref,
-                allowed: tier.canCostAnalytics,
-                reason: l.paywallReasonCostAnalytics,
-                route: Routes.boatCosts(boat.id),
-              ),
-            ),
-            if (boat.isOwner)
-              NavisRow(
-                title: l.bookingsTitle,
-                icon: Icons.calendar_month_outlined,
-                value: tier.canSharedCoordination ? null : l.proBadge,
-                valueTone: NavisTone.caution,
-                onTap: () => _openGated(
-                  context,
-                  ref,
-                  allowed: tier.canSharedCoordination,
-                  reason: l.paywallReasonShared,
-                  route: Routes.boatBookings(boat.id),
-                ),
-              ),
-          ],
+        NavisRow(
+          title: l.documents,
+          icon: Icons.description_outlined,
+          value: documentsValue(l, summary),
+          valueTone: documentsTone(summary),
+          onTap: () => context.push(Routes.boatDocuments(boat.id)),
+        ),
+        NavisRow(
+          title: l.logbook,
+          icon: Icons.route_outlined,
+          onTap: () => context.push(Routes.boatTrips(boat.id)),
+        ),
+        NavisRow(
+          title: l.tripStatistics,
+          icon: Icons.query_stats_rounded,
+          onTap: () => context.push(Routes.boatStats(boat.id)),
+        ),
+        NavisRow(
+          title: l.maintenanceAndExpenses,
+          icon: Icons.build_outlined,
+          onTap: () => context.push(Routes.boatMaintenance(boat.id)),
+        ),
+        // Paid rows are marked before the tap, and quietly: a lock and the tier
+        // in muted ink. They used to carry the same filled amber chip as an
+        // expired document, so «you have to pay» read as loud as «this lapsed».
+        NavisRow(
+          title: l.costTitle,
+          icon: Icons.insights_rounded,
+          lockLabel: tier.canCostAnalytics ? null : l.proBadge,
+          onTap: () => _openGated(
+            context,
+            ref,
+            allowed: tier.canCostAnalytics,
+            reason: l.paywallReasonCostAnalytics,
+            route: Routes.boatCosts(boat.id),
+          ),
         ),
         if (boat.isOwner)
-          NavisList(
-            title: l.manageBoat,
-            children: [
-              NavisRow(
-                title: l.passportExport,
-                icon: Icons.picture_as_pdf_outlined,
-                value: tier.canExportPassport ? null : l.proBadge,
-                valueTone: NavisTone.caution,
-                onTap: () => unawaited(exportBoatPassport(context, ref, boat)),
-              ),
-              NavisRow(
-                title: l.boatCrewTitle,
-                icon: Icons.group_outlined,
-                onTap: () => unawaited(
-                  showBoatMembersSheet(context, boatId: boat.id),
-                ),
-              ),
-              NavisRow(
-                title: l.shareBoat,
-                icon: Icons.ios_share_rounded,
-                onTap: () => unawaited(showShareBoatSheet(context, boat)),
-              ),
-              NavisRow(
-                title: l.editBoat,
-                icon: Icons.edit_outlined,
-                onTap: () => context.push(Routes.boatEdit(boat.id)),
-              ),
-            ],
+          NavisRow(
+            title: l.bookingsTitle,
+            icon: Icons.calendar_month_outlined,
+            lockLabel: tier.canSharedCoordination ? null : l.proBadge,
+            onTap: () => _openGated(
+              context,
+              ref,
+              allowed: tier.canSharedCoordination,
+              reason: l.paywallReasonShared,
+              route: Routes.boatBookings(boat.id),
+            ),
           ),
+        if (boat.isOwner) ...[
+          NavisRow(
+            title: l.passportExport,
+            icon: Icons.picture_as_pdf_outlined,
+            lockLabel: tier.canExportPassport ? null : l.proBadge,
+            onTap: () => unawaited(exportBoatPassport(context, ref, boat)),
+          ),
+          NavisRow(
+            title: l.boatCrewTitle,
+            icon: Icons.group_outlined,
+            onTap: () => unawaited(
+              showBoatMembersSheet(context, boatId: boat.id),
+            ),
+          ),
+          NavisRow(
+            title: l.shareBoat,
+            icon: Icons.ios_share_rounded,
+            onTap: () => unawaited(showShareBoatSheet(context, boat)),
+          ),
+          NavisRow(
+            title: l.editBoat,
+            icon: Icons.edit_outlined,
+            onTap: () => context.push(Routes.boatEdit(boat.id)),
+          ),
+        ],
+        // Registration, type, length, home port and the photo gallery. Four
+        // rows nobody reads daily, so they go behind one that says what they
+        // are instead of taking a block in the middle of the page.
+        NavisRow(
+          title: l.boatData,
+          icon: Icons.info_outline_rounded,
+          onTap: () => unawaited(showBoatDataSheet(context, boat)),
+        ),
       ],
     );
   }
 
-  /// Paid rows are marked before the tap and gated on it, so the paywall is
-  /// never a surprise and the row is never a dead end.
   Future<void> _openGated(
     BuildContext context,
     WidgetRef ref, {
@@ -961,50 +1073,6 @@ class _SectionsBlock extends ConsumerWidget {
   }
 }
 
-/// The other boats, and the two ways to get one more.
-///
-/// Only drawn when it has something to say: with a single boat the whole notion
-/// of "my boats" is noise.
-class _OtherBoatsBlock extends ConsumerWidget {
-  const _OtherBoatsBlock({
-    required this.boat,
-    required this.onAddBoat,
-    required this.onJoinBoat,
-  });
-
-  final Boat boat;
-  final VoidCallback onAddBoat;
-  final VoidCallback onJoinBoat;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l = AppLocalizations.of(context)!;
-    final others =
-        ref.watch(allBoatsProvider).where((b) => b.id != boat.id).toList();
-
-    return NavisList(
-      title: others.isEmpty ? null : l.myBoats,
-      children: [
-        for (final other in others) _OtherBoatRow(boat: other),
-        NavisRow(
-          title: l.addBoat,
-          icon: Icons.add_rounded,
-          iconColor: context.accent,
-          showChevron: false,
-          onTap: onAddBoat,
-        ),
-        NavisRow(
-          title: l.joinBoat,
-          icon: Icons.group_add_outlined,
-          iconColor: context.accent,
-          showChevron: false,
-          onTap: onJoinBoat,
-        ),
-      ],
-    );
-  }
-}
-
 /// The boat's photos, if it has any.
 ///
 /// Kept because it is the only way to *look* at them — the gallery is a plan
@@ -1014,38 +1082,6 @@ List<String> _photosOf(Boat boat) => [
       if (boat.photoUrl != null && boat.photoUrl!.isNotEmpty) boat.photoUrl!,
       ...boat.photoUrls,
     ];
-
-class _GalleryBlock extends StatelessWidget {
-  const _GalleryBlock({required this.boat});
-
-  final Boat boat;
-
-  @override
-  Widget build(BuildContext context) {
-    final photos = _photosOf(boat);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: Dimens.spaceSm),
-      child: SizedBox(
-        height: 96,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          padding: Insets.gutter,
-          itemCount: photos.length,
-          separatorBuilder: (_, __) => const SizedBox(width: Dimens.spaceSm),
-          itemBuilder: (context, i) => NavisPhotoThumb(
-            url: photos[i],
-            size: 96,
-            onTap: () => showNavisPhotoViewer(
-              context,
-              urls: photos,
-              initialIndex: i,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 /// What a crew member is allowed to do on someone else's boat.
 ///
@@ -1160,52 +1196,6 @@ class _DangerBlock extends ConsumerWidget {
   }
 }
 
-/// The boat's own data: registration, type, length, home port.
-///
-/// Read-only, and kept because the retired hub was the only place that showed
-/// them — the registration in particular is the number an owner is asked for,
-/// and it should not require opening the edit form to read.
-class _DetailsBlock extends StatelessWidget {
-  const _DetailsBlock({required this.boat});
-
-  final Boat boat;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
-    return NavisList(
-      title: l.details,
-      children: [
-        NavisRow(
-          title: l.registration,
-          value: boat.registration,
-          dense: true,
-          showChevron: false,
-        ),
-        NavisRow(
-          title: l.boatType,
-          value: localizedBoatType(l, boat.type),
-          dense: true,
-          showChevron: false,
-        ),
-        NavisRow(
-          title: l.length,
-          value: '${boat.lengthMeters} m',
-          dense: true,
-          showChevron: false,
-        ),
-        if (boat.homePort != null)
-          NavisRow(
-            title: l.homePort,
-            value: boat.homePort!,
-            dense: true,
-            showChevron: false,
-          ),
-      ],
-    );
-  }
-}
-
 /// Short on purpose: this goes in a chip, and "1 cosa requiere atención"
 /// wrapped to two lines and turned a status marker into a paragraph.
 String? documentsValue(AppLocalizations l, DocumentSummary? summary) {
@@ -1223,36 +1213,4 @@ NavisTone documentsTone(DocumentSummary? summary) {
   if (summary.expired + summary.critical > 0) return NavisTone.critical;
   if (summary.warning > 0) return NavisTone.caution;
   return NavisTone.neutral;
-}
-
-/// One of the boats you are not currently looking at, **with its status**.
-///
-/// The status is the reason this section exists. Without it the row is a second
-/// copy of the header's switcher, and an owner with three boats loses what the
-/// old boat list gave them: seeing at a glance which boat needs them. The
-/// summary is the same provider the list of cards used, so this is no more
-/// network than before.
-class _OtherBoatRow extends ConsumerWidget {
-  const _OtherBoatRow({required this.boat});
-
-  final Boat boat;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l = AppLocalizations.of(context)!;
-    final summary = ref.watch(boatDocumentSummaryProvider(boat.id)).valueOrNull;
-    final tone = documentsTone(summary);
-
-    return NavisRow(
-      title: boat.name,
-      subtitle: localizedBoatType(l, boat.type),
-      icon: Icons.sailing_outlined,
-      // Only when something needs doing: a row with nothing pending says so by
-      // carrying no chip at all.
-      value: tone == NavisTone.neutral ? null : documentsValue(l, summary),
-      valueTone: tone,
-      showChevron: false,
-      onTap: () => ref.read(activeBoatIdProvider.notifier).select(boat.id),
-    );
-  }
 }

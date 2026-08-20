@@ -22,6 +22,14 @@ class MockBoatShareRepository extends Mock implements BoatShareRepository {}
 void main() {
   setUpAll(() => registerFallbackValue(FakeRoute()));
 
+  /// The header's chevron opens the sheet that now holds the other boats and
+  /// both ways to get one more. It opens with a single boat too — gating it on
+  /// «more than one» is what briefly made adding a second boat impossible.
+  Future<void> openBoatsSheet(WidgetTester tester) async {
+    await tester.tap(find.byIcon(Icons.expand_more_rounded));
+    await pumpFrames(tester, frames: 8);
+  }
+
   // makeBoat already homeports in Palma; named here only where a test
   // asserts on it.
   final oneBoat = [makeBoat()];
@@ -72,14 +80,28 @@ void main() {
   }
 
   group('which boat Today is about', () {
-    testWidgets('with one boat it is that boat, and no switcher is offered',
-        (tester) async {
+    testWidgets('with one boat the header is that boat', (tester) async {
       setPhoneSize(tester);
       await tester.pumpWidget(await subject(boats: oneBoat));
       await pumpFrames(tester, frames: 8);
 
       expect(find.text('Luna Azul'), findsOneWidget);
-      expect(find.byIcon(Icons.expand_more_rounded), findsNothing);
+    });
+
+    testWidgets('with one boat the sheet still opens, for adding another',
+        (tester) async {
+      setPhoneSize(tester);
+      await tester.pumpWidget(await subject(boats: oneBoat));
+      await pumpFrames(tester, frames: 8);
+
+      // Gating the chevron on «more than one boat» is what briefly made adding
+      // a second boat impossible: no chevron, no sheet, no action.
+      expect(find.byIcon(Icons.expand_more_rounded), findsOneWidget);
+      await openBoatsSheet(tester);
+
+      expect(find.text('MY BOATS'), findsOneWidget);
+      expect(find.text('Add Boat'), findsOneWidget);
+      expect(find.text('Join a boat'), findsOneWidget);
     });
 
     testWidgets('with several boats the name opens a picker', (tester) async {
@@ -88,8 +110,7 @@ void main() {
       await pumpFrames(tester, frames: 8);
 
       expect(find.byIcon(Icons.expand_more_rounded), findsOneWidget);
-      await tester.tap(find.text('Luna Azul').first);
-      await pumpFrames(tester, frames: 8);
+      await openBoatsSheet(tester);
 
       expect(find.text('CHANGE BOAT'), findsOneWidget);
       expect(find.text('Sea Runner'), findsWidgets);
@@ -102,9 +123,9 @@ void main() {
       );
       await pumpFrames(tester, frames: 8);
 
-      // The header is the active boat; the other one appears further down under
-      // "My Boats", so scope the assertion to the top of the page.
-      expect(find.text('ES-BCN-7-5678'), findsWidgets);
+      // The registration lives behind «Boat data» now, so the header is what
+      // says which boat is active.
+      expect(find.text('Sea Runner'), findsWidgets);
     });
 
     testWidgets('a stored id that no longer exists falls back to the first',
@@ -151,15 +172,16 @@ void main() {
       );
       await pumpFrames(tester, frames: 8);
 
-      final labels = await scrollAndCollectText(
-        tester,
-        find.byKey(todayScrollKey),
-      );
-      expect(labels, containsAll(['Sea Runner', 'Marea']));
+      // They live in the sheet now: one place for «the other boats», not a
+      // section at the bottom duplicating the header's picker.
+      await openBoatsSheet(tester);
+
+      expect(find.text('Sea Runner'), findsWidgets);
+      expect(find.text('Marea'), findsWidgets);
       expect(
-        labels.where((t) => t.contains('alert')),
-        isNotEmpty,
-        reason: 'an other-boat row must say when that boat needs attention',
+        find.textContaining('alert'),
+        findsWidgets,
+        reason: 'a boat in the picker must say when it needs attention',
       );
     });
 
@@ -213,11 +235,13 @@ void main() {
       expect(
         controller.offset,
         greaterThan(0),
-        reason: 'the other-boat rows sit below the fold',
+        reason: 'the page is taller than this viewport',
       );
 
-      await scrollUntilVisible(tester, find.text('Sea Runner'), todayScrollKey);
-      await tester.tap(find.text('Sea Runner'));
+      await tester.drag(scrollable, const Offset(0, 1200));
+      await pumpFrames(tester, frames: 4);
+      await openBoatsSheet(tester);
+      await tester.tap(find.text('Sea Runner').last);
       await pumpFrames(tester, frames: 8);
 
       // Otherwise the new boat's Today opens at the bottom, on the very list
@@ -386,6 +410,7 @@ void main() {
           'Crew and permissions',
           'Share boat',
           'Edit Boat',
+          'Boat data',
         ]),
       );
     });
@@ -442,12 +467,14 @@ void main() {
       await tester.pumpWidget(await subject(boats: oneBoat));
       await pumpFrames(tester, frames: 8);
 
-      final labels = await scrollAndCollectText(
-        tester,
-        find.byKey(todayScrollKey),
-      );
-      expect(labels, contains('ES-MAL-3-1234'));
-      expect(labels, contains('Palma de Mallorca'));
+      await scrollUntilVisible(tester, find.text('Boat data'), todayScrollKey);
+      await tester.tap(find.text('Boat data'));
+      await pumpFrames(tester, frames: 8);
+
+      expect(find.text('ES-MAL-3-1234'), findsOneWidget);
+      // The harness runs in English, so the point is correct here; the Spanish
+      // comma is pinned in `test/core/measure_utils_test.dart`.
+      expect(find.text('12.5 m'), findsOneWidget);
     });
   });
 
@@ -481,7 +508,7 @@ void main() {
       );
       await pumpFrames(tester, frames: 8);
 
-      await scrollUntilVisible(tester, find.text('Add Boat'), todayScrollKey);
+      await openBoatsSheet(tester);
       await tester.tap(find.text('Add Boat'));
       await pumpFrames(tester, frames: 8);
 
@@ -495,7 +522,7 @@ void main() {
       await tester.pumpWidget(await subject(boats: oneBoat, spy: spy));
       await pumpFrames(tester, frames: 8);
 
-      await scrollUntilVisible(tester, find.text('Add Boat'), todayScrollKey);
+      await openBoatsSheet(tester);
       await tester.tap(find.text('Add Boat'));
       await pumpFrames(tester, frames: 8);
 

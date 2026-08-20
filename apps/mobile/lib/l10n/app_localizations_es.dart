@@ -2999,4 +2999,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get otherBoatsNeedAttention => 'otro barco requiere atención';
+
+  @override
+  String get boatData => 'Datos del barco';
 }

@@ -2974,4 +2974,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get otherBoatsNeedAttention => 'another boat needs attention';
+
+  @override
+  String get boatData => 'Boat data';
 }

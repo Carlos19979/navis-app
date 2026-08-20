@@ -5533,6 +5533,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'another boat needs attention'**
   String get otherBoatsNeedAttention;
+
+  /// No description provided for @boatData.
+  ///
+  /// In en, this message translates to:
+  /// **'Boat data'**
+  String get boatData;
 }
 
 class _AppLocalizationsDelegate

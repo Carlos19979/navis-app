@@ -8,6 +8,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:navis_mobile/core/theme/app_theme.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 
+import '../helpers/map_noise.dart';
+import '../helpers/plugins.dart';
 import '../helpers/test_helpers.dart';
 
 /// Loads every font declared in the test asset bundle (Inter + MaterialIcons +
@@ -44,6 +46,13 @@ Future<void> pumpGolden(
   Locale locale = const Locale('es'),
   bool settle = true,
 }) async {
+  // Any screen with a network image reaches path_provider through
+  // flutter_cache_manager, and there is no plugin under test: the boat photo
+  // header threw MissingPluginException before it could render its placeholder.
+  // Cosmetic, and already the exact set this filter tolerates.
+  installTileNoiseFilter();
+  stubPathProvider();
+
   tester.view.physicalSize = size * tester.view.devicePixelRatio;
   tester.view.devicePixelRatio = 1.0;
   tester.view.physicalSize = size;

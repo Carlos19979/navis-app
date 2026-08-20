@@ -1207,5 +1207,6 @@
   "anchorActionShort": "Fondeo",
   "alertsCount": "{count, plural, =1{1 aviso} other{{count} avisos}}",
   "@alertsCount": {"placeholders": {"count": {"type": "int"}}},
-  "otherBoatsNeedAttention": "otro barco requiere atención"
+  "otherBoatsNeedAttention": "otro barco requiere atención",
+  "boatData": "Datos del barco"
 }
