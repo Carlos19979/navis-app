@@ -53,6 +53,32 @@ void main() {
     ],
   );
 
+  // A full-page shot as well as the phone-sized one. Today is a long page and
+  // its most interesting parts for review — the other boats and their alerts,
+  // the crew rows, the destructive action — sit below the fold, so a 844px
+  // viewport captures maybe half of it.
+  testWidgets('today, whole page', (tester) async {
+    await pumpGolden(
+      tester,
+      const TodayScreen(),
+      brightness: Brightness.light,
+      size: const Size(390, 2000),
+      settle: false,
+      overrides: [
+        ...await todayOverrides(
+          boats: boats,
+          readiness: readiness,
+          summary: const DocumentSummary(total: 3, ok: 2, warning: 1),
+        ),
+        ...planOverrides(),
+      ],
+    );
+    await expectLater(
+      find.byType(TodayScreen),
+      matchesGoldenFile('goldens/today_full.png'),
+    );
+  });
+
   for (final brightness in Brightness.values) {
     testWidgets('today — ${brightness.name}', (tester) async {
       await pumpGolden(
