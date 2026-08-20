@@ -57,7 +57,7 @@
   "readinessAttention": "Needs attention",
   "readinessNotReady": "Not ready",
   "readinessAllGood": "Everything is in order",
-  "readinessItemsNeedAttention": "{count} items need attention",
+  "readinessItemsNeedAttention": "{count, plural, =1{1 item needs attention} other{{count} items need attention}}",
   "@readinessItemsNeedAttention": {
     "placeholders": {
       "count": {
@@ -1323,5 +1323,10 @@
   "bgAnchorWatchBody": "Watching your position - tap to open",
   "authLinkOpening": "Opening Navis...",
   "authLinkExpiredTitle": "This link no longer works",
-  "authLinkExpiredBody": "Links expire after an hour and can only be used once. Ask for a new one from \"Forgot Password?\"."
+  "authLinkExpiredBody": "Links expire after an hour and can only be used once. Ask for a new one from \"Forgot Password?\".",
+  "changeBoat": "Change boat",
+  "nextUp": "Coming up",
+  "seeAll": "See all",
+  "todayNothingDue": "Nothing needs doing",
+  "anchorActionShort": "Anchor"
 }

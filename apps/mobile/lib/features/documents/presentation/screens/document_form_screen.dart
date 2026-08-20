@@ -492,7 +492,6 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
       appBar: NavisAppBar(
         title: widget.isRenew
             ? l.renewDocument

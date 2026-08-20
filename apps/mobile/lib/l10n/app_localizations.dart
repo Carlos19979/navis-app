@@ -359,7 +359,7 @@ abstract class AppLocalizations {
   /// No description provided for @readinessItemsNeedAttention.
   ///
   /// In en, this message translates to:
-  /// **'{count} items need attention'**
+  /// **'{count, plural, =1{1 item needs attention} other{{count} items need attention}}'**
   String readinessItemsNeedAttention(int count);
 
   /// No description provided for @readinessScoreOf.
@@ -5491,6 +5491,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Links expire after an hour and can only be used once. Ask for a new one from \"Forgot Password?\".'**
   String get authLinkExpiredBody;
+
+  /// No description provided for @changeBoat.
+  ///
+  /// In en, this message translates to:
+  /// **'Change boat'**
+  String get changeBoat;
+
+  /// No description provided for @nextUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming up'**
+  String get nextUp;
+
+  /// No description provided for @seeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'See all'**
+  String get seeAll;
+
+  /// No description provided for @todayNothingDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing needs doing'**
+  String get todayNothingDue;
+
+  /// No description provided for @anchorActionShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Anchor'**
+  String get anchorActionShort;
 }
 
 class _AppLocalizationsDelegate

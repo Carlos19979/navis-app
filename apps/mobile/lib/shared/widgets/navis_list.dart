@@ -211,9 +211,18 @@ class NavisList extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              title!.toUpperCase(),
-              style: NavisType.overline.copyWith(color: context.inkMuted),
+            // Tracked uppercase is the editorial treatment, but a screen reader
+            // spells all-caps out letter by letter, so the announced label is
+            // the original string.
+            child: Semantics(
+              header: true,
+              label: title,
+              child: ExcludeSemantics(
+                child: Text(
+                  title!.toUpperCase(),
+                  style: NavisType.overline.copyWith(color: context.inkMuted),
+                ),
+              ),
             ),
           ),
           if (action != null) action!,

@@ -115,6 +115,8 @@ Boat makeBoat({
   String? homePort = 'Palma de Mallorca',
   String? photoUrl,
   List<String> photoUrls = const [],
+  bool isOwner = true,
+  BoatPermissions? permissions,
 }) {
   return Boat(
     id: id,
@@ -125,6 +127,11 @@ Boat makeBoat({
     homePort: homePort,
     photoUrl: photoUrl,
     photoUrls: photoUrls,
+    isOwner: isOwner,
+    // Matches the entity's own default for an owner, and grants a member
+    // everything unless a test narrows it — the point of a member fixture is
+    // usually the *ownership*, not the flags.
+    permissions: permissions ?? const BoatPermissions.all(),
     createdAt: DateTime(2026),
     updatedAt: DateTime(2026),
   );

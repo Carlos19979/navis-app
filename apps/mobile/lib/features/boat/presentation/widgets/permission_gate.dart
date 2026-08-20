@@ -10,6 +10,19 @@ import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 
 /// Why the user cannot do something on a shared boat, in their language.
+/// The localized name of a permission area.
+///
+/// Lived as a private static on the boat-detail hub; Today needs it for the
+/// crew member's permission list, and it is the same five strings either way.
+String permissionAreaLabel(AppLocalizations l, BoatPermissionArea area) =>
+    switch (area) {
+      BoatPermissionArea.recordTrips => l.permRecordTrips,
+      BoatPermissionArea.viewDocuments => l.permViewDocuments,
+      BoatPermissionArea.manageDocuments => l.permManageDocuments,
+      BoatPermissionArea.manageMaintenance => l.permManageMaintenance,
+      BoatPermissionArea.manageExpenses => l.permManageExpenses,
+    };
+
 String permissionReason(AppLocalizations l, BoatPermissionArea area) =>
     switch (area) {
       BoatPermissionArea.recordTrips => l.permBlockedRecordTrips,

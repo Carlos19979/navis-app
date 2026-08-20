@@ -38,7 +38,6 @@ class ProfileScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
       appBar: NavisAppBar(title: l.profile, showBack: true),
       body: GradientBackground(
         child: SafeArea(

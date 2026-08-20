@@ -6,6 +6,7 @@ import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/readiness/data/readiness_repository.dart';
 import 'package:navis_mobile/features/readiness/presentation/providers/readiness_provider.dart';
+import 'package:navis_mobile/features/readiness/presentation/readiness_labels.dart';
 import 'package:navis_mobile/features/readiness/presentation/readiness_links.dart';
 import 'package:navis_mobile/features/readiness/presentation/widgets/readiness_card.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -157,9 +158,9 @@ class _AttentionRow extends StatelessWidget {
       route: route,
       borderColor: color.withValues(alpha: 0.4),
       leading: Icon(Icons.circle, color: color, size: 10),
-      title: item.label.isNotEmpty ? item.label : _refLabel(l, item.ref),
+      title: readinessItemTitle(l, item),
       subtitle: Text(
-        _daysLabel(l, item),
+        readinessDaysLabel(l, item),
         style: TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w600,
@@ -261,39 +262,3 @@ class _UpsellCard extends StatelessWidget {
 }
 
 /// Localizes an attention item's ref (API document type, or "engine_service").
-String _refLabel(AppLocalizations l, String ref) => switch (ref) {
-      'itb' => l.readinessRefItb,
-      'insurance_rc' => l.readinessRefInsurance,
-      'insurance_full' => l.readinessRefInsurance,
-      'life_raft' => l.readinessRefLifeRaft,
-      'extinguisher' => l.readinessRefExtinguisher,
-      'flares' => l.readinessRefFlares,
-      'first_aid' => l.readinessRefFirstAid,
-      'medical_cert' => l.readinessRefMedicalCert,
-      'radio_cert' => l.readinessRefRadioCert,
-      'navigation_license' => l.readinessRefNavLicense,
-      'engine_service' => l.readinessRefEngineService,
-      _ => l.readinessRefDocument,
-    };
-
-/// Human string for an item's timing.
-String _daysLabel(AppLocalizations l, ReadinessItem item) {
-  if (item.ref == 'engine_service') {
-    switch (item.reason) {
-      case 'no_plan':
-        return l.readinessMaintNoPlan;
-      case 'overdue':
-        return l.readinessMaintOverdue;
-      case 'pending':
-        return l.readinessMaintPending;
-      default:
-        // due_soon: prefer the nearer of date/hours.
-        if (item.hours != null && (item.days <= 0 || item.hours! < item.days)) {
-          return l.readinessMaintInHours(item.hours!.round());
-        }
-        return l.readinessExpiresInDays(item.days);
-    }
-  }
-  if (item.days < 0) return l.readinessExpired;
-  return l.readinessExpiresInDays(item.days);
-}

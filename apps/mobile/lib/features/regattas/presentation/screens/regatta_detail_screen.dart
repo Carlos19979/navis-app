@@ -40,7 +40,6 @@ class RegattaDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
       appBar: NavisAppBar(
         title: async.valueOrNull?.displayTitle ??
             AppLocalizations.of(context)!.regattaLabel,

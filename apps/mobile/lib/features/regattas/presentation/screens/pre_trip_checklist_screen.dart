@@ -254,7 +254,6 @@ class _PreTripChecklistScreenState
     final l = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
       appBar: NavisAppBar(
         title: l.safetyChecklist,
         showBack: true,

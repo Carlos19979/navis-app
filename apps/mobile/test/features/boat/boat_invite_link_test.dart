@@ -7,11 +7,11 @@ import 'package:navis_mobile/core/deeplinks/join_deep_link.dart';
 import 'package:navis_mobile/features/boat/data/boat_share_repository.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
-import 'package:navis_mobile/features/boat/presentation/screens/boat_dashboard_screen.dart';
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
 import 'package:navis_mobile/features/weather/presentation/providers/weather_provider.dart';
 
 import '../../helpers/helpers.dart';
+import 'package:navis_mobile/features/boat/presentation/screens/today_screen.dart';
 
 class MockBoatShareRepository extends Mock implements BoatShareRepository {}
 
@@ -46,7 +46,7 @@ void main() {
   });
 
   Widget subject({String? pendingCode}) => buildRoutedTestApp(
-        const BoatDashboardScreen(),
+        const TodayScreen(),
         overrides: [
           boatsProvider.overrideWith(_EmptyBoatsNotifier.new),
           boatShareRepositoryProvider.overrideWithValue(shareRepository),
@@ -83,7 +83,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final container = ProviderScope.containerOf(
-      tester.element(find.byType(BoatDashboardScreen)),
+      tester.element(find.byType(TodayScreen)),
     );
     container.read(pendingJoinCodeProvider.notifier).state = code;
     await tester.pumpAndSettle();

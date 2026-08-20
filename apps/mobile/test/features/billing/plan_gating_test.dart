@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:navis_mobile/features/boat/data/boat_share_repository.dart';
-import 'package:navis_mobile/features/boat/presentation/screens/boat_detail_screen.dart';
 import 'package:navis_mobile/features/community/presentation/screens/community_screen.dart';
 import 'package:navis_mobile/features/events/domain/entities/event.dart';
 import 'package:navis_mobile/features/events/presentation/providers/event_provider.dart';
@@ -18,6 +17,7 @@ import 'package:navis_mobile/features/readiness/presentation/providers/readiness
 import 'package:navis_mobile/features/shared/data/shared_repository.dart';
 
 import '../../helpers/helpers.dart';
+import 'package:navis_mobile/features/boat/presentation/screens/today_screen.dart';
 
 class MockSharedRepository extends Mock implements SharedRepository {}
 
@@ -66,9 +66,10 @@ void main() {
       final spy = RouteSpy();
       await tester.pumpWidget(
         buildRoutedTestApp(
-          const BoatDetailScreen(boatId: 'boat-1'),
+          const TodayScreen(),
           spy: spy,
           overrides: [
+            ...await todayOverrides(),
             ...planOverrides(pro: pro),
             boatReadinessProvider.overrideWith(
               (ref, id) async => makeReadiness(),
@@ -232,9 +233,10 @@ void main() {
       final spy = RouteSpy();
       await tester.pumpWidget(
         buildRoutedTestApp(
-          const BoatDetailScreen(boatId: 'boat-1'),
+          const TodayScreen(),
           spy: spy,
           overrides: [
+            ...await todayOverrides(),
             ...planOverrides(pro: pro),
             boatReadinessProvider.overrideWith(
               (ref, id) async => makeReadiness(),

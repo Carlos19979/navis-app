@@ -37,7 +37,6 @@ class GroupDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
       appBar: NavisAppBar(
         title: groupAsync.valueOrNull?.name ?? l.groupLabel,
         showBack: true,

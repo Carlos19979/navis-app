@@ -144,7 +144,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String readinessItemsNeedAttention(int count) {
-    return '$count items need attention';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items need attention',
+      one: '1 item needs attention',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2939,4 +2945,19 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get authLinkExpiredBody =>
       'Links expire after an hour and can only be used once. Ask for a new one from \"Forgot Password?\".';
+
+  @override
+  String get changeBoat => 'Change boat';
+
+  @override
+  String get nextUp => 'Coming up';
+
+  @override
+  String get seeAll => 'See all';
+
+  @override
+  String get todayNothingDue => 'Nothing needs doing';
+
+  @override
+  String get anchorActionShort => 'Anchor';
 }

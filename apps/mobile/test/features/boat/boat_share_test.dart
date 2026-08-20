@@ -11,10 +11,9 @@ import 'package:mocktail/mocktail.dart';
 
 import 'package:navis_mobile/features/boat/data/boat_share_repository.dart';
 import 'package:navis_mobile/features/boat/domain/boat_join_link.dart';
-import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
-import 'package:navis_mobile/features/boat/presentation/screens/boat_detail_screen.dart';
 
 import '../../helpers/helpers.dart';
+import 'package:navis_mobile/features/boat/presentation/screens/today_screen.dart';
 
 class _MockShareRepository extends Mock implements BoatShareRepository {}
 
@@ -71,11 +70,11 @@ void main() {
     );
   }
 
-  Widget subject() => buildRoutedTestApp(
-        const BoatDetailScreen(boatId: boatId),
+  Future<Widget> subject() async => buildRoutedTestApp(
+        const TodayScreen(),
+        // makeBoat defaults to id 'boat-1' / name 'Luna Azul'.
         overrides: [
-          // makeBoat defaults to id 'boat-1' / name 'Luna Azul'.
-          boatProvider.overrideWith((ref, id) async => makeBoat()),
+          ...await todayOverrides(),
           boatShareRepositoryProvider.overrideWithValue(repo),
         ],
       );
@@ -83,15 +82,11 @@ void main() {
   /// Walks the owner's real path: scroll to the "Share boat" action, tap it,
   /// wait for the code round-trip and the sheet animation.
   Future<void> openShareSheet(WidgetTester tester) async {
-    await tester.scrollUntilVisible(
-      find.text('Share boat'),
-      200,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.pump();
+    // Keyed, not `byType(Scrollable).first`: Today nests scrollables (the photo
+    // strip, the boat picker) and which one comes first depends on the fixture.
+    await scrollUntilVisible(tester, find.text('Share boat'), todayScrollKey);
     await tester.tap(find.text('Share boat'));
-    await pumpScreen(tester);
-    await tester.pump(const Duration(milliseconds: 400));
+    await pumpFrames(tester, frames: 8);
   }
 
   /// The text handed to the OS on the most recent share.
@@ -106,15 +101,15 @@ void main() {
     interceptShareSheet(tester);
     interceptClipboard(tester);
 
-    await tester.pumpWidget(subject());
-    await pumpScreen(tester);
+    await tester.pumpWidget(await subject());
+    await pumpFrames(tester, frames: 8);
     await openShareSheet(tester);
 
     expect(find.text(shareCode), findsOneWidget,
         reason: 'the sheet shows the invite code it is about to share');
 
     await tester.tap(find.widgetWithText(FilledButton, 'Share'));
-    await pumpScreen(tester);
+    await pumpFrames(tester, frames: 8);
 
     expect(
       shareSheetCalls,
@@ -136,12 +131,12 @@ void main() {
     installTileNoiseFilter();
     interceptShareSheet(tester);
 
-    await tester.pumpWidget(subject());
-    await pumpScreen(tester);
+    await tester.pumpWidget(await subject());
+    await pumpFrames(tester, frames: 8);
     await openShareSheet(tester);
 
     await tester.tap(find.widgetWithText(FilledButton, 'Share'));
-    await pumpScreen(tester);
+    await pumpFrames(tester, frames: 8);
 
     final text = sharedText();
     // The recipient needs to know which boat, and needs something tappable.
@@ -163,12 +158,12 @@ void main() {
     interceptShareSheet(tester);
     interceptClipboard(tester);
 
-    await tester.pumpWidget(subject());
-    await pumpScreen(tester);
+    await tester.pumpWidget(await subject());
+    await pumpFrames(tester, frames: 8);
     await openShareSheet(tester);
 
     await tester.tap(find.widgetWithText(OutlinedButton, 'Copy'));
-    await pumpScreen(tester);
+    await pumpFrames(tester, frames: 8);
 
     expect(clipboardWrites, hasLength(1));
     expect(
@@ -194,12 +189,12 @@ void main() {
     installTileNoiseFilter();
     interceptShareSheet(tester, fails: true);
 
-    await tester.pumpWidget(subject());
-    await pumpScreen(tester);
+    await tester.pumpWidget(await subject());
+    await pumpFrames(tester, frames: 8);
     await openShareSheet(tester);
 
     await tester.tap(find.widgetWithText(FilledButton, 'Share'));
-    await pumpScreen(tester);
+    await pumpFrames(tester, frames: 8);
 
     expect(shareSheetCalls, hasLength(1));
     expect(tester.takeException(), isNull,

@@ -57,7 +57,7 @@
   "readinessAttention": "Requiere atención",
   "readinessNotReady": "No está listo",
   "readinessAllGood": "Todo en regla",
-  "readinessItemsNeedAttention": "{count} cosas requieren atención",
+  "readinessItemsNeedAttention": "{count, plural, =1{1 cosa requiere atención} other{{count} cosas requieren atención}}",
   "@readinessItemsNeedAttention": {
     "placeholders": {
       "count": {
@@ -1199,5 +1199,10 @@
   "bgAnchorWatchBody": "Vigilando tu posición - toca para abrir",
   "authLinkOpening": "Abriendo Navis...",
   "authLinkExpiredTitle": "El enlace ya no vale",
-  "authLinkExpiredBody": "Los enlaces caducan al cabo de una hora y solo se pueden usar una vez. Pide uno nuevo desde «Olvidaste tu contraseña»."
+  "authLinkExpiredBody": "Los enlaces caducan al cabo de una hora y solo se pueden usar una vez. Pide uno nuevo desde «Olvidaste tu contraseña».",
+  "changeBoat": "Cambiar barco",
+  "nextUp": "Próximo",
+  "seeAll": "Ver todo",
+  "todayNothingDue": "No hay nada pendiente",
+  "anchorActionShort": "Fondeo"
 }

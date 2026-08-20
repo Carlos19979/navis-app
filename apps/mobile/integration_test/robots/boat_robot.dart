@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
-import 'package:navis_mobile/features/boat/presentation/screens/boat_detail_screen.dart';
+import 'package:navis_mobile/features/boat/presentation/screens/today_screen.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_text_field.dart';
 
@@ -48,23 +48,22 @@ class BoatRobot {
     return find.byType(FloatingActionButton);
   }
 
-  /// The boat-detail hub's scrollable, for scoped lazy-sliver scrolling.
-  Finder detailScrollable() => find.descendant(
-        of: find.byType(BoatDetailScreen),
-        matching: find.byType(Scrollable),
-      );
-
-  /// Scrolls the detail hub top to bottom and returns every label seen on the
-  /// way.
+  /// Today's scrollable, by key.
   ///
-  /// The hub is a lazy sliver list: what scrolls off is disposed, so "the member
-  /// sees the permissions card near the top AND 'Leave shared boat' at the
-  /// bottom, and no owner-only tile anywhere" cannot be asserted from one
-  /// screenful. Scoped to BoatDetailScreen — the dashboard underneath is still
-  /// in the tree and would smuggle its own labels in.
+  /// By key and not by type: Today nests scrollables (the photo strip, the
+  /// picker sheet), and `find.byType(Scrollable).first` picked whichever the
+  /// tree happened to build first.
+  Finder detailScrollable() => find.byKey(todayScrollKey);
+
+  /// Scrolls Today top to bottom and returns every label seen on the way.
+  ///
+  /// It is a lazy list: what scrolls off is disposed, so "the member sees their
+  /// permissions AND 'Leave shared boat' at the bottom, and no owner-only row
+  /// anywhere" cannot be asserted from one screenful. Scoped to TodayScreen so
+  /// the nav pill's own labels are not smuggled in.
   Future<Set<String>> readDetailLabels({int drags = 8}) async {
     final labels = find.descendant(
-      of: find.byType(BoatDetailScreen),
+      of: find.byType(TodayScreen),
       matching: find.byType(Text),
     );
     final seen = <String>{};
@@ -89,8 +88,8 @@ class BoatRobot {
     return seen;
   }
 
-  /// Opens the Share boat sheet from the detail hub and reads the invite
-  /// code (the prominent cyan 26pt text — the only reliable handle).
+  /// Opens the Share boat sheet from Today and reads the invite code (the
+  /// prominent 26pt text — the only reliable handle).
   Future<String> readShareCode() async {
     final codeText = find.byWidgetPredicate(
       (w) => w is Text && w.style?.fontSize == 26,

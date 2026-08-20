@@ -12,8 +12,7 @@ import 'package:navis_mobile/features/auth/presentation/screens/check_email_scre
 import 'package:navis_mobile/features/auth/presentation/screens/login_screen.dart';
 import 'package:navis_mobile/features/auth/presentation/screens/register_screen.dart';
 import 'package:navis_mobile/features/auth/presentation/screens/reset_password_screen.dart';
-import 'package:navis_mobile/features/boat/presentation/screens/boat_dashboard_screen.dart';
-import 'package:navis_mobile/features/boat/presentation/screens/boat_detail_screen.dart';
+import 'package:navis_mobile/features/boat/presentation/screens/today_screen.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/boat_form_screen.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/document_detail_screen.dart';
 import 'package:navis_mobile/features/anchor/presentation/screens/anchor_alarm_screen.dart';
@@ -139,7 +138,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/boats',
-                builder: (context, state) => const BoatDashboardScreen(),
+                builder: (context, state) => const TodayScreen(),
               ),
             ],
           ),
@@ -231,11 +230,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/boats/new',
         builder: (context, state) => const BoatFormScreen(boatId: 'new'),
       ),
+      // Kept as a path even though the boat hub is gone: it is a notification
+      // deep-link target (`notification_link.dart` maps `boat` here) and the
+      // destination of nine `context.go('/boats')`-style calls. It now makes
+      // that boat the active one and shows its Today.
       GoRoute(
         path: '/boats/:id',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return BoatDetailScreen(boatId: id);
+          return TodayScreen(boatId: id);
         },
       ),
       GoRoute(
