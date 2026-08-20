@@ -93,6 +93,21 @@ abstract final class Dimens {
   /// column if the column is one.
   static const double rowValueColumn = 96;
 
+  /// How far the floating nav pill sits above the bottom edge, given the
+  /// safe-area inset. The pill eats 10 of the inset on purpose (a home
+  /// indicator already leaves room), so it is not simply `inset`.
+  static double navPillInset(double safeAreaBottom) =>
+      ((safeAreaBottom - 10).clamp(0, double.infinity)) + 2;
+
+  /// The y of the pill's top edge, measured from the bottom.
+  ///
+  /// The scaffold lifts a tab screen's FAB to exactly here, plus a gap. It used
+  /// to lift by [navClearance], which is sized for the *worst case* (a notched
+  /// phone) and applied on every device — so on a phone with no home indicator
+  /// the FAB floated 50 px above the pill and read as stranded mid-screen.
+  static double navPillTop(double safeAreaBottom) =>
+      navPillInset(safeAreaBottom) + bottomNavHeight;
+
   /// Hairline thickness. One physical-ish line, not the 0.5 that disappeared
   /// on some densities.
   static const double hairline = 1;

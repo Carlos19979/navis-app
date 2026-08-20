@@ -51,12 +51,18 @@ class NavisScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     // Tab screens (safeAreaBottom: false) sit under the floating bottom nav,
     // which overlays this scaffold from the shell: an unpadded FAB lands
-    // BEHIND the nav and taps hit the nav's rightmost item instead. Lift it
-    // above the nav clearance (16 = the FAB's own default margin).
+    // BEHIND the nav and taps hit the nav's rightmost item instead.
+    //
+    // Lifted to the pill's actual top edge plus a gap — computed from the same
+    // helper the pill uses, so the two cannot drift. `Dimens.spaceLg` comes off
+    // because that is the FAB's own default margin, already applied by the
+    // Scaffold.
     final fab = floatingActionButton != null && !safeAreaBottom
         ? Padding(
-            padding: const EdgeInsets.only(
-              bottom: Dimens.navClearance - Dimens.spaceLg,
+            padding: EdgeInsets.only(
+              bottom: Dimens.navPillTop(MediaQuery.of(context).padding.bottom) +
+                  Dimens.spaceSm -
+                  Dimens.spaceLg,
             ),
             child: floatingActionButton,
           )

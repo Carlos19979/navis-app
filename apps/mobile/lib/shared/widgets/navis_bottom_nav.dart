@@ -33,8 +33,9 @@ class NavisBottomNav extends ConsumerWidget {
     final isDark = context.isDarkMode;
     // Sit lower by eating into the bottom safe-area inset (clamped so it never
     // goes off-screen on devices without a home indicator).
-    final bottomPadding = (MediaQuery.of(context).padding.bottom - 10)
-        .clamp(0.0, double.infinity);
+    // The shared helper: the scaffold lifts a tab's FAB to this same edge.
+    final bottomPadding =
+        Dimens.navPillInset(MediaQuery.of(context).padding.bottom);
 
     final items = [
       _NavItem(Icons.home_outlined, Icons.home_rounded, l.home),
@@ -59,7 +60,7 @@ class NavisBottomNav extends ConsumerWidget {
           padding: EdgeInsets.only(
             left: Dimens.spaceXl,
             right: Dimens.spaceXl,
-            bottom: bottomPadding + 2,
+            bottom: bottomPadding,
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(Dimens.radiusXxl),
