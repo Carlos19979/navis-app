@@ -122,7 +122,7 @@ void main() {
         findsOneWidget,
       );
 
-      await tester.tap(find.text('Create group'));
+      await tester.tap(find.text('Create club'));
       await pumpScreen(tester);
 
       expect(spy.last, '/groups/new');

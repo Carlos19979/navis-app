@@ -110,8 +110,8 @@ void main() {
       );
       await pumpFrames(tester);
 
-      // Featured events show star icon
-      expect(find.byIcon(Icons.star), findsOneWidget);
+      // The star is inline with the name now, not floating in a glowing disc.
+      expect(find.byIcon(Icons.star_rounded), findsOneWidget);
     });
 
     testWidgets('shows empty state when no events', (tester) async {
@@ -229,8 +229,9 @@ void main() {
       );
       await pumpFrames(tester);
 
+      // Time and place read as one metadata line under the name.
       expect(
-        find.text('Palma de Mallorca'),
+        find.textContaining('Palma de Mallorca'),
         findsOneWidget,
       );
     });

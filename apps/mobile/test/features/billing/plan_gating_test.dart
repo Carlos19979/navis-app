@@ -196,12 +196,9 @@ void main() {
           ],
         ),
       );
-      await pumpScreen(tester);
-
-      await tester.tap(find.text('My groups'));
-      await pumpScreen(tester);
-
-      await tester.tap(find.byTooltip('Create group'));
+      // No tab to open first, and the create button is always on screen.
+      await pumpFrames(tester, frames: 8);
+      await tester.tap(find.byTooltip('Create club'));
       await pumpScreen(tester);
       return spy;
     }

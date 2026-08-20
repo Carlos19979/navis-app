@@ -3629,7 +3629,7 @@ abstract class AppLocalizations {
   /// No description provided for @createGroup.
   ///
   /// In en, this message translates to:
-  /// **'Create group'**
+  /// **'Create club'**
   String get createGroup;
 
   /// No description provided for @groupName.
@@ -3713,13 +3713,13 @@ abstract class AppLocalizations {
   /// No description provided for @notInAnyGroup.
   ///
   /// In en, this message translates to:
-  /// **'You\'re not in any group yet.'**
+  /// **'You\'re not in a club yet.'**
   String get notInAnyGroup;
 
   /// No description provided for @noPublicGroups.
   ///
   /// In en, this message translates to:
-  /// **'No public groups to discover.'**
+  /// **'No public clubs to discover.'**
   String get noPublicGroups;
 
   /// No description provided for @cancelTrip.
@@ -4553,13 +4553,13 @@ abstract class AppLocalizations {
   /// No description provided for @myGroupsTab.
   ///
   /// In en, this message translates to:
-  /// **'My groups'**
+  /// **'My clubs'**
   String get myGroupsTab;
 
   /// No description provided for @discoverTab.
   ///
   /// In en, this message translates to:
-  /// **'Discover'**
+  /// **'Discover clubs'**
   String get discoverTab;
 
   /// No description provided for @pendingLabel.
@@ -4567,6 +4567,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pending'**
   String get pendingLabel;
+
+  /// No description provided for @membersCountShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 member} other{{count} members}}'**
+  String membersCountShort(int count);
 
   /// No description provided for @pendingCountShort.
   ///
@@ -5029,6 +5035,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t complete that. Please try again.'**
   String get moderationFailed;
+
+  /// No description provided for @searchCommunity.
+  ///
+  /// In en, this message translates to:
+  /// **'Search regattas and clubs'**
+  String get searchCommunity;
+
+  /// No description provided for @clubsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Clubs'**
+  String get clubsLabel;
 
   /// No description provided for @searchGroups.
   ///

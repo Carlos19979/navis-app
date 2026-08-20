@@ -1922,7 +1922,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get couldNotCreateGroup => 'No se pudo crear el grupo';
 
   @override
-  String get createGroup => 'Crear grupo';
+  String get createGroup => 'Crear club';
 
   @override
   String get groupName => 'Nombre del grupo';
@@ -1970,10 +1970,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get requestAction => 'Solicitar';
 
   @override
-  String get notInAnyGroup => 'Aún no estás en ningún grupo.';
+  String get notInAnyGroup => 'Todavía no estás en ningún club.';
 
   @override
-  String get noPublicGroups => 'No hay grupos públicos para descubrir.';
+  String get noPublicGroups => 'No hay clubes públicos que descubrir.';
 
   @override
   String get cancelTrip => 'Descartar viaje';
@@ -2423,13 +2423,24 @@ class AppLocalizationsEs extends AppLocalizations {
   String get visibilityLabel => 'Visibilidad';
 
   @override
-  String get myGroupsTab => 'Mis grupos';
+  String get myGroupsTab => 'Mis clubes';
 
   @override
-  String get discoverTab => 'Descubrir';
+  String get discoverTab => 'Descubrir clubes';
 
   @override
   String get pendingLabel => 'Pendiente';
+
+  @override
+  String membersCountShort(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count miembros',
+      one: '1 miembro',
+    );
+    return '$_temp0';
+  }
 
   @override
   String pendingCountShort(int count) {
@@ -2691,6 +2702,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get moderationFailed => 'No se pudo completar. Inténtalo de nuevo.';
+
+  @override
+  String get searchCommunity => 'Buscar regatas y clubes';
+
+  @override
+  String get clubsLabel => 'Clubes';
 
   @override
   String get searchGroups => 'Buscar clubes por nombre…';

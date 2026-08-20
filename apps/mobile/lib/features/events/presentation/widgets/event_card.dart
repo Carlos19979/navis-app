@@ -3,12 +3,19 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import 'package:navis_mobile/app/routes.dart';
+import 'package:navis_mobile/core/theme/app_typography.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/events/domain/entities/event.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
-import 'package:navis_mobile/shared/widgets/navis_card.dart';
 
+/// One regatta in the feed: when, what, where.
+///
+/// The date is the anchor, so it leads — but as *type*, not as a 56 dp gradient
+/// block with its own drop shadow. That block, the star in a glowing disc and
+/// the outlined «interested» pill made three decorated objects per row, and a
+/// screenful of them had no reading order at all.
 class EventCard extends StatelessWidget {
   const EventCard({super.key, required this.event});
 
@@ -18,148 +25,100 @@ class EventCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).toString();
-    return NavisCard(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      onTap: () => context.go(Routes.event(event.id)),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Date box with gradient
-          Container(
-            width: 56,
-            padding: const EdgeInsets.symmetric(vertical: 10),
+    final day = event.startDate.day.toString();
+    final month = DateFormat.MMM(locale).format(event.startDate).toUpperCase();
+
+    return Semantics(
+      button: true,
+      label: event.name,
+      value: [
+        NavisDateUtils.formatDate(event.startDate),
+        event.locationName,
+        if (event.isInterested) l.interested,
+      ].join(', '),
+      child: ExcludeSemantics(
+        child: InkWell(
+          onTap: () => context.go(Routes.event(event.id)),
+          child: DecoratedBox(
             decoration: BoxDecoration(
-              gradient: context.accentGradient,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: context.accent.withValues(alpha: 0.25),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              border: Border(bottom: BorderSide(color: context.hairline)),
             ),
-            child: Column(
-              children: [
-                Text(
-                  '${event.startDate.day}',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
-                Text(
-                  DateFormat.MMM(locale).format(event.startDate).toUpperCase(),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.85),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                      ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 14),
-
-          // Event info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  event.name,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: context.txtPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  NavisDateUtils.formatTime(event.startDate),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: context.txtSecondary,
-                      ),
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.location_on_outlined,
-                      size: 14,
-                      color: context.accent.withValues(alpha: 0.7),
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        event.locationName,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: context.txtSecondary,
-                            ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          // Status indicators
-          Column(
-            children: [
-              if (event.isFeatured)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: context.caution.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: context.caution.withValues(alpha: 0.2),
-                          blurRadius: 6,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: Dimens.spaceLg),
+              child: Row(
+                children: [
+                  // Fixed width so a column of dates aligns; tabular figures so
+                  // «1» and «28» occupy the same space.
+                  SizedBox(
+                    width: 44,
+                    child: Column(
+                      children: [
+                        Text(
+                          day,
+                          style: NavisType.title1.copyWith(color: context.ink),
+                        ),
+                        Text(
+                          month,
+                          style: NavisType.overline.copyWith(
+                            color: context.inkMuted,
+                          ),
                         ),
                       ],
                     ),
-                    child: Icon(
-                      Icons.star,
-                      size: 16,
-                      color: context.caution,
-                      semanticLabel: l.featured,
+                  ),
+                  const SizedBox(width: Dimens.spaceLg),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            if (event.isFeatured) ...[
+                              Icon(
+                                Icons.star_rounded,
+                                size: Dimens.iconSm,
+                                color: context.caution,
+                              ),
+                              const SizedBox(width: 4),
+                            ],
+                            Expanded(
+                              child: Text(
+                                event.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: NavisType.title3.copyWith(
+                                  color: context.ink,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${NavisDateUtils.formatTime(event.startDate)} · '
+                          '${event.locationName}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: NavisType.caption.copyWith(
+                            color: context.inkMuted,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              if (event.isInterested)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: context.positive.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: context.positive.withValues(alpha: 0.3),
-                      width: 0.5,
-                    ),
-                  ),
-                  child: Text(
-                    l.interested,
-                    style: TextStyle(
+                  if (event.isInterested) ...[
+                    const SizedBox(width: Dimens.spaceSm),
+                    Icon(
+                      Icons.check_circle_rounded,
+                      size: Dimens.iconMd,
                       color: context.positive,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
                     ),
-                  ),
-                ),
-            ],
+                  ],
+                ],
+              ),
+            ),
           ),
-        ],
+        ),
       ),
     );
   }

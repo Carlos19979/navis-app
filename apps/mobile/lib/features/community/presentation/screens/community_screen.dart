@@ -5,12 +5,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/app/routes.dart';
+import 'package:navis_mobile/core/theme/app_typography.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
+import 'package:navis_mobile/core/theme/motion.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
 import 'package:navis_mobile/features/community/presentation/providers/group_search_provider.dart';
-import 'package:navis_mobile/features/events/presentation/screens/events_screen.dart';
+import 'package:navis_mobile/features/events/domain/entities/event.dart';
+import 'package:navis_mobile/features/events/presentation/providers/event_provider.dart';
+import 'package:navis_mobile/features/events/presentation/widgets/calendar_view.dart';
+import 'package:navis_mobile/features/events/presentation/widgets/event_card.dart';
 import 'package:navis_mobile/features/groups/domain/entities/group.dart';
 import 'package:navis_mobile/features/groups/presentation/providers/group_provider.dart';
 import 'package:navis_mobile/features/groups/presentation/widgets/group_card.dart';
@@ -18,18 +23,31 @@ import 'package:navis_mobile/features/notifications/presentation/widgets/notific
 import 'package:navis_mobile/features/profile/data/account_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/join_by_code_sheet.dart';
-import 'package:navis_mobile/shared/widgets/navis_empty_state.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_gradient_fab.dart';
 import 'package:navis_mobile/shared/widgets/navis_plan_badge.dart';
 import 'package:navis_mobile/shared/widgets/navis_scaffold.dart';
+import 'package:navis_mobile/shared/widgets/navis_section.dart';
 import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 import 'package:navis_mobile/shared/widgets/navis_text_field.dart';
 
-/// Community tab — merges the regattas feed and the clubs (groups) surface,
-/// flattened into three top tabs (Regattas · My clubs · Discover) so there is
-/// no nested tab bar. Replaces the separate Events and Groups tabs.
+/// Key on the scrollable, so a test can reach the sections below the fold.
+const communityScrollKey = Key('community-scroll');
+
+/// Community: regattas and clubs in **one** feed.
+///
+/// It used to be three sub-tabs (Regattas · My clubs · Discover), which is
+/// three problems. Two of them only showed clubs, so «community» meant
+/// different things depending on which tab you had left it on. The search box
+/// lived inside Discover, so it could not find a club you were already in — the
+/// most likely thing to look for. And the two actions moved: «join by code»
+/// appeared only on the club tabs, and the create-club button with it, so the
+/// same screen offered different doors depending on a tab index nothing on
+/// screen explained.
+///
+/// One scroll, three labelled sections, one search field at the top that
+/// filters *everything*. Nothing here is behind a tab.
 class CommunityScreen extends ConsumerStatefulWidget {
   const CommunityScreen({super.key});
 
@@ -37,20 +55,45 @@ class CommunityScreen extends ConsumerStatefulWidget {
   ConsumerState<CommunityScreen> createState() => _CommunityScreenState();
 }
 
-class _CommunityScreenState extends ConsumerState<CommunityScreen>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabs = TabController(length: 3, vsync: this)
-    ..addListener(() {
-      if (mounted) setState(() {});
-    });
+class _CommunityScreenState extends ConsumerState<CommunityScreen> {
+  static const _debounceDelay = Duration(milliseconds: 300);
+
+  final _controller = TextEditingController();
+  Timer? _debounce;
+
+  /// The trimmed query actually sent to the server, updated on debounce — not
+  /// on every keystroke, which would fire a request per letter.
+  String _query = '';
+
+  /// The regatta section can show its dates as a calendar. It is a different
+  /// *view* of one section, not a tab: the clubs below it stay where they are.
+  bool _calendar = false;
 
   @override
   void dispose() {
-    _tabs.dispose();
+    _debounce?.cancel();
+    _controller.dispose();
     super.dispose();
   }
 
-  bool get _onClubsTab => _tabs.index >= 1;
+  void _onSearchChanged(String value) {
+    // Rebuild now so the clear button tracks the field, but hold the query
+    // until the user stops typing.
+    setState(() {});
+    _debounce?.cancel();
+    _debounce = Timer(_debounceDelay, () {
+      if (!mounted) return;
+      final next = value.trim();
+      if (next == _query) return;
+      setState(() => _query = next);
+    });
+  }
+
+  void _clearSearch() {
+    _debounce?.cancel();
+    _controller.clear();
+    setState(() => _query = '');
+  }
 
   Future<void> _onCreateGroup() async {
     final l = AppLocalizations.of(context)!;
@@ -95,323 +138,318 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
     }
   }
 
+  void _openGroup(Group group) {
+    unawaited(context.push(Routes.group(group.id)));
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    ref.watch(accountProvider); // warm the plan for create-group gating
+    ref.watch(accountProvider); // warm the plan for create-club gating
+
+    final searching = _controller.text.trim().isNotEmpty;
 
     return NavisScaffold(
       title: l.community,
-      appBarBottom: TabBar(
-        controller: _tabs,
-        labelColor: context.accent,
-        unselectedLabelColor: context.txtSecondary,
-        indicatorColor: context.accent,
-        isScrollable: true,
-        tabAlignment: TabAlignment.center,
-        tabs: [
-          Tab(text: l.communityRegattas),
-          Tab(text: l.myGroupsTab),
-          Tab(text: l.discoverTab),
-        ],
-      ),
-      actions: [
-        const NotificationBell(),
-        if (_onClubsTab)
-          Padding(
-            padding: const EdgeInsets.only(right: Dimens.spaceSm),
-            child: TextButton.icon(
-              onPressed: _joinByCode,
-              icon: Icon(
-                Icons.vpn_key_outlined,
-                size: Dimens.iconSm,
-                color: context.accent,
-              ),
-              label: Text(
-                l.joinByCode,
-                style: TextStyle(color: context.accent),
-              ),
-            ),
-          ),
-      ],
+      actions: const [NotificationBell()],
       // Creating a club is Pro. Marked before the tap, like the paid rows on
-      // the boat screen, instead of only finding out via the paywall.
-      floatingActionButton: _onClubsTab
-          ? NavisPlanBadged(
-              label: l.proBadge,
-              show: !ref.watch(effectiveTierProvider).canCreateGroups,
-              child: NavisGradientFab(
-                icon: Icons.add,
-                onPressed: _onCreateGroup,
-                tooltip: l.createGroup,
-              ),
-            )
-          : null,
+      // Today, instead of only finding out via the paywall — and no longer
+      // appearing and disappearing with a tab index.
+      floatingActionButton: NavisPlanBadged(
+        label: l.proBadge,
+        show: !ref.watch(effectiveTierProvider).canCreateGroups,
+        child: NavisGradientFab(
+          icon: Icons.add,
+          onPressed: _onCreateGroup,
+          tooltip: l.createGroup,
+        ),
+      ),
       safeAreaBottom: false,
-      body: TabBarView(
-        controller: _tabs,
-        children: [
-          const EventsBody(),
-          _MyGroupsTab(
-            onCreateGroup: _onCreateGroup,
-            onJoinByCode: _joinByCode,
-            onTap: _openGroup,
-          ),
-          _DiscoverTab(onTap: _openGroup),
-        ],
+      body: RefreshIndicator(
+        color: context.accent,
+        backgroundColor: context.surfaceRaised,
+        onRefresh: () async {
+          ref.invalidate(eventsProvider);
+          ref.invalidate(myGroupsProvider);
+          ref.invalidate(discoverGroupsProvider);
+        },
+        child: ListView(
+          key: communityScrollKey,
+          padding: Insets.gutterWithNav,
+          children: [
+            const SizedBox(height: Dimens.spaceMd),
+            NavisTextField(
+              controller: _controller,
+              hint: l.searchCommunity,
+              prefixIcon: Icons.search_rounded,
+              textInputAction: TextInputAction.search,
+              onChanged: _onSearchChanged,
+              suffix: _controller.text.isEmpty
+                  ? null
+                  : IconButton(
+                      icon: Icon(
+                        Icons.close_rounded,
+                        color: context.inkMuted,
+                      ),
+                      tooltip: l.clearSearch,
+                      onPressed: _clearSearch,
+                    ),
+            ),
+            const SizedBox(height: Dimens.spaceXl),
+            if (searching) ..._searchResults(l) else ..._feed(l),
+          ],
+        ),
       ),
     );
   }
 
-  void _openGroup(Group group) {
-    unawaited(context.push(Routes.group(group.id)));
+  // ── The feed ──────────────────────────────────────────────────────────────
+
+  List<Widget> _feed(AppLocalizations l) {
+    return [
+      _RegattaSection(
+        calendar: _calendar,
+        onToggleCalendar: () => setState(() => _calendar = !_calendar),
+      ).entrance(),
+      const SizedBox(height: Dimens.spaceXl),
+      _ClubSection(
+        title: l.myGroupsTab,
+        state: ref.watch(myGroupsProvider),
+        onRetry: () => ref.invalidate(myGroupsProvider),
+        emptyMessage: l.notInAnyGroup,
+        onTap: _openGroup,
+        action: TextButton.icon(
+          onPressed: _joinByCode,
+          icon: Icon(
+            Icons.vpn_key_outlined,
+            size: Dimens.iconSm,
+            color: context.accent,
+          ),
+          label: Text(l.joinByCode, style: TextStyle(color: context.accent)),
+        ),
+      ).entrance(index: 1),
+      const SizedBox(height: Dimens.spaceXl),
+      _ClubSection(
+        title: l.discoverTab,
+        state: ref.watch(discoverGroupsProvider),
+        onRetry: () => ref.invalidate(discoverGroupsProvider),
+        emptyMessage: l.noPublicGroups,
+        onTap: _openGroup,
+        trailingBuilder: (g) => _JoinButton(group: g),
+      ).entrance(index: 2),
+    ];
+  }
+
+  // ── Searching ─────────────────────────────────────────────────────────────
+
+  List<Widget> _searchResults(AppLocalizations l) {
+    final typed = _controller.text.trim();
+
+    // Regattas are already loaded, so they filter locally and instantly —
+    // there is no server-side search for them and no need for one.
+    final regattas = (ref.watch(eventsProvider).valueOrNull ?? const <Event>[])
+        .where((e) => e.eventType == 'regatta')
+        .where(
+          (e) =>
+              e.name.toLowerCase().contains(typed.toLowerCase()) ||
+              e.locationName.toLowerCase().contains(typed.toLowerCase()),
+        )
+        .toList(growable: false);
+
+    return [
+      if (regattas.isNotEmpty) ...[
+        NavisSectionHeader(label: l.communityRegattas),
+        for (final e in regattas) EventCard(event: e),
+        const SizedBox(height: Dimens.spaceXl),
+      ],
+      NavisSectionHeader(label: l.clubsLabel),
+      if (typed.length < groupSearchMinChars)
+        _Quiet(text: l.groupSearchTypeMore)
+      // Still inside the debounce window: what is on screen belongs to the
+      // previous query, so a skeleton is more honest than stale matches.
+      else if (typed != _query)
+        const NavisShimmer()
+      else
+        _ClubResults(
+          state: ref.watch(groupSearchProvider(_query)),
+          onRetry: () => ref.invalidate(groupSearchProvider(_query)),
+          emptyMessage: l.noGroupsFound,
+          errorMessage: l.groupSearchError,
+          onTap: _openGroup,
+          trailingBuilder: (g) => _JoinButton(group: g),
+        ),
+      if (regattas.isEmpty && typed.length >= groupSearchMinChars)
+        const SizedBox(height: Dimens.spaceXl),
+    ];
   }
 }
 
-/// Clubs the user already belongs to.
-class _MyGroupsTab extends ConsumerWidget {
-  const _MyGroupsTab({
-    required this.onCreateGroup,
-    required this.onJoinByCode,
-    required this.onTap,
+/// Upcoming regattas, as a list or as a month.
+class _RegattaSection extends ConsumerWidget {
+  const _RegattaSection({
+    required this.calendar,
+    required this.onToggleCalendar,
   });
 
-  final VoidCallback onCreateGroup;
-  final VoidCallback onJoinByCode;
-  final void Function(Group) onTap;
+  final bool calendar;
+  final VoidCallback onToggleCalendar;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
-    return _GroupList(
-      state: ref.watch(myGroupsProvider),
-      onRefresh: () => ref.invalidate(myGroupsProvider),
-      emptyIcon: Icons.groups_outlined,
-      emptyMessage: l.notInAnyGroup,
-      emptyActionLabel: l.createGroup,
-      onEmptyAction: onCreateGroup,
-      emptyJoinLabel: l.joinEmptyCta,
-      onEmptyJoin: onJoinByCode,
-      onTap: onTap,
-    );
-  }
-}
+    final state = ref.watch(eventsProvider);
 
-/// Public clubs to join, browsable as a list and searchable by name.
-///
-/// Typing runs a server-side search (debounced 300 ms, same as the port
-/// picker); an empty field falls back to browsing the discover list, so the tab
-/// still works for someone who does not know what they are looking for.
-class _DiscoverTab extends ConsumerStatefulWidget {
-  const _DiscoverTab({required this.onTap});
-
-  final void Function(Group) onTap;
-
-  @override
-  ConsumerState<_DiscoverTab> createState() => _DiscoverTabState();
-}
-
-class _DiscoverTabState extends ConsumerState<_DiscoverTab> {
-  static const _debounceDelay = Duration(milliseconds: 300);
-
-  final _controller = TextEditingController();
-  Timer? _debounce;
-
-  /// The trimmed query actually sent to the server, updated on debounce — not
-  /// on every keystroke, which would fire a request per letter.
-  String _query = '';
-
-  @override
-  void dispose() {
-    _debounce?.cancel();
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _onChanged(String value) {
-    // Rebuild now so the clear button tracks the field, but hold the query
-    // until the user stops typing.
-    setState(() {});
-    _debounce?.cancel();
-    _debounce = Timer(_debounceDelay, () {
-      if (!mounted) return;
-      final next = value.trim();
-      if (next == _query) return;
-      setState(() => _query = next);
-    });
-  }
-
-  void _clear() {
-    _debounce?.cancel();
-    _controller.clear();
-    setState(() => _query = '');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            Dimens.spaceLg,
-            Dimens.spaceMd,
-            Dimens.spaceLg,
-            Dimens.spaceSm,
-          ),
-          child: NavisTextField(
-            controller: _controller,
-            hint: l.searchGroups,
-            prefixIcon: Icons.search,
-            textInputAction: TextInputAction.search,
-            onChanged: _onChanged,
-            suffix: _controller.text.isEmpty
-                ? null
-                : IconButton(
-                    icon: Icon(Icons.close, color: context.txtSecondary),
-                    tooltip: l.clearSearch,
-                    onPressed: _clear,
-                  ),
+        NavisSectionHeader(
+          label: l.communityRegattas,
+          trailing: IconButton(
+            icon: Icon(
+              calendar ? Icons.view_list_rounded : Icons.calendar_month_rounded,
+              size: Dimens.iconMd,
+              color: context.inkMuted,
+            ),
+            tooltip: calendar ? l.communityRegattas : l.eventDate,
+            onPressed: onToggleCalendar,
           ),
         ),
-        Expanded(child: _body(l)),
+        switch (state) {
+          AsyncLoading() => const NavisShimmer(),
+          AsyncError(:final error) => NavisErrorWidget(
+              message: error.toString(),
+              onRetry: () => ref.invalidate(eventsProvider),
+            ),
+          AsyncValue(:final value) => _regattas(
+              context,
+              l,
+              (value ?? const <Event>[])
+                  .where((e) => e.eventType == 'regatta')
+                  .toList(growable: false),
+            ),
+        },
       ],
     );
   }
 
-  Widget _body(AppLocalizations l) {
-    final typed = _controller.text.trim();
-    if (typed.isEmpty) {
-      return _GroupList(
-        state: ref.watch(discoverGroupsProvider),
-        onRefresh: () => ref.invalidate(discoverGroupsProvider),
-        emptyIcon: Icons.travel_explore_outlined,
-        emptyMessage: l.noPublicGroups,
-        onTap: widget.onTap,
-        trailingBuilder: (g) => _JoinButton(group: g),
-      );
+  Widget _regattas(
+    BuildContext context,
+    AppLocalizations l,
+    List<Event> regattas,
+  ) {
+    if (regattas.isEmpty) {
+      // A regatta is scheduled from a club, so «add one» is not something this
+      // section can offer. The clubs are right below, which is the honest way
+      // out — and in one feed they are already on screen.
+      return _Quiet(text: l.noEventsDescription);
     }
-    if (typed.length < groupSearchMinChars) {
-      return Center(
-        child: Text(
-          l.groupSearchTypeMore,
-          style: TextStyle(color: context.txtSecondary),
-        ),
-      );
-    }
-    // Still inside the debounce window: the results on screen belong to the
-    // previous query, so show the skeleton rather than stale matches.
-    if (typed != _query) return const NavisShimmer(itemCount: 4);
-    return _GroupList(
-      state: ref.watch(groupSearchProvider(_query)),
-      onRefresh: () => ref.invalidate(groupSearchProvider(_query)),
-      emptyIcon: Icons.search_off,
-      emptyMessage: l.noGroupsFound,
-      errorMessage: l.groupSearchError,
-      onTap: widget.onTap,
-      trailingBuilder: (g) => _JoinButton(group: g),
+    if (calendar) return CalendarView(events: regattas);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [for (final e in regattas) EventCard(event: e)],
     );
   }
 }
 
-/// Shared body for the three club lists (mine, discover, search results):
-/// loading / error / empty / populated plus pull-to-refresh.
-///
-/// It takes the [state] and a [onRefresh] callback instead of a provider
-/// because the search results come from an autoDispose *family* element, which
-/// is not the same type as the two plain list providers.
-class _GroupList extends StatelessWidget {
-  const _GroupList({
+/// One club list under its heading, with the section's own empty line rather
+/// than a full-screen empty state: in a single feed the other sections are
+/// still there, so taking over the screen would be a lie.
+class _ClubSection extends StatelessWidget {
+  const _ClubSection({
+    required this.title,
     required this.state,
-    required this.onRefresh,
-    required this.emptyIcon,
+    required this.onRetry,
     required this.emptyMessage,
     required this.onTap,
-    this.errorMessage,
-    this.emptyActionLabel,
-    this.onEmptyAction,
-    this.emptyJoinLabel,
-    this.onEmptyJoin,
+    this.action,
     this.trailingBuilder,
   });
 
+  final String title;
   final AsyncValue<List<Group>> state;
-  final VoidCallback onRefresh;
-  final IconData emptyIcon;
+  final VoidCallback onRetry;
   final String emptyMessage;
   final void Function(Group) onTap;
-
-  /// Friendly error copy. Without it the raw exception is shown, which is what
-  /// the two list providers already did.
-  final String? errorMessage;
-  final String? emptyActionLabel;
-  final VoidCallback? onEmptyAction;
-
-  /// Optional secondary "join by code" CTA rendered under the empty state, for
-  /// members who were invited rather than creating their own club.
-  final String? emptyJoinLabel;
-  final VoidCallback? onEmptyJoin;
+  final Widget? action;
   final Widget Function(Group)? trailingBuilder;
 
   @override
   Widget build(BuildContext context) {
-    return state.when(
-      loading: () => const NavisShimmer(itemCount: 4),
-      error: (e, _) => NavisErrorWidget(
-        message: errorMessage ?? e.toString(),
-        onRetry: onRefresh,
-      ),
-      data: (groups) {
-        if (groups.isEmpty) {
-          final empty = NavisEmptyState(
-            icon: emptyIcon,
-            message: emptyMessage,
-            actionLabel: emptyActionLabel,
-            onAction: onEmptyAction,
-          );
-          if (emptyJoinLabel == null || onEmptyJoin == null) return empty;
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Flexible(child: empty),
-              Padding(
-                padding: const EdgeInsets.only(bottom: Dimens.navClearance),
-                child: TextButton.icon(
-                  onPressed: onEmptyJoin,
-                  icon: Icon(
-                    Icons.vpn_key_outlined,
-                    size: Dimens.iconSm,
-                    color: context.accent,
-                  ),
-                  label: Text(
-                    emptyJoinLabel!,
-                    style: TextStyle(color: context.accent),
-                  ),
-                ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        NavisSectionHeader(label: title, trailing: action),
+        _ClubResults(
+          state: state,
+          onRetry: onRetry,
+          emptyMessage: emptyMessage,
+          onTap: onTap,
+          trailingBuilder: trailingBuilder,
+        ),
+      ],
+    );
+  }
+}
+
+class _ClubResults extends StatelessWidget {
+  const _ClubResults({
+    required this.state,
+    required this.onRetry,
+    required this.emptyMessage,
+    required this.onTap,
+    this.errorMessage,
+    this.trailingBuilder,
+  });
+
+  final AsyncValue<List<Group>> state;
+  final VoidCallback onRetry;
+  final String emptyMessage;
+  final void Function(Group) onTap;
+
+  /// Friendly error copy. Without it the raw exception is shown, which is what
+  /// the list providers used to do.
+  final String? errorMessage;
+  final Widget Function(Group)? trailingBuilder;
+
+  @override
+  Widget build(BuildContext context) {
+    return switch (state) {
+      AsyncLoading() => const NavisShimmer(),
+      AsyncError(:final error) => NavisErrorWidget(
+          message: errorMessage ?? error.toString(),
+          onRetry: onRetry,
+        ),
+      AsyncValue(:final value) when (value ?? const []).isEmpty =>
+        _Quiet(text: emptyMessage),
+      AsyncValue(:final value) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final g in value!)
+              GroupCard(
+                group: g,
+                onTap: () => onTap(g),
+                trailing: trailingBuilder?.call(g),
               ),
-            ],
-          );
-        }
-        return RefreshIndicator(
-          color: context.accent,
-          backgroundColor: context.dialogSurface,
-          onRefresh: () async => onRefresh(),
-          child: ListView.builder(
-            padding: const EdgeInsets.fromLTRB(
-              16,
-              12,
-              16,
-              Dimens.navClearance,
-            ),
-            itemCount: groups.length,
-            itemBuilder: (context, i) => GroupCard(
-              group: groups[i],
-              onTap: () => onTap(groups[i]),
-              trailing: trailingBuilder?.call(groups[i]),
-            ),
-          ),
-        );
-      },
+          ],
+        ),
+    };
+  }
+}
+
+/// A section with nothing in it: one muted line, not a full-page empty state.
+class _Quiet extends StatelessWidget {
+  const _Quiet({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: Dimens.spaceMd),
+      child: Text(
+        text,
+        style: NavisType.bodySm.copyWith(color: context.inkMuted),
+      ),
     );
   }
 }
@@ -427,7 +465,7 @@ class _JoinButton extends ConsumerWidget {
     if (group.isPending) {
       return Text(
         l.pendingLabel,
-        style: TextStyle(color: context.caution, fontSize: 13),
+        style: NavisType.caption.copyWith(color: context.inkMuted),
       );
     }
     return TextButton(

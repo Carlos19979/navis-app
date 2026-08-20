@@ -283,6 +283,7 @@ Event makeEvent({
   String organizer = 'RCNP',
   String eventType = 'regatta',
   bool isFeatured = true,
+  DateTime? startDate,
 }) {
   return Event(
     id: id,
@@ -290,7 +291,9 @@ Event makeEvent({
     organizer: organizer,
     eventType: eventType,
     locationName: 'Palma de Mallorca',
-    startDate: DateTime(2026, 7, 31),
+    // A real start hour: at midnight every regatta in a golden read «00:00»,
+    // which is not what a regatta looks like — and the row shows the time.
+    startDate: startDate ?? DateTime(2026, 7, 31, 11, 30),
     endDate: DateTime(2026, 8, 6),
     description: 'Major regatta event',
     isFeatured: isFeatured,
