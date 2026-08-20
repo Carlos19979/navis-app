@@ -129,7 +129,11 @@ void main() {
               routes: [
                 GoRoute(
                   path: '/settings',
-                  builder: (_, __) => const SettingsScreen(),
+                  builder: (_, __) => const Scaffold(
+                    body: SingleChildScrollView(
+                      child: AccountSettingsSections(),
+                    ),
+                  ),
                 ),
                 GoRoute(
                   path: '/login',
@@ -160,15 +164,18 @@ void main() {
         await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
-        expect(find.byType(SettingsScreen), findsOneWidget);
+        expect(find.byType(AccountSettingsSections), findsOneWidget);
       });
 
-      testWidgets('displays Settings title in app bar', (tester) async {
+      testWidgets('shows its section headings', (tester) async {
         setPhoneSize(tester);
         await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
-        expect(find.text('Settings'), findsOneWidget);
+        // There is no «Settings» title any more: these are sections of the
+        // Profile tab, not a screen with a bar of its own.
+        expect(find.text('APPEARANCE'), findsOneWidget);
+        expect(find.text('LANGUAGE'), findsOneWidget);
       });
     });
 
@@ -519,9 +526,11 @@ void main() {
         await tester.tap(find.text('Log Out'));
         await tester.pumpAndSettle();
 
+        // The surviving log-out is the one that unregisters the push device
+        // first, and it confirms with a FilledButton rather than a TextButton.
         final dialogLogout = find.descendant(
           of: find.byType(AlertDialog),
-          matching: find.widgetWithText(TextButton, 'Log Out'),
+          matching: find.widgetWithText(FilledButton, 'Log Out'),
         );
         await tester.tap(dialogLogout);
         await tester.pumpAndSettle();
@@ -695,7 +704,16 @@ void main() {
         await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
-        expect(find.byType(ListView), findsOneWidget);
+        // The sections no longer own the scroll view: they are a column inside
+        // the Profile tab's, so this asserts they are *inside* one rather than
+        // that they are one.
+        expect(
+          find.ancestor(
+            of: find.byType(AccountSettingsSections),
+            matching: find.byType(Scrollable),
+          ),
+          findsWidgets,
+        );
       });
     });
 

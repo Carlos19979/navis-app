@@ -40,7 +40,6 @@ import 'package:navis_mobile/features/logbook/presentation/screens/trip_recordin
 import 'package:navis_mobile/features/logbook/presentation/screens/trip_stats_screen.dart';
 import 'package:navis_mobile/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:navis_mobile/features/profile/presentation/screens/profile_screen.dart';
-import 'package:navis_mobile/features/profile/presentation/screens/settings_screen.dart';
 import 'package:navis_mobile/features/weather/presentation/screens/weather_screen.dart';
 import 'package:navis_mobile/shared/widgets/navis_bottom_nav.dart';
 
@@ -375,9 +374,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           return TripEditScreen(tripId: id);
         },
       ),
+      // Settings folded into the Profile tab: everything it held is inline
+      // there now. The path stays as a redirect because it is a deep link and
+      // an old push target.
       GoRoute(
         path: Routes.settings,
-        builder: (context, state) => const SettingsScreen(),
+        redirect: (context, state) => Routes.profile,
       ),
       // Saved chart areas. Reachable from the chart's download sheet and from
       // Settings, so the storage they cost is never hidden from the user.

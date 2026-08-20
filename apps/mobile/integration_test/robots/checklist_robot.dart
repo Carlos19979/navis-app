@@ -168,18 +168,13 @@ class ChecklistRobot {
     await settings.open();
 
     final title = find.descendant(
-      of: find.byType(SettingsScreen),
+      of: find.byType(AccountSettingsSections),
       matching: find.text('Checklist before setting sail'),
     );
     await tester.scrollUntilVisible(
       title,
       150,
-      scrollable: find
-          .descendant(
-            of: find.byType(SettingsScreen),
-            matching: find.byType(Scrollable),
-          )
-          .first,
+      scrollable: find.byType(Scrollable).first,
     );
     await pumpFor(tester, const Duration(milliseconds: 400));
 

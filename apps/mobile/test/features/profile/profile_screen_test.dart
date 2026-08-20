@@ -10,6 +10,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:navis_mobile/features/profile/data/account_provider.dart';
 
 import '../../helpers/plan.dart';
+import '../../helpers/prefs.dart';
 
 import 'package:navis_mobile/core/analytics/analytics_service.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -63,6 +64,14 @@ Future<void> tapLogout(WidgetTester tester) async {
 }
 
 void main() {
+  /// The settings sections are part of this screen now, and they read persisted
+  /// preferences, so every pump needs an in-memory store.
+  late Override prefs;
+
+  setUp(() async {
+    prefs = await prefsOverride();
+  });
+
   late MockAuthNotifier mockAuthNotifier;
   late MockAuthRepository mockAuthRepository;
   late MockAnalyticsService mockAnalyticsService;
@@ -103,6 +112,9 @@ void main() {
   }) {
     return ProviderScope(
       overrides: [
+        // The settings sections live on this screen now and read the theme,
+        // the locale and the checklist preference.
+        prefs,
         ...overrides,
         profileProvider.overrideWithValue(profile ?? testProfile()),
         authProvider.overrideWith((_) => mockAuthNotifier),
@@ -235,15 +247,15 @@ void main() {
     });
 
     group('menu items', () {
-      testWidgets('displays Settings menu item', (tester) async {
+      testWidgets('shows the settings themselves, not a row to reach them',
+          (tester) async {
         await tester.pumpWidget(buildProfileScreen());
         await tester.pumpAndSettle();
 
-        expect(find.text('Settings'), findsOneWidget);
-        expect(
-          find.byIcon(Icons.settings_outlined),
-          findsOneWidget,
-        );
+        // «Settings» was a row whose only job was to open a screen whose
+        // content is now inline here.
+        expect(find.text('Settings'), findsNothing);
+        expect(find.text('APPEARANCE'), findsOneWidget);
       });
 
       testWidgets('displays Help & Support menu item', (tester) async {
@@ -279,16 +291,16 @@ void main() {
         expect(find.byIcon(Icons.info_outline), findsOneWidget);
       });
 
-      testWidgets('all menu items have chevron trailing icon', (tester) async {
+      testWidgets('the help rows are all still reachable', (tester) async {
         await tester.pumpWidget(buildProfileScreen());
         await tester.pumpAndSettle();
 
-        // Each _ProfileTile has a chevron_right icon: Settings, Help &
-        // Support, Email us, About Navis.
-        expect(
-          find.byIcon(Icons.chevron_right),
-          findsNWidgets(4),
-        );
+        // Was a count of chevron icons, which is a proxy that broke the moment
+        // the settings sections — with chevrons of their own — moved onto this
+        // screen. The rows are what matters.
+        expect(find.text('Help & Support'), findsOneWidget);
+        expect(find.text('Email us'), findsOneWidget);
+        expect(find.text('About Navis'), findsOneWidget);
       });
     });
 
@@ -358,6 +370,7 @@ void main() {
         await tester.pumpWidget(
           ProviderScope(
             overrides: [
+              prefs,
               profileProvider.overrideWithValue(null),
               authProvider.overrideWith((_) => mockAuthNotifier),
               authRepositoryProvider.overrideWithValue(mockAuthRepository),
@@ -390,6 +403,7 @@ void main() {
         await tester.pumpWidget(
           ProviderScope(
             overrides: [
+              prefs,
               profileProvider.overrideWithValue(null),
               authProvider.overrideWith((_) => mockAuthNotifier),
               authRepositoryProvider.overrideWithValue(mockAuthRepository),

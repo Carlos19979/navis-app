@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/config/env.dart';
-import 'package:navis_mobile/core/network/notification_service.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
@@ -15,10 +12,10 @@ import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
 import 'package:navis_mobile/features/profile/data/account_provider.dart';
 import 'package:navis_mobile/features/profile/presentation/providers/profile_provider.dart';
+import 'package:navis_mobile/features/profile/presentation/screens/settings_screen.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
-import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
@@ -39,7 +36,9 @@ class ProfileScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: NavisAppBar(title: l.profile, showBack: true),
+      // No back button: this is a tab root, and one drawn here pops the
+      // shell's whole stack.
+      appBar: NavisAppBar(title: l.profile),
       body: GradientBackground(
         child: SafeArea(
           child: SingleChildScrollView(
@@ -171,21 +170,21 @@ class ProfileScreen extends ConsumerWidget {
 
                 const SizedBox(height: 32),
 
-                // Menu items in glass card
+                // Every setting, inline. It used to be one row away — «Ajustes»
+                // opened a second screen whose content is exactly this, which is
+                // two levels for one thing.
+                const AccountSettingsSections(),
+
+                const SizedBox(height: 12),
+
+                // Help, about and contact. The «Account» block — log out and
+                // the typed-confirmation deletion — comes from the sections
+                // above; keeping this screen's own would have put two of each
+                // on one page.
                 NavisCard(
                   padding: EdgeInsets.zero,
                   child: Column(
                     children: [
-                      _ProfileTile(
-                        icon: Icons.settings_outlined,
-                        title: l.settings,
-                        onTap: () => context.push(Routes.settings),
-                      ),
-                      Divider(
-                        height: 1,
-                        color: context.glassBorderColor.withValues(alpha: 0.3),
-                        indent: 56,
-                      ),
                       // Manage subscription — paid users only; opens the
                       // App Store / Play Store subscription page.
                       Consumer(
@@ -260,55 +259,10 @@ class ProfileScreen extends ConsumerWidget {
                       delay: 250.ms,
                       curve: Curves.easeOutCubic,
                     ),
-
-                const SizedBox(height: 24),
-
-                // Logout button
-                NavisButton(
-                  label: l.logout,
-                  icon: Icons.logout,
-                  variant: NavisButtonVariant.danger,
-                  onPressed: () => _confirmLogout(context, ref),
-                ).animate().fadeIn(
-                      duration: 400.ms,
-                      delay: 350.ms,
-                    ),
               ],
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  void _confirmLogout(BuildContext context, WidgetRef ref) {
-    final l = AppLocalizations.of(context)!;
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l.logout),
-        content: Text(l.logoutConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(l.cancel),
-          ),
-          FilledButton(
-            onPressed: () async {
-              Navigator.of(ctx).pop();
-              final notificationService = ref.read(notificationServiceProvider);
-              await notificationService.unregisterDevice();
-              await ref.read(authProvider.notifier).logout();
-              if (ctx.mounted) {
-                context.go(Routes.login);
-              }
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: context.critical,
-            ),
-            child: Text(l.logout),
-          ),
-        ],
       ),
     );
   }
