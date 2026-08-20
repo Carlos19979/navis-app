@@ -287,7 +287,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   }
 }
 
-class _TodayBody extends ConsumerWidget {
+class _TodayBody extends ConsumerStatefulWidget {
   const _TodayBody({
     required this.boat,
     required this.onAddBoat,
@@ -299,7 +299,32 @@ class _TodayBody extends ConsumerWidget {
   final VoidCallback onJoinBoat;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_TodayBody> createState() => _TodayBodyState();
+}
+
+class _TodayBodyState extends ConsumerState<_TodayBody> {
+  final _scroll = ScrollController();
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final boat = widget.boat;
+
+    // Switching boats rewrites the whole page, so staying where you were means
+    // landing at the bottom of a different boat's Today — on the very list you
+    // just tapped, which reads as "nothing happened". Central listener rather
+    // than a callback per entry point, so the header's picker, the rows below
+    // and a deep link all behave the same.
+    ref.listen(activeBoatIdProvider, (previous, next) {
+      if (previous == next || !_scroll.hasClients) return;
+      _scroll.jumpTo(0);
+    });
+
     return RefreshIndicator(
       color: context.accent,
       onRefresh: () async {
@@ -310,6 +335,7 @@ class _TodayBody extends ConsumerWidget {
       },
       child: ListView(
         key: todayScrollKey,
+        controller: _scroll,
         padding: const EdgeInsets.only(bottom: Dimens.navClearance),
         children: [
           _TodayHeader(boat: boat).entrance(),
@@ -325,8 +351,8 @@ class _TodayBody extends ConsumerWidget {
             _CrewPermissionsBlock(boat: boat).entrance(index: 7),
           _OtherBoatsBlock(
             boat: boat,
-            onAddBoat: onAddBoat,
-            onJoinBoat: onJoinBoat,
+            onAddBoat: widget.onAddBoat,
+            onJoinBoat: widget.onJoinBoat,
           ).entrance(index: 8),
           _DangerBlock(boat: boat).entrance(index: 8),
         ],
@@ -824,8 +850,8 @@ class _SectionsBlock extends ConsumerWidget {
             NavisRow(
               title: l.documents,
               icon: Icons.description_outlined,
-              value: _documentsValue(l, summary),
-              valueTone: _documentsTone(summary),
+              value: documentsValue(l, summary),
+              valueTone: documentsTone(summary),
               onTap: () => context.push('/boats/${boat.id}/documents'),
             ),
             NavisRow(
@@ -906,25 +932,6 @@ class _SectionsBlock extends ConsumerWidget {
     );
   }
 
-  /// Short on purpose: this goes in a chip, and "1 cosa requiere atención"
-  /// wrapped to two lines and turned a status marker into a paragraph.
-  String? _documentsValue(AppLocalizations l, DocumentSummary? summary) {
-    if (summary == null || summary.total == 0) return null;
-    final overdue = summary.expired + summary.critical;
-    if (overdue > 0) return l.alertsCount(overdue);
-    if (summary.warning > 0) return l.alertsCount(summary.warning);
-    return l.readinessAllGood;
-  }
-
-  /// Only what needs a decision gets a filled chip. "Everything in order" is
-  /// quiet muted text: three pills down a list and none of them means anything.
-  NavisTone _documentsTone(DocumentSummary? summary) {
-    if (summary == null || summary.total == 0) return NavisTone.neutral;
-    if (summary.expired + summary.critical > 0) return NavisTone.critical;
-    if (summary.warning > 0) return NavisTone.caution;
-    return NavisTone.neutral;
-  }
-
   /// Paid rows are marked before the tap and gated on it, so the paywall is
   /// never a surprise and the row is never a dead end.
   Future<void> _openGated(
@@ -966,15 +973,7 @@ class _OtherBoatsBlock extends ConsumerWidget {
     return NavisList(
       title: others.isEmpty ? null : l.myBoats,
       children: [
-        for (final other in others)
-          NavisRow(
-            title: other.name,
-            subtitle: localizedBoatType(l, other.type),
-            icon: Icons.sailing_outlined,
-            showChevron: false,
-            onTap: () =>
-                ref.read(activeBoatIdProvider.notifier).select(other.id),
-          ),
+        for (final other in others) _OtherBoatRow(boat: other),
         NavisRow(
           title: l.addBoat,
           icon: Icons.add_rounded,
@@ -1191,6 +1190,57 @@ class _DetailsBlock extends StatelessWidget {
             showChevron: false,
           ),
       ],
+    );
+  }
+}
+
+/// Short on purpose: this goes in a chip, and "1 cosa requiere atención"
+/// wrapped to two lines and turned a status marker into a paragraph.
+String? documentsValue(AppLocalizations l, DocumentSummary? summary) {
+  if (summary == null || summary.total == 0) return null;
+  final overdue = summary.expired + summary.critical;
+  if (overdue > 0) return l.alertsCount(overdue);
+  if (summary.warning > 0) return l.alertsCount(summary.warning);
+  return l.readinessAllGood;
+}
+
+/// Only what needs a decision gets a filled chip. "Everything in order" is
+/// quiet muted text: three pills down a list and none of them means anything.
+NavisTone documentsTone(DocumentSummary? summary) {
+  if (summary == null || summary.total == 0) return NavisTone.neutral;
+  if (summary.expired + summary.critical > 0) return NavisTone.critical;
+  if (summary.warning > 0) return NavisTone.caution;
+  return NavisTone.neutral;
+}
+
+/// One of the boats you are not currently looking at, **with its status**.
+///
+/// The status is the reason this section exists. Without it the row is a second
+/// copy of the header's switcher, and an owner with three boats loses what the
+/// old boat list gave them: seeing at a glance which boat needs them. The
+/// summary is the same provider the list of cards used, so this is no more
+/// network than before.
+class _OtherBoatRow extends ConsumerWidget {
+  const _OtherBoatRow({required this.boat});
+
+  final Boat boat;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
+    final summary = ref.watch(boatDocumentSummaryProvider(boat.id)).valueOrNull;
+    final tone = documentsTone(summary);
+
+    return NavisRow(
+      title: boat.name,
+      subtitle: localizedBoatType(l, boat.type),
+      icon: Icons.sailing_outlined,
+      // Only when something needs doing: a row with nothing pending says so by
+      // carrying no chip at all.
+      value: tone == NavisTone.neutral ? null : documentsValue(l, summary),
+      valueTone: tone,
+      showChevron: false,
+      onTap: () => ref.read(activeBoatIdProvider.notifier).select(boat.id),
     );
   }
 }

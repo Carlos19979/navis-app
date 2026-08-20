@@ -129,6 +129,99 @@ void main() {
     });
   });
 
+  group('with more than one boat', () {
+    final threeBoats = [
+      makeBoat(),
+      makeBoat(id: 'boat-2', name: 'Sea Runner', type: 'motorboat'),
+      makeBoat(id: 'boat-3', name: 'Marea'),
+    ];
+
+    testWidgets('the others are listed with what needs doing on them',
+        (tester) async {
+      setPhoneSize(tester);
+      await tester.pumpWidget(
+        await subject(
+          boats: threeBoats,
+          // Every boat resolves through the same family override, so the two
+          // that are not active carry an alert too — which is the point of the
+          // section: an owner of three boats used to lose this when the list of
+          // cards went away.
+          summary: const DocumentSummary(total: 2, expired: 1, ok: 1),
+        ),
+      );
+      await pumpFrames(tester, frames: 8);
+
+      final labels = await scrollAndCollectText(
+        tester,
+        find.byKey(todayScrollKey),
+      );
+      expect(labels, containsAll(['Sea Runner', 'Marea']));
+      expect(
+        labels.where((t) => t.contains('alert')),
+        isNotEmpty,
+        reason: 'an other-boat row must say when that boat needs attention',
+      );
+    });
+
+    testWidgets('tapping another boat scrolls back to the top', (tester) async {
+      // A real phone viewport, not `setPhoneSize`'s 1080x1920: at that height
+      // the whole page fits and there is no scroll offset to observe.
+      tester.view.physicalSize = const Size(390, 700);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(await subject(boats: threeBoats));
+      await pumpFrames(tester, frames: 8);
+
+      final scrollable = find.byKey(todayScrollKey);
+      final controller = tester.widget<ListView>(scrollable).controller!;
+      await tester.drag(scrollable, const Offset(0, -1200));
+      await pumpFrames(tester, frames: 4);
+      expect(
+        controller.offset,
+        greaterThan(0),
+        reason: 'the other-boat rows sit below the fold',
+      );
+
+      await scrollUntilVisible(tester, find.text('Sea Runner'), todayScrollKey);
+      await tester.tap(find.text('Sea Runner'));
+      await pumpFrames(tester, frames: 8);
+
+      // Otherwise the new boat's Today opens at the bottom, on the very list
+      // that was just tapped, and it reads as if nothing happened.
+      expect(controller.offset, 0);
+    });
+
+    testWidgets('the picker scrolls, so a long crew list cannot overflow it',
+        (tester) async {
+      setPhoneSize(tester);
+      await tester.pumpWidget(
+        await subject(
+          boats: threeBoats,
+          shared: [
+            for (var i = 0; i < 6; i++)
+              makeBoat(id: 'shared-$i', name: 'Compartido $i'),
+          ],
+        ),
+      );
+      await pumpFrames(tester, frames: 8);
+
+      await tester.tap(find.text('Luna Azul').first);
+      await pumpFrames(tester, frames: 8);
+
+      expect(find.text('CHANGE BOAT'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(BottomSheet),
+          matching: find.byType(SingleChildScrollView),
+        ),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+    });
+  });
+
   group('the first screenful answers "can I go out?"', () {
     testWidgets('the readiness score and its status lead the page',
         (tester) async {

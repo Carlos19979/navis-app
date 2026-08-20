@@ -74,8 +74,12 @@ class BoatSwitcher extends ConsumerWidget {
       context: context,
       // The sheet must clear the floating nav pill, which overlays the shell.
       useSafeArea: true,
+      // Scroll-controlled and scrollable: owned boats top out at three, but
+      // *shared* boats have no limit — crew on enough boats and a plain Column
+      // overflowed the sheet's 9/16 height budget.
+      isScrollControlled: true,
       builder: (sheetContext) => SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: Dimens.spaceLg),
           child: NavisList(
             title: l.changeBoat,
