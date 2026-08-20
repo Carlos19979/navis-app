@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/network/notification_service.dart';
+import 'package:navis_mobile/core/theme/app_typography.dart';
+import 'package:navis_mobile/core/theme/motion.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/auth/domain/auth_state.dart';
@@ -161,64 +163,34 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // -- Logo Section --
+                    // The mark, then the wordmark. It used to be a 120 px
+                    // circle with a glass fill, a border and a 40-blur glow
+                    // around the app icon — three treatments on an asset that
+                    // is already a logo.
                     Center(
-                      child: Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: context.glassBg,
-                          border: Border.all(
-                            color: context.glassBorderColor,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: context.accent.withValues(alpha: 0.2),
-                              blurRadius: 40,
-                              spreadRadius: 8,
-                            ),
-                          ],
-                        ),
-                        // No BackdropFilter here. It blurred the app icon
-                        // itself — a static asset, so the blur had nothing to
-                        // reveal and everything to cost, on the first screen
-                        // of the app.
-                        child: ClipOval(
-                          child: Image.asset(
-                            'assets/icon/navis_icon.png',
-                            width: 100,
-                            height: 100,
-                            fit: BoxFit.cover,
-                          ),
+                      child: ClipOval(
+                        child: Image.asset(
+                          'assets/icon/navis_icon.png',
+                          width: 88,
+                          height: 88,
+                          fit: BoxFit.cover,
                         ),
                       ),
-                    ).animate().fadeIn(duration: 600.ms).scale(
-                          begin: const Offset(0.8, 0.8),
-                          end: const Offset(1.0, 1.0),
-                          duration: 600.ms,
-                          curve: Curves.easeOut,
-                        ),
-                    const SizedBox(height: 20),
+                    ).entrance(),
+                    const SizedBox(height: Dimens.spaceLg),
                     Text(
                       'Navis',
                       textAlign: TextAlign.center,
-                      style: textTheme.displayMedium?.copyWith(
-                        color: context.txtPrimary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ).animate().fadeIn(delay: 200.ms, duration: 500.ms),
-                    const SizedBox(height: 4),
+                      style: NavisType.display.copyWith(color: context.ink),
+                    ).entrance(index: 1),
                     Text(
                       l.boatManagement,
                       textAlign: TextAlign.center,
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: context.txtSecondary,
-                        letterSpacing: 2.0,
-                        fontWeight: FontWeight.w400,
+                      style: NavisType.overline.copyWith(
+                        color: context.inkMuted,
                       ),
-                    ).animate().fadeIn(delay: 300.ms, duration: 500.ms),
-                    const SizedBox(height: 48),
+                    ).entrance(index: 2),
+                    const SizedBox(height: Dimens.spaceXxl),
 
                     // -- Error Display --
                     if (authState.errorMessage != null)
@@ -233,7 +205,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                     // -- Email Field --
                     NavisTextField(
-                      circlePrefix: true,
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
@@ -248,18 +219,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         }
                         return null;
                       },
-                    ).animate().fadeIn(delay: 400.ms, duration: 500.ms).slideY(
-                          begin: 0.3,
-                          end: 0,
-                          delay: 400.ms,
-                          duration: 500.ms,
-                          curve: Curves.easeOut,
-                        ),
+                    ).entrance(index: 4),
                     const SizedBox(height: 16),
 
                     // -- Password Field --
                     NavisTextField(
-                      circlePrefix: true,
                       controller: _passwordController,
                       obscureText: _obscurePassword,
                       textInputAction: TextInputAction.done,
@@ -291,13 +255,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         }
                         return null;
                       },
-                    ).animate().fadeIn(delay: 500.ms, duration: 500.ms).slideY(
-                          begin: 0.3,
-                          end: 0,
-                          delay: 500.ms,
-                          duration: 500.ms,
-                          curve: Curves.easeOut,
-                        ),
+                    ).entrance(index: 5),
                     const SizedBox(height: 28),
 
                     // -- Login Button --
@@ -305,13 +263,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       label: l.login,
                       onPressed: _onLogin,
                       isLoading: authState.status == AuthStatus.loading,
-                    ).animate().fadeIn(delay: 600.ms, duration: 500.ms).slideY(
-                          begin: 0.3,
-                          end: 0,
-                          delay: 600.ms,
-                          duration: 500.ms,
-                          curve: Curves.easeOut,
-                        ),
+                    ).entrance(index: 6),
                     const SizedBox(height: 16),
 
                     // -- Divider --
@@ -355,7 +307,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           color: context.accent,
                         ),
                       ),
-                    ).animate().fadeIn(delay: 700.ms, duration: 500.ms),
+                    ).entrance(index: 7),
                     const SizedBox(height: 16),
 
                     // -- Register Link --
@@ -379,7 +331,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                         textAlign: TextAlign.center,
                       ),
-                    ).animate().fadeIn(delay: 800.ms, duration: 500.ms),
+                    ).entrance(index: 8),
                   ],
                 ),
               ),

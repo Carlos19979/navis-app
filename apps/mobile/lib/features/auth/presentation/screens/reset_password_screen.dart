@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/app/routes.dart';
+import 'package:navis_mobile/core/theme/motion.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -95,7 +96,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                         color: context.txtPrimary,
                         fontWeight: FontWeight.w700,
                       ),
-                    ).animate().fadeIn(delay: 100.ms, duration: 500.ms),
+                    ).entrance(index: 1),
                     const SizedBox(height: 8),
                     Text(
                       l.newPasswordSubtitle,
@@ -103,7 +104,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                       style: textTheme.bodyMedium?.copyWith(
                         color: context.txtSecondary,
                       ),
-                    ).animate().fadeIn(delay: 200.ms, duration: 500.ms),
+                    ).entrance(index: 2),
                     const SizedBox(height: 36),
 
                     // -- New Password Field --
@@ -138,7 +139,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                         }
                         return null;
                       },
-                    ).animate().fadeIn(delay: 300.ms, duration: 500.ms),
+                    ).entrance(index: 3),
                     const SizedBox(height: 16),
 
                     // -- Confirm Password Field --
@@ -175,7 +176,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                         }
                         return null;
                       },
-                    ).animate().fadeIn(delay: 400.ms, duration: 500.ms),
+                    ).entrance(index: 4),
                     const SizedBox(height: 28),
 
                     // -- Submit Button --
@@ -183,7 +184,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                       label: l.resetPwSubmit,
                       onPressed: _onSubmit,
                       isLoading: _submitting,
-                    ).animate().fadeIn(delay: 500.ms, duration: 500.ms),
+                    ).entrance(index: 5),
                     const SizedBox(height: 12),
 
                     // The way out. Mandatory now that the flag survives a
@@ -197,7 +198,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                           color: context.txtSecondary,
                         ),
                       ),
-                    ).animate().fadeIn(delay: 600.ms, duration: 500.ms),
+                    ).entrance(index: 6),
                   ],
                 ),
               ),

@@ -18,7 +18,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get register => 'Registrarse';
 
   @override
-  String get email => 'Correo electronico';
+  String get email => 'Correo electrónico';
 
   @override
   String get password => 'Contraseña';
@@ -830,7 +830,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get waveHeight => 'Altura de olas';
 
   @override
-  String get forecast => 'Pronostico';
+  String get forecast => 'Pronóstico';
 
   @override
   String get today => 'Hoy';
@@ -875,7 +875,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get requiredField => 'Este campo es obligatorio';
 
   @override
-  String get invalidEmail => 'Por favor ingresa un correo valido';
+  String get invalidEmail => 'Introduce un correo electrónico válido';
 
   @override
   String get passwordTooShort =>
@@ -1237,7 +1237,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get paywallAutoRenewNotice =>
-      'La suscripción se renueva automáticamente salvo que la canceles en los ajustes de tu cuenta del App Store al menos 24 horas antes del fin del período en curso.';
+      'La suscripción se renueva automáticamente salvo que la canceles en los ajustes de tu cuenta del App Store al menos 24 horas antes del fin del periodo en curso.';
 
   @override
   String aboutVersion(String version) {

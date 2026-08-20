@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
+import 'package:navis_mobile/core/theme/motion.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/auth/domain/auth_state.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
@@ -114,7 +115,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         color: context.txtPrimary,
                         fontWeight: FontWeight.w700,
                       ),
-                    ).animate().fadeIn(delay: 200.ms, duration: 500.ms),
+                    ).entrance(index: 2),
                     const SizedBox(height: 4),
                     Text(
                       l.joinNavisSubtitle,
@@ -124,7 +125,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         letterSpacing: 2.0,
                         fontWeight: FontWeight.w400,
                       ),
-                    ).animate().fadeIn(delay: 300.ms, duration: 500.ms),
+                    ).entrance(index: 3),
                     const SizedBox(height: 48),
 
                     // -- Error Display --
@@ -140,7 +141,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
                     // -- Email Field --
                     NavisTextField(
-                      circlePrefix: true,
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
@@ -155,18 +155,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         }
                         return null;
                       },
-                    ).animate().fadeIn(delay: 400.ms, duration: 500.ms).slideY(
-                          begin: 0.3,
-                          end: 0,
-                          delay: 400.ms,
-                          duration: 500.ms,
-                          curve: Curves.easeOut,
-                        ),
+                    ).entrance(index: 4),
                     const SizedBox(height: 16),
 
                     // -- Password Field --
                     NavisTextField(
-                      circlePrefix: true,
                       controller: _passwordController,
                       obscureText: _obscurePassword,
                       textInputAction: TextInputAction.next,
@@ -197,18 +190,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         }
                         return null;
                       },
-                    ).animate().fadeIn(delay: 500.ms, duration: 500.ms).slideY(
-                          begin: 0.3,
-                          end: 0,
-                          delay: 500.ms,
-                          duration: 500.ms,
-                          curve: Curves.easeOut,
-                        ),
+                    ).entrance(index: 5),
                     const SizedBox(height: 16),
 
                     // -- Confirm Password Field --
                     NavisTextField(
-                      circlePrefix: true,
                       controller: _confirmPasswordController,
                       obscureText: _obscureConfirmPassword,
                       textInputAction: TextInputAction.done,
@@ -241,13 +227,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         }
                         return null;
                       },
-                    ).animate().fadeIn(delay: 600.ms, duration: 500.ms).slideY(
-                          begin: 0.3,
-                          end: 0,
-                          delay: 600.ms,
-                          duration: 500.ms,
-                          curve: Curves.easeOut,
-                        ),
+                    ).entrance(index: 6),
                     const SizedBox(height: 28),
 
                     // -- Register Button --
@@ -255,13 +235,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       label: l.register,
                       onPressed: _onRegister,
                       isLoading: authState.status == AuthStatus.loading,
-                    ).animate().fadeIn(delay: 700.ms, duration: 500.ms).slideY(
-                          begin: 0.3,
-                          end: 0,
-                          delay: 700.ms,
-                          duration: 500.ms,
-                          curve: Curves.easeOut,
-                        ),
+                    ).entrance(index: 7),
                     const SizedBox(height: 24),
 
                     // -- Login Link --
@@ -285,7 +259,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                         textAlign: TextAlign.center,
                       ),
-                    ).animate().fadeIn(delay: 800.ms, duration: 500.ms),
+                    ).entrance(index: 8),
                   ],
                 ),
               ),
