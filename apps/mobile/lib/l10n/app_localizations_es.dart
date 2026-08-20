@@ -72,7 +72,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get edit => 'Editar';
 
   @override
-  String get add => 'Agregar';
+  String get add => 'Añadir';
 
   @override
   String get retry => 'Reintentar';
@@ -714,7 +714,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get photo => 'Foto';
 
   @override
-  String get addPhoto => 'Agregar foto';
+  String get addPhoto => 'Añadir foto';
 
   @override
   String get departure => 'Salida';
@@ -970,7 +970,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get chooseFromGallery => 'Elegir de la galería';
 
   @override
-  String get addScan => 'Agregar escaneo';
+  String get addScan => 'Añadir escaneo';
 
   @override
   String get notesOptional => 'Notas (opcional)';
@@ -1084,7 +1084,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get tripHistory => 'Historial de viajes e iniciar uno nuevo';
 
   @override
-  String get modifyBoatDetails => 'Modificar detalles del barco';
+  String get modifyBoatDetails => 'Editar los datos del barco';
 
   @override
   String get removePermanently => 'Eliminar este barco permanentemente';
@@ -2788,7 +2788,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tripDeleteForbidden =>
-      'No tienes permiso para borrar este viaje. Pídelo al propietario del barco.';
+      'No tienes permiso para eliminar este viaje. Pídelo al propietario del barco.';
 
   @override
   String get tripAlreadyDeleted => 'Este viaje ya no existe';
