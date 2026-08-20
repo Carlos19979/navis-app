@@ -21,6 +21,15 @@ abstract final class Measure {
   static String nauticalMiles(String locale, double value, String unit) =>
       '${_decimals(locale, value, value < 10 ? 1 : 0)} $unit';
 
+  /// A trip's distance: metres below a cable, nautical miles above it.
+  ///
+  /// Replaces `DistanceUtils.formatDistance`, which did the same switch with
+  /// `toStringAsFixed` — so «1.5 NM» kept its decimal point in Spanish — and
+  /// hard-coded `NM`, which is `MN` there.
+  static String distance(String locale, double nm, String nmUnit) => nm < 0.1
+      ? '${_decimals(locale, nm * 1852, 0)} m'
+      : nauticalMiles(locale, nm, nmUnit);
+
   /// Speed over ground: `7,1 kt`.
   static String knots(String locale, double value, String unit) =>
       '${_decimals(locale, value, 1)} $unit';

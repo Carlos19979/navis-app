@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/config/checklist_preference.dart';
+import 'package:navis_mobile/core/theme/app_typography.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/regattas/data/repositories/regatta_repository.dart';
@@ -13,9 +14,9 @@ import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
-import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
+import 'package:navis_mobile/shared/widgets/navis_list.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 
@@ -316,63 +317,74 @@ class _PreTripChecklistScreenState
     required bool showSkipHint,
     required VoidCallback onPrimary,
   }) {
+    final l = AppLocalizations.of(context)!;
+    final checked = items.where((i) => i.isChecked).length;
+
     return Column(
       children: [
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            padding: Insets.gutter.add(
+              const EdgeInsets.symmetric(vertical: Dimens.spaceMd),
+            ),
             children: [
-              for (final item in items)
-                NavisCard(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    children: [
-                      Checkbox(
-                        value: item.isChecked,
-                        activeColor: context.positive,
-                        onChanged: (v) => _toggle(item, v ?? false),
-                      ),
-                      Expanded(
-                        child: Text(
-                          item.label,
-                          style: TextStyle(
-                            color: item.isChecked
-                                ? context.txtSecondary
-                                : context.txtPrimary,
-                            decoration: item.isChecked
-                                ? TextDecoration.lineThrough
-                                : null,
-                          ),
+              // Where you are, in one line and one rule. A checklist read on
+              // deck is scanned, not studied: «5 de 7» answers it before any
+              // row is read, and the rule is a static fill — free at rest.
+              _Progress(checked: checked, total: items.length),
+              const SizedBox(height: Dimens.spaceLg),
+              NavisList(
+                padding: EdgeInsets.zero,
+                children: [
+                  for (final item in items)
+                    NavisRow(
+                      // The whole row toggles: a 48 dp target on a moving boat,
+                      // instead of a 20 dp checkbox.
+                      icon: item.isChecked
+                          ? Icons.check_circle_rounded
+                          : Icons.circle_outlined,
+                      iconColor:
+                          item.isChecked ? context.positive : context.inkFaint,
+                      title: item.label,
+                      done: item.isChecked,
+                      onTap: () => _toggle(item, !item.isChecked),
+                      showChevron: false,
+                      trailing: IconButton(
+                        icon: Icon(
+                          Icons.close_rounded,
+                          size: Dimens.iconSm,
+                          color: context.inkFaint,
                         ),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.close,
-                            size: 18, color: context.txtSecondary),
-                        tooltip: AppLocalizations.of(context)!.delete,
+                        tooltip: l.delete,
                         onPressed: () => _remove(item),
                       ),
-                    ],
-                  ),
-                ),
+                    ),
+                ],
+              ),
             ],
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+          padding: const EdgeInsets.fromLTRB(
+            Dimens.spaceLg,
+            0,
+            Dimens.spaceLg,
+            Dimens.spaceXl,
+          ),
           child: Column(
             children: [
               if (showSkipHint)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.only(bottom: Dimens.spaceSm),
                   child: Text(
-                    AppLocalizations.of(context)!.checklistSkipHint,
+                    l.checklistSkipHint,
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: context.caution, fontSize: 13),
+                    style: NavisType.bodySm.copyWith(color: context.inkMuted),
                   ),
                 ),
               NavisButton(
                 label: primaryLabel,
-                icon: Icons.sailing,
+                icon: Icons.sailing_rounded,
                 isLoading: _busy,
                 isDisabled: _busy,
                 onPressed: onPrimary,
@@ -381,6 +393,65 @@ class _PreTripChecklistScreenState
           ),
         ),
       ],
+    );
+  }
+}
+
+/// «5 de 7», with the same count as a rule underneath it.
+class _Progress extends StatelessWidget {
+  const _Progress({required this.checked, required this.total});
+
+  final int checked;
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final fraction = total == 0 ? 0.0 : checked / total;
+    final complete = total > 0 && checked == total;
+
+    return Semantics(
+      label: l.checklistProgress(checked.toString(), total.toString()),
+      child: ExcludeSemantics(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    l.checklistProgress(
+                      checked.toString(),
+                      total.toString(),
+                    ),
+                    style: NavisType.overline.copyWith(
+                      color: context.inkMuted,
+                    ),
+                  ),
+                ),
+                if (complete)
+                  Icon(
+                    Icons.check_circle_rounded,
+                    size: Dimens.iconSm,
+                    color: context.positive,
+                  ),
+              ],
+            ),
+            const SizedBox(height: Dimens.spaceSm),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(Dimens.hairline * 2),
+              child: LinearProgressIndicator(
+                value: fraction,
+                minHeight: 3,
+                backgroundColor: context.surfaceSunken,
+                valueColor: AlwaysStoppedAnimation(
+                  complete ? context.positiveFill : context.accentFill,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:navis_mobile/core/theme/app_theme.dart';
+import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 
 import '../helpers/map_noise.dart';
@@ -52,6 +53,11 @@ Future<void> pumpGolden(
   // Cosmetic, and already the exact set this filter tolerates.
   installTileNoiseFilter();
   stubPathProvider();
+  // What `NavisApp.builder` does at startup. Without it `DateFormat`
+  // falls back to en_US and every golden shows «26 Apr 2026» while the
+  // rest of the frame is in Spanish — a bug in the *shot*, not the app,
+  // and the kind that makes a real one invisible.
+  NavisDateUtils.useLocale(locale);
 
   tester.view.physicalSize = size * tester.view.devicePixelRatio;
   tester.view.devicePixelRatio = 1.0;

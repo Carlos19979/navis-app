@@ -111,7 +111,10 @@ class NavisMetricGrid extends StatelessWidget {
         Row(
           children: [
             for (var j = 0; j < columns; j++) ...[
-              if (j > 0)
+              // Only between two real figures: a last row with one metric in it
+              // was drawing a rule against an empty cell, which read as a
+              // missing value rather than as no value.
+              if (j > 0 && j < slice.length)
                 Container(
                   width: Dimens.hairline,
                   height: 40,

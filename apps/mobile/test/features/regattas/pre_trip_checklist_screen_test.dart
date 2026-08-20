@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'package:navis_mobile/shared/widgets/navis_list.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -17,6 +19,15 @@ import 'package:navis_mobile/shared/widgets/navis_loading.dart';
 import '../../helpers/helpers.dart';
 
 class _MockRegattaRepository extends Mock implements RegattaRepository {}
+
+/// How many checklist items are on screen.
+///
+/// The items are [NavisRow]s now, not `Checkbox`es: the whole row toggles, so
+/// the target is 48 dp instead of 20 on a moving boat. Counting rows also stops
+/// the prompt dialog's own «remember my choice» checkbox from being counted as
+/// an item, which is what the old finder did.
+int checklistRows(WidgetTester tester) =>
+    find.byType(NavisRow).evaluate().length;
 
 void main() {
   setUpAll(() {
@@ -80,7 +91,7 @@ void main() {
       await tester.pumpWidget(await buildLocal());
       await pumpScreen(tester);
 
-      expect(find.byType(Checkbox), findsNWidgets(10));
+      expect(checklistRows(tester), 10);
       expect(
         find.text('Lifejackets for the whole crew'),
         findsOneWidget,
@@ -98,7 +109,7 @@ void main() {
       await tester.tap(find.text('Add'));
       await pumpScreen(tester);
 
-      expect(find.byType(Checkbox), findsNWidgets(11));
+      expect(checklistRows(tester), 11);
       expect(find.text('Extra water'), findsOneWidget);
     });
 
@@ -110,7 +121,7 @@ void main() {
       await tester.tap(find.byTooltip('Delete').first);
       await pumpScreen(tester);
 
-      expect(find.byType(Checkbox), findsNWidgets(9));
+      expect(checklistRows(tester), 9);
       expect(
         find.text('Lifejackets for the whole crew'),
         findsNothing,
@@ -187,7 +198,7 @@ void main() {
       await tester.tap(find.text('Review checklist'));
       await pumpScreen(tester);
 
-      expect(find.byType(Checkbox), findsNWidgets(10));
+      expect(checklistRows(tester), 10);
       expect(spy.locations, isEmpty);
     });
 
@@ -201,7 +212,7 @@ void main() {
       await pumpScreen(tester);
 
       expect(spy.last, '/boats/b1/record?autostart=true');
-      expect(find.byType(Checkbox), findsNothing);
+      expect(checklistRows(tester), 0);
     });
 
     testWidgets('remembering Skip persists the choice', (tester) async {
@@ -241,7 +252,7 @@ void main() {
       await pumpScreen(tester);
 
       expect(find.text('Review checklist'), findsNothing);
-      expect(find.byType(Checkbox), findsNothing);
+      expect(checklistRows(tester), 0);
       expect(spy.last, '/boats/b1/record?autostart=true');
     });
 
@@ -253,7 +264,7 @@ void main() {
       await pumpScreen(tester);
 
       expect(find.text('Review checklist'), findsNothing);
-      expect(find.byType(Checkbox), findsNWidgets(10));
+      expect(checklistRows(tester), 10);
       expect(spy.locations, isEmpty);
     });
   });
@@ -311,12 +322,12 @@ void main() {
       await tester.pumpWidget(buildRegatta(items: [makeItem()]));
       await pumpScreen(tester);
 
-      await tester.tap(find.byType(Checkbox));
+      await tester.tap(find.byType(NavisRow));
       await pumpScreen(tester);
 
       verify(() => mockRepo.setChecklistItem(tripId, 'c1', true)).called(1);
       expect(
-        tester.widget<Checkbox>(find.byType(Checkbox)).value,
+        tester.widget<NavisRow>(find.byType(NavisRow)).done,
         isTrue,
       );
     });
@@ -329,11 +340,11 @@ void main() {
       await tester.pumpWidget(buildRegatta(items: [makeItem()]));
       await pumpScreen(tester);
 
-      await tester.tap(find.byType(Checkbox));
+      await tester.tap(find.byType(NavisRow));
       await pumpScreen(tester);
 
       expect(
-        tester.widget<Checkbox>(find.byType(Checkbox)).value,
+        tester.widget<NavisRow>(find.byType(NavisRow)).done,
         isFalse,
       );
       expectSnackbar(tester, 'Could not update');

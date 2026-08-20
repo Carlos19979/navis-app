@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/app/routes.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
+import 'package:navis_mobile/core/theme/motion.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
+import 'package:navis_mobile/features/boat/presentation/boat_actions.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
 import 'package:navis_mobile/features/logbook/presentation/widgets/stats_summary.dart';
@@ -58,54 +60,51 @@ class LogbookScreen extends ConsumerWidget {
                 ref.invalidate(boatTripsProvider(boatId));
               },
               child: ListView.builder(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                padding: Insets.gutterWithNav.add(
+                  const EdgeInsets.only(top: Dimens.spaceLg),
+                ),
                 itemCount: trips.length + 1,
                 itemBuilder: (context, index) {
                   if (index == 0) {
                     return Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: StatsSummary(stats: stats)
-                          .animate()
-                          .fadeIn(duration: 400.ms)
-                          .slideY(
-                            begin: -0.1,
-                            end: 0,
-                            duration: 400.ms,
-                          ),
+                      padding: const EdgeInsets.only(bottom: Dimens.spaceXl),
+                      child: StatsSummary(stats: stats).entrance(),
                     );
                   }
+                  // The shared entrance, which caps its stagger: this list was
+                  // the reason the cap exists — at `100ms * index` the
+                  // thirty-first trip waited three seconds and a scroll to
+                  // item 60 met a blank list.
                   return TripCard(trip: trips[index - 1])
-                      .animate()
-                      .fadeIn(
-                        delay: (100 * index).ms,
-                        duration: 400.ms,
-                      )
-                      .slideX(
-                        begin: 0.05,
-                        end: 0,
-                        delay: (100 * index).ms,
-                        duration: 400.ms,
-                        curve: Curves.easeOut,
-                      );
+                      .entrance(index: index);
                 },
               ),
             );
           },
         ),
-        floatingActionButton: (ref
-                    .watch(boatProvider(boatId))
-                    .valueOrNull
-                    ?.permissions
-                    .canRecordTrips ??
-                true)
-            ? NavisGradientFab(
-                icon: Icons.play_arrow,
-                onPressed: () => context.push(Routes.boatPrecheck(boatId)),
-                tooltip: l.startTrip,
-                heroTag: 'record_trip',
-                label: l.startTrip,
-              )
-            : null,
+        floatingActionButton: switch (ref.watch(boatProvider(boatId))) {
+          // Through the shared action, so this button behaves like the other
+          // three: it says «resume» and returns to the trip in progress
+          // instead of walking the checklist again.
+          AsyncData(:final value) when BoatActions.canSail(value) =>
+            NavisGradientFab(
+              icon: Icons.play_arrow_rounded,
+              onPressed: () => BoatActions.sail(context, ref, value),
+              tooltip: BoatActions.sailLabel(l, ref),
+              heroTag: 'record_trip',
+              label: BoatActions.sailLabel(l, ref),
+            ),
+          // Still loading: the permission is unknown, and a FAB that appears a
+          // frame later is better than one that has to be taken away.
+          AsyncLoading() => NavisGradientFab(
+              icon: Icons.play_arrow_rounded,
+              onPressed: () => context.push(Routes.boatPrecheck(boatId)),
+              tooltip: l.startTrip,
+              heroTag: 'record_trip',
+              label: l.startTrip,
+            ),
+          _ => null,
+        },
       ),
     );
   }

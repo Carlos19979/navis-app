@@ -664,7 +664,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get nauticalMiles => 'MN';
 
   @override
-  String get knots => 'nudos';
+  String get knots => 'kt';
 
   @override
   String get kilometers => 'km';
@@ -724,6 +724,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get arrival => 'Llegada';
 
   @override
+  String get tripRoute => 'Ruta';
+
+  @override
   String get distance => 'Distancia';
 
   @override
@@ -750,7 +753,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sailWindowAdverseHint => 'Mejor esperar a que baje.';
 
   @override
-  String get startTrip => 'Iniciar viaje';
+  String get startTrip => 'Zarpar';
 
   @override
   String get stopTrip => 'Detener Viaje';
@@ -895,7 +898,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get logbook => 'Bitácora';
 
   @override
-  String get tripDetails => 'Detalles del Viaje';
+  String get tripDetails => 'Detalles del viaje';
 
   @override
   String get editBoat => 'Editar barco';
@@ -2117,6 +2120,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get couldNotStart => 'No se pudo iniciar';
+
+  @override
+  String checklistProgress(String checked, String total) {
+    return '$checked de $total listos';
+  }
 
   @override
   String get checklistSkipHint =>

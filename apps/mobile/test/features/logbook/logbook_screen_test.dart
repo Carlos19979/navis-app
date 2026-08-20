@@ -74,8 +74,9 @@ void main() {
       await pumpFrames(tester);
 
       expect(find.byType(TripCard), findsNWidgets(2));
-      expect(find.text('Palma de Mallorca'), findsOneWidget);
-      expect(find.text('Barcelona'), findsOneWidget);
+      // One line now, arrow included, instead of one Text per port.
+      expect(find.textContaining('Palma de Mallorca'), findsWidgets);
+      expect(find.textContaining('Barcelona'), findsWidgets);
     });
 
     testWidgets('shows stats summary when trips exist', (tester) async {
@@ -277,8 +278,8 @@ void main() {
       final tripCard = find.byType(TripCard);
       expect(tripCard, findsOneWidget);
 
-      // TripCard renders departure port text
-      expect(find.text('Palma de Mallorca'), findsOneWidget);
+      // The route reads as one line now, arrow included.
+      expect(find.textContaining('Palma de Mallorca'), findsWidgets);
     });
 
     testWidgets('FAB is hidden when the member cannot record trips',

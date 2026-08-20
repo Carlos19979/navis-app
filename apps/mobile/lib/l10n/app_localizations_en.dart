@@ -721,6 +721,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get arrival => 'Arrival';
 
   @override
+  String get tripRoute => 'Route';
+
+  @override
   String get distance => 'Distance';
 
   @override
@@ -2099,6 +2102,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get couldNotStart => 'Could not start';
+
+  @override
+  String checklistProgress(String checked, String total) {
+    return '$checked of $total ready';
+  }
 
   @override
   String get checklistSkipHint =>

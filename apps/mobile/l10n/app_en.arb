@@ -333,6 +333,7 @@
   "addPhoto": "Add Photo",
   "departure": "Departure",
   "arrival": "Arrival",
+  "tripRoute": "Route",
   "distance": "Distance",
   "duration": "Duration",
   "maxSpeed": "Max Speed",
@@ -910,6 +911,13 @@
   "couldNotAdd": "Could not add",
   "couldNotUpdate": "Could not update",
   "couldNotStart": "Could not start",
+  "checklistProgress": "{checked} of {total} ready",
+  "@checklistProgress": {
+    "placeholders": {
+      "checked": { "type": "String" },
+      "total": { "type": "String" }
+    }
+  },
   "checklistSkipHint": "We recommend checking every safety item, but you may set sail anyway at your own responsibility.",
   "checklistLifejackets": "Lifejackets for the whole crew",
   "checklistFlares": "Flares and pyrotechnic signals in date",

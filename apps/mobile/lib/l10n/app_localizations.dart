@@ -1364,6 +1364,12 @@ abstract class AppLocalizations {
   /// **'Arrival'**
   String get arrival;
 
+  /// No description provided for @tripRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Route'**
+  String get tripRoute;
+
   /// No description provided for @distance.
   ///
   /// In en, this message translates to:
@@ -3997,6 +4003,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not start'**
   String get couldNotStart;
+
+  /// No description provided for @checklistProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{checked} of {total} ready'**
+  String checklistProgress(String checked, String total);
 
   /// No description provided for @checklistSkipHint.
   ///

@@ -36,6 +36,7 @@ class NavisRow extends StatelessWidget {
     this.onTap,
     this.showChevron,
     this.dense = false,
+    this.done = false,
   });
 
   final String title;
@@ -79,6 +80,11 @@ class NavisRow extends StatelessWidget {
 
   final bool dense;
 
+  /// Renders the label struck through and muted: a checklist item that has been
+  /// ticked, a task already serviced. The row stays tappable — done is a state,
+  /// not a disabled control.
+  final bool done;
+
   @override
   Widget build(BuildContext context) {
     final chevron = showChevron ?? (onTap != null);
@@ -113,8 +119,14 @@ class NavisRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(title,
-                      style: NavisType.title3.copyWith(color: context.ink)),
+                  Text(
+                    title,
+                    style: NavisType.title3.copyWith(
+                      color: done ? context.inkMuted : context.ink,
+                      decoration: done ? TextDecoration.lineThrough : null,
+                      decorationColor: context.inkFaint,
+                    ),
+                  ),
                   if (subtitle != null) ...[
                     const SizedBox(height: 2),
                     Text(

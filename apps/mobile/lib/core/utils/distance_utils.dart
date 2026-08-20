@@ -1,5 +1,8 @@
 import 'dart:math';
 
+/// Distance and speed **maths**. The formatting moved to [Measure] — these two
+/// printed `toStringAsFixed`, which writes a decimal point in every language,
+/// and hard-coded `NM`/`kt` where Spanish uses `MN`.
 class DistanceUtils {
   DistanceUtils._();
 
@@ -34,18 +37,4 @@ class DistanceUtils {
   }
 
   static double _toRadians(double degrees) => degrees * pi / 180;
-
-  static String formatDistance(double nm) {
-    if (nm < 0.1) {
-      return '${(nm * 1852).toStringAsFixed(0)} m';
-    }
-    if (nm < 10) {
-      return '${nm.toStringAsFixed(1)} NM';
-    }
-    return '${nm.toStringAsFixed(0)} NM';
-  }
-
-  static String formatSpeed(double knots) {
-    return '${knots.toStringAsFixed(1)} kt';
-  }
 }
