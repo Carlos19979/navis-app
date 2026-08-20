@@ -174,7 +174,7 @@ void main() {
 
       await openExpensesTab(tester);
 
-      expect(find.text('No expenses in this period'), findsOneWidget);
+      expect(find.text('No expenses recorded'), findsOneWidget);
 
       await finish(tester);
     });

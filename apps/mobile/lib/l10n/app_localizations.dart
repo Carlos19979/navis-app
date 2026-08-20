@@ -5539,6 +5539,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Boat data'**
   String get boatData;
+
+  /// No description provided for @exploreClubs.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore clubs'**
+  String get exploreClubs;
+
+  /// No description provided for @noEventsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Regattas are scheduled by a club. Join one, or start your own.'**
+  String get noEventsDescription;
+
+  /// No description provided for @seeAllExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'See the whole history'**
+  String get seeAllExpenses;
+
+  /// No description provided for @expensesEmptyPeriodDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'There may be entries in another period.'**
+  String get expensesEmptyPeriodDescription;
 }
 
 class _AppLocalizationsDelegate

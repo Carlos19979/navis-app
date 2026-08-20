@@ -1138,10 +1138,7 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
         if (scoped.isEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 40),
-            child: NavisEmptyState(
-              icon: Icons.receipt_long_outlined,
-              message: l.expensesNoneInPeriod,
-            ),
+            child: _emptyPeriod(l, items),
           )
         else if (_period.isWholeYear)
           ..._monthBreakdown(context, l, scoped)
@@ -1150,6 +1147,50 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
             _expenseCard(context, l, e, splits, canManage),
       ],
     );
+  }
+
+  /// An empty *period* is not an empty ledger.
+  ///
+  /// This is the one empty state in the app whose way out is not «add one»: the
+  /// entries may well exist, just not in the month being looked at. So the
+  /// action widens the window to somewhere that has something — the whole year
+  /// first, and failing that the most recent year with any entry at all.
+  Widget _emptyPeriod(AppLocalizations l, List<Expense> items) {
+    if (items.isEmpty) {
+      // Genuinely nothing, ever. Then «add one» *is* the answer.
+      return NavisEmptyState(
+        icon: Icons.receipt_long_outlined,
+        message: l.noExpensesRecorded,
+        actionLabel: l.newExpense,
+        onAction: () => _editExpense(context, ref),
+      );
+    }
+
+    final wider = _widerPeriodWithData(items);
+    return NavisEmptyState(
+      icon: Icons.receipt_long_outlined,
+      message: l.expensesNoneInPeriod,
+      description: l.expensesEmptyPeriodDescription,
+      actionLabel: wider == null ? null : l.seeAllExpenses,
+      onAction: wider == null ? null : () => setState(() => _period = wider),
+    );
+  }
+
+  /// The nearest period that actually holds something: this year in full, else
+  /// the most recent year with an entry. Null when the current period is
+  /// already the whole of the only year with data.
+  ExpensePeriod? _widerPeriodWithData(List<Expense> items) {
+    if (!_period.isWholeYear) {
+      final year = ExpensePeriod.wholeYear(_period.year);
+      if (items.any((e) => year.contains(e.incurredOn))) return year;
+    }
+    final years = items.map((e) => e.incurredOn.year).toSet().toList()..sort();
+    for (final year in years.reversed) {
+      if (year != _period.year || !_period.isWholeYear) {
+        return ExpensePeriod.wholeYear(year);
+      }
+    }
+    return null;
   }
 
   /// The period control: one tap opens the month/year picker.

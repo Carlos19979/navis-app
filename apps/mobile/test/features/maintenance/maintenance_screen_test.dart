@@ -657,13 +657,39 @@ void main() {
       await tester.pump(const Duration(seconds: 5));
     });
 
-    testWidgets('empty shows the no-expenses state', (tester) async {
+    testWidgets('a ledger with nothing in it offers adding one',
+        (tester) async {
       setPhoneSize(tester);
       await tester.pumpWidget(buildSubject());
       await pumpScreen(tester);
       await openExpensesTab(tester);
 
+      // Not "none in this period": that implies there are some elsewhere, and
+      // it left the only truly empty state in the app without a way out.
+      expect(find.text('No expenses recorded'), findsOneWidget);
+      expect(find.text('New expense'), findsWidgets);
+
+      await drain(tester);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('an empty period offers widening it, not adding',
+        (tester) async {
+      setPhoneSize(tester);
+      // Entries exist, just not in the month the ledger opens on. Widening is
+      // the answer; "add one" would be advice to duplicate what is already
+      // there.
+      final lastYear = DateTime(DateTime.now().year - 1, 6, 12);
+      await tester.pumpWidget(
+        buildSubject(
+          expenses: () async => [makeExpense(incurredOn: lastYear)],
+        ),
+      );
+      await pumpScreen(tester);
+      await openExpensesTab(tester);
+
       expect(find.text('No expenses in this period'), findsOneWidget);
+      expect(find.text('See the whole history'), findsOneWidget);
 
       await drain(tester);
       await tester.pump(const Duration(seconds: 5));

@@ -1,3 +1,5 @@
+import 'package:go_router/go_router.dart';
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 
 import 'package:flutter/material.dart';
@@ -63,9 +65,15 @@ class _EventsBodyState extends ConsumerState<EventsBody> {
             );
 
         if (regattas.isEmpty) {
+          // A regatta is scheduled from a club, so "add one" is not a
+          // thing this screen can offer. Sending them to the clubs is the only
+          // honest way out of an empty feed.
           return NavisEmptyState(
             icon: Icons.event_outlined,
             message: l.noEvents,
+            description: l.noEventsDescription,
+            actionLabel: l.exploreClubs,
+            onAction: () => context.go(Routes.community),
           );
         }
 

@@ -1332,5 +1332,9 @@
   "alertsCount": "{count, plural, =1{1 alert} other{{count} alerts}}",
   "@alertsCount": {"placeholders": {"count": {"type": "int"}}},
   "otherBoatsNeedAttention": "another boat needs attention",
-  "boatData": "Boat data"
+  "boatData": "Boat data",
+  "exploreClubs": "Explore clubs",
+  "noEventsDescription": "Regattas are scheduled by a club. Join one, or start your own.",
+  "seeAllExpenses": "See the whole history",
+  "expensesEmptyPeriodDescription": "There may be entries in another period."
 }

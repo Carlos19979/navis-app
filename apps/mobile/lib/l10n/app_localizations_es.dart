@@ -3002,4 +3002,18 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get boatData => 'Datos del barco';
+
+  @override
+  String get exploreClubs => 'Explorar clubes';
+
+  @override
+  String get noEventsDescription =>
+      'Las regatas las programa un club. Únete a uno, o crea el tuyo.';
+
+  @override
+  String get seeAllExpenses => 'Ver todo el histórico';
+
+  @override
+  String get expensesEmptyPeriodDescription =>
+      'Puede haber apuntes en otro periodo.';
 }

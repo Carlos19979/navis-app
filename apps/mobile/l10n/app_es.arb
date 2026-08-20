@@ -1208,5 +1208,9 @@
   "alertsCount": "{count, plural, =1{1 aviso} other{{count} avisos}}",
   "@alertsCount": {"placeholders": {"count": {"type": "int"}}},
   "otherBoatsNeedAttention": "otro barco requiere atención",
-  "boatData": "Datos del barco"
+  "boatData": "Datos del barco",
+  "exploreClubs": "Explorar clubes",
+  "noEventsDescription": "Las regatas las programa un club. Únete a uno, o crea el tuyo.",
+  "seeAllExpenses": "Ver todo el histórico",
+  "expensesEmptyPeriodDescription": "Puede haber apuntes en otro periodo."
 }

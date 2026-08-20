@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import 'package:go_router/go_router.dart';
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/logbook/domain/entities/trip.dart';
@@ -57,6 +59,8 @@ class TripStatsScreen extends ConsumerWidget {
                 icon: Icons.insights_outlined,
                 message: l.noTrips,
                 description: l.statsEmptyDescription,
+                actionLabel: l.recordTrip,
+                onAction: () => context.push(Routes.boatPrecheck(boatId)),
               );
             }
             return _StatsBody(trips: trips);
