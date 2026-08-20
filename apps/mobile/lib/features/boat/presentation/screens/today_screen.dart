@@ -9,6 +9,7 @@ import 'package:navis_mobile/core/theme/app_typography.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/motion.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
+import 'package:navis_mobile/core/theme/tone.dart';
 import 'package:navis_mobile/features/anchor/presentation/providers/anchor_watch_provider.dart';
 import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
@@ -47,6 +48,7 @@ import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_list.dart';
 import 'package:navis_mobile/shared/widgets/navis_ring.dart';
 import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
+import 'package:navis_mobile/shared/widgets/navis_status_chip.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 
 /// Key on the scrollable, so tests and robots can scroll Today without
@@ -692,12 +694,10 @@ class _Action extends StatelessWidget {
                     ),
                   ),
                   if (badge != null) ...[
-                    const SizedBox(width: Dimens.spaceXs),
-                    Text(
-                      badge!,
-                      style: NavisType.overline.copyWith(
-                        color: context.caution,
-                      ),
+                    const SizedBox(width: Dimens.spaceSm),
+                    NavisStatusChip(
+                      label: badge!,
+                      tone: NavisTone.caution,
                     ),
                   ],
                 ],
@@ -756,9 +756,9 @@ class _ComingUpBlock extends ConsumerWidget {
           NavisRow(
             title: readinessItemTitle(l, item),
             value: readinessDaysLabel(l, item),
-            valueColor: item.status == ReadinessStatus.notReady
-                ? context.critical
-                : context.caution,
+            valueTone: item.status == ReadinessStatus.notReady
+                ? NavisTone.critical
+                : NavisTone.caution,
             icon: Icons.circle,
             iconColor: item.status == ReadinessStatus.notReady
                 ? context.criticalFill
@@ -824,8 +824,8 @@ class _SectionsBlock extends ConsumerWidget {
             NavisRow(
               title: l.documents,
               icon: Icons.description_outlined,
-              value: _documentsValue(context, l, summary),
-              valueColor: _documentsColor(context, summary),
+              value: _documentsValue(l, summary),
+              valueTone: _documentsTone(summary),
               onTap: () => context.push('/boats/${boat.id}/documents'),
             ),
             NavisRow(
@@ -847,7 +847,7 @@ class _SectionsBlock extends ConsumerWidget {
               title: l.costTitle,
               icon: Icons.insights_rounded,
               value: tier.canCostAnalytics ? null : l.proBadge,
-              valueColor: context.caution,
+              valueTone: NavisTone.caution,
               onTap: () => _openGated(
                 context,
                 ref,
@@ -861,7 +861,7 @@ class _SectionsBlock extends ConsumerWidget {
                 title: l.bookingsTitle,
                 icon: Icons.calendar_month_outlined,
                 value: tier.canSharedCoordination ? null : l.proBadge,
-                valueColor: context.caution,
+                valueTone: NavisTone.caution,
                 onTap: () => _openGated(
                   context,
                   ref,
@@ -880,7 +880,7 @@ class _SectionsBlock extends ConsumerWidget {
                 title: l.passportExport,
                 icon: Icons.picture_as_pdf_outlined,
                 value: tier.canExportPassport ? null : l.proBadge,
-                valueColor: context.caution,
+                valueTone: NavisTone.caution,
                 onTap: () => unawaited(exportBoatPassport(context, ref, boat)),
               ),
               NavisRow(
@@ -906,25 +906,23 @@ class _SectionsBlock extends ConsumerWidget {
     );
   }
 
-  String? _documentsValue(
-    BuildContext context,
-    AppLocalizations l,
-    DocumentSummary? summary,
-  ) {
+  /// Short on purpose: this goes in a chip, and "1 cosa requiere atención"
+  /// wrapped to two lines and turned a status marker into a paragraph.
+  String? _documentsValue(AppLocalizations l, DocumentSummary? summary) {
     if (summary == null || summary.total == 0) return null;
     final overdue = summary.expired + summary.critical;
-    if (overdue > 0) return l.readinessItemsNeedAttention(overdue);
-    if (summary.warning > 0) {
-      return l.readinessItemsNeedAttention(summary.warning);
-    }
+    if (overdue > 0) return l.alertsCount(overdue);
+    if (summary.warning > 0) return l.alertsCount(summary.warning);
     return l.readinessAllGood;
   }
 
-  Color? _documentsColor(BuildContext context, DocumentSummary? summary) {
-    if (summary == null || summary.total == 0) return null;
-    if (summary.expired + summary.critical > 0) return context.critical;
-    if (summary.warning > 0) return context.caution;
-    return context.positive;
+  /// Only what needs a decision gets a filled chip. "Everything in order" is
+  /// quiet muted text: three pills down a list and none of them means anything.
+  NavisTone _documentsTone(DocumentSummary? summary) {
+    if (summary == null || summary.total == 0) return NavisTone.neutral;
+    if (summary.expired + summary.critical > 0) return NavisTone.critical;
+    if (summary.warning > 0) return NavisTone.caution;
+    return NavisTone.neutral;
   }
 
   /// Paid rows are marked before the tap and gated on it, so the paywall is

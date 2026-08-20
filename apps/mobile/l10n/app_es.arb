@@ -1204,5 +1204,7 @@
   "nextUp": "Próximo",
   "seeAll": "Ver todo",
   "todayNothingDue": "No hay nada pendiente",
-  "anchorActionShort": "Fondeo"
+  "anchorActionShort": "Fondeo",
+  "alertsCount": "{count, plural, =1{1 aviso} other{{count} avisos}}",
+  "@alertsCount": {"placeholders": {"count": {"type": "int"}}}
 }

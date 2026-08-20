@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/document_detail_screen.dart';
 import 'package:navis_mobile/features/documents/domain/entities/document.dart';
 import 'package:navis_mobile/features/documents/domain/repositories/document_repository.dart';
@@ -14,6 +13,8 @@ import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
 
 import '../../helpers/helpers.dart';
+import 'package:navis_mobile/shared/widgets/navis_status_chip.dart';
+import 'package:navis_mobile/core/theme/tone.dart';
 
 class _MockDocumentRepository extends Mock implements DocumentRepository {}
 
@@ -49,9 +50,17 @@ void main() {
 
   /// Asserts the given badge label is shown and painted in [color] (the badge
   /// text style carries the tier color).
-  void expectBadge(WidgetTester tester, String label, Color color) {
-    final text = tester.widget<Text>(find.text(label));
-    expect(text.style?.color, color);
+  /// The badge is a filled chip now, so the status lives in its **fill**, not
+  /// in the text colour: the amber warning could only be legible as tinted text
+  /// by darkening it to brown.
+  void expectBadge(WidgetTester tester, String label, NavisTone tone) {
+    final chip = tester.widget<NavisStatusChip>(
+      find.ancestor(
+        of: find.text(label),
+        matching: find.byType(NavisStatusChip),
+      ),
+    );
+    expect(chip.tone, tone);
   }
 
   group('DocumentDetailScreen async states', () {
@@ -87,7 +96,7 @@ void main() {
       );
       await pumpScreen(tester);
 
-      expectBadge(tester, 'Expired', AppColors.red);
+      expectBadge(tester, 'Expired', NavisTone.critical);
       expect(find.text('5 days overdue'), findsOneWidget);
 
       // The expired badge loops a shimmer animation: dispose it explicitly.
@@ -101,7 +110,7 @@ void main() {
       );
       await pumpScreen(tester);
 
-      expectBadge(tester, 'Critical', AppColors.red);
+      expectBadge(tester, 'Critical', NavisTone.critical);
       expect(find.text('5 days remaining'), findsOneWidget);
 
       await drain(tester);
@@ -114,7 +123,7 @@ void main() {
       );
       await pumpScreen(tester);
 
-      expectBadge(tester, 'Warning', AppColors.amber);
+      expectBadge(tester, 'Warning', NavisTone.caution);
       expect(find.text('60 days remaining'), findsOneWidget);
     });
 
@@ -125,7 +134,7 @@ void main() {
       );
       await pumpScreen(tester);
 
-      expectBadge(tester, 'Valid', AppColors.green);
+      expectBadge(tester, 'Valid', NavisTone.positive);
       expect(find.text('120 days remaining'), findsOneWidget);
     });
   });

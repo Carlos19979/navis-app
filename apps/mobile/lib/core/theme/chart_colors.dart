@@ -19,7 +19,7 @@ abstract final class ChartColors {
   /// Distinct in order, so neighbouring rows never share a hue.
   static const series = <Color>[
     Palette.accentBright, // #4DA8DA
-    Palette.cautionBright, // #F39C12
+    Palette.caution, // #F39C12
     Color(0xFF9B7EDE), // violet
     Color(0xFF1ABC9C), // seafoam
     Color(0xFF5B7FD4), // indigo
@@ -34,7 +34,7 @@ abstract final class ChartColors {
   /// colour because a different month is selected. Keys the owner invented hash
   /// into the series instead of all collapsing onto one accent.
   static Color forCostCategory(String key) => switch (key) {
-        'combustible' => Palette.cautionBright,
+        'combustible' => Palette.caution,
         'amarre' => Palette.accentBright,
         'seguro' => const Color(0xFF5B7FD4),
         'reparación' => Palette.criticalBright, // i18n-exempt: API value

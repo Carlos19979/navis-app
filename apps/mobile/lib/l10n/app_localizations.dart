@@ -5521,6 +5521,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Anchor'**
   String get anchorActionShort;
+
+  /// No description provided for @alertsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 alert} other{{count} alerts}}'**
+  String alertsCount(int count);
 }
 
 class _AppLocalizationsDelegate

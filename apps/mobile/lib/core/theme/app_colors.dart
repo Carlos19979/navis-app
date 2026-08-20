@@ -24,7 +24,7 @@ class AppColors {
   static const navy = Palette.navy;
   static const cyan = Palette.accentBright;
   static const green = Palette.positiveBright;
-  static const amber = Palette.cautionBright;
+  static const amber = Palette.caution;
   static const red = Palette.criticalBright;
 
   // Extended accent palette
@@ -96,6 +96,6 @@ class AppColors {
   static const amberGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Palette.cautionInk, Palette.cautionBright],
+    colors: [Palette.caution, Palette.caution],
   );
 }

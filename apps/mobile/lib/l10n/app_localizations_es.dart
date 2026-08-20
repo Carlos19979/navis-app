@@ -2985,4 +2985,15 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get anchorActionShort => 'Fondeo';
+
+  @override
+  String alertsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count avisos',
+      one: '1 aviso',
+    );
+    return '$_temp0';
+  }
 }

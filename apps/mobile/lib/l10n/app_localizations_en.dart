@@ -2960,4 +2960,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get anchorActionShort => 'Anchor';
+
+  @override
+  String alertsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count alerts',
+      one: '1 alert',
+    );
+    return '$_temp0';
+  }
 }

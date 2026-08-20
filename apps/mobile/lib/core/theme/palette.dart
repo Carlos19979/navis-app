@@ -20,6 +20,14 @@ import 'package:flutter/painting.dart';
 /// used for **fills, bars and chart series** — where the contrast requirement
 /// is against an adjacent shape, not a glyph — and for text on dark, where the
 /// bright value already passes.
+///
+/// **Amber is the exception, and it has no ink twin.** Cyan, green and red all
+/// have a darker shade that is recognisably the same colour; amber does not.
+/// Getting `#F39C12` to 4.5:1 on white means `#A86600`, which nobody would call
+/// amber — it is brown. So the caution accent stays the brand amber at full
+/// saturation and is never bare text on a light surface: a caution *stated in
+/// words* is a filled chip with navy ink on it (7.32:1), which shows more amber
+/// than the old tinted-text treatment did, not less.
 abstract final class Palette {
   // ── Light canvas ────────────────────────────────────────────────────────
   static const canvasLight = Color(0xFFFFFFFF);
@@ -57,9 +65,10 @@ abstract final class Palette {
   static const positiveInk = Color(0xFF157F45);
   static const positiveBright = Color(0xFF2ECC71);
 
-  /// 6.33:1 on [canvasLight].
-  static const cautionInk = Color(0xFF8A5300);
-  static const cautionBright = Color(0xFFF39C12);
+  /// The brand amber, in both themes and in every role. 8.44:1 as text on the
+  /// dark canvas; on the light one it is a fill, never a glyph — see the note
+  /// above.
+  static const caution = Color(0xFFF39C12);
 
   /// 6.54:1 on [canvasLight].
   static const criticalInk = Color(0xFFB3261E);
@@ -86,6 +95,10 @@ abstract final class Palette {
 
   /// White text on an accent-filled surface (primary button, FAB).
   static const onAccent = Color(0xFFFFFFFF);
+
+  /// Text on a *light* fill — the amber and green status chips. Navy rather
+  /// than white, because white on amber is 1.9:1 and unreadable.
+  static const onLightFill = ink;
 
   // ── The one gradient that survives ──────────────────────────────────────
   /// Primary action fill (FAB, primary button). Every other gradient in the

@@ -1328,5 +1328,7 @@
   "nextUp": "Coming up",
   "seeAll": "See all",
   "todayNothingDue": "Nothing needs doing",
-  "anchorActionShort": "Anchor"
+  "anchorActionShort": "Anchor",
+  "alertsCount": "{count, plural, =1{1 alert} other{{count} alerts}}",
+  "@alertsCount": {"placeholders": {"count": {"type": "int"}}}
 }

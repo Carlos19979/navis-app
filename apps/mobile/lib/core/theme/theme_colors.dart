@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:navis_mobile/core/theme/palette.dart';
+import 'package:navis_mobile/core/theme/tone.dart';
 
 /// The colour API for the whole app. Screens read colours from here and never
 /// from [Palette] or `AppColors`, because every colour has two values — one per
@@ -55,18 +56,30 @@ extension ThemeColorsX on BuildContext {
 
   Color get accent => _dark ? Palette.accentBright : Palette.accentInk;
   Color get positive => _dark ? Palette.positiveBright : Palette.positiveInk;
-  Color get caution => _dark ? Palette.cautionBright : Palette.cautionInk;
   Color get critical => _dark ? Palette.criticalBright : Palette.criticalInk;
+
+  /// The brand amber, in both themes.
+  ///
+  /// Unlike the other three it has **no darkened twin**: the shade that would
+  /// clear AA on white is brown, not amber. So this is a glyph colour on the
+  /// dark canvas (8.44:1) and a *shape* colour on the light one — dots, arcs,
+  /// bars, borders and chip fills. A caution stated in words goes through
+  /// [NavisStatusChip], which puts navy ink on the amber instead of amber ink
+  /// on the page.
+  Color get caution => Palette.caution;
 
   // ── Accents, fill role ──────────────────────────────────────────────────
 
   Color get accentFill => Palette.accentBright;
   Color get positiveFill => Palette.positiveBright;
-  Color get cautionFill => Palette.cautionBright;
+  Color get cautionFill => Palette.caution;
   Color get criticalFill => Palette.criticalBright;
 
   /// Text/icon colour that sits on top of an accent-filled surface.
   Color get onAccent => Palette.onAccent;
+
+  /// Text on a light fill (amber, bright green). Navy, not white.
+  Color get onLightFill => Palette.onLightFill;
 
   /// The primary-action gradient (FAB, primary button).
   LinearGradient get accentGradient =>
@@ -84,6 +97,42 @@ extension ThemeColorsX on BuildContext {
   /// dissolving into the row they sit on.
   Color get skeletonBar =>
       _dark ? Palette.skeletonBarDark : Palette.skeletonBarLight;
+
+  // ── Status tones ────────────────────────────────────────────────────────
+
+  /// Fill for a status chip. **Theme-independent**: these are brand fills, and
+  /// the chip is a block of colour in both themes — what changes per tone is
+  /// the ink on top, not the fill underneath.
+  ///
+  /// Critical is the odd one out and deliberately so. The bright red only
+  /// reaches 3.82:1 under white and 4.20:1 under navy, so neither ink passes on
+  /// it; the deep red does, at 6.54:1 with white. It also reads as the heaviest
+  /// of the three, which is the right weight for the thing you have to fix.
+  Color toneFill(NavisTone tone) => switch (tone) {
+        NavisTone.caution => Palette.caution,
+        NavisTone.positive => Palette.positiveBright,
+        NavisTone.critical => Palette.criticalInk,
+        NavisTone.neutral => surfaceSunken,
+      };
+
+  /// Ink for a status chip: whichever of navy or white clears AA on
+  /// [toneFill].
+  Color toneInk(NavisTone tone) => switch (tone) {
+        // 7.32:1 and 7.64:1 — white on either of these is unreadable.
+        NavisTone.caution => Palette.onLightFill,
+        NavisTone.positive => Palette.onLightFill,
+        // 6.54:1.
+        NavisTone.critical => Palette.onAccent,
+        NavisTone.neutral => inkMuted,
+      };
+
+  /// The tone as a *glyph* colour, for a dot or an icon rather than a chip.
+  Color toneAccent(NavisTone tone) => switch (tone) {
+        NavisTone.caution => Palette.caution,
+        NavisTone.positive => positiveFill,
+        NavisTone.critical => criticalFill,
+        NavisTone.neutral => inkFaint,
+      };
 
   // ── Helpers ─────────────────────────────────────────────────────────────
 

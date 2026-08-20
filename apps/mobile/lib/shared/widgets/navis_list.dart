@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:navis_mobile/core/theme/app_typography.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
+import 'package:navis_mobile/core/theme/tone.dart';
+import 'package:navis_mobile/shared/widgets/navis_status_chip.dart';
 
 /// Where a row's text starts, and therefore where its separator starts too, so
 /// the hairlines line up with the labels instead of cutting the icons.
@@ -28,6 +30,7 @@ class NavisRow extends StatelessWidget {
     this.iconColor,
     this.value,
     this.valueColor,
+    this.valueTone,
     this.trailing,
     this.onTap,
     this.showChevron,
@@ -50,6 +53,12 @@ class NavisRow extends StatelessWidget {
   /// column of them aligns.
   final String? value;
   final Color? valueColor;
+
+  /// When set, [value] is drawn as a filled [NavisStatusChip] instead of tinted
+  /// text. Use it for a status the user has to act on — and specifically for
+  /// caution, which cannot be tinted text on a light canvas without turning
+  /// brown.
+  final NavisTone? valueTone;
 
   /// Custom trailing widget (badge, switch). Wins over [value].
   final Widget? trailing;
@@ -113,13 +122,21 @@ class NavisRow extends StatelessWidget {
               // Flexible, not fixed: a long status used to squeeze the label
               // and break it mid-word.
               Flexible(
-                child: Text(
-                  value!,
-                  textAlign: TextAlign.end,
-                  style: NavisType.label.copyWith(
-                    color: valueColor ?? context.inkMuted,
-                  ),
-                ),
+                child: valueTone != null
+                    ? Align(
+                        alignment: Alignment.centerRight,
+                        child: NavisStatusChip(
+                          label: value!,
+                          tone: valueTone!,
+                        ),
+                      )
+                    : Text(
+                        value!,
+                        textAlign: TextAlign.end,
+                        style: NavisType.label.copyWith(
+                          color: valueColor ?? context.inkMuted,
+                        ),
+                      ),
               ),
             ],
             if (chevron) ...[
