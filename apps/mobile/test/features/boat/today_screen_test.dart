@@ -404,7 +404,9 @@ void main() {
           'Documents',
           'Logbook',
           'Trip statistics',
-          'Maintenance & expenses',
+          // Two rows since the screen behind them became two routes.
+          'Maintenance',
+          'Expenses',
           'Cost intelligence',
           'Bookings',
           'Crew and permissions',

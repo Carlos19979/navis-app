@@ -52,6 +52,7 @@ void main() {
     Routes.boatDocuments('b1'),
     Routes.newDocument('b1'),
     Routes.boatMaintenance('b1'),
+    Routes.boatExpenses('b1'),
     Routes.boatReadiness('b1'),
     Routes.boatCosts('b1'),
     Routes.boatBookings('b1'),

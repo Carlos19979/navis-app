@@ -889,10 +889,18 @@ class _SectionsBlock extends ConsumerWidget {
           icon: Icons.query_stats_rounded,
           onTap: () => context.push(Routes.boatStats(boat.id)),
         ),
+        // Two rows, because they are two screens: «maintenance and expenses»
+        // named one screen with 26 actions in it, and a row whose title is two
+        // nouns joined by «and» is a row that does two things.
         NavisRow(
-          title: l.maintenanceAndExpenses,
+          title: l.maintenanceTab,
           icon: Icons.build_outlined,
           onTap: () => context.push(Routes.boatMaintenance(boat.id)),
+        ),
+        NavisRow(
+          title: l.expensesTab,
+          icon: Icons.receipt_long_outlined,
+          onTap: () => context.push(Routes.boatExpenses(boat.id)),
         ),
         // Paid rows are marked before the tap, and quietly: a lock and the tier
         // in muted ink. They used to carry the same filled amber chip as an

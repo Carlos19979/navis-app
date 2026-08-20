@@ -11,6 +11,7 @@ import 'package:navis_mobile/features/boat/presentation/providers/boat_permissio
 import 'package:navis_mobile/features/boat/presentation/widgets/permission_gate.dart';
 import 'package:navis_mobile/features/maintenance/data/maintenance_models.dart';
 import 'package:navis_mobile/features/maintenance/data/maintenance_repository.dart';
+import 'package:navis_mobile/features/maintenance/presentation/screens/expenses_screen.dart';
 import 'package:navis_mobile/features/maintenance/presentation/screens/maintenance_screen.dart';
 import 'package:navis_mobile/features/shared/data/shared_repository.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
@@ -54,9 +55,12 @@ void main() {
     Map<String, ExpenseSplitSummary> splits = const {},
     bool canManage = true,
     bool pro = true,
+    bool ledger = false,
   }) {
     return buildTestApp(
-      const MaintenanceScreen(boatId: boatId),
+      ledger
+          ? const ExpensesScreen(boatId: boatId)
+          : const MaintenanceScreen(boatId: boatId),
       overrides: [
         ...planOverrides(pro: pro),
         storageServiceProvider.overrideWithValue(mockStorage),
@@ -81,15 +85,6 @@ void main() {
           ),
       ],
     );
-  }
-
-  Future<void> openExpensesTab(WidgetTester tester) async {
-    await tester.tap(find.text('Expenses'));
-    // One frame to start the tab transition, one to finish it (the page is
-    // built lazily during the animation) and one for the async providers.
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.pump(const Duration(seconds: 1));
   }
 
   group('MaintenanceScreen maintenance tab async states', () {
@@ -253,12 +248,12 @@ void main() {
       setPhoneSize(tester);
       await tester.pumpWidget(
         buildSubject(
+          ledger: true,
           expenses: () async => [makeExpense()],
           canManage: false,
         ),
       );
       await pumpScreen(tester);
-      await openExpensesTab(tester);
 
       expect(find.byType(NavisGradientFab), findsNothing);
       expect(find.byType(BlockedActionCard), findsOneWidget);
@@ -506,7 +501,8 @@ void main() {
 
       // Both kinds share one history: a linked service used to be visible
       // only inside its plan entry.
-      expect(find.text('History'), findsOneWidget);
+      // Tracked uppercase, like every section heading in the app.
+      expect(find.text('HISTORY'), findsOneWidget);
       expect(find.text('Oil change'), findsOneWidget);
       expect(find.text('Bilge pump'), findsOneWidget);
       // "Other records" is gone as a concept.
@@ -613,7 +609,7 @@ void main() {
 
       // Open the edit sheet from the log card, then try to add a second
       // photo: Free's AttachmentLimit (1) is already used up.
-      await tester.tap(find.text('engine_service'));
+      await tester.tap(find.text('Engine service'));
       await pumpScreen(tester);
       await tester.ensureVisible(find.byTooltip('Add Photo'));
       await tester.tap(find.byTooltip('Add Photo'));
@@ -634,9 +630,9 @@ void main() {
     testWidgets('loading shows shimmer', (tester) async {
       setPhoneSize(tester);
       final completer = Completer<List<Expense>>();
-      await tester.pumpWidget(buildSubject(expenses: () => completer.future));
+      await tester.pumpWidget(
+          buildSubject(ledger: true, expenses: () => completer.future));
       await pumpScreen(tester);
-      await openExpensesTab(tester);
 
       expect(find.byType(NavisShimmer), findsWidgets);
 
@@ -646,10 +642,10 @@ void main() {
     testWidgets('error shows error widget', (tester) async {
       setPhoneSize(tester);
       await tester.pumpWidget(
-        buildSubject(expenses: () async => throw Exception('boom')),
+        buildSubject(
+            ledger: true, expenses: () async => throw Exception('boom')),
       );
       await pumpScreen(tester);
-      await openExpensesTab(tester);
 
       expect(find.byType(NavisErrorWidget), findsOneWidget);
 
@@ -660,9 +656,10 @@ void main() {
     testWidgets('a ledger with nothing in it offers adding one',
         (tester) async {
       setPhoneSize(tester);
-      await tester.pumpWidget(buildSubject());
+      await tester.pumpWidget(buildSubject(
+        ledger: true,
+      ));
       await pumpScreen(tester);
-      await openExpensesTab(tester);
 
       // Not "none in this period": that implies there are some elsewhere, and
       // it left the only truly empty state in the app without a way out.
@@ -682,11 +679,11 @@ void main() {
       final lastYear = DateTime(DateTime.now().year - 1, 6, 12);
       await tester.pumpWidget(
         buildSubject(
+          ledger: true,
           expenses: () async => [makeExpense(incurredOn: lastYear)],
         ),
       );
       await pumpScreen(tester);
-      await openExpensesTab(tester);
 
       expect(find.text('No expenses in this period'), findsOneWidget);
       expect(find.text('See the whole history'), findsOneWidget);
@@ -700,6 +697,7 @@ void main() {
       setPhoneSize(tester);
       await tester.pumpWidget(
         buildSubject(
+          ledger: true,
           expenses: () async => [
             makeExpense(
                 id: 'e-1',
@@ -720,7 +718,6 @@ void main() {
         ),
       );
       await pumpScreen(tester);
-      await openExpensesTab(tester);
 
       expect(find.text('Fuel'), findsWidgets);
       expect(find.text('Mooring'), findsWidgets);
@@ -737,6 +734,7 @@ void main() {
       setPhoneSize(tester);
       await tester.pumpWidget(
         buildSubject(
+          ledger: true,
           expenses: () async => [
             makeExpense(id: 'e-1', amount: 500, incurredOn: thisMonth),
             makeExpense(id: 'e-2', amount: 450, incurredOn: thisMonth),
@@ -746,10 +744,12 @@ void main() {
         ),
       );
       await pumpScreen(tester);
-      await openExpensesTab(tester);
 
-      expect(find.text('Period total'), findsOneWidget);
-      expect(find.text('950 €'), findsOneWidget);
+      // The label is an overline now, and the amount goes through Money — so
+      // it carries the locale's grouping and symbol placement (tests run in
+      // English: «€950.00»).
+      expect(find.text('PERIOD TOTAL'), findsOneWidget);
+      expect(find.textContaining('950'), findsWidgets);
 
       await drain(tester);
       await tester.pump(const Duration(seconds: 5));
@@ -760,6 +760,7 @@ void main() {
       final year = DateTime.now().year;
       await tester.pumpWidget(
         buildSubject(
+          ledger: true,
           expenses: () async => [
             makeExpense(id: 'a', amount: 100, incurredOn: DateTime(year, 3, 5)),
             makeExpense(id: 'b', amount: 60, incurredOn: DateTime(year, 3, 9)),
@@ -768,7 +769,6 @@ void main() {
         ),
       );
       await pumpScreen(tester);
-      await openExpensesTab(tester);
 
       // Year mode is reached through the period picker now: the Month/Year
       // segmented toggle was replaced by one tappable label.
@@ -791,6 +791,7 @@ void main() {
       setPhoneSize(tester);
       await tester.pumpWidget(
         buildSubject(
+          ledger: true,
           expenses: () async => [
             makeExpense(id: 'e-settled', incurredOn: thisMonth),
             makeExpense(id: 'e-owe', category: 'amarre', incurredOn: thisMonth),
@@ -817,7 +818,6 @@ void main() {
         ),
       );
       await pumpScreen(tester);
-      await openExpensesTab(tester);
 
       expect(find.text('Settled'), findsOneWidget);
       expect(find.text('You owe 25 €'), findsOneWidget);
@@ -831,6 +831,7 @@ void main() {
       setPhoneSize(tester);
       await tester.pumpWidget(
         buildSubject(
+          ledger: true,
           expenses: () async => [
             makeExpense(
                 id: 'f',
@@ -846,7 +847,6 @@ void main() {
         ),
       );
       await pumpScreen(tester);
-      await openExpensesTab(tester);
 
       // All → total 380.
       expect(find.text('380 €'), findsOneWidget);
@@ -866,12 +866,12 @@ void main() {
       setPhoneSize(tester);
       await tester.pumpWidget(
         buildSubject(
+          ledger: true,
           expenses: () async =>
               [makeExpense(id: 'e', amount: 120, incurredOn: thisMonth)],
         ),
       );
       await pumpScreen(tester);
-      await openExpensesTab(tester);
 
       // Shows in both the card and the period-total row.
       expect(find.text('120 €'), findsNWidgets(2));

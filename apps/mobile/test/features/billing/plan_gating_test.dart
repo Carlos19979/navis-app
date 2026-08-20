@@ -11,7 +11,7 @@ import 'package:navis_mobile/features/groups/domain/entities/group.dart';
 import 'package:navis_mobile/features/groups/presentation/providers/group_provider.dart';
 import 'package:navis_mobile/features/maintenance/data/maintenance_models.dart';
 import 'package:navis_mobile/features/maintenance/data/maintenance_repository.dart';
-import 'package:navis_mobile/features/maintenance/presentation/screens/maintenance_screen.dart';
+import 'package:navis_mobile/features/maintenance/presentation/screens/expenses_screen.dart';
 import 'package:navis_mobile/features/passport/presentation/passport_export.dart';
 import 'package:navis_mobile/features/readiness/presentation/providers/readiness_provider.dart';
 import 'package:navis_mobile/features/shared/data/shared_repository.dart';
@@ -116,15 +116,12 @@ void main() {
       final spy = RouteSpy();
       await tester.pumpWidget(
         buildRoutedTestApp(
-          const MaintenanceScreen(boatId: 'boat-1'),
+          // The ledger is its own route now, so there is no tab to tap first.
+          const ExpensesScreen(boatId: 'boat-1'),
           spy: spy,
           overrides: [...maintenanceOverrides(pro: pro), ...overrides],
         ),
       );
-      await pumpScreen(tester);
-
-      await tester.tap(find.text('Expenses'));
-      // Two pump rounds: the tab transition, then the expense list data.
       await pumpScreen(tester);
       await pumpScreen(tester);
 

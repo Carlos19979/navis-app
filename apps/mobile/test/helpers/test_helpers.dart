@@ -456,7 +456,10 @@ MaintenanceTask makeMaintenanceTask({
 MaintenanceLog makeMaintenanceLog({
   String id = 'log-1',
   String boatId = 'boat-1',
-  String type = 'engine_service',
+  // A name, not a key: `engine_service` is a *readiness ref*, and using it as
+  // a log type made the golden look as if the app printed raw keys. What the
+  // app stores here is whatever the owner typed.
+  String type = 'Engine service',
   DateTime? performedAt,
   String? taskId,
   double? engineHours = 120,

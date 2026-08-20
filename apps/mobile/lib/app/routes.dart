@@ -40,6 +40,7 @@ abstract final class Routes {
   static String boatDocuments(String id) => '/boats/$id/documents';
   static String newDocument(String id) => '/boats/$id/documents/new';
   static String boatMaintenance(String id) => '/boats/$id/maintenance';
+  static String boatExpenses(String id) => '/boats/$id/expenses';
   static String boatReadiness(String id) => '/boats/$id/readiness';
   static String boatCosts(String id) => '/boats/$id/costs';
   static String boatBookings(String id) => '/boats/$id/bookings';

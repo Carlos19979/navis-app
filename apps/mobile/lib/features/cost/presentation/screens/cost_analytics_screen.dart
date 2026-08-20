@@ -75,7 +75,7 @@ class _EmptyCosts extends StatelessWidget {
       message: l.costEmptyMessage,
       description: l.costEmptyDescription,
       actionLabel: l.costEmptyAction,
-      onAction: () => context.push(Routes.boatMaintenance(boatId)),
+      onAction: () => context.push(Routes.boatExpenses(boatId)),
     );
   }
 }
@@ -143,7 +143,7 @@ class _CostBody extends ConsumerWidget {
           NavisSectionHeader(
             label: l.costByCategory,
             trailing: TextButton(
-              onPressed: () => context.push(Routes.boatMaintenance(boatId)),
+              onPressed: () => context.push(Routes.boatExpenses(boatId)),
               child: Text(l.costViewExpenses),
             ),
           ),
