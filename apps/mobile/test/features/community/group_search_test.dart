@@ -19,10 +19,14 @@ class _MockGroupRepository extends Mock implements GroupRepository {}
 
 /// "I need a group search, for public groups in discover."
 ///
-/// These tests drive the Discover tab of CommunityScreen the way a user does —
-/// by typing in the field — and assert what the user gets back: matching clubs,
-/// one request per word instead of one per letter, and an honest empty / error
-/// state instead of a spinner that never ends.
+/// These tests drive the Community feed the way a user does — by typing in the
+/// field — and assert what they get back: matching clubs, one request per word
+/// instead of one per letter, and an honest empty / error state instead of a
+/// spinner that never ends.
+///
+/// The field used to live *inside* the Discover tab, which meant it could not
+/// find a club you were already in. It is now at the top of the one feed and
+/// filters everything, so these tests no longer open a tab first.
 void main() {
   setUpAll(() {
     registerFallbackValue(FakeRoute());
@@ -45,13 +49,6 @@ void main() {
         discoverGroupsProvider.overrideWith((ref) async => discover),
       ],
     );
-  }
-
-  Future<void> openTab(WidgetTester tester, String label) async {
-    await tester.tap(find.text(label));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.pump(const Duration(seconds: 1));
   }
 
   /// Types [text] in the search field and waits past the debounce window.
@@ -94,18 +91,16 @@ void main() {
     myRole: '',
   );
 
-  testWidgets('the search field is offered in Discover, not in My groups',
+  testWidgets('the field is at the top of the feed, above everything',
       (tester) async {
     setPhoneSize(tester);
     await tester.pumpWidget(buildSubject(discover: [palma]));
-    await pumpScreen(tester);
+    await pumpFrames(tester, frames: 8);
 
-    await openTab(tester, 'My groups');
-    expect(find.byType(TextField), findsNothing);
-
-    await openTab(tester, 'Discover');
+    // One field, always there. It used to be inside the Discover tab, so it
+    // could not find a club the user was already a member of.
     expect(find.byType(TextField), findsOneWidget);
-    expect(find.text('Search clubs by name…'), findsOneWidget);
+    expect(find.text('Search regattas and clubs'), findsOneWidget);
 
     await drain(tester);
     await tester.pump(const Duration(seconds: 5));
@@ -115,8 +110,7 @@ void main() {
     setPhoneSize(tester);
     stubSearch([regattaLovers]);
     await tester.pumpWidget(buildSubject(discover: [palma]));
-    await pumpScreen(tester);
-    await openTab(tester, 'Discover');
+    await pumpFrames(tester, frames: 8);
 
     expect(find.text('Palma Sailing Club'), findsOneWidget);
 
@@ -124,8 +118,9 @@ void main() {
 
     expect(queriesSeen, ['regatta']);
     expect(find.text('Regatta Lovers'), findsOneWidget);
-    // The browse list is replaced by the results, not appended to.
+    // The feed is replaced by the results, not appended to.
     expect(find.text('Palma Sailing Club'), findsNothing);
+    expect(find.text('MY CLUBS'), findsNothing);
     // A public club the user is not in can be joined from the results.
     expect(find.text('Request'), findsOneWidget);
 
@@ -138,8 +133,7 @@ void main() {
     setPhoneSize(tester);
     stubSearch([regattaLovers]);
     await tester.pumpWidget(buildSubject());
-    await pumpScreen(tester);
-    await openTab(tester, 'Discover');
+    await pumpFrames(tester, frames: 8);
 
     for (final typed in ['p', 'pa', 'pal', 'palm', 'palma']) {
       await tester.enterText(find.byType(TextField), typed);
@@ -160,8 +154,7 @@ void main() {
     setPhoneSize(tester);
     stubSearch([regattaLovers]);
     await tester.pumpWidget(buildSubject(discover: [palma]));
-    await pumpScreen(tester);
-    await openTab(tester, 'Discover');
+    await pumpFrames(tester, frames: 8);
     await search(tester, 'p');
 
     expect(searchCalls, 0);
@@ -178,8 +171,7 @@ void main() {
     setPhoneSize(tester);
     stubSearch([regattaLovers]);
     await tester.pumpWidget(buildSubject(discover: [palma]));
-    await pumpScreen(tester);
-    await openTab(tester, 'Discover');
+    await pumpFrames(tester, frames: 8);
     await search(tester, '   ');
 
     expect(searchCalls, 0);
@@ -194,8 +186,7 @@ void main() {
     setPhoneSize(tester);
     stubSearch(const []);
     await tester.pumpWidget(buildSubject(discover: [palma]));
-    await pumpScreen(tester);
-    await openTab(tester, 'Discover');
+    await pumpFrames(tester, frames: 8);
     await search(tester, 'zzzz');
 
     expect(find.text('No clubs match that name.'), findsOneWidget);
@@ -213,8 +204,7 @@ void main() {
     when(() => mockRepo.getGroups(discover: true, query: 'regatta'))
         .thenAnswer((_) => pending.future);
     await tester.pumpWidget(buildSubject(discover: [palma]));
-    await pumpScreen(tester);
-    await openTab(tester, 'Discover');
+    await pumpFrames(tester, frames: 8);
     await search(tester, 'regatta');
 
     expect(find.byType(NavisShimmer), findsOneWidget);
@@ -242,8 +232,7 @@ void main() {
       return PaginatedResponse<Group>(items: [regattaLovers]);
     });
     await tester.pumpWidget(buildSubject());
-    await pumpScreen(tester);
-    await openTab(tester, 'Discover');
+    await pumpFrames(tester, frames: 8);
     await search(tester, 'regatta');
 
     expect(find.byType(NavisErrorWidget), findsOneWidget);
@@ -267,8 +256,7 @@ void main() {
     setPhoneSize(tester);
     stubSearch(const []);
     await tester.pumpWidget(buildSubject(discover: [palma]));
-    await pumpScreen(tester);
-    await openTab(tester, 'Discover');
+    await pumpFrames(tester, frames: 8);
     await search(tester, 'zzzz');
 
     expect(find.text('No clubs match that name.'), findsOneWidget);

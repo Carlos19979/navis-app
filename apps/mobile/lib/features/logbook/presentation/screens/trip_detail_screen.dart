@@ -7,10 +7,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/app/routes.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
-import 'package:navis_mobile/core/utils/distance_utils.dart';
+import 'package:navis_mobile/core/theme/app_typography.dart';
+import 'package:navis_mobile/shared/widgets/navis_list.dart';
+import 'package:navis_mobile/shared/widgets/navis_metric.dart';
+import 'package:navis_mobile/shared/widgets/navis_section.dart';
+import 'package:navis_mobile/core/utils/measure_utils.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/charts/data/tile_provider.dart';
 import 'package:navis_mobile/features/logbook/domain/entities/trip.dart';
@@ -18,11 +23,11 @@ import 'package:navis_mobile/features/logbook/presentation/providers/logbook_pro
 import 'package:navis_mobile/shared/utils/native_share.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
-import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
+import 'package:navis_mobile/shared/utils/status_colors.dart';
 
 class TripDetailScreen extends ConsumerWidget {
   const TripDetailScreen({super.key, required this.tripId});
@@ -56,12 +61,12 @@ class TripDetailScreen extends ConsumerWidget {
               IconButton(
                 icon: const Icon(Icons.edit_outlined),
                 tooltip: l.editTrip,
-                onPressed: () => context.push('/trips/$tripId/edit'),
+                onPressed: () => context.push(Routes.tripEdit(tripId)),
               ),
               IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.delete_outlined,
-                  color: AppColors.red,
+                  color: context.critical,
                 ),
                 tooltip: l.deleteTrip,
                 onPressed: () => _confirmDelete(context, ref),
@@ -85,34 +90,40 @@ class TripDetailScreen extends ConsumerWidget {
             final hasTrack = trackPoints.isNotEmpty;
 
             return SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              key: tripDetailScrollKey,
+              padding: const EdgeInsets.fromLTRB(
+                Dimens.spaceLg,
+                Dimens.spaceLg,
+                Dimens.spaceLg,
+                Dimens.navClearance,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (hasTrack) ...[
                     _buildMapCard(context, trackPoints),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: Dimens.spaceMd),
                     const _SpeedLegend(),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: Dimens.spaceXl),
                   ],
-                  _buildRouteCard(context, trip),
-                  const SizedBox(height: 12),
-                  _buildStatsCard(context, trip),
+                  // The voyage in figures, before the paperwork about it.
+                  _buildStats(context, trip),
+                  const SizedBox(height: Dimens.spaceXl),
+                  _buildRoute(context, trip),
                   if (trip.engineHours != null ||
                       trip.fuelConsumedL != null) ...[
-                    const SizedBox(height: 12),
-                    _buildEngineCard(context, trip),
+                    const SizedBox(height: Dimens.spaceXl),
+                    _buildEngine(context, trip),
                   ],
                   if (trip.crewMembers != null &&
                       trip.crewMembers!.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    _buildCrewCard(context, trip),
+                    const SizedBox(height: Dimens.spaceXl),
+                    _buildCrew(context, trip),
                   ],
                   if (trip.notes != null && trip.notes!.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    _buildNotesCard(context, trip),
+                    const SizedBox(height: Dimens.spaceXl),
+                    _buildNotes(context, trip),
                   ],
-                  const SizedBox(height: 100),
                 ],
               ),
             );
@@ -129,34 +140,41 @@ class TripDetailScreen extends ConsumerWidget {
     return GestureDetector(
       onTap: () => _openFullScreenMap(context, trackPoints),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(Dimens.radiusSurface),
         child: Stack(
           children: [
             Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(Dimens.radiusSurface),
                 border: Border.all(
                   color: context.glassBorderColor,
                   width: 0.5,
                 ),
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(Dimens.radiusSurface),
                 child: RepaintBoundary(
                   child: SizedBox(
                     height: 220,
                     child: FlutterMap(
                       options: MapOptions(
-                        initialCenter: LatLng(
-                          trackPoints.first.latitude,
-                          trackPoints.first.longitude,
+                        // Framed to the whole track, not centred on its first
+                        // point at a fixed zoom 12 — a trip longer than a few
+                        // miles ran straight off the card, so the preview
+                        // showed the start and none of the voyage.
+                        initialCameraFit: CameraFit.bounds(
+                          bounds: _trackBounds(trackPoints),
+                          padding: const EdgeInsets.all(Dimens.spaceXl),
+                          // A short hop is a handful of points inside a few
+                          // hundred metres; fitting that literally zooms past
+                          // any tile that exists.
+                          maxZoom: 15,
                         ),
-                        initialZoom: 12,
                         minZoom: 3,
                         maxZoom: 18,
                         // Navy while tiles load, instead of flutter_map's
                         // default light grey flashing inside a dark card.
-                        backgroundColor: AppColors.navy,
+                        backgroundColor: OpenSeaMapTileProvider.waterBackground,
                         interactionOptions: const InteractionOptions(
                           flags: InteractiveFlag.none,
                         ),
@@ -164,7 +182,7 @@ class TripDetailScreen extends ConsumerWidget {
                       children: [
                         OpenSeaMapTileProvider.baseLayer(),
                         PolylineLayer(
-                          polylines: _buildSpeedPolylines(trackPoints),
+                          polylines: _buildSpeedPolylines(context, trackPoints),
                         ),
                         MarkerLayer(
                           markers: [
@@ -177,7 +195,7 @@ class TripDetailScreen extends ConsumerWidget {
                               height: 14,
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: AppColors.green,
+                                  color: context.positive,
                                   shape: BoxShape.circle,
                                   border: Border.all(
                                     color: Colors.white,
@@ -185,7 +203,7 @@ class TripDetailScreen extends ConsumerWidget {
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: AppColors.green
+                                      color: context.positive
                                           .withValues(alpha: 0.4),
                                       blurRadius: 6,
                                     ),
@@ -202,7 +220,7 @@ class TripDetailScreen extends ConsumerWidget {
                               height: 14,
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: AppColors.red,
+                                  color: context.critical,
                                   shape: BoxShape.circle,
                                   border: Border.all(
                                     color: Colors.white,
@@ -210,8 +228,8 @@ class TripDetailScreen extends ConsumerWidget {
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color:
-                                          AppColors.red.withValues(alpha: 0.4),
+                                      color: context.critical
+                                          .withValues(alpha: 0.4),
                                       blurRadius: 6,
                                     ),
                                   ],
@@ -232,7 +250,7 @@ class TripDetailScreen extends ConsumerWidget {
               child: Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: AppColors.navy.withValues(alpha: 0.7),
+                  color: context.onMedia,
                   shape: BoxShape.circle,
                 ),
                 child:
@@ -253,141 +271,138 @@ class TripDetailScreen extends ConsumerWidget {
       MaterialPageRoute<void>(
         builder: (_) => _TripMapFullScreen(
           trackPoints: trackPoints,
-          polylines: _buildSpeedPolylines(trackPoints),
+          polylines: _buildSpeedPolylines(context, trackPoints),
         ),
       ),
     );
   }
 
-  Widget _buildRouteCard(BuildContext context, Trip trip) {
-    return NavisCard(
-      child: Column(
-        children: [
-          _DetailRow(
-            icon: Icons.flight_takeoff,
-            label: AppLocalizations.of(context)!.departure,
-            value:
-                '${trip.departurePort}\n${NavisDateUtils.formatDateTime(trip.departureTime)}',
+  /// Where it left from and where it ended, as two rows rather than two cards.
+  Widget _buildRoute(BuildContext context, Trip trip) {
+    final l = AppLocalizations.of(context)!;
+    return NavisList(
+      title: l.tripRoute,
+      padding: EdgeInsets.zero,
+      children: [
+        NavisRow(
+          icon: Icons.sailing_rounded,
+          title: trip.departurePort,
+          subtitle: NavisDateUtils.formatDateTime(trip.departureTime),
+          value: l.departure,
+        ),
+        NavisRow(
+          icon: Icons.anchor_rounded,
+          title: trip.arrivalPort ?? l.notRecorded,
+          subtitle: trip.arrivalTime == null
+              ? null
+              : NavisDateUtils.formatDateTime(trip.arrivalTime!),
+          value: l.arrival,
+        ),
+      ],
+    );
+  }
+
+  /// Distance, time and speed — the four figures, in the shared metric grid
+  /// instead of a bespoke `_StatBox` that tinted every value cyan.
+  Widget _buildStats(BuildContext context, Trip trip) {
+    final l = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    return NavisMetricGrid(
+      columns: 2,
+      children: [
+        if (trip.distanceNm != null)
+          NavisMetric(
+            value: Measure.distance(locale, trip.distanceNm!, l.nauticalMiles),
+            label: l.distance,
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Container(
-              height: 0.5,
-              color: context.glassBorderColor,
-            ),
+        if (trip.duration != null)
+          NavisMetric(
+            value: NavisDateUtils.formatDuration(trip.duration!),
+            label: l.duration,
           ),
-          _DetailRow(
-            icon: Icons.flight_land,
-            label: AppLocalizations.of(context)!.arrival,
-            value: trip.arrivalPort != null
-                ? '${trip.arrivalPort}'
-                    '${trip.arrivalTime != null ? '\n${NavisDateUtils.formatDateTime(trip.arrivalTime!)}' : ''}'
-                : AppLocalizations.of(context)!.notRecorded,
+        if (trip.avgSpeedKnots != null)
+          NavisMetric(
+            value: Measure.knots(locale, trip.avgSpeedKnots!, l.knots),
+            label: l.avgSpeed,
           ),
-        ],
+        if (trip.maxSpeedKnots != null)
+          NavisMetric(
+            value: Measure.knots(locale, trip.maxSpeedKnots!, l.knots),
+            label: l.maxSpeed,
+          ),
+      ],
+    );
+  }
+
+  Widget _buildEngine(BuildContext context, Trip trip) {
+    final l = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    return NavisList(
+      title: l.engineSectionTitle,
+      padding: EdgeInsets.zero,
+      children: [
+        if (trip.engineHours != null)
+          NavisRow(
+            title: l.engineHours,
+            // Through Measure: these were interpolated by hand, so «120.5 h»
+            // kept its decimal point in Spanish.
+            value: Measure.hours(locale, trip.engineHours!, 'h'),
+          ),
+        if (trip.fuelConsumedL != null)
+          NavisRow(
+            title: l.fuelConsumed,
+            value: Measure.litres(locale, trip.fuelConsumedL!, 'L'),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildCrew(BuildContext context, Trip trip) {
+    final l = AppLocalizations.of(context)!;
+    return NavisList(
+      title: l.crew,
+      padding: EdgeInsets.zero,
+      children: [
+        for (final member in trip.crewMembers!)
+          NavisRow(icon: Icons.person_outline_rounded, title: member),
+      ],
+    );
+  }
+
+  Widget _buildNotes(BuildContext context, Trip trip) {
+    final l = AppLocalizations.of(context)!;
+    return NavisSection(
+      title: l.notes,
+      padding: EdgeInsets.zero,
+      child: Text(
+        trip.notes!,
+        style: NavisType.body.copyWith(color: context.ink),
       ),
     );
   }
 
-  Widget _buildStatsCard(BuildContext context, Trip trip) {
-    return NavisCard(
-      child: Row(
-        children: [
-          if (trip.distanceNm != null)
-            Expanded(
-              child: _StatBox(
-                label: AppLocalizations.of(context)!.distance,
-                value: DistanceUtils.formatDistance(
-                  trip.distanceNm!,
-                ),
-                icon: Icons.straighten,
-              ),
-            ),
-          if (trip.duration != null)
-            Expanded(
-              child: _StatBox(
-                label: AppLocalizations.of(context)!.duration,
-                value: NavisDateUtils.formatDuration(
-                  trip.duration!,
-                ),
-                icon: Icons.schedule,
-              ),
-            ),
-          if (trip.avgSpeedKnots != null)
-            Expanded(
-              child: _StatBox(
-                label: AppLocalizations.of(context)!.avgSpeed,
-                value: DistanceUtils.formatSpeed(
-                  trip.avgSpeedKnots!,
-                ),
-                icon: Icons.speed,
-              ),
-            ),
-          if (trip.maxSpeedKnots != null)
-            Expanded(
-              child: _StatBox(
-                label: AppLocalizations.of(context)!.maxSpeed,
-                value: DistanceUtils.formatSpeed(
-                  trip.maxSpeedKnots!,
-                ),
-                icon: Icons.speed,
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEngineCard(BuildContext context, Trip trip) {
-    return NavisCard(
-      child: Column(
-        children: [
-          if (trip.engineHours != null)
-            _DetailRow(
-              icon: Icons.engineering,
-              label: AppLocalizations.of(context)!.engineHours,
-              value: '${trip.engineHours!.toStringAsFixed(1)} h',
-            ),
-          if (trip.engineHours != null && trip.fuelConsumedL != null) ...[
-            const SizedBox(height: 12),
-            Container(
-              height: 0.5,
-              color: context.glassBorderColor,
-            ),
-            const SizedBox(height: 12),
-          ],
-          if (trip.fuelConsumedL != null)
-            _DetailRow(
-              icon: Icons.local_gas_station,
-              label: AppLocalizations.of(context)!.fuelConsumed,
-              value: '${trip.fuelConsumedL!.toStringAsFixed(1)} L',
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCrewCard(BuildContext context, Trip trip) {
-    return NavisCard(
-      child: _DetailRow(
-        icon: Icons.group,
-        label: AppLocalizations.of(context)!.crew,
-        value: trip.crewMembers!.join(', '),
-      ),
-    );
-  }
-
-  Widget _buildNotesCard(BuildContext context, Trip trip) {
-    return NavisCard(
-      child: _DetailRow(
-        icon: Icons.notes,
-        label: AppLocalizations.of(context)!.notes,
-        value: trip.notes!,
-      ),
-    );
+  /// The rectangle that holds every point of the track.
+  ///
+  /// `LatLngBounds.fromPoints` throws on an empty list, and the caller already
+  /// guards on `trackPoints.isNotEmpty`, but a single-point track would give a
+  /// zero-area box — so it is nudged outwards to something a camera can fit.
+  LatLngBounds _trackBounds(List<TrackPoint> trackPoints) {
+    final points = [
+      for (final p in trackPoints) LatLng(p.latitude, p.longitude),
+    ];
+    final bounds = LatLngBounds.fromPoints(points);
+    if (bounds.north == bounds.south && bounds.east == bounds.west) {
+      const nudge = 0.002; // ~200 m
+      return LatLngBounds(
+        LatLng(bounds.south - nudge, bounds.west - nudge),
+        LatLng(bounds.north + nudge, bounds.east + nudge),
+      );
+    }
+    return bounds;
   }
 
   List<Polyline> _buildSpeedPolylines(
+    BuildContext context,
     List<TrackPoint> trackPoints,
   ) {
     if (trackPoints.length < 2) return [];
@@ -395,12 +410,7 @@ class TripDetailScreen extends ConsumerWidget {
     final polylines = <Polyline>[];
     for (int i = 0; i < trackPoints.length - 1; i++) {
       final speed = trackPoints[i].speedKnots ?? 0;
-      final color = switch (speed) {
-        < 3 => AppColors.cyan,
-        < 6 => AppColors.green,
-        < 12 => AppColors.amber,
-        _ => AppColors.red,
-      };
+      final color = context.speedColor(speed);
 
       polylines.add(
         Polyline(
@@ -458,13 +468,13 @@ class TripDetailScreen extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.link, color: AppColors.cyan),
+              leading: Icon(Icons.link, color: context.accent),
               title: Text(l.shareTripLink),
               subtitle: Text(l.shareTripLinkSubtitle),
               onTap: () => Navigator.of(sheetCtx).pop(_ShareChoice.link),
             ),
             ListTile(
-              leading: const Icon(Icons.short_text, color: AppColors.cyan),
+              leading: Icon(Icons.short_text, color: context.accent),
               title: Text(l.shareTripSummary),
               subtitle: Text(l.shareTripSummarySubtitle),
               onTap: () => Navigator.of(sheetCtx).pop(_ShareChoice.summary),
@@ -553,6 +563,9 @@ class TripDetailScreen extends ConsumerWidget {
   }
 }
 
+/// Key on the scrollable, so a test can reach the sections below the map.
+const tripDetailScrollKey = Key('trip-detail-scroll');
+
 /// What the share sheet came back with.
 enum _ShareChoice { link, summary }
 
@@ -561,16 +574,16 @@ class _SpeedLegend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _LegendDot(color: AppColors.cyan, label: '<3 kt'),
-        SizedBox(width: 12),
-        _LegendDot(color: AppColors.green, label: '3-6 kt'),
-        SizedBox(width: 12),
-        _LegendDot(color: AppColors.amber, label: '6-12 kt'),
-        SizedBox(width: 12),
-        _LegendDot(color: AppColors.red, label: '>12 kt'),
+        _LegendDot(color: context.accent, label: '<3 kt'),
+        const SizedBox(width: 12),
+        _LegendDot(color: context.positive, label: '3-6 kt'),
+        const SizedBox(width: 12),
+        _LegendDot(color: context.caution, label: '6-12 kt'),
+        const SizedBox(width: 12),
+        _LegendDot(color: context.critical, label: '>12 kt'),
       ],
     );
   }
@@ -613,97 +626,6 @@ class _LegendDot extends StatelessWidget {
   }
 }
 
-class _DetailRow extends StatelessWidget {
-  const _DetailRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: context.glassBg,
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: context.glassBorderColor,
-              width: 0.5,
-            ),
-          ),
-          child: Icon(icon, size: 16, color: AppColors.cyan),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: context.txtSecondary,
-                    ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _StatBox extends StatelessWidget {
-  const _StatBox({
-    required this.label,
-    required this.value,
-    required this.icon,
-  });
-
-  final String label;
-  final String value;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Icon(icon, size: 18, color: AppColors.cyan),
-        const SizedBox(height: 6),
-        Text(
-          value,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: AppColors.cyan,
-              ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: context.txtSecondary,
-                fontSize: 11,
-              ),
-        ),
-      ],
-    );
-  }
-}
-
 /// Full-screen, interactive view of a finished trip's track.
 class _TripMapFullScreen extends StatelessWidget {
   const _TripMapFullScreen({
@@ -726,7 +648,7 @@ class _TripMapFullScreen extends StatelessWidget {
         .toList(growable: false);
 
     return Scaffold(
-      backgroundColor: AppColors.navy,
+      backgroundColor: OpenSeaMapTileProvider.waterBackground,
       body: Stack(
         children: [
           FlutterMap(
@@ -739,7 +661,7 @@ class _TripMapFullScreen extends StatelessWidget {
               // grey backgroundColor. Capping the fit keeps tiles on screen.
               minZoom: _minZoom,
               maxZoom: _maxZoom,
-              backgroundColor: AppColors.navy,
+              backgroundColor: OpenSeaMapTileProvider.waterBackground,
               initialCameraFit: CameraFit.bounds(
                 bounds: LatLngBounds.fromPoints(points),
                 padding: const EdgeInsets.all(48),
@@ -755,8 +677,8 @@ class _TripMapFullScreen extends StatelessWidget {
               PolylineLayer(polylines: polylines),
               MarkerLayer(
                 markers: [
-                  _endpointMarker(points.first, AppColors.green),
-                  _endpointMarker(points.last, AppColors.red),
+                  _endpointMarker(points.first, context.positive),
+                  _endpointMarker(points.last, context.critical),
                 ],
               ),
             ],
@@ -770,7 +692,7 @@ class _TripMapFullScreen extends StatelessWidget {
                 filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: AppColors.navy.withValues(alpha: 0.6),
+                    color: context.onMedia,
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(

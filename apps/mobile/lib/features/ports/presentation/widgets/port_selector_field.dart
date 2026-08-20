@@ -4,7 +4,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/map_picker_screen.dart';
 import 'package:navis_mobile/features/ports/domain/entities/port.dart';
@@ -245,13 +244,13 @@ class _PortSelectorFieldState extends State<PortSelectorField> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: AppColors.cyan.withValues(alpha: 0.1),
+              color: context.accent.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.cyan.withValues(alpha: 0.3)),
+              border: Border.all(color: context.accent.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
-                const Icon(Icons.location_on, color: AppColors.cyan, size: 18),
+                Icon(Icons.location_on, color: context.accent, size: 18),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -259,7 +258,7 @@ class _PortSelectorFieldState extends State<PortSelectorField> {
                     style: Theme.of(context)
                         .textTheme
                         .bodyMedium
-                        ?.copyWith(color: AppColors.cyan),
+                        ?.copyWith(color: context.accent),
                   ),
                 ),
                 GestureDetector(
@@ -298,11 +297,11 @@ class _ActionChip extends StatelessWidget {
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.cyan.withValues(alpha: 0.15)
+              ? context.accent.withValues(alpha: 0.15)
               : context.glassBg,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? AppColors.cyan : context.glassBorderColor,
+            color: isSelected ? context.accent : context.glassBorderColor,
             width: isSelected ? 1.5 : 0.5,
           ),
         ),
@@ -312,13 +311,13 @@ class _ActionChip extends StatelessWidget {
             Icon(
               icon,
               size: 20,
-              color: isSelected ? AppColors.cyan : context.txtSecondary,
+              color: isSelected ? context.accent : context.txtSecondary,
             ),
             const SizedBox(height: 4),
             Text(
               label,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: isSelected ? AppColors.cyan : context.txtSecondary,
+                    color: isSelected ? context.accent : context.txtSecondary,
                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                   ),
               overflow: TextOverflow.ellipsis,
@@ -430,13 +429,13 @@ class _PortSearchSheetState extends ConsumerState<_PortSearchSheet> {
     );
 
     return resultsAsync.when(
-      loading: () => const Center(
-        child: CircularProgressIndicator(color: AppColors.cyan),
+      loading: () => Center(
+        child: CircularProgressIndicator(color: context.accent),
       ),
       error: (_, __) => Center(
         child: Text(
           l.portSearchError,
-          style: const TextStyle(color: AppColors.red),
+          style: TextStyle(color: context.critical),
         ),
       ),
       data: (ports) {
@@ -453,7 +452,7 @@ class _PortSearchSheetState extends ConsumerState<_PortSearchSheet> {
           itemBuilder: (context, i) {
             final p = ports[i];
             return ListTile(
-              leading: const Icon(Icons.anchor, color: AppColors.cyan),
+              leading: Icon(Icons.anchor, color: context.accent),
               title: Text(p.name, style: TextStyle(color: context.txtPrimary)),
               subtitle: Text(
                 p.country,
@@ -492,11 +491,11 @@ class _PortChip extends StatelessWidget {
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.cyan.withValues(alpha: 0.15)
+              ? context.accent.withValues(alpha: 0.15)
               : context.glassBg,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? AppColors.cyan : context.glassBorderColor,
+            color: isSelected ? context.accent : context.glassBorderColor,
             width: isSelected ? 1.5 : 0.5,
           ),
         ),
@@ -508,14 +507,14 @@ class _PortChip extends StatelessWidget {
               children: [
                 Icon(icon,
                     size: 14,
-                    color: isSelected ? AppColors.cyan : context.txtSecondary),
+                    color: isSelected ? context.accent : context.txtSecondary),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
                     port.name,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           color:
-                              isSelected ? AppColors.cyan : context.txtPrimary,
+                              isSelected ? context.accent : context.txtPrimary,
                           fontWeight:
                               isSelected ? FontWeight.w700 : FontWeight.w500,
                           fontSize: 11,

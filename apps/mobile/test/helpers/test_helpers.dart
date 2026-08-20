@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,6 +24,8 @@ import 'package:navis_mobile/features/weather/domain/entities/weather.dart';
 import 'package:navis_mobile/features/weather/domain/entities/weather_overview.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_permissions_provider.dart';
+import 'package:navis_mobile/features/boat/presentation/providers/active_boat_provider.dart';
+import 'package:navis_mobile/features/notifications/presentation/providers/notification_feed_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/profile/presentation/providers/profile_provider.dart';
 
@@ -47,11 +50,94 @@ final _defaultBoatPermissionsOverride = boatPermissionsProvider.overrideWith(
   (ref, id) async => const BoatPermissions.all(),
 );
 
+/// A [BoatsNotifier] that just holds a list, and records deletions.
+class FakeBoatsNotifier extends AsyncNotifier<List<Boat>>
+    implements BoatsNotifier {
+  FakeBoatsNotifier(this._boats);
+
+  final List<Boat> _boats;
+
+  /// Ids the screen asked to delete, so the destructive path can be asserted
+  /// without a repository.
+  final deleted = <String>[];
+
+  @override
+  Future<List<Boat>> build() async => _boats;
+  @override
+  Future<void> loadMore() async {}
+  @override
+  Future<void> refresh() async {}
+  @override
+  Future<Boat> createBoat(Boat boat) async => boat;
+  @override
+  Future<void> updateBoat(Boat boat) async {}
+  @override
+  Future<void> deleteBoat(String id) async => deleted.add(id);
+}
+
+/// No boats, no shared boats, and no stored choice of active boat.
+///
+/// Needed since the forecast and the chart started offering «Zarpar»: both
+/// watch `activeBoatProvider`, which pulls in the boat list (sqflite, via the
+/// repository) *and* the remembered boat id (SharedPreferences). Without a
+/// baseline every screen that merely asks «is there a boat?» died on
+/// `databaseFactory not initialized` or on «sharedPreferencesProvider must be
+/// overridden».
+///
+/// Empty is the right baseline: a screen with no boat has to render, and a test
+/// that is about boats says so by overriding these. The active id is faked
+/// rather than backed by a mock prefs instance because [defaultTestOverrides]
+/// is a plain list and `SharedPreferences.getInstance()` is async — a test that
+/// needs real persistence still reaches for `prefsOverride`.
+final _defaultBoatsOverride =
+    boatsProvider.overrideWith(() => FakeBoatsNotifier(const []));
+final _defaultSharedBoatsOverride =
+    sharedBoatsProvider.overrideWith((ref) async => const <Boat>[]);
+final _defaultActiveBoatIdOverride =
+    activeBoatIdProvider.overrideWith(FakeActiveBoatNotifier.new);
+
+/// An active-boat choice held in memory, with no SharedPreferences behind it.
+class FakeActiveBoatNotifier extends Notifier<String?>
+    implements ActiveBoatNotifier {
+  @override
+  String? build() => null;
+
+  @override
+  void select(String? boatId) => state = boatId;
+}
+
+/// The bell's badge, answered locally.
+///
+/// It is on the app bar of every root tab, so any test that pumps one used to
+/// reach `ApiClient` for the unread count and end with a pending Dio timer —
+/// a screen test failing as a network test.
+final _defaultUnreadCountOverride =
+    unreadNotificationCountProvider.overrideWith(_ZeroUnread.new);
+
+class _ZeroUnread extends AsyncNotifier<int>
+    implements UnreadNotificationCountNotifier {
+  @override
+  Future<int> build() async => 0;
+
+  @override
+  Future<void> refresh() async {}
+
+  @override
+  void decrement() {}
+
+  @override
+  void clear() {}
+}
+
 /// Overrides applied by every test app builder ([buildTestApp],
 /// [buildTestAppWithScaffold] and `buildRoutedTestApp` in router.dart).
 final defaultTestOverrides = <Override>[
   _defaultBoatOverride,
   _defaultBoatPermissionsOverride,
+  _defaultBoatsOverride,
+  _defaultSharedBoatsOverride,
+  _defaultActiveBoatIdOverride,
+  _defaultUnreadCountOverride,
 ];
 
 Widget buildTestApp(
@@ -115,6 +201,8 @@ Boat makeBoat({
   String? homePort = 'Palma de Mallorca',
   String? photoUrl,
   List<String> photoUrls = const [],
+  bool isOwner = true,
+  BoatPermissions? permissions,
 }) {
   return Boat(
     id: id,
@@ -125,6 +213,11 @@ Boat makeBoat({
     homePort: homePort,
     photoUrl: photoUrl,
     photoUrls: photoUrls,
+    isOwner: isOwner,
+    // Matches the entity's own default for an owner, and grants a member
+    // everything unless a test narrows it — the point of a member fixture is
+    // usually the *ownership*, not the flags.
+    permissions: permissions ?? const BoatPermissions.all(),
     createdAt: DateTime(2026),
     updatedAt: DateTime(2026),
   );
@@ -180,6 +273,7 @@ Trip makeTrip({
   double? fuelConsumedL,
   double? engineHours,
   bool? canManage,
+  List<TrackPoint>? trackPoints,
 }) {
   final departure = departureTime ?? DateTime(2026, 4, 26, 10);
   return Trip(
@@ -196,6 +290,11 @@ Trip makeTrip({
     fuelConsumedL: fuelConsumedL,
     engineHours: engineHours,
     canManage: canManage,
+    // Null by default, which is what a trip recorded before track storage
+    // looks like — but a *default* of null meant the trip-detail golden was
+    // taken without a track, and the map card only renders when there is one.
+    // The map has been there all along; the fixture was hiding it.
+    trackPoints: trackPoints,
     crewMembers: const ['Carlos', 'Maria'],
     notes: 'Great trip',
     createdAt: DateTime(2026, 4, 26),
@@ -209,6 +308,7 @@ Event makeEvent({
   String organizer = 'RCNP',
   String eventType = 'regatta',
   bool isFeatured = true,
+  DateTime? startDate,
 }) {
   return Event(
     id: id,
@@ -216,7 +316,9 @@ Event makeEvent({
     organizer: organizer,
     eventType: eventType,
     locationName: 'Palma de Mallorca',
-    startDate: DateTime(2026, 7, 31),
+    // A real start hour: at midnight every regatta in a golden read «00:00»,
+    // which is not what a regatta looks like — and the row shows the time.
+    startDate: startDate ?? DateTime(2026, 7, 31, 11, 30),
     endDate: DateTime(2026, 8, 6),
     description: 'Major regatta event',
     isFeatured: isFeatured,
@@ -382,7 +484,10 @@ MaintenanceTask makeMaintenanceTask({
 MaintenanceLog makeMaintenanceLog({
   String id = 'log-1',
   String boatId = 'boat-1',
-  String type = 'engine_service',
+  // A name, not a key: `engine_service` is a *readiness ref*, and using it as
+  // a log type made the golden look as if the app printed raw keys. What the
+  // app stores here is whatever the owner typed.
+  String type = 'Engine service',
   DateTime? performedAt,
   String? taskId,
   double? engineHours = 120,
@@ -415,6 +520,8 @@ Expense makeExpense({
   DateTime? incurredOn,
   String? notes,
   String? invoiceUrl,
+  double? liters,
+  double? pricePerLiter,
 }) {
   return Expense(
     id: id,
@@ -424,6 +531,8 @@ Expense makeExpense({
     incurredOn: incurredOn ?? DateTime(2026, 4, 20),
     notes: notes,
     invoiceUrl: invoiceUrl,
+    liters: liters,
+    pricePerLiter: pricePerLiter,
   );
 }
 
@@ -604,4 +713,25 @@ Anomaly makeAnomaly({
     distanceNm: distanceNm,
     excessLiters: excessLiters,
   );
+}
+
+/// A short coastal track with a speed profile, for the screens that draw one.
+///
+/// Rising then falling knots on purpose: the trip map colours each segment by
+/// speed, so a constant track would render as one flat line and prove nothing.
+List<TrackPoint> sampleTrack() {
+  const start = (39.5696, 2.6502); // Palma
+  final points = <TrackPoint>[];
+  for (var i = 0; i < 24; i++) {
+    final t = i / 23;
+    points.add(
+      TrackPoint(
+        latitude: start.$1 + 0.16 * t + 0.02 * math.sin(t * math.pi * 3),
+        longitude: start.$2 - 0.30 * t + 0.03 * math.cos(t * math.pi * 2),
+        timestamp: DateTime(2026, 4, 26, 10).add(Duration(minutes: i * 11)),
+        speedKnots: 2 + 9 * math.sin(t * math.pi),
+      ),
+    );
+  }
+  return points;
 }

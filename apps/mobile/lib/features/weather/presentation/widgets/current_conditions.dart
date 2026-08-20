@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/weather/domain/entities/weather.dart';
 import 'package:navis_mobile/features/weather/presentation/widgets/weather_visuals.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
+import 'package:navis_mobile/shared/utils/status_colors.dart';
 
 /// Current conditions as a grid of metric tiles, Apple-Weather style: one wide
 /// tile for wind and a pair of smaller ones below.
@@ -39,7 +39,7 @@ class CurrentConditions extends StatelessWidget {
           label: l.wind,
           value: wind.round().toString(),
           unit: 'kt',
-          color: windColor(wind),
+          color: context.windColor(wind),
           fraction: wind / _windFullScale,
           grade: windScaleLabel(l, wind),
           // Direction as type, not as a dial: the cardinal is what gets said
@@ -59,7 +59,7 @@ class CurrentConditions extends StatelessWidget {
                   label: l.waves,
                   value: wave.toStringAsFixed(1),
                   unit: 'm',
-                  color: waveColor(wave),
+                  color: context.waveColor(wave),
                   fraction: wave / _waveFullScale,
                   grade: waveScaleLabel(l, wave),
                 ),
@@ -71,7 +71,7 @@ class CurrentConditions extends StatelessWidget {
                   label: l.humidity,
                   value: current.humidity?.toString() ?? '—',
                   unit: current.humidity != null ? '%' : '',
-                  color: AppColors.cyan,
+                  color: context.accent,
                   fraction: (current.humidity ?? 0) / 100,
                 ),
               ),
@@ -120,9 +120,8 @@ class _MetricTile extends StatelessWidget {
     // Same convention as the rest of the screen: over the light gradient the
     // dark-only text tokens do not have the contrast.
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primary = isDark ? context.txtPrimary : AppColors.textLight;
-    final secondary =
-        isDark ? context.txtSecondary : AppColors.textLightSecondary;
+    final primary = isDark ? context.txtPrimary : context.ink;
+    final secondary = isDark ? context.txtSecondary : context.inkMuted;
     final text = Theme.of(context).textTheme;
 
     return Semantics(

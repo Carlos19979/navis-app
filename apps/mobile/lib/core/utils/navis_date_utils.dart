@@ -66,16 +66,6 @@ class NavisDateUtils {
     return DateFormat('HH:mm').format(date.toLocal());
   }
 
-  static String formatRelative(DateTime date) {
-    final days = daysUntil(date);
-    if (days == 0) return 'Today';
-    if (days == 1) return 'Tomorrow';
-    if (days == -1) return 'Yesterday';
-    if (days > 0 && days < 7) return 'In $days days';
-    if (days < 0 && days > -7) return '${-days} days ago';
-    return formatDate(date);
-  }
-
   static bool isExpired(DateTime date) {
     return daysUntil(date) < 0;
   }

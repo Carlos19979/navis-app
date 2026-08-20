@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/readiness/data/readiness_repository.dart';
 import 'package:navis_mobile/features/readiness/presentation/providers/readiness_provider.dart';
 import 'package:navis_mobile/features/readiness/presentation/screens/readiness_screen.dart';
+
+import 'package:navis_mobile/shared/widgets/navis_ring.dart';
 
 import '../../helpers/helpers.dart';
 import '../../helpers/text_layout.dart';
@@ -36,7 +38,8 @@ void main() {
         boatReadinessProvider.overrideWith((ref, id) => fetch()),
     empty: makeReadiness(categories: const [], attention: const []),
     populated: makeReadiness(),
-    emptyFinder: () => find.text('Score 92 / 100'),
+    // The score lives inside the ring now.
+    emptyFinder: () => find.byType(NavisRing),
     populatedFinder: () => find.text('Documents'),
   );
 
@@ -49,8 +52,10 @@ void main() {
       await pumpScreen(tester);
 
       expect(
-        find.text('Unlock the full readiness check '
-            '(safety gear + maintenance) with Pro'),
+        // The upsell names Plus now: the full check is a Plus feature, and the
+        // copy promised Pro.
+        find.text('The full check — safety gear and maintenance — '
+            'is part of Navis Plus'),
         findsOneWidget,
       );
       expect(find.text('Documents'), findsOneWidget);
@@ -120,9 +125,16 @@ void main() {
       await pumpScreen(tester);
 
       expect(find.text('Ready to sail'), findsOneWidget);
-      expect(find.text('Score 95 / 100'), findsOneWidget);
-      final icon = tester.widget<Icon>(find.byIcon(Icons.check_circle_rounded));
-      expect(icon.color, AppColors.green);
+      // The figure is inside the ring, and the arc is what says how far
+      // along: the header used to lead with a 44 px alarm icon and the words
+      // «Score 95 / 100» under it.
+      final finder = find.byType(NavisRing);
+      final ring = tester.widget<NavisRing>(finder);
+      expect(ring.value, 95);
+      // Resolved from the pumped context, not hard-coded: each accent has a
+      // light and a dark value, and asserting one of them would pin the test
+      // to whichever theme the helper happens to build.
+      expect(ring.color, tester.element(finder).positiveFill);
     });
 
     testWidgets('attention shows the amber warning header', (tester) async {
@@ -132,9 +144,16 @@ void main() {
       await pumpScreen(tester);
 
       expect(find.text('Needs attention'), findsOneWidget);
-      expect(find.text('Score 60 / 100'), findsOneWidget);
-      final icon = tester.widget<Icon>(find.byIcon(Icons.warning_rounded));
-      expect(icon.color, AppColors.amber);
+      // The figure is inside the ring, and the arc is what says how far
+      // along: the header used to lead with a 44 px alarm icon and the words
+      // «Score 60 / 100» under it.
+      final finder = find.byType(NavisRing);
+      final ring = tester.widget<NavisRing>(finder);
+      expect(ring.value, 60);
+      // Resolved from the pumped context, not hard-coded: each accent has a
+      // light and a dark value, and asserting one of them would pin the test
+      // to whichever theme the helper happens to build.
+      expect(ring.color, tester.element(finder).cautionFill);
     });
 
     testWidgets('not ready shows the red error header', (tester) async {
@@ -144,9 +163,16 @@ void main() {
       await pumpScreen(tester);
 
       expect(find.text('Not ready'), findsOneWidget);
-      expect(find.text('Score 20 / 100'), findsOneWidget);
-      final icon = tester.widget<Icon>(find.byIcon(Icons.error_rounded));
-      expect(icon.color, AppColors.red);
+      // The figure is inside the ring, and the arc is what says how far
+      // along: the header used to lead with a 44 px alarm icon and the words
+      // «Score 20 / 100» under it.
+      final finder = find.byType(NavisRing);
+      final ring = tester.widget<NavisRing>(finder);
+      expect(ring.value, 20);
+      // Resolved from the pumped context, not hard-coded: each accent has a
+      // light and a dark value, and asserting one of them would pin the test
+      // to whichever theme the helper happens to build.
+      expect(ring.color, tester.element(finder).criticalFill);
     });
   });
 
@@ -233,7 +259,9 @@ void main() {
       );
       await pumpScreen(tester);
 
-      expect(find.text('Needs attention'), findsOneWidget);
+      // The section heading is tracked uppercase; the status word in the
+      // header is not.
+      expect(find.text('NEEDS ATTENTION'), findsOneWidget);
       expect(find.text('set up a maintenance plan'), findsOneWidget);
       expect(find.text('overdue'), findsOneWidget);
       expect(find.text('not logged yet'), findsOneWidget);
@@ -274,7 +302,7 @@ void main() {
       await tester.pumpWidget(buildSubject(makeReadiness()));
       await pumpScreen(tester);
 
-      expect(find.text('Needs attention'), findsNothing);
+      expect(find.text('NEEDS ATTENTION'), findsNothing);
     });
   });
 

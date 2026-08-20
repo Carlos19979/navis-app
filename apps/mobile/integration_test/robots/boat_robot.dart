@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
-import 'package:navis_mobile/features/boat/presentation/screens/boat_detail_screen.dart';
+import 'package:navis_mobile/features/boat/presentation/screens/today_screen.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_text_field.dart';
 
@@ -16,7 +16,7 @@ class BoatRobot {
 
   /// Empty-state CTA on a fresh account; also asserts the dashboard loaded.
   Future<void> expectEmptyDashboard() =>
-      pumpUntilFound(tester, find.text('Add Boat'));
+      pumpUntilFound(tester, find.text('Add boat'));
 
   Future<void> startAddBoat() async {
     await tapUntil(tester, _addBoatTrigger(), find.text('New Boat'));
@@ -43,28 +43,27 @@ class BoatRobot {
 
   /// Empty dashboards offer the empty-state CTA; populated ones the FAB.
   Finder _addBoatTrigger() {
-    final cta = find.text('Add Boat');
+    final cta = find.text('Add boat');
     if (cta.evaluate().isNotEmpty) return cta;
     return find.byType(FloatingActionButton);
   }
 
-  /// The boat-detail hub's scrollable, for scoped lazy-sliver scrolling.
-  Finder detailScrollable() => find.descendant(
-        of: find.byType(BoatDetailScreen),
-        matching: find.byType(Scrollable),
-      );
-
-  /// Scrolls the detail hub top to bottom and returns every label seen on the
-  /// way.
+  /// Today's scrollable, by key.
   ///
-  /// The hub is a lazy sliver list: what scrolls off is disposed, so "the member
-  /// sees the permissions card near the top AND 'Leave shared boat' at the
-  /// bottom, and no owner-only tile anywhere" cannot be asserted from one
-  /// screenful. Scoped to BoatDetailScreen — the dashboard underneath is still
-  /// in the tree and would smuggle its own labels in.
+  /// By key and not by type: Today nests scrollables (the photo strip, the
+  /// picker sheet), and `find.byType(Scrollable).first` picked whichever the
+  /// tree happened to build first.
+  Finder detailScrollable() => find.byKey(todayScrollKey);
+
+  /// Scrolls Today top to bottom and returns every label seen on the way.
+  ///
+  /// It is a lazy list: what scrolls off is disposed, so "the member sees their
+  /// permissions AND 'Leave shared boat' at the bottom, and no owner-only row
+  /// anywhere" cannot be asserted from one screenful. Scoped to TodayScreen so
+  /// the nav pill's own labels are not smuggled in.
   Future<Set<String>> readDetailLabels({int drags = 8}) async {
     final labels = find.descendant(
-      of: find.byType(BoatDetailScreen),
+      of: find.byType(TodayScreen),
       matching: find.byType(Text),
     );
     final seen = <String>{};
@@ -89,8 +88,8 @@ class BoatRobot {
     return seen;
   }
 
-  /// Opens the Share boat sheet from the detail hub and reads the invite
-  /// code (the prominent cyan 26pt text — the only reliable handle).
+  /// Opens the Share boat sheet from Today and reads the invite code (the
+  /// prominent 26pt text — the only reliable handle).
   Future<String> readShareCode() async {
     final codeText = find.byWidgetPredicate(
       (w) => w is Text && w.style?.fontSize == 26,
@@ -138,7 +137,7 @@ class BoatRobot {
   /// The tile lives at the bottom of a lazy CustomScrollView — scroll first.
   Future<void> deleteBoat(String name) async {
     await openDetail(name);
-    final tile = find.text('Delete Boat');
+    final tile = find.text('Delete boat');
     await scrollTo(tester, tile, scrollable: detailScrollable());
     await tapUntil(tester, tile, find.text('Cancel'));
     await pumpFor(tester, const Duration(milliseconds: 400));
@@ -162,11 +161,11 @@ class BoatRobot {
     String length = '9.5',
     String? homePort,
   }) async {
-    await _enterField('Boat Name', name);
-    await _enterField('Registration Number', registration);
-    await _enterField('Length (m)', length);
+    await _enterField('Boat name', name);
+    await _enterField('Registration number', registration);
+    await _enterField('Length', length);
     if (homePort != null) {
-      await _enterField('Home Port (optional)', homePort);
+      await _enterField('Home port', homePort);
     }
     // Dismiss the keyboard so the submit button is tappable, then require the
     // form to actually go away — a missed tap or validation error would
@@ -213,9 +212,9 @@ class BoatRobot {
   /// Taps a hub tile on the boat detail screen and waits for [appears].
   ///
   /// The hub is now where everything about the boat lives: 'Documents',
-  /// 'Logbook', 'Trip Statistics', 'Maintenance & expenses', 'Cost
+  /// 'Logbook', 'Trip statistics', 'Maintenance & expenses', 'Cost
   /// intelligence', 'Bookings', 'Anchor watch', 'Export passport', 'Crew and
-  /// permissions' (owner only), 'Share boat', 'Edit'/'Delete Boat'. Tiles low in
+  /// permissions' (owner only), 'Share boat', 'Edit'/'Delete boat'. Tiles low in
   /// the hub are lazy sliver children — scroll to build them.
   Future<void> openTile(String tile, Finder appears) async {
     final f = find.text(tile);

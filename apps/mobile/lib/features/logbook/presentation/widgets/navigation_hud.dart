@@ -3,8 +3,10 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
+import 'package:navis_mobile/shared/utils/status_colors.dart';
 
 class NavigationHud extends StatelessWidget {
   const NavigationHud({
@@ -37,12 +39,8 @@ class NavigationHud extends StatelessWidget {
     return '${heading!.toStringAsFixed(0)}\u00b0';
   }
 
-  Color get _gpsColor {
-    if (gpsAccuracy == null) return AppColors.textSecondary;
-    if (gpsAccuracy! < 10) return AppColors.green;
-    if (gpsAccuracy! < 25) return AppColors.amber;
-    return AppColors.red;
-  }
+  Color _gpsColor(BuildContext context) =>
+      context.gpsAccuracyColor(gpsAccuracy);
 
   @override
   Widget build(BuildContext context) {
@@ -61,11 +59,10 @@ class NavigationHud extends StatelessWidget {
               vertical: 10,
             ),
             decoration: BoxDecoration(
-              color: AppColors.navy.withValues(alpha: 0.8),
+              color: context.onMedia,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: AppColors.glassBorder,
-                width: 0.5,
+                color: context.onMediaBorder,
               ),
             ),
             child: Column(
@@ -78,35 +75,35 @@ class NavigationHud extends StatelessWidget {
                         onTap: onClose!,
                         semanticLabel: closeSemanticLabel,
                       ),
-                      _divider(),
+                      _divider(context),
                     ],
                     Expanded(
                       child: _HudStat(
                         label: l.speedAbbr,
                         value: speedKnots.toStringAsFixed(1),
                         unit: 'kn',
-                        valueColor: AppColors.cyan,
+                        valueColor: context.accent,
                       ),
                     ),
-                    _divider(),
+                    _divider(context),
                     Expanded(
                       child: _HudStat(
                         label: l.headingAbbr,
                         value: _headingLabel,
                         unit: '',
-                        valueColor: AppColors.textPrimary,
+                        valueColor: context.ink,
                       ),
                     ),
-                    _divider(),
+                    _divider(context),
                     Expanded(
                       child: _HudStat(
                         label: l.distanceAbbr,
                         value: distanceNm.toStringAsFixed(2),
                         unit: 'nm',
-                        valueColor: AppColors.green,
+                        valueColor: context.positive,
                       ),
                     ),
-                    _divider(),
+                    _divider(context),
                     Expanded(
                       child: _ElapsedClock(
                         label: l.timeAbbr,
@@ -123,13 +120,13 @@ class NavigationHud extends StatelessWidget {
                       Icon(
                         Icons.gps_fixed,
                         size: 10,
-                        color: _gpsColor,
+                        color: _gpsColor(context),
                       ),
                       const SizedBox(width: 4),
                       Text(
                         '\u00b1${gpsAccuracy!.toStringAsFixed(0)}m',
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: _gpsColor,
+                              color: _gpsColor(context),
                               fontSize: 10,
                             ),
                       ),
@@ -144,11 +141,11 @@ class NavigationHud extends StatelessWidget {
     );
   }
 
-  Widget _divider() {
+  Widget _divider(BuildContext context) {
     return Container(
-      width: 0.5,
+      width: Dimens.hairline,
       height: 32,
-      color: AppColors.glassBorder,
+      color: context.onMediaBorder,
     );
   }
 }
@@ -168,15 +165,15 @@ class _HudCloseButton extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
-        child: const Padding(
-          padding: EdgeInsets.only(right: 12),
+        child: Padding(
+          padding: const EdgeInsets.only(right: 12),
           child: SizedBox(
             width: 32,
             height: 40,
             child: Icon(
               Icons.close,
               size: 22,
-              color: AppColors.textPrimary,
+              color: context.ink,
             ),
           ),
         ),
@@ -232,7 +229,7 @@ class _ElapsedClockState extends State<_ElapsedClock> {
       label: widget.label,
       value: _formatted,
       unit: '',
-      valueColor: AppColors.textPrimary,
+      valueColor: context.ink,
     );
   }
 }
@@ -258,7 +255,7 @@ class _HudStat extends StatelessWidget {
         Text(
           label,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: AppColors.textSecondary,
+                color: context.inkMuted,
                 fontSize: 9,
                 letterSpacing: 1.2,
               ),
@@ -287,7 +284,7 @@ class _HudStat extends StatelessWidget {
                   TextSpan(
                     text: ' $unit',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.inkMuted,
                           fontSize: 10,
                         ),
                   ),

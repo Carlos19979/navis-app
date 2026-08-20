@@ -1,14 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/app/routes.dart';
+import 'package:navis_mobile/core/theme/app_typography.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
-import 'package:navis_mobile/features/boat/presentation/widgets/expiry_indicator.dart';
 import 'package:navis_mobile/features/documents/domain/entities/document.dart';
+import 'package:navis_mobile/features/documents/presentation/document_type_label.dart';
 import 'package:navis_mobile/features/documents/presentation/widgets/document_status_badge.dart';
-import 'package:navis_mobile/shared/widgets/navis_card.dart';
+import 'package:navis_mobile/l10n/app_localizations.dart';
 
+/// One document in the list: what it is, when it runs out, and how worried to
+/// be about that.
+///
+/// Editorial row rather than a card. It carried a card *plus* a 3 px gradient
+/// severity stripe *plus* a tinted circular icon badge *plus* the status chip —
+/// four devices saying the same thing, and the row that mattered (the expired
+/// one) had no way left to stand out. The chip says it; the rest is type.
 class DocumentCard extends StatelessWidget {
   const DocumentCard({super.key, required this.document, this.onTap});
 
@@ -18,101 +27,66 @@ class DocumentCard extends StatelessWidget {
   /// documents list passes `context.push` so back returns to the list.
   final VoidCallback? onTap;
 
-  Color get _statusColor {
-    final daysLeft = NavisDateUtils.daysUntil(document.expiryDate);
-    if (daysLeft < 0) return AppColors.red;
-    if (daysLeft <= 30) return AppColors.red;
-    if (daysLeft <= 90) return AppColors.amber;
-    return AppColors.green;
-  }
-
-  /// Prettifies a stored document type for display: snake_case → Title Case
-  /// (e.g. `safety_certificate` → `Safety Certificate`). Already-nice values
-  /// (e.g. `Insurance`) pass through unchanged.
-  static String _prettyType(String type) => type
-      .split(RegExp(r'[_\s]+'))
-      .where((w) => w.isNotEmpty)
-      .map((w) => w[0].toUpperCase() + w.substring(1))
-      .join(' ');
-
-  /// Display title: the user-given name for `custom` documents, the
-  /// prettified type otherwise.
-  String get _title {
+  /// The user's own name for a `custom` document, the localized type otherwise.
+  String _title(AppLocalizations l) {
     final customName = document.customName;
     if (document.type == 'custom' &&
         customName != null &&
         customName.isNotEmpty) {
       return customName;
     }
-    return _prettyType(document.type);
+    // Through the shared label: this used to title-case the raw type, so the
+    // list said «Insurance Rc» about a document whose own form said «Seguro
+    // RC».
+    return documentTypeLabel(l, document.type);
   }
 
   @override
   Widget build(BuildContext context) {
-    return NavisCard(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: EdgeInsets.zero,
-      onTap: onTap ?? () => context.go('/documents/${document.id}'),
-      child: IntrinsicHeight(
-        child: Row(
-          children: [
-            Container(
-              width: 3,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    _statusColor,
-                    _statusColor.withValues(alpha: 0.4),
-                  ],
-                ),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  bottomLeft: Radius.circular(16),
-                ),
-              ),
+    final l = AppLocalizations.of(context)!;
+    final title = _title(l);
+
+    return Semantics(
+      button: true,
+      label: title,
+      value: NavisDateUtils.formatDate(document.expiryDate),
+      child: ExcludeSemantics(
+        child: InkWell(
+          onTap: onTap ?? () => context.go(Routes.document(document.id)),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: context.hairline)),
             ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
-                ),
-                child: Row(
-                  children: [
-                    ExpiryIndicator(expiryDate: document.expiryDate),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            _title,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleSmall
-                                ?.copyWith(fontWeight: FontWeight.w600),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: Dimens.spaceLg),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: NavisType.title3.copyWith(color: context.ink),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          NavisDateUtils.formatDate(document.expiryDate),
+                          style: NavisType.caption.copyWith(
+                            color: context.inkMuted,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            NavisDateUtils.formatDate(document.expiryDate),
-                            style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: context.txtSecondary,
-                                    ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    DocumentStatusBadge(expiryDate: document.expiryDate),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: Dimens.spaceMd),
+                  DocumentStatusBadge(expiryDate: document.expiryDate),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );

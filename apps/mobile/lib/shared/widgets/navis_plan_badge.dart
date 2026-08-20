@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 
 /// The amber "PRO" / "PLUS" pill that marks an entry point as paid.
 ///
@@ -22,21 +23,19 @@ class NavisPlanBadge extends StatelessWidget {
           ? const EdgeInsets.symmetric(horizontal: 5, vertical: 1)
           : const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        // Opaque core so it stays readable on top of an image or a FAB.
+        // Opaque, so it stays readable pinned to a photo or a FAB, but *quiet*.
+        // It marks availability, not urgency: a solid amber pill here shouted as
+        // loud as an expired document, and the two are not the same news.
         color: Color.alphaBlend(
-          AppColors.amber.withValues(alpha: 0.18),
+          context.ink.withValues(alpha: 0.72),
           Theme.of(context).colorScheme.surface,
         ),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: AppColors.amber.withValues(alpha: 0.4),
-          width: 0.5,
-        ),
+        borderRadius: BorderRadius.circular(Dimens.radiusSm),
       ),
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: AppColors.amber,
+              color: context.canvas,
               fontWeight: FontWeight.w700,
               fontSize: compact ? 9 : null,
               letterSpacing: compact ? 0 : 0.5,

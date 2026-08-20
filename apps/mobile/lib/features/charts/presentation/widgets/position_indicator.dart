@@ -3,7 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/shared/widgets/navis_pulse_budget.dart';
 
 class PositionIndicator extends StatelessWidget {
@@ -33,7 +33,7 @@ class PositionIndicator extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: AppColors.cyan.withValues(alpha: 0.4),
+                      color: context.accent.withValues(alpha: 0.4),
                       width: 2,
                     ),
                   ),
@@ -63,12 +63,12 @@ class PositionIndicator extends StatelessWidget {
                 width: 18,
                 height: 18,
                 decoration: BoxDecoration(
-                  color: AppColors.cyan,
+                  color: context.accent,
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 3),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.cyan.withValues(alpha: 0.5),
+                      color: context.accent.withValues(alpha: 0.5),
                       blurRadius: 12,
                       spreadRadius: 3,
                     ),

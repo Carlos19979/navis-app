@@ -179,7 +179,7 @@ void main() {
 
       expect(find.byTooltip('Edit trip'), findsOneWidget);
       expect(find.byTooltip('Share trip'), findsOneWidget);
-      expect(find.byTooltip('Delete Trip'), findsOneWidget);
+      expect(find.byTooltip('Delete trip'), findsOneWidget);
       expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
       expect(find.byIcon(Icons.share_outlined), findsOneWidget);
       expect(find.byIcon(Icons.delete_outlined), findsOneWidget);
@@ -197,11 +197,11 @@ void main() {
       );
       await pumpFrames(tester);
 
-      await tester.tap(find.byTooltip('Delete Trip'));
+      await tester.tap(find.byTooltip('Delete trip'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
 
-      expect(find.text('Delete Trip'), findsOneWidget);
+      expect(find.text('Delete trip'), findsOneWidget);
       expect(
         find.text('Are you sure you want to delete this trip?'),
         findsOneWidget,
@@ -223,11 +223,11 @@ void main() {
       await pumpFrames(tester);
 
       // Open dialog
-      await tester.tap(find.byTooltip('Delete Trip'));
+      await tester.tap(find.byTooltip('Delete trip'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
 
-      expect(find.text('Delete Trip'), findsOneWidget);
+      expect(find.text('Delete trip'), findsOneWidget);
 
       // Tap Cancel
       await tester.tap(find.text('Cancel'));
@@ -235,7 +235,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
 
       // Dialog should be dismissed
-      expect(find.text('Delete Trip'), findsNothing);
+      expect(find.text('Delete trip'), findsNothing);
     });
 
     testWidgets('confirm delete calls repository deleteTrip', (tester) async {
@@ -253,7 +253,7 @@ void main() {
       await pumpFrames(tester);
 
       // Open dialog
-      await tester.tap(find.byTooltip('Delete Trip'));
+      await tester.tap(find.byTooltip('Delete trip'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
 
@@ -330,28 +330,12 @@ void main() {
 
     testWidgets('renders the map card when track points exist', (tester) async {
       setPhoneSize(tester);
-      // Ignore tile/network-image plumbing errors from FlutterMap in tests
-      // (same pattern as the W1 chart spike).
-      final originalOnError = FlutterError.onError;
-      FlutterError.onError = (details) {
-        final message = details.exceptionAsString();
-        const tolerated = [
-          'MissingPluginException',
-          'HTTP request failed',
-          'NetworkImage',
-          'CachedNetworkImageProvider',
-          'HttpException',
-          'SocketException',
-          'Failed host lookup',
-          'Connection refused',
-          'Connection closed',
-          'Couldn\'t download or retrieve file',
-          'HttpExceptionWithStatus',
-        ];
-        if (tolerated.any(message.contains)) return;
-        originalOnError?.call(details);
-      };
-      addTearDown(() => FlutterError.onError = originalOnError);
+      // The shared filter, not a copy of its list: this test carried its own
+      // and it had gone stale — it predates the offline tile store, so it
+      // tolerated raw HTTP errors but not the DioException the store's
+      // fetcher actually throws. It passed only while few enough tiles
+      // resolved inside the pumped frames.
+      installTileNoiseFilter();
 
       final trip = makeTrip().copyWith(
         trackPoints: [

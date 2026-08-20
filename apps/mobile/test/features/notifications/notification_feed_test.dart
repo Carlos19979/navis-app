@@ -167,8 +167,9 @@ void main() {
 
       expect(find.text('Sin leer'), findsOneWidget);
       expect(find.text('Ya leida'), findsOneWidget);
-      // "Mark all as read" only shows while something is unread.
-      expect(find.text('Mark all as read'), findsOneWidget);
+      // «Mark all as read» only shows while something is unread — an icon
+      // with that tooltip now, because the label ran off the bar.
+      expect(find.byTooltip('Mark all as read'), findsOneWidget);
     });
 
     testWidgets('empty state explains what will show up here', (tester) async {
@@ -176,7 +177,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('No notifications'), findsOneWidget);
-      expect(find.text('Mark all as read'), findsNothing);
+      expect(find.byTooltip('Mark all as read'), findsNothing);
     });
 
     testWidgets('tapping a notification marks it read and follows its link',
@@ -232,12 +233,12 @@ void main() {
       await tester.pumpWidget(wrap(const NotificationsScreen()));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Mark all as read'));
+      await tester.tap(find.byTooltip('Mark all as read'));
       await tester.pumpAndSettle();
 
       verify(() => repo.markAllRead()).called(1);
       // The action disappears once nothing is unread.
-      expect(find.text('Mark all as read'), findsNothing);
+      expect(find.byTooltip('Mark all as read'), findsNothing);
     });
   });
 

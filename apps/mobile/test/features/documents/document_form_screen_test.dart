@@ -90,21 +90,22 @@ void main() {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
-      expect(find.text('New Document'), findsOneWidget);
+      expect(find.text('New document'), findsOneWidget);
     });
 
     testWidgets('shows Document Type section header', (tester) async {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
-      expect(find.text('Document Type'), findsAtLeastNWidgets(1));
+      expect(find.text('Document type'), findsAtLeastNWidgets(1));
     });
 
     testWidgets('shows Notes section header', (tester) async {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
-      expect(find.text('Notes'), findsAtLeastNWidgets(1));
+      // Section headings are tracked uppercase.
+      expect(find.text('NOTES'), findsAtLeastNWidgets(1));
     });
 
     testWidgets('shows document type dropdown', (tester) async {
@@ -131,7 +132,7 @@ void main() {
       // Verify key canonical document types near the top are visible
       expect(find.text('Third-Party Insurance'), findsAtLeastNWidgets(1));
       expect(find.text('Full Insurance'), findsAtLeastNWidgets(1));
-      expect(find.text('Life Raft'), findsAtLeastNWidgets(1));
+      expect(find.text('Life raft'), findsAtLeastNWidgets(1));
       expect(find.text('Navigation License'), findsAtLeastNWidgets(1));
     });
 
@@ -156,7 +157,7 @@ void main() {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
-      expect(find.text('Expiry Date'), findsOneWidget);
+      expect(find.text('Expiry date'), findsOneWidget);
     });
 
     testWidgets('shows alert day chips with 30 and 7 preselected',
@@ -164,7 +165,7 @@ void main() {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
-      expect(find.text('Alert Days Before Expiry'), findsOneWidget);
+      expect(find.text('Alert days before expiry'), findsOneWidget);
       // Preset thresholds render as chips (plus the custom-entry chip).
       expect(find.text('30 days'), findsOneWidget);
       expect(find.text('15 days'), findsOneWidget);
@@ -196,7 +197,7 @@ void main() {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
-      expect(find.text('Add Scan'), findsOneWidget);
+      expect(find.text('Add scan'), findsOneWidget);
     });
 
     testWidgets('deselecting every alert chip blocks saving', (tester) async {
@@ -359,7 +360,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Find and tap the expiry date field area
-      final expiryField = find.text('Expiry Date');
+      final expiryField = find.text('Expiry date');
       expect(expiryField, findsOneWidget);
 
       // Tap the GestureDetector wrapping the date field
@@ -374,7 +375,7 @@ void main() {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Expiry Date'));
+      await tester.tap(find.text('Expiry date'));
       await tester.pumpAndSettle();
 
       expect(find.byType(DatePickerDialog), findsOneWidget);
@@ -390,7 +391,7 @@ void main() {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Expiry Date'));
+      await tester.tap(find.text('Expiry date'));
       await tester.pumpAndSettle();
 
       // Confirm the selected date
@@ -405,7 +406,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Last Renewal'), findsNothing);
-      expect(find.text('Renewal Cost'), findsNothing);
+      expect(find.text('Renewal cost'), findsNothing);
       expect(find.text('Provider / Company'), findsNothing);
     });
   });
@@ -420,7 +421,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      expect(find.text('Edit Document'), findsAtLeastNWidgets(1));
+      expect(find.text('Edit document'), findsAtLeastNWidgets(1));
     });
 
     testWidgets('shows Edit Document button in edit mode', (tester) async {
@@ -430,7 +431,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      expect(find.text('Edit Document'), findsAtLeastNWidgets(1));
+      expect(find.text('Edit document'), findsAtLeastNWidgets(1));
     });
 
     testWidgets('pre-populates notes from existing document', (tester) async {
@@ -469,8 +470,8 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      // Title in AppBar + button label both say 'Renew Document'
-      expect(find.text('Renew Document'), findsNWidgets(2));
+      // Title in AppBar + button label both say 'Renew document'
+      expect(find.text('Renew document'), findsNWidgets(2));
     });
 
     testWidgets('shows Renew Document button', (tester) async {
@@ -481,7 +482,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      expect(find.text('Renew Document'), findsNWidgets(2)); // title + button
+      expect(find.text('Renew document'), findsNWidgets(2)); // title + button
     });
 
     testWidgets('shows renewal details section', (tester) async {
@@ -492,8 +493,8 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      expect(find.text('Last Renewal'), findsOneWidget);
-      expect(find.text('Renewal Cost'), findsOneWidget);
+      expect(find.text('LAST RENEWAL'), findsOneWidget);
+      expect(find.text('Renewal cost'), findsOneWidget);
       expect(find.text('Provider / Company'), findsOneWidget);
     });
 
@@ -523,7 +524,7 @@ void main() {
 
       final costField = find.widgetWithText(
         TextFormField,
-        'Renewal Cost',
+        'Renewal cost',
       );
       expect(costField, findsOneWidget);
 
@@ -574,26 +575,34 @@ void main() {
       await tester.pumpAndSettle();
 
       // Tap the scan area
-      await tester.tap(find.text('Add Scan'));
+      await tester.tap(find.text('Add scan'));
       await tester.pumpAndSettle();
 
       // Bottom sheet should appear with camera and gallery options
-      expect(find.text('Take Photo'), findsOneWidget);
-      expect(find.text('Choose from Gallery'), findsOneWidget);
+      expect(find.text('Take photo'), findsOneWidget);
+      expect(find.text('Choose from gallery'), findsOneWidget);
     });
 
     testWidgets('scan bottom sheet can be dismissed', (tester) async {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Add Scan'));
+      // Scroll it into view first, like the sibling test above: the scan area
+      // sits below the fold, and tapping an off-screen finder silently misses.
+      await tester.ensureVisible(find.text('Add scan'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add scan'));
       await tester.pumpAndSettle();
 
-      // Dismiss by tapping outside
-      await tester.tapAt(Offset.zero);
+      // Dismiss by tapping the barrier above the sheet. Deliberately not
+      // Offset.zero: the very corner of the screen belongs to the app bar's
+      // back button, so a miss there leaves the sheet open and pops the route
+      // instead — which is how this assertion used to fail for the wrong
+      // reason.
+      await tester.tapAt(const Offset(400, 120));
       await tester.pumpAndSettle();
 
-      expect(find.text('Take Photo'), findsNothing);
+      expect(find.text('Take photo'), findsNothing);
     });
 
     testWidgets('all form sections are visible on scroll', (tester) async {
@@ -601,7 +610,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Document Type section
-      expect(find.text('Document Type'), findsAtLeastNWidgets(1));
+      expect(find.text('Document type'), findsAtLeastNWidgets(1));
 
       // Scroll down to see the rest
       await tester.drag(

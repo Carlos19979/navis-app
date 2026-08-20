@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
@@ -57,7 +57,7 @@ class _StartEventRegattaScreenState
     final boat = _boatById(boats);
     final departurePort = (boat?.homePort != null && boat!.homePort!.isNotEmpty)
         ? boat.homePort!
-        : (event?.locationName ?? 'Puerto de salida');
+        : (event?.locationName ?? AppLocalizations.of(context)!.departurePort);
 
     setState(() => _saving = true);
     try {
@@ -71,7 +71,7 @@ class _StartEventRegattaScreenState
       ref.invalidate(groupRegattasProvider(_groupId!));
       if (!mounted) return;
       NavisSnackbar.success(context, l.joinedWithGroup);
-      context.pushReplacement('/regattas/${regatta.id}');
+      context.pushReplacement(Routes.regatta(regatta.id));
     } catch (_) {
       if (!mounted) return;
       setState(() => _saving = false);
@@ -98,7 +98,7 @@ class _StartEventRegattaScreenState
             NavisCard(
               child: Row(
                 children: [
-                  const Icon(Icons.emoji_events, color: AppColors.cyan),
+                  Icon(Icons.emoji_events, color: context.accent),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -117,10 +117,10 @@ class _StartEventRegattaScreenState
           _Label(l.groupLabel),
           const SizedBox(height: 8),
           groupsAsync.when(
-            loading: () => const Center(
-                child: CircularProgressIndicator(color: AppColors.cyan)),
+            loading: () =>
+                Center(child: CircularProgressIndicator(color: context.accent)),
             error: (e, _) => Text(l.errorWithMessage(e.toString()),
-                style: const TextStyle(color: AppColors.red)),
+                style: TextStyle(color: context.critical)),
             data: (groups) {
               final owned =
                   groups.where((g) => g.isOwner).toList(growable: false);
@@ -135,7 +135,7 @@ class _StartEventRegattaScreenState
                         label: l.createGroup,
                         variant: NavisButtonVariant.secondary,
                         compact: true,
-                        onPressed: () => context.push('/groups/new'),
+                        onPressed: () => context.push(Routes.newGroup),
                       ),
                     ],
                   ),
@@ -157,10 +157,10 @@ class _StartEventRegattaScreenState
           _Label(l.boat),
           const SizedBox(height: 8),
           boatsAsync.when(
-            loading: () => const Center(
-                child: CircularProgressIndicator(color: AppColors.cyan)),
+            loading: () =>
+                Center(child: CircularProgressIndicator(color: context.accent)),
             error: (e, _) => Text(l.errorWithMessage(e.toString()),
-                style: const TextStyle(color: AppColors.red)),
+                style: TextStyle(color: context.critical)),
             data: (boats) {
               if (boats.isEmpty) {
                 return NavisCard(
@@ -173,7 +173,7 @@ class _StartEventRegattaScreenState
                         label: l.addBoat,
                         variant: NavisButtonVariant.secondary,
                         compact: true,
-                        onPressed: () => context.push('/boats/new'),
+                        onPressed: () => context.push(Routes.newBoat),
                       ),
                     ],
                   ),

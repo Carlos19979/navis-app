@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/chart_colors.dart';
+import 'package:navis_mobile/core/theme/app_typography.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
+import 'package:navis_mobile/core/utils/measure_utils.dart';
 import 'package:navis_mobile/core/utils/money_utils.dart';
 import 'package:navis_mobile/features/cost/domain/cost_period_stats.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -90,17 +91,21 @@ class CostHeadlineCard extends StatelessWidget {
             child: Text(
               Money.format(locale, stats.total),
               maxLines: 1,
-              style: theme.textTheme.displaySmall?.copyWith(
-                color: AppColors.cyan,
-                fontWeight: FontWeight.w800,
-              ),
+              style: NavisType.numeral.copyWith(color: context.ink),
             ),
           ),
           if (stats.distanceNm > 0 || stats.trips > 0) ...[
             const SizedBox(height: 4),
             Text(
               l.costPeriodUsage(
-                stats.distanceNm.toStringAsFixed(1),
+                // Number only — the string already carries the unit (and it is
+                // «MN» in Spanish). Same trap as the wave height, which came
+                // out as «0,8 m m».
+                Measure.decimal(
+                  locale,
+                  stats.distanceNm,
+                  digits: stats.distanceNm < 10 ? 1 : 0,
+                ),
                 stats.trips,
               ),
               style: theme.textTheme.bodyMedium?.copyWith(
@@ -151,7 +156,7 @@ class _DeltaBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = worse ? AppColors.amber : AppColors.green;
+    final color = worse ? context.caution : context.positive;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -207,10 +212,10 @@ class CostRunRateCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.speed_rounded,
                 size: Dimens.iconSm,
-                color: AppColors.green,
+                color: context.inkMuted,
               ),
               const SizedBox(width: Dimens.spaceSm),
               Text(
@@ -231,7 +236,7 @@ class CostRunRateCard extends StatelessWidget {
                     l.costPerMonthValue(Money.format(locale, monthly)),
                     maxLines: 1,
                     style: theme.textTheme.titleLarge?.copyWith(
-                      color: AppColors.green,
+                      color: context.ink,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -277,9 +282,6 @@ class CostFixedVariableCard extends StatelessWidget {
   final CostPeriodStats stats;
   final String locale;
 
-  static const _fixedColor = AppColors.cyan;
-  static const _variableColor = AppColors.amber;
-
   static int _flex(double share) => (share * 1000).round().clamp(1, 1000);
 
   @override
@@ -313,12 +315,12 @@ class CostFixedVariableCard extends StatelessWidget {
                       // At least one flex unit, so a sliver of a share still
                       // shows rather than rounding itself out of existence.
                       flex: _flex(fixedShare),
-                      child: const ColoredBox(color: _fixedColor),
+                      child: ColoredBox(color: context.accent),
                     ),
                   if (fixedShare < 1)
                     Expanded(
                       flex: _flex(1 - fixedShare),
-                      child: const ColoredBox(color: _variableColor),
+                      child: ColoredBox(color: context.caution),
                     ),
                 ],
               ),
@@ -326,7 +328,7 @@ class CostFixedVariableCard extends StatelessWidget {
           ),
           const SizedBox(height: Dimens.spaceMd),
           _Row(
-            color: _fixedColor,
+            color: context.accent,
             label: l.costFixed,
             amount: stats.fixed,
             share: fixedShare,
@@ -334,7 +336,7 @@ class CostFixedVariableCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           _Row(
-            color: _variableColor,
+            color: context.caution,
             label: l.costVariable,
             amount: stats.variable,
             share: 1 - fixedShare,
@@ -452,8 +454,8 @@ class CostCategoryCard extends StatelessWidget {
                         Money.signedPercent(locale, item.deltaPct!),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: item.deltaPct! > 0
-                              ? AppColors.amber
-                              : AppColors.green,
+                              ? context.caution
+                              : context.positive,
                           fontWeight: FontWeight.w600,
                         ),
                       ),

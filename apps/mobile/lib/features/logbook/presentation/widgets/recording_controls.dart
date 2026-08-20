@@ -2,8 +2,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/logbook/domain/entities/trip.dart';
 import 'package:navis_mobile/shared/widgets/navis_pulse_budget.dart';
@@ -15,7 +15,7 @@ const _labelShadows = [
   Shadow(color: Colors.black54, blurRadius: 4, offset: Offset(0, 1)),
 ];
 
-/// Lightened red for the discard row: [AppColors.red] itself only reaches ~2.9:1
+/// Lightened red for the discard row: [context.critical] itself only reaches ~2.9:1
 /// against the red-tinted glass, this clears WCAG AA.
 const _discardTint = Color(0xFFFF8E80);
 
@@ -45,37 +45,35 @@ class RecordingControls extends StatelessWidget {
         return _StartButton(onPressed: onStart);
       case TripStatus.recording:
         return _dock(
+          context,
           l,
-          primary: _GradientControlButton(
+          primary: _ControlButton(
             icon: Icons.pause,
             label: l.pauseTrip,
-            gradient: AppColors.amberGradient,
-            glowColor: AppColors.amber,
+            color: context.caution,
             onPressed: onPause,
           ),
-          secondary: _GradientControlButton(
+          secondary: _ControlButton(
             icon: Icons.stop,
             label: l.stopTrip,
-            gradient: AppColors.redGradient,
-            glowColor: AppColors.red,
+            color: context.critical,
             onPressed: onStop,
           ),
         );
       case TripStatus.paused:
         return _dock(
+          context,
           l,
-          primary: _GradientControlButton(
+          primary: _ControlButton(
             icon: Icons.play_arrow,
             label: l.resumeTrip,
-            gradient: AppColors.greenGradient,
-            glowColor: AppColors.green,
+            color: context.positive,
             onPressed: onResume,
           ),
-          secondary: _GradientControlButton(
+          secondary: _ControlButton(
             icon: Icons.stop,
             label: l.stopTrip,
-            gradient: AppColors.redGradient,
-            glowColor: AppColors.red,
+            color: context.critical,
             onPressed: onStop,
           ),
         );
@@ -89,6 +87,7 @@ class RecordingControls extends StatelessWidget {
   /// destructive treatment: still clearly subordinate to pause/stop (outlined,
   /// not filled), but impossible to miss.
   Widget _dock(
+    BuildContext context,
     AppLocalizations l, {
     required Widget primary,
     required Widget secondary,
@@ -110,9 +109,9 @@ class RecordingControls extends StatelessWidget {
               Dimens.spaceMd,
             ),
             decoration: BoxDecoration(
-              color: AppColors.navy.withValues(alpha: 0.78),
+              color: context.onMedia,
               borderRadius: BorderRadius.circular(Dimens.radiusXxl),
-              border: Border.all(color: AppColors.glassBorder, width: 0.5),
+              border: Border.all(color: context.onMediaBorder),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -127,10 +126,10 @@ class RecordingControls extends StatelessWidget {
                 ),
                 if (onCancel != null) ...[
                   const SizedBox(height: Dimens.spaceLg),
-                  const Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: AppColors.glassOverlay,
+                  Divider(
+                    height: Dimens.hairline,
+                    thickness: Dimens.hairline,
+                    color: context.onMediaBorder,
                   ),
                   const SizedBox(height: Dimens.spaceMd),
                   _DiscardButton(label: l.cancelTrip, onPressed: onCancel!),
@@ -176,10 +175,10 @@ class _DiscardButtonState extends State<_DiscardButton> {
             height: Dimens.minTouchTarget,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: AppColors.red.withValues(alpha: _pressed ? 0.28 : 0.16),
+              color: context.critical.withValues(alpha: _pressed ? 0.28 : 0.16),
               borderRadius: BorderRadius.circular(Dimens.radiusLg),
               border: Border.all(
-                color: AppColors.red.withValues(alpha: 0.55),
+                color: context.critical.withValues(alpha: 0.55),
               ),
             ),
             child: Row(
@@ -270,10 +269,10 @@ class _StartButtonState extends State<_StartButton>
                 height: 72,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: AppColors.cyanGradient,
+                  gradient: context.accentGradient,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.cyan.withValues(
+                      color: context.accent.withValues(
                         alpha: 0.25 + (_pulseAnimation.value * 0.25),
                       ),
                       blurRadius: 16 + (_pulseAnimation.value * 8),
@@ -296,26 +295,30 @@ class _StartButtonState extends State<_StartButton>
   }
 }
 
-class _GradientControlButton extends StatefulWidget {
-  const _GradientControlButton({
+/// A 72dp round control in the in-trip dock.
+///
+/// Solid, not gradient: the dock behind it already supplies the contrast, and a
+/// gradient plus a coloured glow on a 72dp circle was three paint operations to
+/// say what one fill says. The glow is gone with it — the dock is what separates
+/// these controls from the chart underneath.
+class _ControlButton extends StatefulWidget {
+  const _ControlButton({
     required this.icon,
     required this.label,
-    required this.gradient,
-    required this.glowColor,
+    required this.color,
     required this.onPressed,
   });
 
   final IconData icon;
   final String label;
-  final LinearGradient gradient;
-  final Color glowColor;
+  final Color color;
   final VoidCallback onPressed;
 
   @override
-  State<_GradientControlButton> createState() => _GradientControlButtonState();
+  State<_ControlButton> createState() => _ControlButtonState();
 }
 
-class _GradientControlButtonState extends State<_GradientControlButton> {
+class _ControlButtonState extends State<_ControlButton> {
   bool _pressed = false;
 
   @override
@@ -339,14 +342,7 @@ class _GradientControlButtonState extends State<_GradientControlButton> {
                 height: 72,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: widget.gradient,
-                  boxShadow: [
-                    BoxShadow(
-                      color: widget.glowColor.withValues(alpha: 0.35),
-                      blurRadius: 16,
-                      spreadRadius: 2,
-                    ),
-                  ],
+                  color: widget.color,
                 ),
                 child: Icon(
                   widget.icon,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -122,10 +121,10 @@ class _JoinByCodeSheetState extends State<_JoinByCodeSheet> {
                     color: context.glassBg,
                     border: Border.all(color: context.glassBorderColor),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.vpn_key_outlined,
                     size: Dimens.iconSm,
-                    color: AppColors.cyan,
+                    color: context.accent,
                   ),
                 ),
                 const SizedBox(width: Dimens.spaceMd),

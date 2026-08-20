@@ -3,7 +3,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/app/routes.dart';
+import 'package:navis_mobile/core/theme/motion.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -48,7 +49,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       ref.read(passwordRecoveryProvider.notifier).complete();
       if (!mounted) return;
       NavisSnackbar.success(context, l.resetPwSuccess);
-      context.go('/boats');
+      context.go(Routes.today);
     } catch (_) {
       if (mounted) {
         setState(() => _submitting = false);
@@ -62,7 +63,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   /// the account open to whoever opened the email.
   Future<void> _onCancel() async {
     await ref.read(authProvider.notifier).logout();
-    if (mounted) context.go('/login');
+    if (mounted) context.go(Routes.login);
   }
 
   @override
@@ -82,10 +83,10 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.lock_reset_outlined,
                       size: 72,
-                      color: AppColors.cyan,
+                      color: context.accent,
                     ).animate().fadeIn(duration: 500.ms),
                     const SizedBox(height: 24),
                     Text(
@@ -95,7 +96,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                         color: context.txtPrimary,
                         fontWeight: FontWeight.w700,
                       ),
-                    ).animate().fadeIn(delay: 100.ms, duration: 500.ms),
+                    ).entrance(index: 1),
                     const SizedBox(height: 8),
                     Text(
                       l.newPasswordSubtitle,
@@ -103,7 +104,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                       style: textTheme.bodyMedium?.copyWith(
                         color: context.txtSecondary,
                       ),
-                    ).animate().fadeIn(delay: 200.ms, duration: 500.ms),
+                    ).entrance(index: 2),
                     const SizedBox(height: 36),
 
                     // -- New Password Field --
@@ -138,7 +139,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                         }
                         return null;
                       },
-                    ).animate().fadeIn(delay: 300.ms, duration: 500.ms),
+                    ).entrance(index: 3),
                     const SizedBox(height: 16),
 
                     // -- Confirm Password Field --
@@ -175,7 +176,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                         }
                         return null;
                       },
-                    ).animate().fadeIn(delay: 400.ms, duration: 500.ms),
+                    ).entrance(index: 4),
                     const SizedBox(height: 28),
 
                     // -- Submit Button --
@@ -183,7 +184,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                       label: l.resetPwSubmit,
                       onPressed: _onSubmit,
                       isLoading: _submitting,
-                    ).animate().fadeIn(delay: 500.ms, duration: 500.ms),
+                    ).entrance(index: 5),
                     const SizedBox(height: 12),
 
                     // The way out. Mandatory now that the flag survives a
@@ -197,7 +198,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                           color: context.txtSecondary,
                         ),
                       ),
-                    ).animate().fadeIn(delay: 600.ms, duration: 500.ms),
+                    ).entrance(index: 6),
                   ],
                 ),
               ),
@@ -251,7 +252,7 @@ class _GlassTextField extends StatelessWidget {
             color: context.glassBg,
             border: Border.all(color: context.glassBorderColor),
           ),
-          child: Icon(prefixIconData, color: AppColors.cyan, size: 20),
+          child: Icon(prefixIconData, color: context.accent, size: 20),
         ),
         prefixIconConstraints: const BoxConstraints(
           minWidth: 52,

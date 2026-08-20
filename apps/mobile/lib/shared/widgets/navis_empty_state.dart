@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_pulse_budget.dart';
@@ -13,6 +14,8 @@ class NavisEmptyState extends StatelessWidget {
     this.description,
     this.actionLabel,
     this.onAction,
+    this.secondaryActionLabel,
+    this.onSecondaryAction,
   });
 
   final IconData icon;
@@ -22,6 +25,14 @@ class NavisEmptyState extends StatelessWidget {
   final String? description;
   final String? actionLabel;
   final VoidCallback? onAction;
+
+  /// A second way out of the empty screen.
+  ///
+  /// Some empty states have two honest answers and offering only one is a dead
+  /// end: with no boats you can *add* one or *join* someone else's, and a crew
+  /// member invited to a boat has no boat of their own to add.
+  final String? secondaryActionLabel;
+  final VoidCallback? onSecondaryAction;
 
   @override
   Widget build(BuildContext context) {
@@ -90,12 +101,23 @@ class NavisEmptyState extends StatelessWidget {
                 ),
               ],
               if (actionLabel != null && onAction != null) ...[
-                const SizedBox(height: 24),
+                const SizedBox(height: Dimens.spaceXl),
+                // Filled: on an empty screen this is *the* thing to do, and a
+                // recessed button made it read as an aside.
                 NavisButton(
                   label: actionLabel!,
-                  variant: NavisButtonVariant.secondary,
                   compact: true,
                   onPressed: onAction!,
+                ),
+              ],
+              if (secondaryActionLabel != null &&
+                  onSecondaryAction != null) ...[
+                const SizedBox(height: Dimens.spaceSm),
+                NavisButton(
+                  label: secondaryActionLabel!,
+                  variant: NavisButtonVariant.secondary,
+                  compact: true,
+                  onPressed: onSecondaryAction!,
                 ),
               ],
             ],

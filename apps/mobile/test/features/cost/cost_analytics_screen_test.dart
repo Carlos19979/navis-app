@@ -75,7 +75,9 @@ void main() {
       await tester.pumpWidget(buildSubject(makeCostAnalytics()));
       await pumpScreen(tester);
 
-      expect(find.text('142.3 NM · 5 trips'), findsOneWidget);
+      // Through Measure now: past ten miles the tenth changes no decision, and
+      // the separator follows the locale (tests run in English).
+      expect(find.text('142 NM · 5 trips'), findsOneWidget);
     });
   });
 

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/shared/widgets/navis_empty_state.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
@@ -64,8 +64,8 @@ class NavisAsyncListView<T> extends StatelessWidget {
         }
         final headerCount = header != null ? 1 : 0;
         return RefreshIndicator(
-          color: AppColors.cyan,
-          backgroundColor: AppColors.darkSurface,
+          color: context.accent,
+          backgroundColor: context.surfaceRaised,
           onRefresh: onRefresh,
           child: ListView.builder(
             padding: padding,

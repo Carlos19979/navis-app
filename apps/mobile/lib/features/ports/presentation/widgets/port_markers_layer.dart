@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/ports/domain/entities/port.dart';
 import 'package:navis_mobile/features/ports/presentation/widgets/port_info_sheet.dart';
 
@@ -89,11 +90,11 @@ class _PortMarker extends StatelessWidget {
             color: AppColors.navy.withValues(alpha: 0.9),
             shape: BoxShape.circle,
             border: Border.all(
-              color: AppColors.cyan.withValues(alpha: 0.6),
+              color: context.accent.withValues(alpha: 0.6),
               width: 1.5,
             ),
           ),
-          child: Icon(icon, color: AppColors.cyan, size: 18),
+          child: Icon(icon, color: context.accent, size: 18),
         ),
       ),
     );

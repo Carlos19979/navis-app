@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/app/routes.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
+import 'package:navis_mobile/core/theme/motion.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/documents/domain/entities/document.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_permissions_provider.dart';
@@ -34,7 +36,6 @@ class DocumentListScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
       appBar: NavisAppBar(title: l.documents, showBack: true),
       body: GradientBackground(
         child: SafeArea(
@@ -57,7 +58,7 @@ class DocumentListScreen extends ConsumerWidget {
       floatingActionButton: canView && canManage
           ? NavisGradientFab(
               icon: Icons.add,
-              onPressed: () => context.push('/boats/$boatId/documents/new'),
+              onPressed: () => context.push(Routes.newDocument(boatId)),
               tooltip: l.newDocument,
             )
           : null,
@@ -89,7 +90,7 @@ class _DocumentList extends ConsumerWidget {
             message: l.noDocuments,
             actionLabel: canManage ? l.newDocument : null,
             onAction: canManage
-                ? () => context.push('/boats/$boatId/documents/new')
+                ? () => context.push(Routes.newDocument(boatId))
                 : null,
           );
         }
@@ -98,13 +99,13 @@ class _DocumentList extends ConsumerWidget {
           ..sort((a, b) => a.expiryDate.compareTo(b.expiryDate));
 
         return RefreshIndicator(
-          color: AppColors.cyan,
+          color: context.accent,
           onRefresh: () async {
             ref.invalidate(boatDocumentsProvider(boatId));
             ref.invalidate(boatPermissionsProvider(boatId));
           },
           child: ListView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+            padding: Insets.gutterWithNav,
             // A read-only member gets the padlock and the reason at the top of
             // the list, not a silently missing button.
             itemCount: sorted.length + (canManage ? 0 : 1),
@@ -124,20 +125,8 @@ class _DocumentList extends ConsumerWidget {
               final doc = sorted[canManage ? index : index - 1];
               return DocumentCard(
                 document: doc,
-                onTap: () => context.push('/documents/${doc.id}'),
-              )
-                  .animate()
-                  .fadeIn(
-                    duration: 400.ms,
-                    delay: (50 * index).ms,
-                  )
-                  .slideY(
-                    begin: 0.1,
-                    end: 0,
-                    duration: 400.ms,
-                    delay: (50 * index).ms,
-                    curve: Curves.easeOutCubic,
-                  );
+                onTap: () => context.push(Routes.document(doc.id)),
+              ).entrance(index: index);
             },
           ),
         );

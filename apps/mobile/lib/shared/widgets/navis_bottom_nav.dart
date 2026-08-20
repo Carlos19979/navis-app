@@ -33,22 +33,23 @@ class NavisBottomNav extends ConsumerWidget {
     final isDark = context.isDarkMode;
     // Sit lower by eating into the bottom safe-area inset (clamped so it never
     // goes off-screen on devices without a home indicator).
-    final bottomPadding = (MediaQuery.of(context).padding.bottom - 10)
-        .clamp(0.0, double.infinity);
+    // The shared helper: the scaffold lifts a tab's FAB to this same edge.
+    final bottomPadding =
+        Dimens.navPillInset(MediaQuery.of(context).padding.bottom);
 
     final items = [
       _NavItem(Icons.home_outlined, Icons.home_rounded, l.home),
       _NavItem(Icons.map_outlined, Icons.map_rounded, l.charts),
       _NavItem(Icons.cloud_outlined, Icons.cloud_rounded, l.weather),
       _NavItem(Icons.groups_outlined, Icons.groups_rounded, l.community),
-      _NavItem(Icons.person_outline_rounded, Icons.person_rounded, l.profile),
+      _NavItem(Icons.person_outline_rounded, Icons.person_rounded, l.account),
     ];
 
     // A dark-navy glass pill floats over content in both themes; on light it
     // gets a translucent surface tint so it doesn't read as a black slab.
     final pillColor = isDark
         ? AppColors.navy.withValues(alpha: 0.85)
-        : AppColors.lightSurface.withValues(alpha: 0.9);
+        : context.surfaceRaised.withValues(alpha: 0.9);
 
     return GradientBackground(
       child: Scaffold(
@@ -59,7 +60,7 @@ class NavisBottomNav extends ConsumerWidget {
           padding: EdgeInsets.only(
             left: Dimens.spaceXl,
             right: Dimens.spaceXl,
-            bottom: bottomPadding + 2,
+            bottom: bottomPadding,
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(Dimens.radiusXxl),
@@ -77,7 +78,7 @@ class NavisBottomNav extends ConsumerWidget {
                     color: context.glassBorderColor,
                     width: 0.5,
                   ),
-                  boxShadow: Shadows.nav,
+                  boxShadow: Shadows.nav(isDark: isDark),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -144,13 +145,13 @@ class _NavBarItem extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: isActive
-                      ? AppColors.cyan.withValues(alpha: 0.15)
+                      ? context.accent.withValues(alpha: 0.15)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(Dimens.radiusMd),
                 ),
                 child: Icon(
                   isActive ? item.activeIcon : item.icon,
-                  color: isActive ? AppColors.cyan : inactiveColor,
+                  color: isActive ? context.accent : inactiveColor,
                   size: 24,
                 ),
               ),
@@ -160,7 +161,7 @@ class _NavBarItem extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                  color: isActive ? AppColors.cyan : inactiveColor,
+                  color: isActive ? context.accent : inactiveColor,
                 ),
                 child: Text(item.label),
               ),

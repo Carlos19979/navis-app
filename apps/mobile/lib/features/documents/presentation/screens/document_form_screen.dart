@@ -10,7 +10,6 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:navis_mobile/core/network/storage_service.dart';
 import 'package:navis_mobile/core/network/supabase_client.dart';
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/boat/data/permission_errors.dart';
@@ -19,11 +18,13 @@ import 'package:navis_mobile/features/boat/presentation/providers/boat_permissio
 import 'package:navis_mobile/features/boat/presentation/widgets/permission_gate.dart';
 import 'package:navis_mobile/features/documents/domain/entities/document.dart';
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
+import 'package:navis_mobile/features/documents/presentation/document_type_label.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
+import 'package:navis_mobile/shared/widgets/navis_section.dart';
 import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 
@@ -68,7 +69,13 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
   /// an existing document.
   final List<int> _extraAlertDays = [];
 
-  static const _alertDayPresets = [30, 15, 7, 1];
+  /// Thresholds offered as chips, longest first.
+  ///
+  /// 180 and 90 are here because that is how a renewal actually works: an ITB
+  /// or an insurance policy needs an appointment booked months out, and a
+  /// reminder 30 days before is already late. «Personalizado» stays for
+  /// anything else.
+  static const _alertDayPresets = [180, 90, 30, 15, 7, 1];
 
   List<int> get _alertDayOptions =>
       {..._alertDayPresets, ..._extraAlertDays, ..._selectedAlertDays}.toList()
@@ -92,38 +99,6 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
     'navigation_license',
     'custom',
   ];
-
-  static String _localizedDocType(AppLocalizations l, String type) =>
-      switch (type) {
-        'itb' => l.docTypeItb,
-        'insurance_rc' => l.docTypeInsuranceRc,
-        'insurance_full' => l.docTypeInsuranceFull,
-        'life_raft' => l.docTypeLifeRaft,
-        'extinguisher' => l.docTypeFireExtinguisher,
-        'flares' => l.docTypeFlares,
-        'first_aid' => l.docTypeFirstAidKit,
-        'medical_cert' => l.docTypeMedicalCertificate,
-        'radio_cert' => l.docTypeRadioLicense,
-        'navigation_license' => l.docTypeNavigationLicense,
-        // Legacy rows created before the canonical alignment keep rendering
-        // through the old display names.
-        'Registration' => l.docTypeRegistration,
-        'Insurance' => l.docTypeInsurance,
-        'Inspection' => l.docTypeInspection,
-        'License' => l.docTypeLicense,
-        'Safety Certificate' => l.docTypeSafetyCertificate,
-        'Radio License' => l.docTypeRadioLicense,
-        'Pollution Certificate' => l.docTypePollutionCertificate,
-        'Medical Certificate' => l.docTypeMedicalCertificate,
-        'Life Raft' => l.docTypeLifeRaft,
-        'Fire Extinguisher' => l.docTypeFireExtinguisher,
-        'Flares' => l.docTypeFlares,
-        'First Aid Kit' => l.docTypeFirstAidKit,
-        'Fishing Permit' => l.docTypeFishingPermit,
-        'Other' => l.other,
-        'custom' => l.docTypeCustom,
-        _ => type,
-      };
 
   @override
   void initState() {
@@ -186,7 +161,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: Theme.of(context).colorScheme.copyWith(
-                  primary: AppColors.cyan,
+                  primary: context.accent,
                 ),
           ),
           child: child!,
@@ -492,7 +467,6 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
       appBar: NavisAppBar(
         title: widget.isRenew
             ? l.renewDocument
@@ -532,19 +506,16 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                l.documentType,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelLarge
-                                    ?.copyWith(
-                                      color: AppColors.cyan,
-                                      letterSpacing: 0.8,
-                                    ),
-                              ),
+                              NavisSectionHeader(label: l.documentType),
                               const SizedBox(height: 16),
                               DropdownButtonFormField<String>(
                                 initialValue: _selectedType,
+                                // Expanded and ellipsised: «Certificado
+                                // anticontaminación» next to a prefix icon
+                                // overflowed the field by 27 px, which is a
+                                // yellow-and-black stripe on a real phone at a
+                                // large text scale.
+                                isExpanded: true,
                                 decoration: InputDecoration(
                                   labelText: l.documentType,
                                   prefixIcon:
@@ -554,7 +525,9 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                                   return DropdownMenuItem(
                                     value: type,
                                     child: Text(
-                                      _localizedDocType(l, type),
+                                      documentTypeLabel(l, type),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   );
                                 }).toList(),
@@ -614,16 +587,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                l.notes,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelLarge
-                                    ?.copyWith(
-                                      color: AppColors.cyan,
-                                      letterSpacing: 0.8,
-                                    ),
-                              ),
+                              NavisSectionHeader(label: l.notes),
                               const SizedBox(height: 16),
                               _buildAlertDaysField(context, l),
                               const SizedBox(height: 16),
@@ -648,16 +612,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  l.lastRenewal,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .labelLarge
-                                      ?.copyWith(
-                                        color: AppColors.cyan,
-                                        letterSpacing: 0.8,
-                                      ),
-                                ),
+                                NavisSectionHeader(label: l.lastRenewal),
                                 const SizedBox(height: 16),
                                 TextFormField(
                                   controller: _renewalCostController,
@@ -706,11 +661,11 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                                             Image.file(
                                               File(_photoPath!),
                                               fit: BoxFit.cover,
-                                              semanticLabel: 'Document scan',
+                                              semanticLabel: l.documentScan,
                                             )
                                           else
                                             Semantics(
-                                              label: 'Document scan',
+                                              label: l.documentScan,
                                               child: CachedNetworkImage(
                                                 imageUrl: _existingPhotoUrl!,
                                                 memCacheWidth: 1200,
@@ -735,8 +690,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                                               width: 36,
                                               height: 36,
                                               decoration: BoxDecoration(
-                                                color: AppColors.navy
-                                                    .withValues(alpha: 0.7),
+                                                color: context.onMedia,
                                                 shape: BoxShape.circle,
                                                 border: Border.all(
                                                   color:

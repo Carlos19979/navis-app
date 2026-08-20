@@ -32,7 +32,7 @@ void main() {
     );
   }
 
-  Finder submitButton() => find.widgetWithText(NavisButton, 'Create group');
+  Finder submitButton() => find.widgetWithText(NavisButton, 'Create club');
 
   void stubCreateGroup() {
     when(() => mockRepo.createGroup(

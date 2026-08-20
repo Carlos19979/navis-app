@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:navis_mobile/core/network/connectivity_provider.dart';
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/charts/domain/entities/chart_region.dart';
 import 'package:navis_mobile/features/charts/presentation/providers/offline_charts_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -27,14 +27,14 @@ class OfflineChartBanner extends ConsumerWidget {
     final regions = ref.watch(chartRegionsProvider).valueOrNull;
     final hasCharts = regions != null &&
         regions.any((r) => r.status != ChartRegionStatus.failed);
-    final color = hasCharts ? AppColors.cyan : AppColors.amber;
+    final color = hasCharts ? context.accent : context.caution;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(Dimens.radiusMd),
       child: BackdropFilter(
         filter: ImageFilter.blur(
-          sigmaX: Dimens.blurCard,
-          sigmaY: Dimens.blurCard,
+          sigmaX: Dimens.blurOverlay,
+          sigmaY: Dimens.blurOverlay,
         ),
         child: Container(
           padding: const EdgeInsets.symmetric(

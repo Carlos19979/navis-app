@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
@@ -167,9 +166,9 @@ class _Column extends StatelessWidget {
                   child: Text(
                     bar.valueLabel!,
                     maxLines: 1,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 9,
-                      color: AppColors.cyan,
+                      color: context.accent,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -178,13 +177,13 @@ class _Column extends StatelessWidget {
               Container(
                 height: (bar.value / scale * barHeight).clamp(4.0, barHeight),
                 decoration: BoxDecoration(
-                  gradient: accent ? AppColors.cyanGradient : null,
+                  gradient: accent ? context.accentGradient : null,
                   color: accent
                       ? null
                       : context.txtSecondary.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(4),
                   border: bar.highlighted
-                      ? Border.all(color: AppColors.cyan, width: 1.5)
+                      ? Border.all(color: context.accent, width: 1.5)
                       : null,
                 ),
               ),

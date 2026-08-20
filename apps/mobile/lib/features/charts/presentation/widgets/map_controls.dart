@@ -2,7 +2,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 
 class MapControls extends StatelessWidget {
@@ -19,6 +20,7 @@ class MapControls extends StatelessWidget {
     this.showPorts = false,
     this.onDownloadCharts,
     this.isDownloadingCharts = false,
+    this.bottomOffset = 120,
   });
 
   final VoidCallback onZoomIn;
@@ -36,22 +38,25 @@ class MapControls extends StatelessWidget {
   final VoidCallback? onDownloadCharts;
   final bool isDownloadingCharts;
 
+  /// How far above the bottom edge the stack floats. Raised on the chart, where
+  /// the sail/anchor bar now occupies the bottom of the screen.
+  final double bottomOffset;
+
   @override
   Widget build(BuildContext context) {
     return Positioned(
       right: 16,
-      bottom: 120,
+      bottom: bottomOffset,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
           child: Container(
             decoration: BoxDecoration(
-              color: AppColors.navy.withValues(alpha: 0.7),
+              color: context.onMedia,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: AppColors.glassBorder,
-                width: 0.5,
+                color: context.onMediaBorder,
               ),
               boxShadow: [
                 BoxShadow(
@@ -71,19 +76,19 @@ class MapControls extends StatelessWidget {
                     tooltip: l.zoomIn,
                     onPressed: onZoomIn,
                   ),
-                  _buildDivider(),
+                  _buildDivider(context),
                   _ControlButton(
                     icon: Icons.remove,
                     tooltip: l.zoomOut,
                     onPressed: onZoomOut,
                   ),
-                  _buildDivider(),
+                  _buildDivider(context),
                   _ControlButton(
                     icon: Icons.my_location,
                     tooltip: l.centerOnGps,
                     onPressed: onCenterGps,
                   ),
-                  _buildDivider(),
+                  _buildDivider(context),
                   _ControlButton(
                     icon: showSeamarks ? Icons.layers : Icons.layers_outlined,
                     tooltip: l.toggleSeamarks,
@@ -91,7 +96,7 @@ class MapControls extends StatelessWidget {
                     isActive: showSeamarks,
                   ),
                   if (onTogglePorts != null) ...[
-                    _buildDivider(),
+                    _buildDivider(context),
                     _ControlButton(
                       icon: Icons.anchor,
                       tooltip: l.togglePorts,
@@ -100,7 +105,7 @@ class MapControls extends StatelessWidget {
                     ),
                   ],
                   if (onToggleTracks != null) ...[
-                    _buildDivider(),
+                    _buildDivider(context),
                     _ControlButton(
                       icon: Icons.route,
                       tooltip: l.toggleTripTracks,
@@ -109,7 +114,7 @@ class MapControls extends StatelessWidget {
                     ),
                   ],
                   if (onDownloadCharts != null) ...[
-                    _buildDivider(),
+                    _buildDivider(context),
                     _ControlButton(
                       icon: isDownloadingCharts
                           ? Icons.downloading
@@ -128,11 +133,11 @@ class MapControls extends StatelessWidget {
     );
   }
 
-  Widget _buildDivider() {
+  Widget _buildDivider(BuildContext context) {
     return Container(
-      height: 0.5,
+      height: Dimens.hairline,
       width: 28,
-      color: AppColors.glassBorder,
+      color: context.onMediaBorder,
     );
   }
 }
@@ -176,7 +181,7 @@ class _ControlButtonState extends State<_ControlButton> {
                 ? BoxDecoration(
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.cyan.withValues(alpha: 0.25),
+                        color: context.accent.withValues(alpha: 0.25),
                         blurRadius: 8,
                         spreadRadius: 1,
                       ),
@@ -185,7 +190,7 @@ class _ControlButtonState extends State<_ControlButton> {
                 : null,
             child: Icon(
               widget.icon,
-              color: widget.isActive ? AppColors.cyan : AppColors.textPrimary,
+              color: widget.isActive ? context.accent : context.ink,
               size: 22,
             ),
           ),

@@ -3,7 +3,6 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/map_picker_screen.dart';
@@ -361,9 +360,9 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
               width: 0.5,
             ),
           ),
-          child: const Icon(
+          child: Icon(
             Icons.flag_rounded,
-            color: AppColors.green,
+            color: context.positive,
             size: 20,
           ),
         ),
@@ -443,17 +442,17 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
               vertical: 8,
             ),
             decoration: BoxDecoration(
-              color: AppColors.cyan.withValues(alpha: 0.1),
+              color: context.accent.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: AppColors.cyan.withValues(alpha: 0.3),
+                color: context.accent.withValues(alpha: 0.3),
               ),
             ),
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.location_on,
-                  color: AppColors.cyan,
+                  color: context.accent,
                   size: 18,
                 ),
                 const SizedBox(width: 8),
@@ -463,7 +462,7 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
                     style: Theme.of(context)
                         .textTheme
                         .bodyMedium
-                        ?.copyWith(color: AppColors.cyan),
+                        ?.copyWith(color: context.accent),
                   ),
                 ),
                 GestureDetector(
@@ -495,11 +494,11 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.cyan.withValues(alpha: 0.15)
+              ? context.accent.withValues(alpha: 0.15)
               : context.glassBg,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? AppColors.cyan : context.glassBorderColor,
+            color: isSelected ? context.accent : context.glassBorderColor,
             width: isSelected ? 1.5 : 0.5,
           ),
         ),
@@ -509,13 +508,13 @@ class _TripCompletionDialogState extends State<TripCompletionDialog> {
             Icon(
               Icons.edit_location_alt,
               size: 20,
-              color: isSelected ? AppColors.cyan : context.txtSecondary,
+              color: isSelected ? context.accent : context.txtSecondary,
             ),
             const SizedBox(height: 4),
             Text(
               l.other,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: isSelected ? AppColors.cyan : context.txtSecondary,
+                    color: isSelected ? context.accent : context.txtSecondary,
                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                   ),
               overflow: TextOverflow.ellipsis,
@@ -602,11 +601,11 @@ class _PortChip extends StatelessWidget {
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.cyan.withValues(alpha: 0.15)
+              ? context.accent.withValues(alpha: 0.15)
               : context.glassBg,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? AppColors.cyan : context.glassBorderColor,
+            color: isSelected ? context.accent : context.glassBorderColor,
             width: isSelected ? 1.5 : 0.5,
           ),
         ),
@@ -619,7 +618,7 @@ class _PortChip extends StatelessWidget {
                 Icon(
                   icon,
                   size: 14,
-                  color: isSelected ? AppColors.cyan : context.txtSecondary,
+                  color: isSelected ? context.accent : context.txtSecondary,
                 ),
                 const SizedBox(width: 4),
                 Expanded(
@@ -627,7 +626,7 @@ class _PortChip extends StatelessWidget {
                     port.name,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           color:
-                              isSelected ? AppColors.cyan : context.txtPrimary,
+                              isSelected ? context.accent : context.txtPrimary,
                           fontWeight:
                               isSelected ? FontWeight.w700 : FontWeight.w500,
                           fontSize: 11,
@@ -683,7 +682,7 @@ class _SummaryPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: AppColors.cyan),
+          Icon(icon, size: 14, color: context.accent),
           const SizedBox(width: 4),
           Text(
             value,

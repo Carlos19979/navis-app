@@ -1,17 +1,20 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/network/notification_service.dart';
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/app_typography.dart';
+import 'package:navis_mobile/core/theme/motion.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/auth/domain/auth_state.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
+import 'package:navis_mobile/shared/widgets/navis_text_field.dart';
+import 'package:navis_mobile/shared/widgets/navis_alert.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -96,7 +99,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.cyan,
+              backgroundColor: context.accent,
             ),
             onPressed: () => Navigator.of(ctx).pop(emailCtrl.text.trim()),
             child: Text(AppLocalizations.of(context)!.sendResetLink),
@@ -144,7 +147,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         notificationService.requestPermission().then((_) {
           notificationService.registerDevice();
         });
-        context.go('/boats');
+        context.go(Routes.today);
       }
     });
 
@@ -160,96 +163,53 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // -- Logo Section --
+                    // The mark, then the wordmark. It used to be a 120 px
+                    // circle with a glass fill, a border and a 40-blur glow
+                    // around the app icon — three treatments on an asset that
+                    // is already a logo.
+                    // On dark the mark needs a ground to sit on: the asset is
+                    // a navy disc with a compass in it, so on the navy canvas
+                    // the disc's edge vanishes and only the compass floats.
+                    // A hairline ring gives it back its shape without adding a
+                    // glow or a second asset.
                     Center(
-                      child: Container(
-                        width: 120,
-                        height: 120,
+                      child: DecoratedBox(
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: context.glassBg,
-                          border: Border.all(
-                            color: context.glassBorderColor,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.cyan.withValues(alpha: 0.2),
-                              blurRadius: 40,
-                              spreadRadius: 8,
-                            ),
-                          ],
+                          border: context.isDarkMode
+                              ? Border.all(color: context.onMediaBorder)
+                              : null,
                         ),
                         child: ClipOval(
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(
-                              sigmaX: 12,
-                              sigmaY: 12,
-                            ),
-                            child: Image.asset(
-                              'assets/icon/navis_icon.png',
-                              width: 100,
-                              height: 100,
-                              fit: BoxFit.cover,
-                            ),
+                          child: Image.asset(
+                            'assets/icon/navis_icon.png',
+                            width: 88,
+                            height: 88,
+                            fit: BoxFit.cover,
                           ),
                         ),
                       ),
-                    ).animate().fadeIn(duration: 600.ms).scale(
-                          begin: const Offset(0.8, 0.8),
-                          end: const Offset(1.0, 1.0),
-                          duration: 600.ms,
-                          curve: Curves.easeOut,
-                        ),
-                    const SizedBox(height: 20),
+                    ).entrance(),
+                    const SizedBox(height: Dimens.spaceLg),
                     Text(
                       'Navis',
                       textAlign: TextAlign.center,
-                      style: textTheme.displayMedium?.copyWith(
-                        color: context.txtPrimary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ).animate().fadeIn(delay: 200.ms, duration: 500.ms),
-                    const SizedBox(height: 4),
+                      style: NavisType.display.copyWith(color: context.ink),
+                    ).entrance(index: 1),
                     Text(
                       l.boatManagement,
                       textAlign: TextAlign.center,
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: context.txtSecondary,
-                        letterSpacing: 2.0,
-                        fontWeight: FontWeight.w400,
+                      style: NavisType.overline.copyWith(
+                        color: context.inkMuted,
                       ),
-                    ).animate().fadeIn(delay: 300.ms, duration: 500.ms),
-                    const SizedBox(height: 48),
+                    ).entrance(index: 2),
+                    const SizedBox(height: Dimens.spaceXxl),
 
                     // -- Error Display --
                     if (authState.errorMessage != null)
-                      GlassContainer(
-                        borderRadius: 12,
-                        padding: const EdgeInsets.all(14),
-                        margin: const EdgeInsets.only(bottom: 20),
-                        borderColor: AppColors.red.withValues(alpha: 0.4),
-                        opacity: 0.06,
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.error_outline,
-                              color: AppColors.red.withValues(
-                                alpha: 0.9,
-                              ),
-                              size: 20,
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                authState.errorMessage!,
-                                style: const TextStyle(
-                                  color: AppColors.red,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                      NavisAlert(
+                        message: authState.errorMessage!,
+                        margin: const EdgeInsets.only(bottom: Dimens.spaceXl),
                       ).animate().fadeIn(duration: 300.ms).shakeX(
                             hz: 3,
                             amount: 4,
@@ -257,12 +217,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
 
                     // -- Email Field --
-                    _GlassTextField(
+                    NavisTextField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
-                      labelText: l.email,
-                      prefixIconData: Icons.email_outlined,
+                      label: l.email,
+                      prefixIcon: Icons.email_outlined,
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return l.pleaseEnterEmail;
@@ -272,24 +232,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         }
                         return null;
                       },
-                    ).animate().fadeIn(delay: 400.ms, duration: 500.ms).slideY(
-                          begin: 0.3,
-                          end: 0,
-                          delay: 400.ms,
-                          duration: 500.ms,
-                          curve: Curves.easeOut,
-                        ),
+                    ).entrance(index: 4),
                     const SizedBox(height: 16),
 
                     // -- Password Field --
-                    _GlassTextField(
+                    NavisTextField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
                       textInputAction: TextInputAction.done,
-                      onFieldSubmitted: (_) => _onLogin(),
-                      labelText: l.password,
-                      prefixIconData: Icons.lock_outlined,
-                      suffixIcon: IconButton(
+                      onSubmitted: (_) => _onLogin(),
+                      label: l.password,
+                      prefixIcon: Icons.lock_outlined,
+                      suffix: IconButton(
                         icon: Icon(
                           _obscurePassword
                               ? Icons.visibility_outlined
@@ -314,13 +268,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         }
                         return null;
                       },
-                    ).animate().fadeIn(delay: 500.ms, duration: 500.ms).slideY(
-                          begin: 0.3,
-                          end: 0,
-                          delay: 500.ms,
-                          duration: 500.ms,
-                          curve: Curves.easeOut,
-                        ),
+                    ).entrance(index: 5),
                     const SizedBox(height: 28),
 
                     // -- Login Button --
@@ -328,13 +276,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       label: l.login,
                       onPressed: _onLogin,
                       isLoading: authState.status == AuthStatus.loading,
-                    ).animate().fadeIn(delay: 600.ms, duration: 500.ms).slideY(
-                          begin: 0.3,
-                          end: 0,
-                          delay: 600.ms,
-                          duration: 500.ms,
-                          curve: Curves.easeOut,
-                        ),
+                    ).entrance(index: 6),
                     const SizedBox(height: 16),
 
                     // -- Divider --
@@ -375,15 +317,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         l.forgotPassword,
                         textAlign: TextAlign.center,
                         style: textTheme.bodyMedium?.copyWith(
-                          color: AppColors.cyan,
+                          color: context.accent,
                         ),
                       ),
-                    ).animate().fadeIn(delay: 700.ms, duration: 500.ms),
+                    ).entrance(index: 7),
                     const SizedBox(height: 16),
 
                     // -- Register Link --
                     GestureDetector(
-                      onTap: () => context.go('/register'),
+                      onTap: () => context.go(Routes.register),
                       child: Text.rich(
                         TextSpan(
                           text: '${l.noAccount} ',
@@ -393,8 +335,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           children: [
                             TextSpan(
                               text: l.register,
-                              style: const TextStyle(
-                                color: AppColors.cyan,
+                              style: TextStyle(
+                                color: context.accent,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -402,7 +344,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                         textAlign: TextAlign.center,
                       ),
-                    ).animate().fadeIn(delay: 800.ms, duration: 500.ms),
+                    ).entrance(index: 8),
                   ],
                 ),
               ),
@@ -415,66 +357,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 }
 
 /// Glass-style text field with an icon inside a small glass circle.
-class _GlassTextField extends StatelessWidget {
-  const _GlassTextField({
-    required this.controller,
-    required this.labelText,
-    required this.prefixIconData,
-    this.keyboardType,
-    this.textInputAction,
-    this.obscureText = false,
-    this.onFieldSubmitted,
-    this.suffixIcon,
-    this.validator,
-  });
-
-  final TextEditingController controller;
-  final String labelText;
-  final IconData prefixIconData;
-  final TextInputType? keyboardType;
-  final TextInputAction? textInputAction;
-  final bool obscureText;
-  final ValueChanged<String>? onFieldSubmitted;
-  final Widget? suffixIcon;
-  final FormFieldValidator<String>? validator;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      textInputAction: textInputAction,
-      obscureText: obscureText,
-      onFieldSubmitted: onFieldSubmitted,
-      style: TextStyle(color: context.txtPrimary),
-      validator: validator,
-      decoration: InputDecoration(
-        labelText: labelText,
-        prefixIcon: Container(
-          width: 40,
-          height: 40,
-          margin: const EdgeInsets.only(left: 8, right: 4),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: context.glassBg,
-            border: Border.all(color: context.glassBorderColor),
-          ),
-          child: Icon(
-            prefixIconData,
-            color: AppColors.cyan,
-            size: 20,
-          ),
-        ),
-        prefixIconConstraints: const BoxConstraints(
-          minWidth: 52,
-          minHeight: 40,
-        ),
-        suffixIcon: suffixIcon,
-      ),
-    );
-  }
-}
-
 class _SocialButton extends StatelessWidget {
   const _SocialButton({
     required this.icon,

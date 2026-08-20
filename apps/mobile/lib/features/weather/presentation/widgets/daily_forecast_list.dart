@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
+import 'package:navis_mobile/core/utils/measure_utils.dart';
 import 'package:navis_mobile/core/theme/motion.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/weather/domain/entities/daily_weather.dart';
@@ -17,6 +17,7 @@ import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_inline_error.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
+import 'package:navis_mobile/shared/utils/status_colors.dart';
 
 /// The week's forecast as a vertical list of days with temperature range bars,
 /// where tapping a day expands its hourly detail in place (iOS-style).
@@ -210,9 +211,8 @@ class _DailyRow extends StatelessWidget {
     final l = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).toString();
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primary = isDark ? context.txtPrimary : AppColors.textLight;
-    final secondary =
-        isDark ? context.txtSecondary : AppColors.textLightSecondary;
+    final primary = isDark ? context.txtPrimary : context.ink;
+    final secondary = isDark ? context.txtSecondary : context.inkMuted;
     final condition = WeatherCondition.fromCode(day.weatherCode);
 
     final label = isToday
@@ -239,25 +239,28 @@ class _DailyRow extends StatelessWidget {
                       ),
                 ),
               ),
-              Icon(condition.icon, color: condition.color, size: 22),
+              Icon(condition.icon, color: condition.color(context), size: 22),
               const SizedBox(width: 10),
               SizedBox(
-                width: 58,
+                // Wider since the units gained their space ("9 kt", not
+                // "9kt"): the old 58 was exactly the width of the un-spaced
+                // string and overflowed the moment it grew.
+                width: 68,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _MiniStat(
                       icon: Icons.air_rounded,
-                      value: '${day.windSpeed.round()}kt',
-                      color: windColor(day.windSpeed),
+                      value: Measure.windKnots(locale, day.windSpeed),
+                      color: context.windColor(day.windSpeed),
                     ),
                     if (day.waveHeight != null) ...[
                       const SizedBox(height: 2),
                       _MiniStat(
                         icon: Icons.waves_rounded,
-                        value: '${day.waveHeight!.toStringAsFixed(1)}m',
-                        color: waveColor(day.waveHeight!),
+                        value: Measure.waveHeight(locale, day.waveHeight!),
+                        color: context.waveColor(day.waveHeight!),
                       ),
                     ],
                   ],
@@ -299,7 +302,7 @@ class _DailyRow extends StatelessWidget {
                   Icons.chevron_right_rounded,
                   size: 18,
                   color: expanded
-                      ? AppColors.cyan
+                      ? context.accent
                       : secondary.withValues(alpha: 0.6),
                 ),
               ),
@@ -353,8 +356,8 @@ class _TempRangeBar extends StatelessWidget {
                   height: 6,
                   width: segWidth,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppColors.cyan, AppColors.amber],
+                    gradient: LinearGradient(
+                      colors: [context.accent, context.caution],
                     ),
                     borderRadius: BorderRadius.circular(3),
                   ),
@@ -386,12 +389,18 @@ class _MiniStat extends StatelessWidget {
       children: [
         Icon(icon, size: 11, color: color),
         const SizedBox(width: 2),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: color,
+        // Shrinks rather than overflows: this sits in a fixed-width column and
+        // the string's length depends on the locale's decimal separator and on
+        // the user's text scale.
+        Flexible(
+          child: Text(
+            value,
+            maxLines: 1,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
           ),
         ),
       ],

@@ -1,12 +1,17 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/network/storage_service.dart';
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/app_typography.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
+import 'package:navis_mobile/core/theme/motion.dart';
+import 'package:navis_mobile/core/utils/money_utils.dart';
+import 'package:navis_mobile/features/documents/presentation/document_type_label.dart';
+import 'package:navis_mobile/shared/widgets/navis_list.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
@@ -18,7 +23,6 @@ import 'package:navis_mobile/features/documents/presentation/providers/document_
 import 'package:navis_mobile/features/documents/presentation/widgets/document_status_badge.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
-import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
@@ -37,7 +41,10 @@ class DocumentDetailScreen extends ConsumerWidget {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: NavisAppBar(
-          title: l.documentDetails,
+          // One word: with a back button and three actions the bar has ~150 px
+          // for a title, so «Detalles del documento» truncated mid-word — and
+          // the page's own heading already names the document.
+          title: l.documentSingular,
           showBack: true,
           // Edit / renew / delete all need can_manage_documents on the
           // document's boat. The boat id only exists once the document has
@@ -62,296 +69,168 @@ class DocumentDetailScreen extends ConsumerWidget {
                       customName != null &&
                       customName.isNotEmpty
                   ? customName
-                  : doc.type;
+                  // Was `doc.type` raw: the detail screen of «Seguro RC» was
+                  // titled «insurance_rc».
+                  : documentTypeLabel(l, doc.type);
+              final locale = Localizations.localeOf(context).toLanguageTag();
               // Full alert-threshold list, falling back to the single legacy
               // value for rows cached before alert_days was carried through.
               final alertDays = doc.alertDays ??
                   [if (doc.alertDaysBefore != null) doc.alertDaysBefore!];
-              final statusColor = daysLeft < 0
-                  ? AppColors.red
-                  : daysLeft <= 30
-                      ? AppColors.red
-                      : daysLeft <= 90
-                          ? AppColors.amber
-                          : AppColors.green;
-
               return SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
+                padding: Insets.screenWithNav,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Header card with status accent
-                    NavisCard(
+                    // The document, its status and how long is left. It used to
+                    // be a card with a 4 px gradient stripe down its left edge
+                    // and the days line tinted by state — amber text on the
+                    // light canvas, which is brown.
+                    // The chip goes *under* the title, on the same line as the
+                    // days left. Beside it, a name like «Seguro de
+                    // responsabilidad civil» wrapped to three lines with the
+                    // chip floating in the gap — the two were reading as one
+                    // broken block.
+                    Text(
+                      title,
+                      style: NavisType.title1.copyWith(color: context.ink),
+                    ),
+                    const SizedBox(height: Dimens.spaceSm),
+                    Row(
+                      children: [
+                        DocumentStatusBadge(expiryDate: doc.expiryDate),
+                        const SizedBox(width: Dimens.spaceMd),
+                        Expanded(
+                          child: Text(
+                            daysLeft < 0
+                                ? l.daysOverdue(-daysLeft)
+                                : l.daysRemaining(daysLeft),
+                            style: NavisType.bodySm.copyWith(
+                              color: context.inkMuted,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: Dimens.spaceXl),
+                    NavisList(
+                      title: l.details,
                       padding: EdgeInsets.zero,
-                      borderColor: statusColor.withValues(alpha: 0.3),
-                      child: IntrinsicHeight(
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 4,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    statusColor,
-                                    statusColor.withValues(alpha: 0.4),
-                                  ],
-                                ),
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(16),
-                                  bottomLeft: Radius.circular(16),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.all(20),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            title,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .headlineMedium
-                                                ?.copyWith(
-                                                  fontWeight: FontWeight.w700,
-                                                ),
-                                          ),
-                                        ),
-                                        DocumentStatusBadge(
-                                            expiryDate: doc.expiryDate),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      daysLeft < 0
-                                          ? l.daysOverdue(-daysLeft)
-                                          : l.daysRemaining(daysLeft),
-                                      style: TextStyle(
-                                        color: statusColor,
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
+                      children: [
+                        NavisRow(
+                          title: l.expiryDate,
+                          value: NavisDateUtils.formatDate(doc.expiryDate),
                         ),
-                      ),
-                    ).animate().fadeIn(duration: 400.ms).slideY(
-                          begin: 0.05,
-                          end: 0,
-                          duration: 400.ms,
-                          curve: Curves.easeOutCubic,
-                        ),
-
-                    const SizedBox(height: 16),
-
-                    // Details card
-                    NavisCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        if (alertDays.isNotEmpty)
+                          NavisRow(
+                            title: l.alert,
+                            subtitle: '${alertDays.join(", ")} '
+                                '${l.daysBeforeExpiry}',
+                          ),
+                        if (doc.notes != null && doc.notes!.isNotEmpty)
+                          NavisRow(
+                            title: l.notes,
+                            subtitle: doc.notes,
+                          ),
+                      ],
+                    ),
+                    if (doc.lastRenewalDate != null) ...[
+                      const SizedBox(height: Dimens.spaceXl),
+                      NavisList(
+                        title: l.lastRenewal,
+                        padding: EdgeInsets.zero,
                         children: [
-                          Text(
-                            l.details,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleSmall
-                                ?.copyWith(
-                                  color: AppColors.cyan,
-                                  letterSpacing: 0.5,
-                                ),
-                          ),
-                          const SizedBox(height: 16),
-                          _DetailRow(
-                            icon: Icons.calendar_today_outlined,
-                            label: l.expiryDate,
-                            value: NavisDateUtils.formatDate(doc.expiryDate),
-                          ),
-                          if (alertDays.isNotEmpty) ...[
-                            const SizedBox(height: 12),
-                            _DetailRow(
-                              icon: Icons.notifications_outlined,
-                              label: l.alert,
-                              value: '${alertDays.join(", ")} '
-                                  '${l.daysBeforeExpiry}',
+                          NavisRow(
+                            title: l.date,
+                            value: NavisDateUtils.formatDate(
+                              doc.lastRenewalDate!,
                             ),
-                          ],
-                          if (doc.notes != null && doc.notes!.isNotEmpty) ...[
-                            const SizedBox(height: 12),
-                            _DetailRow(
-                              icon: Icons.notes_outlined,
-                              label: l.notes,
-                              value: doc.notes!,
+                          ),
+                          if (doc.lastRenewalCost != null)
+                            NavisRow(
+                              title: l.cost,
+                              // Through Money: this printed «€120.00» with the
+                              // symbol glued in front and a decimal point in
+                              // every language.
+                              // Precise: this is one invoice, and its cents
+                              // are part of what was paid — unlike a period
+                              // total, which rounds.
+                              value: Money.formatPrecise(
+                                locale,
+                                doc.lastRenewalCost!,
+                              ),
                             ),
-                          ],
+                          if (doc.lastRenewalProvider != null)
+                            NavisRow(
+                              title: l.provider,
+                              subtitle: doc.lastRenewalProvider,
+                            ),
                         ],
                       ),
-                    )
-                        .animate()
-                        .fadeIn(
-                          duration: 400.ms,
-                          delay: 100.ms,
-                        )
-                        .slideY(
-                          begin: 0.05,
-                          end: 0,
-                          duration: 400.ms,
-                          delay: 100.ms,
-                          curve: Curves.easeOutCubic,
-                        ),
-
-                    // Renewal info card
-                    if (doc.lastRenewalDate != null) ...[
-                      const SizedBox(height: 16),
-                      NavisCard(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l.lastRenewal,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall
-                                  ?.copyWith(
-                                    color: AppColors.cyan,
-                                    letterSpacing: 0.5,
-                                  ),
-                            ),
-                            const SizedBox(height: 16),
-                            _DetailRow(
-                              icon: Icons.event_outlined,
-                              label: l.date,
-                              value: NavisDateUtils.formatDate(
-                                doc.lastRenewalDate!,
-                              ),
-                            ),
-                            if (doc.lastRenewalCost != null) ...[
-                              const SizedBox(height: 12),
-                              _DetailRow(
-                                icon: Icons.euro_outlined,
-                                label: l.cost,
-                                value:
-                                    '\u20AC${doc.lastRenewalCost!.toStringAsFixed(2)}',
-                              ),
-                            ],
-                            if (doc.lastRenewalProvider != null) ...[
-                              const SizedBox(height: 12),
-                              _DetailRow(
-                                icon: Icons.business_outlined,
-                                label: l.provider,
-                                value: doc.lastRenewalProvider!,
-                              ),
-                            ],
-                          ],
-                        ),
-                      )
-                          .animate()
-                          .fadeIn(
-                            duration: 400.ms,
-                            delay: 200.ms,
-                          )
-                          .slideY(
-                            begin: 0.05,
-                            end: 0,
-                            duration: 400.ms,
-                            delay: 200.ms,
-                            curve: Curves.easeOutCubic,
-                          ),
                     ],
-
                     // Document scan image. The bucket is private: the stored
                     // URL is a stable identifier that gets exchanged for a
                     // short-lived signed URL at display time.
                     if (doc.photoUrl != null) ...[
-                      const SizedBox(height: 16),
-                      NavisCard(
-                        padding: EdgeInsets.zero,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: Semantics(
-                            label: 'Document scan',
-                            child: switch (ref.watch(
-                                signedDocumentUrlProvider(doc.photoUrl!))) {
-                              AsyncData(:final value) when value != null =>
-                                CachedNetworkImage(
-                                  imageUrl: value,
-                                  memCacheWidth: 1200,
-                                  fit: BoxFit.cover,
-                                  placeholder: (context, url) =>
-                                      const AspectRatio(
-                                    aspectRatio: 4 / 3,
-                                    child: Center(
-                                      child: CircularProgressIndicator(
-                                        color: AppColors.cyan,
-                                        strokeWidth: 2,
-                                      ),
-                                    ),
-                                  ),
-                                  errorWidget: (context, url, error) =>
-                                      AspectRatio(
-                                    aspectRatio: 4 / 3,
-                                    child: Center(
-                                      child: Icon(
-                                        Icons.broken_image_outlined,
-                                        size: 48,
-                                        color: context.txtSecondary,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              AsyncLoading() => const AspectRatio(
-                                  aspectRatio: 4 / 3,
-                                  child: Center(
-                                    child: CircularProgressIndicator(
-                                      color: AppColors.cyan,
-                                      strokeWidth: 2,
-                                    ),
-                                  ),
-                                ),
-                              _ => AspectRatio(
-                                  aspectRatio: 4 / 3,
-                                  child: Center(
-                                    child: Icon(
-                                      Icons.broken_image_outlined,
-                                      size: 48,
-                                      color: context.txtSecondary,
-                                    ),
-                                  ),
-                                ),
-                            },
-                          ),
+                      const SizedBox(height: Dimens.spaceXl),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(
+                          Dimens.radiusSurface,
                         ),
-                      )
-                          .animate()
-                          .fadeIn(
-                            duration: 400.ms,
-                            delay: 300.ms,
-                          )
-                          .slideY(
-                            begin: 0.05,
-                            end: 0,
-                            duration: 400.ms,
-                            delay: 300.ms,
-                            curve: Curves.easeOutCubic,
-                          ),
+                        child: Semantics(
+                          label: l.documentScan,
+                          child: switch (ref.watch(
+                              signedDocumentUrlProvider(doc.photoUrl!))) {
+                            AsyncData(:final value) when value != null =>
+                              CachedNetworkImage(
+                                imageUrl: value,
+                                memCacheWidth: 1200,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) =>
+                                    const _ScanPlaceholder(),
+                                errorWidget: (context, url, error) =>
+                                    const _ScanPlaceholder(broken: true),
+                              ),
+                            AsyncLoading() => const _ScanPlaceholder(),
+                            _ => const _ScanPlaceholder(broken: true),
+                          },
+                        ),
+                      ),
                     ],
-
-                    const SizedBox(height: 8),
                   ],
-                ),
+                ).entrance(),
               );
             },
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Standing in for the scan while it loads, or when it will not.
+class _ScanPlaceholder extends StatelessWidget {
+  const _ScanPlaceholder({this.broken = false});
+
+  final bool broken;
+
+  @override
+  Widget build(BuildContext context) {
+    return AspectRatio(
+      aspectRatio: 4 / 3,
+      child: ColoredBox(
+        color: context.surfaceSunken,
+        child: Center(
+          child: broken
+              ? Icon(
+                  Icons.broken_image_outlined,
+                  size: Dimens.iconXl,
+                  color: context.inkFaint,
+                )
+              : CircularProgressIndicator(
+                  color: context.accent,
+                  strokeWidth: 2,
+                ),
         ),
       ),
     );
@@ -380,17 +259,19 @@ class _DocumentActions extends ConsumerWidget {
         IconButton(
           icon: const Icon(Icons.edit_outlined),
           tooltip: l.editDocument,
-          onPressed: () =>
-              context.push('/documents/$documentId/edit?boatId=$boatId'),
+          onPressed: () => context.push(
+            Routes.documentEdit(documentId, boatId: boatId),
+          ),
         ),
         IconButton(
-          icon: const Icon(Icons.autorenew, color: AppColors.cyan),
+          icon: Icon(Icons.autorenew, color: context.accent),
           tooltip: l.renewDocument,
-          onPressed: () => context
-              .push('/documents/$documentId/edit?boatId=$boatId&renew=true'),
+          onPressed: () => context.push(
+            Routes.documentEdit(documentId, boatId: boatId, renew: true),
+          ),
         ),
         IconButton(
-          icon: const Icon(Icons.delete_outlined, color: AppColors.red),
+          icon: Icon(Icons.delete_outlined, color: context.critical),
           tooltip: l.delete,
           onPressed: () => _confirmDelete(context, ref, l),
         ),
@@ -435,50 +316,5 @@ class _DocumentActions extends ConsumerWidget {
         );
       }
     }
-  }
-}
-
-class _DetailRow extends StatelessWidget {
-  const _DetailRow({
-    required this.label,
-    required this.value,
-    this.icon,
-  });
-
-  final String label;
-  final String value;
-  final IconData? icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (icon != null) ...[
-          Icon(
-            icon,
-            size: 18,
-            color: context.txtSecondary,
-          ),
-          const SizedBox(width: 10),
-        ],
-        SizedBox(
-          width: 100,
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: context.txtSecondary,
-                ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            value,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-        ),
-      ],
-    );
   }
 }

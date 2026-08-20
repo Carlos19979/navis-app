@@ -37,7 +37,7 @@ void j05Logbook() {
     await tapUntil(
       tester,
       find.byTooltip('Statistics'),
-      find.text('Trip Statistics'),
+      find.text('Trip statistics'),
     );
     await pumpFor(tester, const Duration(seconds: 1));
     await nav.back();

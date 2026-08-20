@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:navis_mobile/features/maintenance/data/maintenance_models.dart';
 import 'package:navis_mobile/features/maintenance/data/maintenance_repository.dart';
+import 'package:navis_mobile/features/maintenance/presentation/screens/expenses_screen.dart';
 import 'package:navis_mobile/features/maintenance/presentation/screens/maintenance_screen.dart';
 import 'package:navis_mobile/features/maintenance/presentation/widgets/expense_period_picker.dart';
 import 'package:navis_mobile/features/shared/data/shared_repository.dart';
@@ -11,13 +12,15 @@ import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 
 import '../../helpers/helpers.dart';
 
-/// The user asked for the cost-intelligence shortcut to be gone from
-/// "Maintenance & expenses": the same screen is already one tap away from the
-/// boat's detail screen, and two doors to one room read as two features.
+/// The chrome of the two halves of what used to be one screen.
 ///
-/// Absence is trivial to undo by accident, so these tests assert it directly:
-/// no icon, no label, and — with a [RouteSpy] — no reachable route to
-/// `/boats/{id}/costs` from anywhere in the bar.
+/// Two requirements meet here. The cost-intelligence shortcut stays *gone*:
+/// cost intelligence is one tap from Today, and two doors to one room read as
+/// two features — absence is trivial to undo by accident, so it is asserted
+/// directly (no icon, no label, and no reachable `/costs` route from the bar).
+/// And since the split, each half must offer the other: the tab bar that used
+/// to carry them is gone, so without that action the ledger would be
+/// unreachable from the plan.
 void main() {
   const boatId = 'boat-1';
 
@@ -36,7 +39,7 @@ void main() {
     ),
   );
 
-  Widget buildSubject({RouteSpy? spy, bool pro = true}) {
+  Widget buildSubject({RouteSpy? spy, bool pro = true, bool ledger = false}) {
     final overrides = <Override>[
       // Pro so a re-added shortcut would navigate straight through instead of
       // stopping at the paywall: the tests must see the navigation attempt.
@@ -55,19 +58,12 @@ void main() {
         (ref, id) async => const <String, ExpenseSplitSummary>{},
       ),
     ];
-    const screen = MaintenanceScreen(boatId: boatId);
+    final screen = ledger
+        ? const ExpensesScreen(boatId: boatId)
+        : const MaintenanceScreen(boatId: boatId);
     return spy == null
         ? buildTestApp(screen, overrides: overrides)
         : buildRoutedTestApp(screen, spy: spy, overrides: overrides);
-  }
-
-  Future<void> openExpensesTab(WidgetTester tester) async {
-    await tester.tap(find.text('Expenses'));
-    // One frame to start the tab transition, one to finish it (the page is
-    // built lazily during the animation) and one for the async providers.
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.pump(const Duration(seconds: 1));
   }
 
   /// Taps whatever action the app bar exposes. Today there is none — that is
@@ -102,23 +98,22 @@ void main() {
       expect(find.text('Cost intelligence'), findsNothing);
       expect(
         tester.widgetList<IconButton>(appBarButtons).map((b) => b.tooltip),
-        ['Go back'],
-        reason: 'Back is the only control the bar should have',
+        ['Go back', 'Expenses'],
+        reason: 'Back, and the way to the other half — nothing else',
       );
     });
 
-    testWidgets('expenses tab shows neither the icon nor the label',
+    testWidgets('the ledger shows neither the icon nor the label',
         (tester) async {
       setPhoneSize(tester);
-      await tester.pumpWidget(buildSubject());
+      await tester.pumpWidget(buildSubject(ledger: true));
       await pumpScreen(tester);
-      await openExpensesTab(tester);
 
       expect(find.byIcon(Icons.insights_rounded), findsNothing);
       expect(find.text('Cost intelligence'), findsNothing);
       expect(
         tester.widgetList<IconButton>(appBarButtons).map((b) => b.tooltip),
-        ['Go back'],
+        ['Go back', 'Maintenance'],
       );
 
       await finish(tester);
@@ -132,49 +127,53 @@ void main() {
       await pumpScreen(tester);
 
       await tapAppBarActions(tester);
-      // Only worth visiting the second tab while the screen is still mounted:
-      // a navigation would already have replaced it.
-      if (find.byType(MaintenanceScreen).evaluate().isNotEmpty) {
-        await openExpensesTab(tester);
-        await tapAppBarActions(tester);
-      }
 
       expect(
         spy.locations.where((l) => l.contains('/costs')),
         isEmpty,
         reason: 'the screen must offer no route to /boats/$boatId/costs',
       );
-      expect(spy.locations, isEmpty);
+      // What the one action does go to.
+      expect(spy.locations, ['/boats/$boatId/expenses']);
 
       await finish(tester);
     });
   });
 
-  group('MaintenanceScreen keeps the rest of its bar', () {
-    testWidgets('title, back button and the two tabs are intact',
-        (tester) async {
+  group('the two halves are two routes', () {
+    testWidgets('the plan is titled and has no tab bar', (tester) async {
       setPhoneSize(tester);
       await tester.pumpWidget(buildSubject());
       await pumpScreen(tester);
 
-      expect(find.text('Maintenance & expenses'), findsOneWidget);
-      expect(find.byTooltip('Go back'), findsOneWidget);
-      expect(find.byType(TabBar), findsOneWidget);
-      expect(find.byType(Tab), findsNWidgets(2));
+      // «Maintenance & expenses» named a screen that no longer exists.
       expect(find.text('Maintenance'), findsOneWidget);
-      expect(find.text('Expenses'), findsOneWidget);
+      expect(find.byTooltip('Go back'), findsOneWidget);
+      expect(find.byType(TabBar), findsNothing);
+      expect(find.text('No maintenance tasks yet'), findsOneWidget);
     });
 
-    testWidgets('both tabs still open their own content', (tester) async {
+    testWidgets('the ledger is its own screen', (tester) async {
       setPhoneSize(tester);
-      await tester.pumpWidget(buildSubject());
+      await tester.pumpWidget(buildSubject(ledger: true));
       await pumpScreen(tester);
 
-      expect(find.text('No maintenance tasks yet'), findsOneWidget);
+      expect(find.byType(TabBar), findsNothing);
+      expect(find.text('No expenses recorded'), findsOneWidget);
 
-      await openExpensesTab(tester);
+      await finish(tester);
+    });
 
-      expect(find.text('No expenses in this period'), findsOneWidget);
+    testWidgets('and each one offers the other', (tester) async {
+      setPhoneSize(tester);
+      final spy = RouteSpy();
+      await tester.pumpWidget(buildSubject(ledger: true, spy: spy));
+      await pumpScreen(tester);
+
+      await tester.tap(find.byTooltip('Maintenance'));
+      await pumpScreen(tester);
+
+      expect(spy.last, '/boats/$boatId/maintenance');
 
       await finish(tester);
     });
@@ -184,9 +183,8 @@ void main() {
     testWidgets('the period bar is a picker, not chevron stepping',
         (tester) async {
       setPhoneSize(tester);
-      await tester.pumpWidget(buildSubject());
+      await tester.pumpWidget(buildSubject(ledger: true));
       await pumpScreen(tester);
-      await openExpensesTab(tester);
 
       // One tappable control that opens a picker.
       expect(find.byType(ExpensePeriodSelector), findsOneWidget);
@@ -212,9 +210,8 @@ void main() {
 
     testWidgets('chevrons live inside the picker dialog only', (tester) async {
       setPhoneSize(tester);
-      await tester.pumpWidget(buildSubject());
+      await tester.pumpWidget(buildSubject(ledger: true));
       await pumpScreen(tester);
-      await openExpensesTab(tester);
 
       await tester.tap(find.byType(ExpensePeriodSelector));
       await tester.pumpAndSettle();

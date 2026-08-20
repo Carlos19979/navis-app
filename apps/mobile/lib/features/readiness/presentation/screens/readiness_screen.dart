@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/app_typography.dart';
+import 'package:navis_mobile/core/theme/tone.dart';
+import 'package:navis_mobile/shared/widgets/navis_list.dart';
+import 'package:navis_mobile/shared/widgets/navis_ring.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/readiness/data/readiness_repository.dart';
 import 'package:navis_mobile/features/readiness/presentation/providers/readiness_provider.dart';
+import 'package:navis_mobile/features/readiness/presentation/readiness_labels.dart';
 import 'package:navis_mobile/features/readiness/presentation/readiness_links.dart';
 import 'package:navis_mobile/features/readiness/presentation/widgets/readiness_card.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
-import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_scaffold.dart';
 import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
@@ -35,40 +38,103 @@ class ReadinessScreen extends ConsumerWidget {
           onRetry: () => ref.invalidate(boatReadinessProvider(boatId)),
         ),
         data: (r) => ListView(
-          padding: const EdgeInsets.all(Dimens.spaceLg),
+          padding: Insets.screenWithNav,
           children: [
             _Header(readiness: r),
-            const SizedBox(height: Dimens.spaceLg),
-            for (final c in r.categories) ...[
-              _CategoryRow(category: c, boatId: boatId),
-              const SizedBox(height: Dimens.spaceSm),
-            ],
-            if (r.attention.isNotEmpty) ...[
-              const SizedBox(height: Dimens.spaceSm),
-              Text(
-                l.readinessNeedsAttention,
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: context.txtPrimary,
-                ),
-              ),
-              const SizedBox(height: Dimens.spaceSm),
-              for (final item in r.attention) ...[
-                _AttentionRow(item: item, boatId: boatId),
-                const SizedBox(height: Dimens.spaceSm),
+            const SizedBox(height: Dimens.spaceXl),
+            // No heading on this one: it repeated the screen's own title, and
+            // the categories *are* the body of the screen.
+            NavisList(
+              padding: EdgeInsets.zero,
+              children: [
+                for (final c in r.categories)
+                  _categoryRow(context, l, c, boatId),
               ],
+            ),
+            if (r.attention.isNotEmpty) ...[
+              const SizedBox(height: Dimens.spaceXl),
+              NavisList(
+                title: l.readinessNeedsAttention,
+                padding: EdgeInsets.zero,
+                children: [
+                  for (final item in r.attention)
+                    _attentionRow(context, l, item, boatId),
+                ],
+              ),
             ],
             if (!r.full) ...[
-              const SizedBox(height: Dimens.spaceSm),
-              _UpsellCard(),
+              const SizedBox(height: Dimens.spaceXl),
+              const _Upsell(),
             ],
           ],
         ),
       ),
     );
   }
+
+  /// One category: how many of its items are in order, and the way in.
+  Widget _categoryRow(
+    BuildContext context,
+    AppLocalizations l,
+    ReadinessCategory c,
+    String boatId,
+  ) {
+    final label = switch (c.key) {
+      'documents' => l.readinessCatDocuments,
+      'safety_gear' => l.readinessCatSafetyGear,
+      'maintenance' => l.readinessCatMaintenance,
+      _ => c.key,
+    };
+    final route = readinessRoute(boatId: boatId, category: c.key);
+    return NavisRow(
+      icon: Icons.circle,
+      iconColor: context.toneAccent(_tone(c.status)),
+      title: label,
+      value: l.readinessOkOfTotal(c.ok, c.total),
+      onTap: route == null ? null : () => context.push(route),
+    );
+  }
+
+  /// One thing that needs doing. The status can be a whole sentence («set up a
+  /// maintenance plan»), so it goes *under* the label: side by side, a long
+  /// status left the label so little width that it broke mid-word.
+  Widget _attentionRow(
+    BuildContext context,
+    AppLocalizations l,
+    ReadinessItem item,
+    String boatId,
+  ) {
+    final tone = item.status == ReadinessStatus.notReady
+        ? NavisTone.critical
+        : NavisTone.caution;
+    final route = readinessRoute(
+      boatId: boatId,
+      category: item.category,
+      ref: item.ref,
+    );
+    return NavisRow(
+      icon: Icons.circle,
+      iconColor: context.toneAccent(tone),
+      title: readinessItemTitle(l, item),
+      subtitle: readinessDaysLabel(l, item),
+      onTap: route == null ? null : () => context.push(route),
+    );
+  }
 }
 
+/// The readiness status as a system tone.
+NavisTone _tone(ReadinessStatus s) => switch (s) {
+      ReadinessStatus.ready => NavisTone.positive,
+      ReadinessStatus.attention => NavisTone.caution,
+      ReadinessStatus.notReady => NavisTone.critical,
+    };
+
+/// The score, as a gauge.
+///
+/// It used to lead with a 44 px warning triangle and «Score 72 / 100» under it —
+/// an alarm where the answer belonged. The ring says how far along at a glance,
+/// its colour says how worried to be, and the figure is exact for whoever wants
+/// it. One-shot sweep, so it costs nothing at rest.
 class _Header extends StatelessWidget {
   const _Header({required this.readiness});
 
@@ -77,224 +143,67 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final (color, icon) = ReadinessCard.visuals(readiness.status);
-    return NavisCard(
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 44),
-          const SizedBox(height: Dimens.spaceSm),
-          Text(
-            ReadinessCard.statusLabel(l, readiness.status),
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: context.txtPrimary,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            l.readinessScoreOf(readiness.score),
-            style: TextStyle(fontSize: 14, color: context.txtSecondary),
-          ),
-        ],
-      ),
-    );
-  }
-}
+    final tone = _tone(readiness.status);
 
-class _CategoryRow extends StatelessWidget {
-  const _CategoryRow({required this.category, required this.boatId});
-
-  final ReadinessCategory category;
-  final String boatId;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
-    final (color, icon) = ReadinessCard.visuals(category.status);
-    final label = switch (category.key) {
-      'documents' => l.readinessCatDocuments,
-      'safety_gear' => l.readinessCatSafetyGear,
-      'maintenance' => l.readinessCatMaintenance,
-      _ => category.key,
-    };
-    final route = readinessRoute(boatId: boatId, category: category.key);
-    return _RowCard(
-      route: route,
-      leading: Icon(icon, color: color, size: Dimens.iconMd),
-      title: label,
-      // Short trailing text ("2/3 OK"): it stays on the same line, and the
-      // title keeps whatever is left instead of being squeezed.
-      trailing: Text(
-        l.readinessOkOfTotal(category.ok, category.total),
-        style: TextStyle(fontSize: 13, color: context.txtSecondary),
-      ),
-    );
-  }
-}
-
-class _AttentionRow extends StatelessWidget {
-  const _AttentionRow({required this.item, required this.boatId});
-
-  final ReadinessItem item;
-  final String boatId;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
-    final color = item.status == ReadinessStatus.notReady
-        ? AppColors.red
-        : AppColors.amber;
-    final route = readinessRoute(
-      boatId: boatId,
-      category: item.category,
-      ref: item.ref,
-    );
-    // The status text can be a whole sentence ("set up a maintenance plan"), so
-    // it goes UNDER the label instead of competing with it for the same line:
-    // side by side, a long status left the label so little width that it broke
-    // mid-word ("Mainten/ance").
-    return _RowCard(
-      route: route,
-      borderColor: color.withValues(alpha: 0.4),
-      leading: Icon(Icons.circle, color: color, size: 10),
-      title: item.label.isNotEmpty ? item.label : _refLabel(l, item.ref),
-      subtitle: Text(
-        _daysLabel(l, item),
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-          color: color,
+    return Row(
+      children: [
+        NavisRing(
+          value: readiness.score,
+          color: context.toneAccent(tone),
+          caption: '/ 100',
+          semanticLabel: l.readinessScoreOf(readiness.score),
         ),
-      ),
-    );
-  }
-}
-
-/// One readiness line: leading dot/icon, a title that always gets the width it
-/// needs, an optional subtitle under it, and an optional short trailing widget.
-/// When [route] is non-null the whole card opens it.
-class _RowCard extends StatelessWidget {
-  const _RowCard({
-    required this.leading,
-    required this.title,
-    this.subtitle,
-    this.trailing,
-    this.route,
-    this.borderColor,
-  });
-
-  final Widget leading;
-  final String title;
-  final Widget? subtitle;
-  final Widget? trailing;
-  final String? route;
-  final Color? borderColor;
-
-  @override
-  Widget build(BuildContext context) {
-    final route = this.route;
-    final card = NavisCard(
-      borderColor: borderColor,
-      onTap: route == null ? null : () => context.push(route),
-      child: Row(
-        children: [
-          leading,
-          const SizedBox(width: Dimens.spaceMd),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: context.txtPrimary,
-                  ),
-                ),
-                if (subtitle != null) ...[
-                  const SizedBox(height: 2),
-                  subtitle!,
-                ],
-              ],
-            ),
+        const SizedBox(width: Dimens.spaceXl),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                ReadinessCard.statusLabel(l, readiness.status),
+                style: NavisType.title1.copyWith(color: context.ink),
+              ),
+              const SizedBox(height: Dimens.spaceXs),
+              Text(
+                readiness.attention.isEmpty
+                    ? l.readinessAllGood
+                    : l.readinessItemsNeedAttention(readiness.attention.length),
+                style: NavisType.bodySm.copyWith(color: context.inkMuted),
+              ),
+            ],
           ),
-          if (trailing != null) ...[
-            const SizedBox(width: Dimens.spaceSm),
-            trailing!,
-          ],
-          if (route != null) ...[
-            const SizedBox(width: Dimens.spaceXs),
-            Icon(
-              Icons.chevron_right_rounded,
-              color: context.txtSecondary,
-              size: Dimens.iconMd,
-            ),
-          ],
-        ],
-      ),
+        ),
+      ],
     );
-    return route == null ? card : Semantics(button: true, child: card);
   }
 }
 
-class _UpsellCard extends StatelessWidget {
+/// The full check is a paid feature; Free sees the documents block only.
+class _Upsell extends StatelessWidget {
+  const _Upsell();
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    return NavisCard(
-      borderColor: AppColors.cyan.withValues(alpha: 0.4),
-      child: Row(
-        children: [
-          const Icon(Icons.lock_rounded, color: AppColors.cyan, size: 22),
-          const SizedBox(width: Dimens.spaceMd),
-          Expanded(
-            child: Text(
-              l.readinessUpgradeForFull,
-              style: TextStyle(fontSize: 14, color: context.txtPrimary),
-            ),
+    // Quiet, like every other paid marker since this redesign: a lock and
+    // muted ink, not a coloured card competing with the things that are
+    // actually wrong.
+    return Row(
+      children: [
+        Icon(
+          Icons.lock_outline_rounded,
+          color: context.inkFaint,
+          size: Dimens.iconMd,
+        ),
+        const SizedBox(width: Dimens.spaceMd),
+        Expanded(
+          child: Text(
+            l.readinessUpgradeForFull,
+            style: NavisType.bodySm.copyWith(color: context.inkMuted),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
 /// Localizes an attention item's ref (API document type, or "engine_service").
-String _refLabel(AppLocalizations l, String ref) => switch (ref) {
-      'itb' => l.readinessRefItb,
-      'insurance_rc' => l.readinessRefInsurance,
-      'insurance_full' => l.readinessRefInsurance,
-      'life_raft' => l.readinessRefLifeRaft,
-      'extinguisher' => l.readinessRefExtinguisher,
-      'flares' => l.readinessRefFlares,
-      'first_aid' => l.readinessRefFirstAid,
-      'medical_cert' => l.readinessRefMedicalCert,
-      'radio_cert' => l.readinessRefRadioCert,
-      'navigation_license' => l.readinessRefNavLicense,
-      'engine_service' => l.readinessRefEngineService,
-      _ => l.readinessRefDocument,
-    };
-
-/// Human string for an item's timing.
-String _daysLabel(AppLocalizations l, ReadinessItem item) {
-  if (item.ref == 'engine_service') {
-    switch (item.reason) {
-      case 'no_plan':
-        return l.readinessMaintNoPlan;
-      case 'overdue':
-        return l.readinessMaintOverdue;
-      case 'pending':
-        return l.readinessMaintPending;
-      default:
-        // due_soon: prefer the nearer of date/hours.
-        if (item.hours != null && (item.days <= 0 || item.hours! < item.days)) {
-          return l.readinessMaintInHours(item.hours!.round());
-        }
-        return l.readinessExpiresInDays(item.days);
-    }
-  }
-  if (item.days < 0) return l.readinessExpired;
-  return l.readinessExpiresInDays(item.days);
-}

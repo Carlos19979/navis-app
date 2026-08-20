@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:navis_mobile/core/network/supabase_client.dart';
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/data/boat_share_repository.dart';
@@ -250,7 +249,7 @@ class _SplitSheetState extends ConsumerState<_SplitSheet> {
                   '${assigned.toStringAsFixed(0)} / ${widget.amount.toStringAsFixed(0)} €',
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
-                    color: matches ? AppColors.green : AppColors.amber,
+                    color: matches ? context.positive : context.caution,
                   ),
                 ),
               ],
@@ -283,7 +282,7 @@ class _SplitSheetState extends ConsumerState<_SplitSheet> {
               tooltip: l.splitSettled,
               icon: Icon(
                 p.settled ? Icons.check_circle : Icons.radio_button_unchecked,
-                color: p.settled ? AppColors.green : context.txtSecondary,
+                color: p.settled ? context.positive : context.txtSecondary,
                 size: 20,
               ),
               onPressed: () async {

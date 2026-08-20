@@ -12,28 +12,28 @@ class AppLocalizationsEs extends AppLocalizations {
   String get appTitle => 'Navis';
 
   @override
-  String get login => 'Iniciar Sesion';
+  String get login => 'Iniciar sesión';
 
   @override
   String get register => 'Registrarse';
 
   @override
-  String get email => 'Correo electronico';
+  String get email => 'Correo electrónico';
 
   @override
-  String get password => 'Contrasena';
+  String get password => 'Contraseña';
 
   @override
-  String get confirmPassword => 'Confirmar Contrasena';
+  String get confirmPassword => 'Confirmar contraseña';
 
   @override
-  String get forgotPassword => 'Olvidaste tu contrasena?';
+  String get forgotPassword => '¿Olvidaste tu contraseña?';
 
   @override
-  String get noAccount => 'No tienes una cuenta?';
+  String get noAccount => '¿No tienes cuenta?';
 
   @override
-  String get hasAccount => 'Ya tienes una cuenta?';
+  String get hasAccount => '¿Ya tienes cuenta?';
 
   @override
   String get boats => 'Barcos';
@@ -72,7 +72,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get edit => 'Editar';
 
   @override
-  String get add => 'Agregar';
+  String get add => 'Añadir';
 
   @override
   String get retry => 'Reintentar';
@@ -87,22 +87,20 @@ class AppLocalizationsEs extends AppLocalizations {
   String get success => 'Exito';
 
   @override
-  String get noBoats => 'Aun no tienes barcos. Agrega tu primer barco!';
+  String get noBoats => 'Aún no tienes barcos';
 
   @override
-  String get noDocuments =>
-      'Aun no tienes documentos. Agrega tu primer documento!';
+  String get noDocuments => 'Aún no tienes documentos';
 
   @override
-  String get noTrips =>
-      'Aun no has registrado viajes. Comienza tu primer viaje!';
+  String get noTrips => 'Aún no has registrado viajes';
 
   @override
   String get statsEmptyDescription =>
       'Registra viajes para ver aquí distancia, horas en el mar y actividad mensual.';
 
   @override
-  String get noEvents => 'No hay eventos proximos.';
+  String get noEvents => 'No hay eventos próximos.';
 
   @override
   String get expired => 'Vencido';
@@ -111,7 +109,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get warning => 'Advertencia';
 
   @override
-  String get critical => 'Critico';
+  String get critical => 'Crítico';
 
   @override
   String get ok => 'OK';
@@ -121,12 +119,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String daysRemaining(int count) {
-    return '$count dias restantes';
+    return '$count días restantes';
   }
 
   @override
   String daysOverdue(int count) {
-    return '$count dias vencido';
+    return '$count días de retraso';
   }
 
   @override
@@ -146,7 +144,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String readinessItemsNeedAttention(int count) {
-    return '$count cosas requieren atención';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count cosas pendientes',
+      one: '1 cosa pendiente',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -173,7 +177,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get readinessUpgradeForFull =>
-      'Desbloquea el estado completo (equipo de seguridad + mantenimiento) con Pro';
+      'El estado completo —equipo de seguridad y mantenimiento— es de Navis Plus';
 
   @override
   String get readinessExpired => 'caducado';
@@ -349,11 +353,54 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get paywallReasonCostAnalytics =>
-      'Desbloquea la inteligencia de costes con Navis Pro';
+      'Desbloquea la inteligencia de costes';
 
   @override
   String get costAnalyticsSubtitle =>
       'Gasto en combustible, €/MN, tendencias de coste y anomalías';
+
+  @override
+  String planFeatureBoats(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count barcos',
+      one: '1 barco',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planFeatureBasics => 'documentos, viajes y avisos básicos';
+
+  @override
+  String get planFeatureAnchor => 'alarma de fondeo';
+
+  @override
+  String get planFeatureSchedules => 'plan de mantenimiento y avisos';
+
+  @override
+  String get planFeatureReadiness => 'estado de a bordo completo';
+
+  @override
+  String planFeatureGallery(int count) {
+    return '$count fotos por barco';
+  }
+
+  @override
+  String get planFeatureAttachments => 'adjuntos sin límite';
+
+  @override
+  String get planFeatureCosts => 'inteligencia de costes';
+
+  @override
+  String get planFeatureShared => 'reservas y reparto de gastos';
+
+  @override
+  String get planFeaturePassport => 'pasaporte del barco';
+
+  @override
+  String get planFeatureClubs => 'clubes y regatas';
 
   @override
   String get proBadge => 'PRO';
@@ -392,8 +439,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get passportExport => 'Exportar pasaporte';
 
   @override
-  String get paywallReasonPassport =>
-      'Exporta el pasaporte de tu barco con Navis Pro';
+  String get paywallReasonPassport => 'Exporta el pasaporte de tu barco';
 
   @override
   String get bookingsTitle => 'Reservas';
@@ -509,7 +555,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get paywallReasonShared =>
-      'Coordina un barco compartido con Navis Pro';
+      'Coordina un barco compartido: reservas y reparto de gastos';
 
   @override
   String get anomaliesTitle => 'Anomalías';
@@ -611,7 +657,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get paywallReasonMaintenanceReminders =>
-      'Recibe recordatorios de mantenimiento con Navis Plus';
+      'Recibe recordatorios de mantenimiento';
 
   @override
   String maintenanceEveryMonths(int months) {
@@ -660,7 +706,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get nauticalMiles => 'MN';
 
   @override
-  String get knots => 'nudos';
+  String get knots => 'kt';
 
   @override
   String get kilometers => 'km';
@@ -669,25 +715,25 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meters => 'm';
 
   @override
-  String get boatName => 'Nombre del Barco';
+  String get boatName => 'Nombre del barco';
 
   @override
-  String get registration => 'Numero de Registro';
+  String get registration => 'Número de registro';
 
   @override
-  String get boatType => 'Tipo de Barco';
+  String get boatType => 'Tipo de barco';
 
   @override
-  String get length => 'Eslora (m)';
+  String get length => 'Eslora';
 
   @override
-  String get homePort => 'Puerto Base';
+  String get homePort => 'Puerto base';
 
   @override
   String get sailboat => 'Velero';
 
   @override
-  String get motorboat => 'Lancha a Motor';
+  String get motorboat => 'Lancha a motor';
 
   @override
   String get catamaran => 'Catamaran';
@@ -696,13 +742,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get other => 'Otro';
 
   @override
-  String get documentType => 'Tipo de Documento';
+  String get documentType => 'Tipo de documento';
 
   @override
-  String get expiryDate => 'Fecha de Vencimiento';
+  String get expiryDate => 'Fecha de vencimiento';
 
   @override
-  String get alertDays => 'Dias de Alerta Antes del Vencimiento';
+  String get alertDays => 'Días de aviso antes del vencimiento';
 
   @override
   String get notes => 'Notas';
@@ -711,7 +757,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get photo => 'Foto';
 
   @override
-  String get addPhoto => 'Agregar Foto';
+  String get addPhoto => 'Añadir foto';
 
   @override
   String get departure => 'Salida';
@@ -720,22 +766,39 @@ class AppLocalizationsEs extends AppLocalizations {
   String get arrival => 'Llegada';
 
   @override
+  String get tripRoute => 'Ruta';
+
+  @override
   String get distance => 'Distancia';
 
   @override
-  String get duration => 'Duracion';
+  String get duration => 'Duración';
 
   @override
-  String get maxSpeed => 'Velocidad Maxima';
+  String get maxSpeed => 'Velocidad máxima';
 
   @override
-  String get avgSpeed => 'Velocidad Promedio';
+  String get avgSpeed => 'Velocidad promedio';
 
   @override
-  String get startTrip => 'Iniciar Viaje';
+  String get resumeTripAction => 'Continuar viaje';
 
   @override
-  String get stopTrip => 'Detener Viaje';
+  String get sailWindowGoodHint =>
+      'Viento flojo y mar tranquila. Buen día para salir.';
+
+  @override
+  String get sailWindowModerateHint =>
+      'Se puede, sin perder de vista el viento.';
+
+  @override
+  String get sailWindowAdverseHint => 'Mejor esperar a que baje.';
+
+  @override
+  String get startTrip => 'Zarpar';
+
+  @override
+  String get stopTrip => 'Detener viaje';
 
   @override
   String get pauseTrip => 'Pausar';
@@ -747,10 +810,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recording => 'Grabando...';
 
   @override
-  String get totalTrips => 'Viajes Totales';
+  String get totalTrips => 'Viajes totales';
 
   @override
-  String get tripStatistics => 'Estadísticas de Viajes';
+  String get tripStatistics => 'Estadísticas de viajes';
 
   @override
   String get tripStatisticsSubtitle => 'Distancia, horas de motor y puertos';
@@ -774,10 +837,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get engineHoursTotal => 'Horas de motor';
 
   @override
-  String get yearInReview => 'Resumen del Año';
+  String get yearInReview => 'Resumen del año';
 
   @override
-  String get monthlyActivity => 'Actividad Mensual';
+  String get monthlyActivity => 'Actividad mensual';
 
   @override
   String get tripsLabel => 'Viajes';
@@ -792,37 +855,37 @@ class AppLocalizationsEs extends AppLocalizations {
   String get allTime => 'Todo el tiempo';
 
   @override
-  String get totalDistance => 'Distancia Total';
+  String get totalDistance => 'Distancia total';
 
   @override
-  String get totalHours => 'Horas Totales';
+  String get totalHours => 'Horas totales';
 
   @override
   String get temperature => 'Temperatura';
 
   @override
-  String get windSpeed => 'Velocidad del Viento';
+  String get windSpeed => 'Velocidad del viento';
 
   @override
-  String get windDirection => 'Direccion del Viento';
+  String get windDirection => 'Dirección del viento';
 
   @override
-  String get waveHeight => 'Altura de Olas';
+  String get waveHeight => 'Altura de olas';
 
   @override
-  String get forecast => 'Pronostico';
+  String get forecast => 'Pronóstico';
 
   @override
   String get today => 'Hoy';
 
   @override
-  String get tomorrow => 'Manana';
+  String get tomorrow => 'Mañana';
 
   @override
-  String get eventDate => 'Fecha del Evento';
+  String get eventDate => 'Fecha del evento';
 
   @override
-  String get eventLocation => 'Ubicacion';
+  String get eventLocation => 'Ubicación';
 
   @override
   String get registerForEvent => 'Registrarse';
@@ -831,10 +894,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get theme => 'Tema';
 
   @override
-  String get darkMode => 'Modo Oscuro';
+  String get darkMode => 'Modo oscuro';
 
   @override
-  String get lightMode => 'Modo Claro';
+  String get lightMode => 'Modo claro';
 
   @override
   String get language => 'Idioma';
@@ -843,71 +906,74 @@ class AppLocalizationsEs extends AppLocalizations {
   String get notifications => 'Notificaciones';
 
   @override
-  String get logout => 'Cerrar Sesion';
+  String get logout => 'Cerrar sesión';
 
   @override
-  String get logoutConfirm => 'Estas seguro de que deseas cerrar sesion?';
+  String get logoutConfirm => '¿Seguro que quieres cerrar sesión?';
 
   @override
-  String get deleteConfirm => 'Estas seguro de que deseas eliminar esto?';
+  String get deleteConfirm => '¿Seguro que quieres eliminar esto?';
 
   @override
   String get requiredField => 'Este campo es obligatorio';
 
   @override
-  String get invalidEmail => 'Por favor ingresa un correo valido';
+  String get invalidEmail => 'Introduce un correo electrónico válido';
 
   @override
   String get passwordTooShort =>
-      'La contrasena debe tener al menos 6 caracteres';
+      'La contraseña debe tener al menos 6 caracteres';
 
   @override
-  String get passwordsDoNotMatch => 'Las contrasenas no coinciden';
+  String get passwordsDoNotMatch => 'Las contraseñas no coinciden';
 
   @override
-  String get engineHours => 'Horas de Motor';
+  String get engineHours => 'Horas de motor';
 
   @override
-  String get fuelUsed => 'Combustible Usado';
+  String get fuelUsed => 'Combustible usado';
 
   @override
-  String get crew => 'Tripulacion';
+  String get crew => 'Tripulación';
 
   @override
   String get logbook => 'Bitácora';
 
   @override
-  String get tripDetails => 'Detalles del Viaje';
+  String get tripDetails => 'Detalles del viaje';
 
   @override
-  String get editBoat => 'Editar Barco';
+  String get editBoat => 'Editar barco';
 
   @override
-  String get myBoats => 'Mis Barcos';
+  String get myBoats => 'Mis barcos';
 
   @override
-  String get addBoat => 'Agregar Barco';
+  String get addBoat => 'Añadir barco';
 
   @override
-  String get newDocument => 'Nuevo Documento';
+  String get newDocument => 'Nuevo documento';
 
   @override
-  String get editDocument => 'Editar Documento';
+  String get editDocument => 'Editar documento';
 
   @override
-  String get renewDocument => 'Renovar Documento';
+  String get renewDocument => 'Renovar documento';
 
   @override
-  String get documentDetails => 'Detalles del Documento';
+  String get documentSingular => 'Documento';
 
   @override
-  String get renewalCost => 'Coste de Renovacion';
+  String get documentDetails => 'Detalles del documento';
+
+  @override
+  String get renewalCost => 'Coste de renovación';
 
   @override
   String get renewalProvider => 'Proveedor / Empresa';
 
   @override
-  String get lastRenewal => 'Ultima Renovacion';
+  String get lastRenewal => 'Última renovación';
 
   @override
   String get date => 'Fecha';
@@ -919,11 +985,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get provider => 'Proveedor';
 
   @override
-  String get deleteDocument => 'Eliminar Documento';
+  String get deleteDocument => 'Eliminar documento';
 
   @override
   String get deleteDocumentConfirm =>
-      'Estas seguro de que deseas eliminar este documento?';
+      '¿Seguro que quieres eliminar este documento?';
 
   @override
   String get documentDeleted => 'Documento eliminado';
@@ -944,22 +1010,22 @@ class AppLocalizationsEs extends AppLocalizations {
   String get failedToDelete => 'Error al eliminar';
 
   @override
-  String get takePhoto => 'Tomar Foto';
+  String get takePhoto => 'Tomar foto';
 
   @override
-  String get chooseFromGallery => 'Elegir de la Galeria';
+  String get chooseFromGallery => 'Elegir de la galería';
 
   @override
-  String get addScan => 'Agregar Escaneo';
+  String get addScan => 'Añadir escaneo';
 
   @override
   String get notesOptional => 'Notas (opcional)';
 
   @override
-  String get alertDaysBeforeExpiry => 'Dias de Alerta Antes del Vencimiento';
+  String get alertDaysBeforeExpiry => 'Días de aviso antes del vencimiento';
 
   @override
-  String get validNumber => 'Por favor ingresa un numero valido';
+  String get validNumber => 'Introduce un número válido';
 
   @override
   String get uploading => 'Subiendo...';
@@ -1064,7 +1130,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get tripHistory => 'Historial de viajes e iniciar uno nuevo';
 
   @override
-  String get modifyBoatDetails => 'Modificar detalles del barco';
+  String get modifyBoatDetails => 'Editar los datos del barco';
 
   @override
   String get removePermanently => 'Eliminar este barco permanentemente';
@@ -1088,10 +1154,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get goBack => 'Volver';
 
   @override
-  String get addNewBoat => 'Agregar nuevo barco';
+  String get addNewBoat => 'Añadir barco';
 
   @override
-  String get homePortOptional => 'Puerto Base (opcional)';
+  String get homePortOptional => 'Puerto base (opcional)';
 
   @override
   String get wind => 'Viento';
@@ -1127,7 +1193,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get dirNW => 'NO';
 
   @override
-  String get currentConditions => 'Condiciones Actuales';
+  String get currentConditions => 'Condiciones actuales';
 
   @override
   String get calm => 'Calma';
@@ -1180,25 +1246,25 @@ class AppLocalizationsEs extends AppLocalizations {
   String get tripDeleted => 'Viaje eliminado';
 
   @override
-  String get selectArrivalPort => 'Seleccionar Puerto de Llegada';
+  String get selectArrivalPort => 'Seleccionar puerto de llegada';
 
   @override
   String get commaSeparatedNames => 'Nombres separados por comas';
 
   @override
-  String get crewMembers => 'Miembros de la Tripulación';
+  String get crewMembers => 'Miembros de la tripulación';
 
   @override
-  String get updateTrip => 'Actualizar Viaje';
+  String get updateTrip => 'Actualizar viaje';
 
   @override
-  String get saveTrip => 'Guardar Viaje';
+  String get saveTrip => 'Guardar viaje';
 
   @override
   String get notLoggedIn => 'No has iniciado sesión';
 
   @override
-  String get helpAndSupport => 'Ayuda y Soporte';
+  String get helpAndSupport => 'Ayuda y soporte';
 
   @override
   String get contactByEmail => 'Escríbenos un correo';
@@ -1217,7 +1283,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get paywallAutoRenewNotice =>
-      'La suscripción se renueva automáticamente salvo que la canceles en los ajustes de tu cuenta del App Store al menos 24 horas antes del fin del período en curso.';
+      'La suscripción se renueva automáticamente salvo que la canceles en los ajustes de tu cuenta del App Store al menos 24 horas antes del fin del periodo en curso.';
 
   @override
   String aboutVersion(String version) {
@@ -1250,7 +1316,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get daysBeforeExpiry => 'días antes del vencimiento';
 
   @override
-  String get selectLocation => 'Seleccionar Ubicación';
+  String get selectLocation => 'Seleccionar ubicación';
 
   @override
   String get totalEngineHours => 'Total horas de motor';
@@ -1260,7 +1326,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String thisYear(String year) {
-    return 'Este Año ($year)';
+    return 'Este año ($year)';
   }
 
   @override
@@ -1291,7 +1357,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get deleteTrip => 'Eliminar Viaje';
+  String get deleteTrip => 'Eliminar viaje';
 
   @override
   String get deleteTripConfirm =>
@@ -1310,10 +1376,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get enterValidNumber => 'Ingresa un número válido';
 
   @override
-  String get completeTrip => 'Completar Viaje';
+  String get completeTrip => 'Completar viaje';
 
   @override
-  String get arrivalPort => 'Puerto de Llegada';
+  String get arrivalPort => 'Puerto de llegada';
 
   @override
   String get savingTrip => 'Guardando viaje...';
@@ -1330,7 +1396,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Permiso de ubicación denegado. Habilita en ajustes.';
 
   @override
-  String get resetPassword => 'Restablecer Contraseña';
+  String get resetPassword => 'Restablecer contraseña';
 
   @override
   String get boatManagement => 'GESTIÓN NÁUTICA';
@@ -1348,7 +1414,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get pleaseEnterRegistration => 'Ingresa el número de registro';
 
   @override
-  String get pleaseEnterLength => 'Ingresa la eslora';
+  String get pleaseEnterLength => 'Introduce la eslora';
 
   @override
   String get pleaseEnterEmail => 'Ingresa tu correo electrónico';
@@ -1366,22 +1432,27 @@ class AppLocalizationsEs extends AppLocalizations {
   String get failedToSaveBoat => 'Error al guardar barco';
 
   @override
-  String get newBoat => 'Nuevo Barco';
+  String get newBoat => 'Nuevo barco';
 
   @override
-  String get boatDetailsSection => 'Detalles del Barco';
+  String get boatDetailsSection => 'Detalles del barco';
+
+  @override
+  String locationSetAt(String lat, String lon) {
+    return 'Ubicación fijada ($lat, $lon)';
+  }
 
   @override
   String get pickLocationOnMap => 'Seleccionar ubicación en mapa';
 
   @override
-  String get updateBoat => 'Actualizar Barco';
+  String get updateBoat => 'Actualizar barco';
 
   @override
-  String get createBoat => 'Crear Barco';
+  String get createBoat => 'Crear barco';
 
   @override
-  String get createAccount => 'Crear Cuenta';
+  String get createAccount => 'Crear cuenta';
 
   @override
   String get joinNavisSubtitle => 'ÚNETE A NAVIS Y GESTIONA TU BARCO';
@@ -1393,25 +1464,25 @@ class AppLocalizationsEs extends AppLocalizations {
   String get confirm => 'Confirmar';
 
   @override
-  String get selectHomePort => 'Seleccionar Puerto Base';
+  String get selectHomePort => 'Seleccionar puerto base';
 
   @override
-  String get documentInfo => 'Información del Documento';
+  String get documentInfo => 'Información del documento';
 
   @override
-  String get alertsAndNotes => 'Alertas y Notas';
+  String get alertsAndNotes => 'Alertas y notas';
 
   @override
-  String get renewalDetails => 'Detalles de Renovación';
+  String get renewalDetails => 'Detalles de renovación';
 
   @override
   String get documentScan => 'Escaneo de documento';
 
   @override
-  String get saveDocument => 'Guardar Documento';
+  String get saveDocument => 'Guardar documento';
 
   @override
-  String get updateDocument => 'Actualizar Documento';
+  String get updateDocument => 'Actualizar documento';
 
   @override
   String get interested => 'Me interesa';
@@ -1420,22 +1491,22 @@ class AppLocalizationsEs extends AppLocalizations {
   String get notInterested => 'No me interesa';
 
   @override
-  String get eventDetails => 'Detalles del Evento';
+  String get eventDetails => 'Detalles del evento';
 
   @override
-  String get departurePort => 'Puerto de Salida';
+  String get departurePort => 'Puerto de salida';
 
   @override
   String get pleaseEnterDeparturePort => 'Ingresa el puerto de salida';
 
   @override
-  String get arrivalPortOptional => 'Puerto de Llegada (opcional)';
+  String get arrivalPortOptional => 'Puerto de llegada (opcional)';
 
   @override
-  String get engineHoursOptional => 'Horas de Motor (opcional)';
+  String get engineHoursOptional => 'Horas de motor (opcional)';
 
   @override
-  String get fuelUsedOptional => 'Combustible Usado (litros, opcional)';
+  String get fuelUsedOptional => 'Combustible usado (litros, opcional)';
 
   @override
   String get crewMembersCommaSeparated => 'Tripulación (separados por comas)';
@@ -1465,7 +1536,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get nextMonth => 'Mes siguiente';
 
   @override
-  String get nearbyPorts => 'Puertos Cercanos';
+  String get nearbyPorts => 'Puertos cercanos';
+
+  @override
+  String planChangedTo(String plan) {
+    return 'Plan cambiado a $plan';
+  }
+
+  @override
+  String get planChangeFailed => 'No se pudo cambiar el plan';
 
   @override
   String get portTypeMarina => 'Marina';
@@ -1480,7 +1559,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get portTypeCommercial => 'Comercial';
 
   @override
-  String get portTypeFishing => 'Puerto Pesquero';
+  String get portTypeFishing => 'Puerto pesquero';
 
   @override
   String get portTypeOther => 'Otro';
@@ -1529,19 +1608,19 @@ class AppLocalizationsEs extends AppLocalizations {
   String get docTypeLicense => 'Licencia';
 
   @override
-  String get docTypeSafetyCertificate => 'Certificado de Seguridad';
+  String get docTypeSafetyCertificate => 'Certificado de seguridad';
 
   @override
-  String get docTypeRadioLicense => 'Licencia de Radio';
+  String get docTypeRadioLicense => 'Licencia de radio';
 
   @override
-  String get docTypePollutionCertificate => 'Certificado Anticontaminación';
+  String get docTypePollutionCertificate => 'Certificado anticontaminación';
 
   @override
-  String get docTypeMedicalCertificate => 'Certificado Médico';
+  String get docTypeMedicalCertificate => 'Certificado médico';
 
   @override
-  String get docTypeLifeRaft => 'Balsa Salvavidas';
+  String get docTypeLifeRaft => 'Balsa salvavidas';
 
   @override
   String get docTypeFireExtinguisher => 'Extintor';
@@ -1553,7 +1632,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get docTypeFirstAidKit => 'Botiquín';
 
   @override
-  String get docTypeFishingPermit => 'Permiso de Pesca';
+  String get docTypeFishingPermit => 'Permiso de pesca';
 
   @override
   String get confirmLocation => 'Confirmar ubicación';
@@ -1757,8 +1836,15 @@ class AppLocalizationsEs extends AppLocalizations {
       'Has alcanzado el máximo de barcos de tu plan.';
 
   @override
-  String get paywallReasonBoatLimit =>
-      'Tu plan Free permite 1 barco. Hazte Pro para gestionar hasta 3.';
+  String paywallReasonBoatLimit(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count barcos',
+      one: '1 barco',
+    );
+    return 'Tu plan permite $_temp0. Amplía para añadir otro.';
+  }
 
   @override
   String get joinBoat => 'Unirse a un barco';
@@ -1836,11 +1922,11 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get deleteGroup => 'Eliminar grupo';
+  String get deleteGroup => 'Eliminar club';
 
   @override
   String get deleteGroupConfirm =>
-      '¿Seguro que quieres eliminar este grupo? No se puede deshacer.';
+      '¿Seguro que quieres eliminar este club? No se puede deshacer.';
 
   @override
   String get leaveGroup => 'Salir del grupo';
@@ -1896,7 +1982,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get couldNotCreateGroup => 'No se pudo crear el grupo';
 
   @override
-  String get createGroup => 'Crear grupo';
+  String get createGroup => 'Crear club';
 
   @override
   String get groupName => 'Nombre del grupo';
@@ -1913,8 +1999,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Solo se unen con un código de invitación.';
 
   @override
-  String get paywallReasonGroups =>
-      'Crear clubes y eventos es una función de Navis Pro.';
+  String get paywallReasonGroups => 'Crea clubes y programa regatas';
 
   @override
   String get joinByCode => 'Unirse por código';
@@ -1944,10 +2029,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get requestAction => 'Solicitar';
 
   @override
-  String get notInAnyGroup => 'Aún no estás en ningún grupo.';
+  String get notInAnyGroup => 'Todavía no estás en ningún club.';
 
   @override
-  String get noPublicGroups => 'No hay grupos públicos para descubrir.';
+  String get noPublicGroups => 'No hay clubes públicos que descubrir.';
 
   @override
   String get cancelTrip => 'Descartar viaje';
@@ -2057,12 +2142,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get gallerySubtitle => 'Fotos adicionales a la portada';
 
   @override
-  String get paywallReasonLogPhotos =>
-      'Añade más fotos de servicio con Navis Pro';
+  String get paywallReasonLogPhotos => 'Añade más fotos a cada servicio';
 
   @override
-  String get paywallReasonGallery =>
-      'Añade una galería de fotos a tu barco con Navis Pro';
+  String get paywallReasonGallery => 'Añade una galería de fotos a tu barco';
 
   @override
   String get expenseCategoryFuel => 'Combustible';
@@ -2099,6 +2182,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get couldNotStart => 'No se pudo iniciar';
+
+  @override
+  String checklistProgress(String checked, String total) {
+    return '$checked de $total listos';
+  }
 
   @override
   String get checklistSkipHint =>
@@ -2392,13 +2480,24 @@ class AppLocalizationsEs extends AppLocalizations {
   String get visibilityLabel => 'Visibilidad';
 
   @override
-  String get myGroupsTab => 'Mis grupos';
+  String get myGroupsTab => 'Mis clubes';
 
   @override
-  String get discoverTab => 'Descubrir';
+  String get discoverTab => 'Descubrir clubes';
 
   @override
   String get pendingLabel => 'Pendiente';
+
+  @override
+  String membersCountShort(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count miembros',
+      one: '1 miembro',
+    );
+    return '$_temp0';
+  }
 
   @override
   String pendingCountShort(int count) {
@@ -2601,8 +2700,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Detén la grabación de la travesía antes de iniciar la alarma de fondeo.';
 
   @override
-  String get paywallReasonAnchor =>
-      'Desbloquea la alarma de fondeo con Navis Plus';
+  String get paywallReasonAnchor => 'Desbloquea la alarma de fondeo';
 
   @override
   String get proBenefitAnchor =>
@@ -2660,6 +2758,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get moderationFailed => 'No se pudo completar. Inténtalo de nuevo.';
+
+  @override
+  String get searchCommunity => 'Buscar regatas y clubes';
+
+  @override
+  String get clubsLabel => 'Clubes';
 
   @override
   String get searchGroups => 'Buscar clubes por nombre…';
@@ -2730,7 +2834,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tripDeleteForbidden =>
-      'No tienes permiso para borrar este viaje. Pídelo al propietario del barco.';
+      'No tienes permiso para eliminar este viaje. Pídelo al propietario del barco.';
 
   @override
   String get tripAlreadyDeleted => 'Este viaje ya no existe';
@@ -2964,4 +3068,50 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get authLinkExpiredBody =>
       'Los enlaces caducan al cabo de una hora y solo se pueden usar una vez. Pide uno nuevo desde «Olvidaste tu contraseña».';
+
+  @override
+  String get changeBoat => 'Cambiar barco';
+
+  @override
+  String get nextUp => 'Próximo';
+
+  @override
+  String get seeAll => 'Ver todo';
+
+  @override
+  String get todayNothingDue => 'No hay nada pendiente';
+
+  @override
+  String get anchorActionShort => 'Fondeo';
+
+  @override
+  String alertsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count avisos',
+      one: '1 aviso',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get otherBoatsNeedAttention => 'otro barco requiere atención';
+
+  @override
+  String get boatData => 'Datos del barco';
+
+  @override
+  String get exploreClubs => 'Explorar clubes';
+
+  @override
+  String get noEventsDescription =>
+      'Las regatas las programa un club. Únete a uno, o crea el tuyo.';
+
+  @override
+  String get seeAllExpenses => 'Ver todo el histórico';
+
+  @override
+  String get expensesEmptyPeriodDescription =>
+      'Puede haber apuntes en otro periodo.';
 }

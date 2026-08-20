@@ -36,11 +36,11 @@ class ChecklistRobot {
       );
 
   /// The logbook FAB. The checklist screen's own primary button is also labelled
-  /// 'Start Trip', so this one is located by its tooltip.
-  Finder get _startTripFab => find.byTooltip('Start Trip');
+  /// 'Start trip', so this one is located by its tooltip.
+  Finder get _startTripFab => find.byTooltip('Start trip');
 
   Finder get _checklistStartButton =>
-      find.widgetWithText(NavisButton, 'Start Trip');
+      find.widgetWithText(NavisButton, 'Start trip');
 
   /// Recording is really running: the HUD renders only while it is.
   Finder get _hud => find.byType(NavigationHud);
@@ -168,18 +168,13 @@ class ChecklistRobot {
     await settings.open();
 
     final title = find.descendant(
-      of: find.byType(SettingsScreen),
+      of: find.byType(AccountSettingsSections),
       matching: find.text('Checklist before setting sail'),
     );
     await tester.scrollUntilVisible(
       title,
       150,
-      scrollable: find
-          .descendant(
-            of: find.byType(SettingsScreen),
-            matching: find.byType(Scrollable),
-          )
-          .first,
+      scrollable: find.byType(Scrollable).first,
     );
     await pumpFor(tester, const Duration(milliseconds: 400));
 

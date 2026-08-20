@@ -1,24 +1,29 @@
 import 'package:flutter/material.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/palette.dart';
 
 /// A categorical palette for charts.
 ///
-/// [AppColors] has no series palette: its five accents each carry a meaning
-/// (cyan = primary, green = good, amber = warning, red = bad), so painting six
-/// spend categories with them would say things the data does not. These hues sit
-/// in the mid range on purpose — light enough to read on the dark background
-/// (#0D1B2A) and dark enough on the light one (#F5F7FA), since every screen is
-/// golden-tested in both.
+/// The semantic accents each carry a meaning (accent = primary, positive =
+/// good, caution = warning, critical = bad), so painting six spend categories
+/// with them would say things the data does not. These hues sit in the mid
+/// range on purpose — light enough to read on the dark canvas and dark enough
+/// on the light one, since every screen is golden-tested in both.
+///
+/// **Fill role only.** These are for bars, dots and swatches, never for text:
+/// several of them are under 4.5:1 on white, exactly like the brand accents
+/// (see [Palette]). A chart legend paints a small swatch in the series colour
+/// and sets its label in `context.ink` / `context.inkMuted`, which is both
+/// legible and how the rest of the app reads.
 abstract final class ChartColors {
   /// Distinct in order, so neighbouring rows never share a hue.
   static const series = <Color>[
-    AppColors.cyan, // #4DA8DA
-    AppColors.amber, // #F39C12
+    Palette.accentBright, // #4DA8DA
+    Palette.caution, // #F39C12
     Color(0xFF9B7EDE), // violet
     Color(0xFF1ABC9C), // seafoam
     Color(0xFF5B7FD4), // indigo
-    AppColors.red, // #E74C3C
+    Palette.criticalBright, // #E74C3C
     Color(0xFFE77CA3), // rose
     Color(0xFF7F8C9B), // slate
   ];
@@ -29,10 +34,10 @@ abstract final class ChartColors {
   /// colour because a different month is selected. Keys the owner invented hash
   /// into the series instead of all collapsing onto one accent.
   static Color forCostCategory(String key) => switch (key) {
-        'combustible' => AppColors.amber,
-        'amarre' => AppColors.cyan,
+        'combustible' => Palette.caution,
+        'amarre' => Palette.accentBright,
         'seguro' => const Color(0xFF5B7FD4),
-        'reparación' => AppColors.red, // i18n-exempt: API value
+        'reparación' => Palette.criticalBright, // i18n-exempt: API value
         'limpieza' => const Color(0xFF1ABC9C),
         'maintenance' => const Color(0xFF9B7EDE),
         'documents' => const Color(0xFFE77CA3),

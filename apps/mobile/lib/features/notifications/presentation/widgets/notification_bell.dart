@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/notifications/presentation/providers/notification_feed_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 
@@ -32,7 +33,7 @@ class NotificationBell extends ConsumerWidget {
         padding: const EdgeInsets.only(right: Dimens.spaceXs),
         child: IconButton(
           tooltip: l.notifications,
-          onPressed: () => context.push('/notifications'),
+          onPressed: () => context.push(Routes.notifications),
           icon: Stack(
             clipBehavior: Clip.none,
             children: [
@@ -46,7 +47,7 @@ class NotificationBell extends ConsumerWidget {
                     constraints: const BoxConstraints(minWidth: 16),
                     height: 16,
                     decoration: BoxDecoration(
-                      color: AppColors.red,
+                      color: context.critical,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     alignment: Alignment.center,

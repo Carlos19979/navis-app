@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 
 class NavisMapZoomControls extends StatelessWidget {
@@ -30,11 +30,10 @@ class NavisMapZoomControls extends StatelessWidget {
           filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
           child: Container(
             decoration: BoxDecoration(
-              color: AppColors.navy.withValues(alpha: 0.7),
+              color: context.onMedia,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: AppColors.glassBorder,
-                width: 0.5,
+                color: context.onMediaBorder,
               ),
             ),
             child: Column(
@@ -51,7 +50,7 @@ class NavisMapZoomControls extends StatelessWidget {
                 Container(
                   height: 0.5,
                   width: 28,
-                  color: AppColors.glassBorder,
+                  color: context.onMediaBorder,
                 ),
                 _ZoomButton(
                   icon: Icons.remove,
@@ -90,7 +89,7 @@ class _ZoomButton extends StatelessWidget {
         child: SizedBox(
           width: 48,
           height: 48,
-          child: Icon(icon, color: AppColors.textPrimary, size: 22),
+          child: Icon(icon, color: context.ink, size: 22),
         ),
       ),
     );

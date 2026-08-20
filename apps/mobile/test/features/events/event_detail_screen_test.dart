@@ -81,7 +81,7 @@ void main() {
       );
       await pumpFrames(tester);
 
-      expect(find.text('Event Details'), findsOneWidget);
+      expect(find.text('Event details'), findsOneWidget);
     });
 
     testWidgets('displays event name', (tester) async {
@@ -162,7 +162,7 @@ void main() {
       await pumpFrames(tester);
 
       // Featured event shows star icon
-      expect(find.byIcon(Icons.star), findsOneWidget);
+      expect(find.byIcon(Icons.star_rounded), findsOneWidget);
     });
 
     testWidgets('does not show featured badge for non-featured events',
@@ -179,7 +179,7 @@ void main() {
       await pumpFrames(tester);
 
       // No star icon should be present
-      expect(find.byIcon(Icons.star), findsNothing);
+      expect(find.byIcon(Icons.star_rounded), findsNothing);
     });
 
     testWidgets('displays description when present', (tester) async {
@@ -347,7 +347,7 @@ void main() {
       await pumpFrames(tester);
 
       expect(
-        find.byIcon(Icons.calendar_today),
+        find.byIcon(Icons.calendar_today_outlined),
         findsOneWidget,
       );
     });
@@ -383,7 +383,7 @@ void main() {
       await pumpFrames(tester);
 
       expect(
-        find.byIcon(Icons.person_outlined),
+        find.byIcon(Icons.person_outline_rounded),
         findsOneWidget,
       );
     });

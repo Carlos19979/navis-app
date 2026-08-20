@@ -9,7 +9,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/data/permission_errors.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_permissions_provider.dart';
@@ -231,12 +232,11 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.darkSurface,
-        title:
-            Text(title, style: const TextStyle(color: AppColors.textPrimary)),
+        backgroundColor: context.surfaceRaised,
+        title: Text(title, style: TextStyle(color: context.ink)),
         content: Text(
           message,
-          style: const TextStyle(color: AppColors.textSecondary),
+          style: TextStyle(color: context.inkMuted),
         ),
         actions: [
           TextButton(
@@ -245,8 +245,8 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text(confirmLabel,
-                style: const TextStyle(color: AppColors.red)),
+            child:
+                Text(confirmLabel, style: TextStyle(color: context.critical)),
           ),
         ],
       ),
@@ -406,10 +406,10 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen> {
         i++) {
       final speed = points[i - 1].speedKnots ?? 0;
       final color = switch (speed) {
-        < 3 => AppColors.cyan,
-        < 6 => AppColors.green,
-        < 12 => AppColors.amber,
-        _ => AppColors.red,
+        < 3 => context.accent,
+        < 6 => context.positive,
+        < 12 => context.caution,
+        _ => context.critical,
       };
       _cachedPolylines.add(
         Polyline(
@@ -458,17 +458,19 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen> {
     );
 
     return Scaffold(
-      backgroundColor: AppColors.navy,
+      // The chart's own water colour, not the dark theme's navy: this screen is
+      // a map in both themes, and the sea is the same colour in both.
+      backgroundColor: OpenSeaMapTileProvider.waterBackground,
       body: saving
           ? Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const CircularProgressIndicator(color: AppColors.cyan),
+                  CircularProgressIndicator(color: context.accent),
                   const SizedBox(height: 16),
                   Text(
                     AppLocalizations.of(context)!.savingTrip,
-                    style: const TextStyle(color: AppColors.textPrimary),
+                    style: TextStyle(color: context.ink),
                   ),
                 ],
               ),
@@ -535,7 +537,7 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen> {
                                 height: 14,
                                 child: Container(
                                   decoration: BoxDecoration(
-                                    color: AppColors.green,
+                                    color: context.positive,
                                     shape: BoxShape.circle,
                                     border: Border.all(
                                       color: Colors.white,
@@ -543,7 +545,7 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen> {
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: AppColors.green
+                                        color: context.positive
                                             .withValues(alpha: 0.4),
                                         blurRadius: 6,
                                       ),
@@ -674,14 +676,13 @@ class _GlassIconButton extends StatelessWidget {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: AppColors.navy.withValues(alpha: 0.7),
+            // On-media tokens: this control floats over the chart, where a
+            // theme surface would be unreadable in one theme or the other.
+            color: context.onMedia,
             shape: BoxShape.circle,
-            border: Border.all(
-              color: AppColors.glassBorder,
-              width: 0.5,
-            ),
+            border: Border.all(color: context.onMediaBorder),
           ),
-          child: Icon(icon, color: AppColors.textPrimary, size: 22),
+          child: Icon(icon, color: context.onAccent, size: Dimens.iconLg),
         ),
       ),
     );

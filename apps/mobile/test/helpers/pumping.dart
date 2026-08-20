@@ -31,3 +31,64 @@ Future<void> drain(WidgetTester tester) async {
 void expectSnackbar(WidgetTester tester, String text) {
   expect(find.widgetWithText(SnackBar, text), findsOneWidget);
 }
+
+/// Pumps [frames] frames of 100 ms.
+///
+/// [pumpScreen] pumps two, which is enough for a screen whose data comes from
+/// one provider. It is not enough for a screen built from *chained* providers —
+/// Today resolves its boats, then mounts the children that ask for readiness
+/// and the document summary — because each link needs its own frame before the
+/// next one is even in the tree. Not `pumpAndSettle`: flutter_animate's bounded
+/// loops mean settling can take seconds of fake time, and a stalled request
+/// would hang forever.
+Future<void> pumpFrames(WidgetTester tester, {int frames = 20}) async {
+  for (var i = 0; i < frames; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+}
+
+/// Scrolls [scrollable] top to bottom and returns every [Text] seen on the way.
+///
+/// A long screen built from slivers or a `ListView` disposes what scrolls off,
+/// so "this row exists and that one does not" cannot be asserted from a single
+/// screenful.
+Future<Set<String>> scrollAndCollectText(
+  WidgetTester tester,
+  Finder scrollable, {
+  int drags = 10,
+}) async {
+  final seen = <String>{};
+  void collect() {
+    for (final element in find.byType(Text).evaluate()) {
+      final data = (element.widget as Text).data?.trim();
+      if (data != null && data.isNotEmpty) seen.add(data);
+    }
+  }
+
+  await pumpFrames(tester, frames: 6);
+  collect();
+  for (var i = 0; i < drags; i++) {
+    await tester.drag(scrollable, const Offset(0, -400), warnIfMissed: false);
+    await pumpFrames(tester, frames: 3);
+    collect();
+  }
+  return seen;
+}
+
+/// Drags the scrollable under [scrollableKey] until [target] is on screen.
+Future<void> scrollUntilVisible(
+  WidgetTester tester,
+  Finder target,
+  Key scrollableKey, {
+  int drags = 12,
+}) async {
+  for (var i = 0; i < drags; i++) {
+    if (target.evaluate().isNotEmpty) return;
+    await tester.drag(
+      find.byKey(scrollableKey),
+      const Offset(0, -400),
+      warnIfMissed: false,
+    );
+    await pumpFrames(tester, frames: 3);
+  }
+}

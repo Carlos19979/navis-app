@@ -17,7 +17,10 @@ void main() {
   // FlutterMap with live OpenSeaMap tiles, whose fetches fail (and render
   // nondeterministically) in tests. Without a track the screen skips the map
   // card and renders route + stats + crew + notes, all deterministic.
-  final trip = makeTrip();
+  // With a track: the map card is the substance of this screen and it only
+  // renders when there is one, so a fixture without a track was quietly taking
+  // the screenshot of a feature-less version.
+  final trip = makeTrip(trackPoints: sampleTrack());
 
   for (final brightness in Brightness.values) {
     testWidgets('trip detail — ${brightness.name}', (tester) async {

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/app/routes.dart';
+import 'package:navis_mobile/core/theme/app_typography.dart';
+import 'package:navis_mobile/core/utils/measure_utils.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/money_utils.dart';
@@ -22,7 +24,7 @@ import 'package:navis_mobile/shared/widgets/navis_period_picker.dart';
 import 'package:navis_mobile/shared/widgets/navis_scaffold.dart';
 import 'package:navis_mobile/shared/widgets/navis_section.dart';
 import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
-import 'package:navis_mobile/shared/widgets/navis_stat_tile.dart';
+import 'package:navis_mobile/shared/widgets/navis_metric.dart';
 
 /// What the boat costs, for whatever period the owner picks.
 ///
@@ -75,7 +77,7 @@ class _EmptyCosts extends StatelessWidget {
       message: l.costEmptyMessage,
       description: l.costEmptyDescription,
       actionLabel: l.costEmptyAction,
-      onAction: () => context.push('/boats/$boatId/maintenance'),
+      onAction: () => context.push(Routes.boatExpenses(boatId)),
     );
   }
 }
@@ -143,7 +145,7 @@ class _CostBody extends ConsumerWidget {
           NavisSectionHeader(
             label: l.costByCategory,
             trailing: TextButton(
-              onPressed: () => context.push('/boats/$boatId/maintenance'),
+              onPressed: () => context.push(Routes.boatExpenses(boatId)),
               child: Text(l.costViewExpenses),
             ),
           ),
@@ -182,49 +184,44 @@ class _RatioGrid extends StatelessWidget {
     String money(double? value) =>
         value == null ? '—' : Money.format(locale, value);
 
-    return NavisStatGrid(
+    return NavisMetricGrid(
       children: [
-        NavisStatTile(
+        NavisMetric(
           icon: Icons.straighten_rounded,
           value: money(stats.costPerNm),
           label: l.costPerNmLabel,
-          color: AppColors.cyan,
         ),
-        NavisStatTile(
+        NavisMetric(
           icon: Icons.route_rounded,
           value: money(stats.costPerTrip),
           label: l.costPerTripLabel,
-          color: AppColors.green,
         ),
-        NavisStatTile(
+        NavisMetric(
           icon: Icons.engineering_rounded,
           value: money(stats.costPerEngineHour),
           label: l.costPerEngineHourLabel,
-          color: AppColors.amber,
         ),
-        NavisStatTile(
+        NavisMetric(
           icon: Icons.opacity_rounded,
           value: stats.litresPerNm == null
               ? '—'
-              : '${stats.litresPerNm!.toStringAsFixed(2)} L/NM',
+              : '${Measure.decimal(locale, stats.litresPerNm!, digits: 2)} '
+                  'L/${l.nauticalMiles}',
           label: l.costFuelEfficiency,
-          color: AppColors.cyan,
         ),
-        NavisStatTile(
+        NavisMetric(
           icon: Icons.local_gas_station_rounded,
           value: stats.pricePerLiter == null
               ? '—'
               : Money.perUnit(locale, stats.pricePerLiter!, 'L', precise: true),
           label: l.costAvgPricePerLiter,
-          color: AppColors.amber,
         ),
-        NavisStatTile(
+        NavisMetric(
           icon: Icons.water_drop_outlined,
           value: stats.fuelLiters > 0
-              ? '${stats.fuelLiters.toStringAsFixed(0)} L'
+              ? Measure.litres(locale, stats.fuelLiters, 'L')
               : '—',
           label: l.costLitersPurchased,
-          color: AppColors.green,
         ),
       ],
     );
@@ -344,20 +341,20 @@ class _Anomalies extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        NavisSectionHeader(label: l.anomaliesTitle, color: AppColors.amber),
+        NavisSectionHeader(label: l.anomaliesTitle, color: context.caution),
         for (final a in anomalies)
           Padding(
             padding: const EdgeInsets.only(bottom: Dimens.spaceSm),
             child: NavisCard(
-              borderColor: AppColors.amber.withValues(alpha: 0.4),
+              borderColor: context.caution.withValues(alpha: 0.4),
               onTap: a.tripId.isEmpty
                   ? null
-                  : () => context.push('/trips/${a.tripId}'),
+                  : () => context.push(Routes.trip(a.tripId)),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.local_gas_station_rounded,
-                    color: AppColors.amber,
+                    color: context.caution,
                     size: Dimens.iconMd,
                   ),
                   const SizedBox(width: Dimens.spaceMd),
@@ -367,16 +364,12 @@ class _Anomalies extends ConsumerWidget {
                       children: [
                         Text(
                           l.anomalyFuelHigh(a.deviationPct.round()),
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: context.txtPrimary,
-                          ),
+                          style: NavisType.title3.copyWith(color: context.ink),
                         ),
                         Text(
                           NavisDateUtils.formatDate(a.date),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: context.txtSecondary,
+                          style: NavisType.caption.copyWith(
+                            color: context.inkMuted,
                           ),
                         ),
                         // The litres are only money once there is a €/L to
@@ -390,10 +383,8 @@ class _Anomalies extends ConsumerWidget {
                                 a.excessLiters * pricePerLiter,
                               ),
                             ),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: AppColors.amber,
-                              fontWeight: FontWeight.w700,
+                            style: NavisType.caption.copyWith(
+                              color: context.inkMuted,
                             ),
                           ),
                       ],
@@ -402,7 +393,7 @@ class _Anomalies extends ConsumerWidget {
                   Icon(
                     Icons.chevron_right_rounded,
                     size: Dimens.iconSm,
-                    color: context.txtSecondary,
+                    color: context.inkFaint,
                   ),
                 ],
               ),
@@ -410,10 +401,7 @@ class _Anomalies extends ConsumerWidget {
           ),
         Text(
           l.anomaliesExplainer,
-          style: Theme.of(context)
-              .textTheme
-              .bodySmall
-              ?.copyWith(color: context.txtSecondary),
+          style: NavisType.bodySm.copyWith(color: context.inkMuted),
         ),
       ],
     );

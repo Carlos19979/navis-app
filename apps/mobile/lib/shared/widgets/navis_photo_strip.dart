@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:navis_mobile/core/network/storage_service.dart';
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_photo_viewer.dart';
@@ -186,7 +185,7 @@ class _RemovableThumb extends StatelessWidget {
                 width: 20,
                 height: 20,
                 decoration: BoxDecoration(
-                  color: AppColors.red,
+                  color: context.critical,
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white),
                 ),
@@ -231,10 +230,10 @@ class _AddTile extends StatelessWidget {
                   padding: EdgeInsets.all(16),
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Icon(
+              : Icon(
                   Icons.add_a_photo_outlined,
                   size: 20,
-                  color: AppColors.cyan,
+                  color: context.accent,
                 ),
         ),
       ),

@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/app_typography.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
+import 'package:navis_mobile/shared/widgets/navis_list.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/charts/data/tile_provider.dart';
@@ -19,7 +21,6 @@ import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
-import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
 
@@ -72,7 +73,6 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
       appBar: NavisAppBar(
         title: l.eventDetails,
         showBack: true,
@@ -93,10 +93,12 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
           data: (event) {
             return SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
-                16,
-                kToolbarHeight + MediaQuery.of(context).padding.top + 16,
-                16,
-                100,
+                Dimens.spaceLg,
+                kToolbarHeight +
+                    MediaQuery.of(context).padding.top +
+                    Dimens.spaceLg,
+                Dimens.spaceLg,
+                Dimens.navClearance,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -104,7 +106,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                   // Map section
                   if (event.latitude != null && event.longitude != null)
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(Dimens.radiusSurface),
                       child: RepaintBoundary(
                         child: SizedBox(
                           height: 200,
@@ -129,9 +131,9 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                     ),
                                     width: 40,
                                     height: 40,
-                                    child: const Icon(
+                                    child: Icon(
                                       Icons.location_on,
-                                      color: AppColors.cyan,
+                                      color: context.accent,
                                       size: 40,
                                     ),
                                   ),
@@ -141,104 +143,66 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                           ),
                         ),
                       ),
-                    ).animate().fadeIn(duration: 500.ms),
+                    ),
                   const SizedBox(height: 16),
 
-                  // Main info card
-                  NavisCard(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                event.name,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headlineMedium
-                                    ?.copyWith(
-                                      color: context.txtPrimary,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                              ),
-                            ),
-                            if (event.isFeatured)
-                              Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color:
-                                      AppColors.amber.withValues(alpha: 0.15),
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.amber
-                                          .withValues(alpha: 0.3),
-                                      blurRadius: 8,
-                                    ),
-                                  ],
-                                ),
-                                child: Icon(
-                                  Icons.star,
-                                  color: AppColors.amber,
-                                  size: 20,
-                                  semanticLabel: l.featured,
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        _EventTypeBadge(type: event.eventType),
-                        const SizedBox(height: 16),
-                        _InfoRow(
-                          icon: Icons.calendar_today,
-                          text: NavisDateUtils.formatDateTime(
-                            event.startDate,
+                  // The event, as a heading and a list — not a card whose
+                  // title competed with a star floating in a glowing disc.
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (event.isFeatured) ...[
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Icon(
+                            Icons.star_rounded,
+                            color: context.caution,
+                            size: Dimens.iconLg,
+                            semanticLabel: l.featured,
                           ),
                         ),
-                        const SizedBox(height: 10),
-                        _InfoRow(
-                          icon: Icons.location_on_outlined,
-                          text: event.locationName,
-                        ),
-                        const SizedBox(height: 10),
-                        _InfoRow(
-                          icon: Icons.person_outlined,
-                          text: event.organizer,
-                        ),
-                        if (event.boatClasses.isNotEmpty) ...[
-                          const SizedBox(height: 10),
-                          _InfoRow(
-                            icon: Icons.sailing_outlined,
-                            text: event.boatClasses.join(', '),
-                          ),
-                        ],
-                        if (event.description != null) ...[
-                          const SizedBox(height: 16),
-                          Container(
-                            height: 0.5,
-                            color: context.glassBorderColor,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            event.description!,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
-                                ?.copyWith(
-                                  color: context.txtSecondary,
-                                  height: 1.5,
-                                ),
-                          ),
-                        ],
+                        const SizedBox(width: Dimens.spaceSm),
                       ],
-                    ),
-                  ).animate().fadeIn(
-                        delay: 200.ms,
-                        duration: 500.ms,
+                      Expanded(
+                        child: Text(
+                          event.name,
+                          style: NavisType.display.copyWith(color: context.ink),
+                        ),
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: Dimens.spaceSm),
+                  _EventTypeBadge(type: event.eventType),
+                  const SizedBox(height: Dimens.spaceLg),
+                  NavisList(
+                    padding: EdgeInsets.zero,
+                    children: [
+                      NavisRow(
+                        icon: Icons.calendar_today_outlined,
+                        title: NavisDateUtils.formatDateTime(event.startDate),
+                      ),
+                      NavisRow(
+                        icon: Icons.location_on_outlined,
+                        title: event.locationName,
+                      ),
+                      NavisRow(
+                        icon: Icons.person_outline_rounded,
+                        title: event.organizer,
+                      ),
+                      if (event.boatClasses.isNotEmpty)
+                        NavisRow(
+                          icon: Icons.sailing_outlined,
+                          title: event.boatClasses.join(', '),
+                        ),
+                    ],
+                  ),
+                  if (event.description != null) ...[
+                    const SizedBox(height: Dimens.spaceLg),
+                    Text(
+                      event.description!,
+                      style: NavisType.body.copyWith(color: context.inkMuted),
+                    ),
+                  ],
                   const SizedBox(height: 16),
 
                   // Action buttons
@@ -263,7 +227,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                           label: l.joinAsGroup,
                           icon: Icons.groups,
                           onPressed: () => context.push(
-                            '/events/${widget.eventId}/start-regatta',
+                            Routes.eventStartRegatta(widget.eventId),
                           ),
                         ),
                         const SizedBox(height: 10),
@@ -282,10 +246,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                         isLoading: _isRegistering,
                       ),
                     ],
-                  ).animate().fadeIn(
-                        delay: 400.ms,
-                        duration: 500.ms,
-                      ),
+                  ),
                 ],
               ),
             );
@@ -311,58 +272,25 @@ class _EventTypeBadge extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.cyan.withValues(alpha: 0.2),
-            AppColors.cyan.withValues(alpha: 0.1),
+            context.accent.withValues(alpha: 0.2),
+            context.accent.withValues(alpha: 0.1),
           ],
         ),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.cyan.withValues(alpha: 0.3),
+          color: context.accent.withValues(alpha: 0.3),
           width: 0.5,
         ),
       ),
       child: Text(
         type[0].toUpperCase() + type.substring(1),
-        style: const TextStyle(
-          color: AppColors.cyan,
+        style: TextStyle(
+          color: context.accent,
           fontSize: 12,
           fontWeight: FontWeight.w600,
           letterSpacing: 0.3,
         ),
       ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.icon, required this.text});
-
-  final IconData icon;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: context.glassBg,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, size: 16, color: AppColors.cyan),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            text,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: context.txtPrimary,
-                ),
-          ),
-        ),
-      ],
     );
   }
 }

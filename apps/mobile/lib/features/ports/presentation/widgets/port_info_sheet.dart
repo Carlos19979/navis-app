@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/distance_utils.dart';
 import 'package:navis_mobile/features/ports/domain/entities/port.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -15,7 +15,7 @@ void showPortInfoSheet(
   showModalBottomSheet<void>(
     context: context,
     useRootNavigator: true,
-    backgroundColor: AppColors.navy,
+    backgroundColor: context.surfaceRaised,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
@@ -77,7 +77,7 @@ class _PortInfoContent extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.glassBorder,
+                color: context.hairline,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -89,16 +89,13 @@ class _PortInfoContent extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppColors.glassWhite,
+                  color: context.surfaceSunken,
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: AppColors.glassBorder,
-                    width: 0.5,
-                  ),
+                  border: Border.all(color: context.hairline),
                 ),
                 child: Icon(
                   _iconForType(port.portType),
-                  color: AppColors.cyan,
+                  color: context.accent,
                   size: 20,
                 ),
               ),
@@ -110,7 +107,7 @@ class _PortInfoContent extends StatelessWidget {
                     Text(
                       port.name,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: AppColors.textPrimary,
+                            color: context.ink,
                             fontWeight: FontWeight.w600,
                           ),
                     ),
@@ -118,7 +115,7 @@ class _PortInfoContent extends StatelessWidget {
                       '${_localizedPortType(l, port.portType)}'
                       ' \u00b7 ${port.country}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
+                            color: context.inkMuted,
                           ),
                     ),
                   ],
@@ -131,13 +128,13 @@ class _PortInfoContent extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.cyan.withValues(alpha: 0.15),
+                    color: context.accent.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     '${distance.toStringAsFixed(1)} nm',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.cyan,
+                          color: context.accent,
                           fontWeight: FontWeight.w600,
                         ),
                   ),
@@ -153,11 +150,8 @@ class _PortInfoContent extends StatelessWidget {
                   .map(
                     (f) => Chip(
                       label: Text(f, style: const TextStyle(fontSize: 11)),
-                      backgroundColor: AppColors.glassWhite,
-                      side: const BorderSide(
-                        color: AppColors.glassBorder,
-                        width: 0.5,
-                      ),
+                      backgroundColor: context.surfaceSunken,
+                      side: BorderSide(color: context.hairline),
                       padding: EdgeInsets.zero,
                       visualDensity: VisualDensity.compact,
                     ),
@@ -173,21 +167,21 @@ class _PortInfoContent extends StatelessWidget {
                   Text(
                     l.depthLabel(port.depthM!.toStringAsFixed(1)),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.inkMuted,
                         ),
                   ),
                 if (port.depthM != null && port.vhfChannel != null)
                   Text(
                     ' \u00b7 ',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.inkMuted,
                         ),
                   ),
                 if (port.vhfChannel != null)
                   Text(
                     l.vhfChannelLabel(port.vhfChannel!),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.inkMuted,
                         ),
                   ),
               ],
@@ -202,17 +196,17 @@ class _PortInfoContent extends StatelessWidget {
               },
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.language,
                     size: 14,
-                    color: AppColors.cyan,
+                    color: context.accent,
                   ),
                   const SizedBox(width: 6),
                   Flexible(
                     child: Text(
                       port.website!,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.cyan,
+                            color: context.accent,
                             decoration: TextDecoration.underline,
                           ),
                       overflow: TextOverflow.ellipsis,

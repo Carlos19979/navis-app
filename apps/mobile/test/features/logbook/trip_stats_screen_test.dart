@@ -96,15 +96,17 @@ void main() {
     testWidgets('displays the screen title', (tester) async {
       await pumpScreen(tester, trips: [makeTrip()]);
 
-      expect(find.text('Trip Statistics'), findsOneWidget);
+      expect(find.text('Trip statistics'), findsOneWidget);
     });
 
     testWidgets('starts on all time and totals the whole logbook',
         (tester) async {
       await pumpScreen(tester, trips: twoSeasons());
 
-      // 20 + 30 + 50 NM across the three trips.
-      expect(find.text('100.0'), findsOneWidget);
+      // 20 + 30 + 50 NM across the three trips. Whole miles past ten: the
+      // headline quotes a season the way an owner does, and the tenth was what
+      // put a decimal comma inside a 72 px numeral.
+      expect(find.text('100'), findsOneWidget);
       expect(find.text('ALL TIME'), findsOneWidget);
       // 20 h at sea, 3 trips.
       expect(find.textContaining('3 trips'), findsOneWidget);
@@ -115,7 +117,7 @@ void main() {
       await pumpScreen(tester, trips: twoSeasons());
 
       for (final label in [
-        'Total Trips',
+        'Total trips',
         'Top speed',
         'Average speed',
         'Fuel consumed',
@@ -123,8 +125,10 @@ void main() {
       ]) {
         expect(find.text(label), findsOneWidget, reason: label);
       }
-      // Stat card + the section listing the ports themselves.
-      expect(find.text('Ports visited'), findsNWidgets(2));
+      // Once as the figure's label, once as the heading of the section that
+      // lists the ports themselves — headings are tracked uppercase now.
+      expect(find.text('Ports visited'), findsOneWidget);
+      expect(find.text('PORTS VISITED'), findsOneWidget);
     });
 
     // The build-5 request: previous years, not just "this year".
@@ -136,9 +140,10 @@ void main() {
       await pumpFrames(tester);
 
       // Only the 2025 trip: 50 NM, one trip, its own top speed.
-      expect(find.text('50.0'), findsOneWidget);
+      expect(find.text('50'), findsOneWidget);
       expect(find.textContaining('1 trip'), findsOneWidget);
-      expect(find.text('11.0 kn'), findsOneWidget);
+      // `kt` everywhere now: this screen was the only one saying `kn`.
+      expect(find.text('11.0 kt'), findsOneWidget);
     });
 
     testWidgets('a year offers only the months it has trips in',
@@ -166,10 +171,10 @@ void main() {
       await pumpFrames(tester);
 
       // Only the April trip: 20 NM.
-      expect(find.text('20.0'), findsOneWidget);
+      expect(find.text('20'), findsOneWidget);
       expect(find.textContaining('1 trip'), findsOneWidget);
       // The monthly chart is a year-level view; a single month does not need it.
-      expect(find.text('Monthly Activity'), findsNothing);
+      expect(find.text('Monthly activity'), findsNothing);
     });
 
     testWidgets('the monthly chart is shown for a year', (tester) async {
@@ -178,13 +183,13 @@ void main() {
       await tester.tap(find.text('2026'));
       await pumpFrames(tester);
       await tester.scrollUntilVisible(
-        find.text('Monthly Activity'),
+        find.text('Monthly activity'),
         200,
         scrollable: pageScroll(),
       );
       await tester.pump();
 
-      expect(find.text('Monthly Activity'), findsOneWidget);
+      expect(find.text('Monthly activity'), findsOneWidget);
     });
 
     testWidgets('lists which ports were visited, not just how many',
@@ -242,7 +247,7 @@ void main() {
       await pumpScreen(tester, trips: const []);
 
       expect(
-        find.text('No trips recorded yet. Start your first trip!'),
+        find.text('No trips recorded yet'),
         findsOneWidget,
       );
     });

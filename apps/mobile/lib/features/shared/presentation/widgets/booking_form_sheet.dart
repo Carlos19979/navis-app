@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
@@ -293,7 +292,7 @@ class _BookingFormSheetState extends ConsumerState<BookingFormSheet> {
                 padding: const EdgeInsets.only(top: Dimens.spaceSm),
                 child: Text(
                   l.bookingEndBeforeStart,
-                  style: const TextStyle(fontSize: 13, color: AppColors.red),
+                  style: TextStyle(fontSize: 13, color: context.critical),
                 ),
               ),
             const SizedBox(height: Dimens.spaceMd),

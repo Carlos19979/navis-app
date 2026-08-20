@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/byte_utils.dart';
@@ -125,9 +125,9 @@ class _OfflineChartsSheetState extends ConsumerState<_OfflineChartsSheet> {
           children: [
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.download_for_offline_outlined,
-                  color: AppColors.cyan,
+                  color: context.accent,
                   size: Dimens.iconLg,
                 ),
                 const SizedBox(width: Dimens.spaceMd),
@@ -171,17 +171,17 @@ class _OfflineChartsSheetState extends ConsumerState<_OfflineChartsSheet> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.warning_amber_rounded,
-                    color: AppColors.amber,
+                    color: context.caution,
                     size: Dimens.iconSm,
                   ),
                   const SizedBox(width: Dimens.spaceSm),
                   Expanded(
                     child: Text(
                       l.chartAreaTooLarge,
-                      style: const TextStyle(
-                        color: AppColors.amber,
+                      style: TextStyle(
+                        color: context.caution,
                         fontSize: 13,
                       ),
                     ),
@@ -221,7 +221,7 @@ class _OfflineChartsSheetState extends ConsumerState<_OfflineChartsSheet> {
                   onPressed: () {
                     final router = GoRouter.of(context);
                     Navigator.of(context).pop();
-                    router.push('/charts/offline');
+                    router.push(Routes.offlineCharts);
                   },
                   child: Text(l.manageSavedAreas),
                 ),
@@ -258,7 +258,7 @@ class _DownloadProgress extends StatelessWidget {
               onPressed: onCancel,
               child: Text(
                 l.cancel,
-                style: const TextStyle(color: AppColors.amber),
+                style: TextStyle(color: context.caution),
               ),
             ),
           ],
@@ -270,7 +270,7 @@ class _DownloadProgress extends StatelessWidget {
             value: state.fraction,
             minHeight: 6,
             backgroundColor: context.glassBg,
-            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.cyan),
+            valueColor: AlwaysStoppedAnimation<Color>(context.accent),
           ),
         ),
       ],

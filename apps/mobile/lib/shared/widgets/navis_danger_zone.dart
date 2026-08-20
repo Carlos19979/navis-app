@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
@@ -45,11 +44,11 @@ class NavisDangerAction extends StatelessWidget {
         );
         if (ok) onConfirmed();
       },
-      borderColor: AppColors.red.withValues(alpha: 0.3),
+      borderColor: context.critical.withValues(alpha: 0.3),
       padding: const EdgeInsets.all(Dimens.spaceLg),
       child: Row(
         children: [
-          Icon(icon, color: AppColors.red, size: Dimens.iconMd),
+          Icon(icon, color: context.critical, size: Dimens.iconMd),
           const SizedBox(width: Dimens.spaceMd),
           Expanded(
             child: Column(
@@ -59,7 +58,7 @@ class NavisDangerAction extends StatelessWidget {
                 Text(
                   label,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppColors.red,
+                        color: context.critical,
                         fontWeight: FontWeight.w600,
                       ),
                 ),

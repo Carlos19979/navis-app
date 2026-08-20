@@ -7,7 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/anchor/presentation/providers/anchor_watch_provider.dart';
 import 'package:navis_mobile/features/billing/billing.dart';
@@ -147,11 +147,13 @@ class _AnchorAlarmScreenState extends ConsumerState<AnchorAlarmScreen> {
                         point: anchor,
                         radius: watch.radiusMeters,
                         useRadiusInMeter: true,
-                        color:
-                            (watch.isDragging ? AppColors.red : AppColors.cyan)
-                                .withValues(alpha: 0.12),
-                        borderColor:
-                            watch.isDragging ? AppColors.red : AppColors.cyan,
+                        color: (watch.isDragging
+                                ? context.critical
+                                : context.accent)
+                            .withValues(alpha: 0.12),
+                        borderColor: watch.isDragging
+                            ? context.critical
+                            : context.accent,
                         borderStrokeWidth: 2,
                       ),
                     ],
@@ -165,8 +167,9 @@ class _AnchorAlarmScreenState extends ConsumerState<AnchorAlarmScreen> {
                         height: 32,
                         child: Icon(
                           Icons.anchor,
-                          color:
-                              watch.isDragging ? AppColors.red : AppColors.cyan,
+                          color: watch.isDragging
+                              ? context.critical
+                              : context.accent,
                           size: 28,
                         ),
                       ),
@@ -210,11 +213,11 @@ class _DragBanner extends ConsumerWidget {
           margin: const EdgeInsets.all(12),
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: AppColors.red,
-            borderRadius: BorderRadius.circular(16),
+            color: context.critical,
+            borderRadius: BorderRadius.circular(Dimens.radiusControl),
             boxShadow: [
               BoxShadow(
-                color: AppColors.red.withValues(alpha: 0.5),
+                color: context.critical.withValues(alpha: 0.5),
                 blurRadius: 16,
               ),
             ],
@@ -302,7 +305,7 @@ class _ControlPanel extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: context.dialogSurface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(Dimens.radiusSurface),
         border: Border.all(color: context.glassBorderColor),
       ),
       child: Column(
@@ -316,7 +319,8 @@ class _ControlPanel extends StatelessWidget {
                 _Metric(
                   label: l.anchorDistance,
                   value: '${watch.distanceMeters.round()} m',
-                  color: watch.isDragging ? AppColors.red : context.txtPrimary,
+                  color:
+                      watch.isDragging ? context.critical : context.txtPrimary,
                 ),
                 _Metric(
                   label: l.anchorRadius,
@@ -350,7 +354,7 @@ class _ControlPanel extends StatelessWidget {
                     max: kMaxAnchorRadiusM,
                     divisions: 27,
                     label: '${watch.radiusMeters.round()} m',
-                    activeColor: AppColors.cyan,
+                    activeColor: context.accent,
                     onChanged: onRadius,
                   ),
                 ),

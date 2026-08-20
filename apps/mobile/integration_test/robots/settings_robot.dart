@@ -11,20 +11,19 @@ class SettingsRobot {
 
   final WidgetTester tester;
 
-  /// Profile tab → Settings entry.
+  /// The Profile tab. That is all it takes now: the settings are inline there,
+  /// so there is no «Settings» row to tap on the way in.
   Future<void> open() async {
     final nav = NavRobot(tester);
     await nav.profile();
-    await pumpUntilFound(tester, find.text('Settings'));
-    await tester.tap(find.text('Settings').last);
-    await pumpUntilFound(tester, find.text('Log Out'));
+    await pumpUntilFound(tester, find.byType(AccountSettingsSections));
   }
 
-  /// Settings is a lazy ListView pushed on top of the shell: earlier routes
-  /// stay in the tree, so both the scrollable and the items must be scoped to
-  /// SettingsScreen or the scroll/tap lands on the screen behind.
+  /// The settings live inline on the Profile tab now, and the tab underneath
+  /// stays in the tree, so both the scrollable and the items still have to be
+  /// scoped — to the sections widget rather than to a screen of its own.
   Finder _inSettings(Finder matching) => find.descendant(
-        of: find.byType(SettingsScreen),
+        of: find.byType(AccountSettingsSections),
         matching: matching,
       );
 

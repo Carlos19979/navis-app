@@ -220,7 +220,7 @@ void main() {
       await pumpRecordingScreen(tester);
       await openStopDialog(tester);
 
-      await tester.tap(find.text('Save Trip'));
+      await tester.tap(find.text('Save trip'));
       await tester.pump();
       // Let the pop route transition finish: while it runs both the map and
       // the host Scaffold show the snackbar, afterwards only the host does.
@@ -243,7 +243,7 @@ void main() {
       await pumpRecordingScreen(tester);
       await openStopDialog(tester);
 
-      await tester.tap(find.text('Save Trip'));
+      await tester.tap(find.text('Save trip'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
@@ -267,7 +267,7 @@ void main() {
       await pumpRecordingScreen(tester);
       await openStopDialog(tester);
 
-      await tester.tap(find.text('Save Trip'));
+      await tester.tap(find.text('Save trip'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
@@ -11,6 +10,19 @@ import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 
 /// Why the user cannot do something on a shared boat, in their language.
+/// The localized name of a permission area.
+///
+/// Lived as a private static on the boat-detail hub; Today needs it for the
+/// crew member's permission list, and it is the same five strings either way.
+String permissionAreaLabel(AppLocalizations l, BoatPermissionArea area) =>
+    switch (area) {
+      BoatPermissionArea.recordTrips => l.permRecordTrips,
+      BoatPermissionArea.viewDocuments => l.permViewDocuments,
+      BoatPermissionArea.manageDocuments => l.permManageDocuments,
+      BoatPermissionArea.manageMaintenance => l.permManageMaintenance,
+      BoatPermissionArea.manageExpenses => l.permManageExpenses,
+    };
+
 String permissionReason(AppLocalizations l, BoatPermissionArea area) =>
     switch (area) {
       BoatPermissionArea.recordTrips => l.permBlockedRecordTrips,
@@ -49,7 +61,7 @@ class BlockedActionCard extends StatelessWidget {
     return Semantics(
       label: '${l.permBlockedTitle}. $reason',
       child: NavisCard(
-        borderColor: AppColors.amber.withValues(alpha: 0.35),
+        borderColor: context.caution.withValues(alpha: 0.35),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -60,16 +72,16 @@ class BlockedActionCard extends StatelessWidget {
                   height: Dimens.iconXl,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.amber.withValues(alpha: 0.15),
+                    color: context.caution.withValues(alpha: 0.15),
                     border: Border.all(
-                      color: AppColors.amber.withValues(alpha: 0.35),
+                      color: context.caution.withValues(alpha: 0.35),
                       width: 0.5,
                     ),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.lock_outline_rounded,
                     size: Dimens.iconSm,
-                    color: AppColors.amber,
+                    color: context.caution,
                   ),
                 ),
                 const SizedBox(width: Dimens.spaceMd),
@@ -94,8 +106,8 @@ class BlockedActionCard extends StatelessWidget {
               const SizedBox(height: Dimens.spaceSm),
               Text(
                 l.permBlockedAskOwner,
-                style: const TextStyle(
-                  color: AppColors.cyan,
+                style: TextStyle(
+                  color: context.accent,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),

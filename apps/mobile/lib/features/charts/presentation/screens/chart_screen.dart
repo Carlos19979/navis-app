@@ -6,10 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
+import 'package:navis_mobile/features/boat/presentation/boat_actions.dart';
+import 'package:navis_mobile/features/boat/presentation/providers/active_boat_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/charts/data/tile_provider.dart';
 import 'package:navis_mobile/features/charts/presentation/providers/chart_provider.dart';
@@ -24,6 +26,7 @@ import 'package:navis_mobile/features/ports/presentation/controllers/viewport_po
 import 'package:navis_mobile/features/ports/presentation/providers/port_provider.dart';
 import 'package:navis_mobile/features/ports/presentation/widgets/port_info_sheet.dart';
 import 'package:navis_mobile/features/ports/presentation/widgets/port_markers_layer.dart';
+import 'package:navis_mobile/shared/widgets/navis_action_button.dart';
 
 class ChartScreen extends ConsumerStatefulWidget {
   const ChartScreen({super.key});
@@ -161,7 +164,9 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final mapState = ref.watch(chartProvider);
+    final activeBoat = ref.watch(activeBoatProvider);
     final boatsAsync = ref.watch(boatsProvider);
     // Offline: clamp the tile layers to the deepest zoom actually on disk, so
     // zooming in upscales stored tiles instead of going blank.
@@ -249,17 +254,17 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.amber.withValues(alpha: 0.15),
+                      color: context.caution.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: AppColors.amber.withValues(alpha: 0.4),
+                        color: context.caution.withValues(alpha: 0.4),
                         width: 0.5,
                       ),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.location_off,
-                            size: 16, color: AppColors.amber),
+                        Icon(Icons.location_off,
+                            size: 16, color: context.caution),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
@@ -272,7 +277,7 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                           onPressed: Geolocator.openLocationSettings,
                           child: Text(
                             AppLocalizations.of(context)!.openSettings,
-                            style: const TextStyle(color: AppColors.cyan),
+                            style: TextStyle(color: context.accent),
                           ),
                         ),
                       ],
@@ -297,10 +302,10 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.navy.withValues(alpha: 0.6),
+                      color: context.onMedia,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: AppColors.glassBorder,
+                        color: context.onMediaBorder,
                         width: 0.5,
                       ),
                     ),
@@ -310,8 +315,8 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                         Container(
                           width: 8,
                           height: 8,
-                          decoration: const BoxDecoration(
-                            color: AppColors.green,
+                          decoration: BoxDecoration(
+                            color: context.positive,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -319,8 +324,8 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                         Text(
                           '${_currentPosition!.latitude.toStringAsFixed(4)}, '
                           '${_currentPosition!.longitude.toStringAsFixed(4)}',
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
+                          style: TextStyle(
+                            color: context.ink,
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
                           ),
@@ -333,8 +338,7 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                           builder: (context, zoom, _) => Text(
                             'z${zoom.toStringAsFixed(0)}',
                             style: TextStyle(
-                              color: AppColors.textSecondary
-                                  .withValues(alpha: 0.7),
+                              color: context.inkMuted.withValues(alpha: 0.7),
                               fontSize: 11,
                             ),
                           ),
@@ -368,18 +372,18 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.navy.withValues(alpha: 0.6),
+                            color: context.onMedia,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: AppColors.glassBorder,
+                              color: context.onMediaBorder,
                               width: 0.5,
                             ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.zoom_in,
-                                  size: 16, color: AppColors.cyan),
+                              Icon(Icons.zoom_in,
+                                  size: 16, color: context.accent),
                               const SizedBox(width: 8),
                               Text(
                                 AppLocalizations.of(context)!.portsZoomInHint,
@@ -396,7 +400,45 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
               },
             ),
 
+          // The two things a chart is for. Neither existed here: the tab drew
+          // the sea, the depths and the marks, and offered no way to go out on
+          // it — the closest button was two tabs away on Today.
+          //
+          // On-media fill rather than another frosted panel: the overlays that
+          // already blur keep it (they are legibility over imagery), but a bar
+          // this size would be a second full-width filter pass every frame,
+          // and 55% navy reads just as cleanly over tiles.
+          if (activeBoat != null)
+            Positioned(
+              left: Dimens.spaceLg,
+              right: Dimens.spaceLg,
+              bottom: Dimens.navClearance - Dimens.spaceXl,
+              child: NavisActionBar(
+                actions: [
+                  if (BoatActions.canSail(activeBoat))
+                    NavisActionButton(
+                      icon: Icons.sailing_rounded,
+                      label: BoatActions.sailLabel(l, ref),
+                      primary: true,
+                      onTap: () => BoatActions.sail(context, ref, activeBoat),
+                    ),
+                  NavisActionButton(
+                    icon: Icons.anchor_rounded,
+                    label: l.anchorActionShort,
+                    onDark: true,
+                    lockLabel: BoatActions.anchorLock(l, ref),
+                    onTap: () => BoatActions.anchor(context, ref, activeBoat),
+                  ),
+                ],
+              ),
+            ),
+
           MapControls(
+            // Cleared above the sail bar, so the zoom buttons are not sitting
+            // on «Zarpar».
+            bottomOffset: activeBoat == null
+                ? Dimens.navClearance
+                : Dimens.navClearance + 56,
             onZoomIn: () => _zoomBy(1),
             onZoomOut: () => _zoomBy(-1),
             onCenterGps: _centerOnGps,
@@ -457,7 +499,7 @@ class _TripTracksLayer extends ConsumerWidget {
                   for (final pt in points) LatLng(pt.latitude, pt.longitude),
                 ],
                 strokeWidth: 3,
-                color: AppColors.cyan.withValues(alpha: 0.7),
+                color: context.accent.withValues(alpha: 0.7),
               ),
             );
           }
@@ -497,6 +539,7 @@ class _HomePortMarkers extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return MarkerLayer(
       markers: [
         for (final boat in boats)
@@ -522,27 +565,27 @@ class _HomePortMarkers extends StatelessWidget {
                 child: Tooltip(
                   message: '${boat.name}'
                       ' \u2014 '
-                      '${boat.homePort ?? "Home port"}',
+                      '${boat.homePort ?? l.homePort}',
                   child: Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppColors.navy.withValues(alpha: 0.85),
+                      color: context.onMedia,
                       border: Border.all(
-                        color: AppColors.amber.withValues(alpha: 0.8),
+                        color: context.caution.withValues(alpha: 0.8),
                         width: 2,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.amber.withValues(alpha: 0.3),
+                          color: context.caution.withValues(alpha: 0.3),
                           blurRadius: 8,
                           spreadRadius: 1,
                         ),
                       ],
                     ),
-                    child: const Center(
+                    child: Center(
                       child: Icon(
                         Icons.sailing,
-                        color: AppColors.amber,
+                        color: context.caution,
                         size: 22,
                       ),
                     ),

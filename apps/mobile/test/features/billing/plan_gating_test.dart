@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:navis_mobile/features/boat/data/boat_share_repository.dart';
-import 'package:navis_mobile/features/boat/presentation/screens/boat_detail_screen.dart';
 import 'package:navis_mobile/features/community/presentation/screens/community_screen.dart';
 import 'package:navis_mobile/features/events/domain/entities/event.dart';
 import 'package:navis_mobile/features/events/presentation/providers/event_provider.dart';
@@ -12,12 +11,13 @@ import 'package:navis_mobile/features/groups/domain/entities/group.dart';
 import 'package:navis_mobile/features/groups/presentation/providers/group_provider.dart';
 import 'package:navis_mobile/features/maintenance/data/maintenance_models.dart';
 import 'package:navis_mobile/features/maintenance/data/maintenance_repository.dart';
-import 'package:navis_mobile/features/maintenance/presentation/screens/maintenance_screen.dart';
+import 'package:navis_mobile/features/maintenance/presentation/screens/expenses_screen.dart';
 import 'package:navis_mobile/features/passport/presentation/passport_export.dart';
 import 'package:navis_mobile/features/readiness/presentation/providers/readiness_provider.dart';
 import 'package:navis_mobile/features/shared/data/shared_repository.dart';
 
 import '../../helpers/helpers.dart';
+import 'package:navis_mobile/features/boat/presentation/screens/today_screen.dart';
 
 class MockSharedRepository extends Mock implements SharedRepository {}
 
@@ -66,9 +66,10 @@ void main() {
       final spy = RouteSpy();
       await tester.pumpWidget(
         buildRoutedTestApp(
-          const BoatDetailScreen(boatId: 'boat-1'),
+          const TodayScreen(),
           spy: spy,
           overrides: [
+            ...await todayOverrides(),
             ...planOverrides(pro: pro),
             boatReadinessProvider.overrideWith(
               (ref, id) async => makeReadiness(),
@@ -115,15 +116,12 @@ void main() {
       final spy = RouteSpy();
       await tester.pumpWidget(
         buildRoutedTestApp(
-          const MaintenanceScreen(boatId: 'boat-1'),
+          // The ledger is its own route now, so there is no tab to tap first.
+          const ExpensesScreen(boatId: 'boat-1'),
           spy: spy,
           overrides: [...maintenanceOverrides(pro: pro), ...overrides],
         ),
       );
-      await pumpScreen(tester);
-
-      await tester.tap(find.text('Expenses'));
-      // Two pump rounds: the tab transition, then the expense list data.
       await pumpScreen(tester);
       await pumpScreen(tester);
 
@@ -198,12 +196,9 @@ void main() {
           ],
         ),
       );
-      await pumpScreen(tester);
-
-      await tester.tap(find.text('My groups'));
-      await pumpScreen(tester);
-
-      await tester.tap(find.byTooltip('Create group'));
+      // No tab to open first, and the create button is always on screen.
+      await pumpFrames(tester, frames: 8);
+      await tester.tap(find.byTooltip('Create club'));
       await pumpScreen(tester);
       return spy;
     }
@@ -232,9 +227,10 @@ void main() {
       final spy = RouteSpy();
       await tester.pumpWidget(
         buildRoutedTestApp(
-          const BoatDetailScreen(boatId: 'boat-1'),
+          const TodayScreen(),
           spy: spy,
           overrides: [
+            ...await todayOverrides(),
             ...planOverrides(pro: pro),
             boatReadinessProvider.overrideWith(
               (ref, id) async => makeReadiness(),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/byte_utils.dart';
@@ -93,7 +92,7 @@ class _RegionCard extends StatelessWidget {
         children: [
           Icon(
             incomplete ? Icons.cloud_off_outlined : Icons.map_outlined,
-            color: incomplete ? AppColors.amber : AppColors.cyan,
+            color: incomplete ? context.caution : context.accent,
             size: Dimens.iconLg,
           ),
           const SizedBox(width: Dimens.spaceLg),
@@ -127,7 +126,7 @@ class _RegionCard extends StatelessWidget {
                           '${NavisDateUtils.formatDate(region.createdAt)}'
                       : NavisDateUtils.formatDate(region.createdAt),
                   style: TextStyle(
-                    color: incomplete ? AppColors.amber : context.txtSecondary,
+                    color: incomplete ? context.caution : context.txtSecondary,
                     fontSize: 12,
                   ),
                 ),
@@ -135,7 +134,7 @@ class _RegionCard extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.delete_outline, color: AppColors.red),
+            icon: Icon(Icons.delete_outline, color: context.critical),
             tooltip: l.deleteArea,
             onPressed: onDelete,
           ),

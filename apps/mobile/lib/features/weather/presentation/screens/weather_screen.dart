@@ -1,24 +1,40 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
 import 'package:navis_mobile/core/error/exceptions.dart';
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/app_typography.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
+import 'package:navis_mobile/core/theme/motion.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
+import 'package:navis_mobile/core/theme/tone.dart';
+import 'package:navis_mobile/core/utils/measure_utils.dart';
+import 'package:navis_mobile/core/utils/navis_date_utils.dart';
+import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
+import 'package:navis_mobile/features/boat/presentation/boat_actions.dart';
+import 'package:navis_mobile/features/boat/presentation/providers/active_boat_provider.dart';
+import 'package:navis_mobile/features/weather/domain/entities/daily_weather.dart';
+import 'package:navis_mobile/features/weather/domain/entities/weather.dart';
 import 'package:navis_mobile/features/weather/domain/entities/weather_overview.dart';
 import 'package:navis_mobile/features/weather/presentation/providers/weather_provider.dart';
 import 'package:navis_mobile/features/weather/presentation/widgets/current_conditions.dart';
 import 'package:navis_mobile/features/weather/presentation/widgets/daily_forecast_list.dart';
 import 'package:navis_mobile/features/weather/presentation/widgets/weather_visuals.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
+import 'package:navis_mobile/shared/models/sail_window.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
+import 'package:navis_mobile/shared/widgets/navis_action_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
-import 'package:navis_mobile/shared/widgets/navis_button.dart';
+import 'package:navis_mobile/shared/widgets/navis_empty_state.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
+import 'package:navis_mobile/shared/widgets/navis_list.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
+import 'package:navis_mobile/shared/widgets/navis_section.dart';
+
+/// Key on the scrollable, so a test can scroll the forecast without guessing
+/// which of the nested scrollables is the page.
+const weatherScrollKey = Key('weather-scroll');
 
 /// Re-acquires the fix as well as the forecast. A stale or wrong location is
 /// the most common reason the weather looks wrong, or does not load at all, so
@@ -67,8 +83,8 @@ class WeatherScreen extends ConsumerWidget {
           // state is exactly where the user needs a way to try again after
           // granting the permission in Settings. Both children scroll.
           data: (data) => RefreshIndicator(
-            color: AppColors.cyan,
-            backgroundColor: context.dialogSurface,
+            color: context.accent,
+            backgroundColor: context.surfaceRaised,
             onRefresh: () async => _refresh(ref),
             child: data == null
                 ? _NoLocation(
@@ -91,151 +107,292 @@ class _OverviewBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primary = isDark ? context.txtPrimary : AppColors.textLight;
-    final secondary =
-        isDark ? context.txtSecondary : AppColors.textLightSecondary;
-
     final current = overview.current;
     final today = overview.daily.isNotEmpty ? overview.daily.first : null;
-    final condition = WeatherCondition.fromCode(current.weatherCode);
 
     return SingleChildScrollView(
+      key: weatherScrollKey,
       physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.fromLTRB(
-        16,
-        kToolbarHeight + MediaQuery.of(context).padding.top + 8,
-        16,
+        Dimens.spaceLg,
+        kToolbarHeight + MediaQuery.of(context).padding.top,
+        Dimens.spaceLg,
         Dimens.navClearance,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Hero: icon, temperature, description, today's high/low.
-          Center(
-            child: Column(
-              children: [
-                Icon(condition.icon, color: condition.color, size: 52)
-                    .animate()
-                    .fadeIn(duration: 500.ms)
-                    .scale(begin: const Offset(0.8, 0.8)),
-                const SizedBox(height: 4),
-                Text(
-                  '${current.temperature.round()}°',
-                  style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                        color: AppColors.cyan,
-                        fontWeight: FontWeight.w200,
-                        fontSize: 92,
-                        height: 1.0,
-                      ),
-                ).animate().fadeIn(duration: 600.ms).slideY(
-                      begin: -0.1,
-                      end: 0,
-                      duration: 600.ms,
-                      curve: Curves.easeOut,
-                    ),
-                const SizedBox(height: 2),
-                Text(
-                  weatherDescription(l, current.weatherCode),
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: secondary,
-                        letterSpacing: 0.5,
-                      ),
-                ).animate().fadeIn(delay: 150.ms, duration: 500.ms),
-                if (today != null) ...[
-                  const SizedBox(height: 4),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.arrow_upward_rounded,
-                          size: 15, color: secondary),
-                      Text(
-                        '${today.temperatureMax.round()}°',
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              color: primary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                      ),
-                      const SizedBox(width: 10),
-                      Icon(Icons.arrow_downward_rounded,
-                          size: 15, color: secondary),
-                      Text(
-                        '${today.temperatureMin.round()}°',
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              color: secondary,
-                            ),
-                      ),
-                    ],
-                  ).animate().fadeIn(delay: 250.ms, duration: 500.ms),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
+          _Hero(current: current, today: today).entrance(),
 
-          // The week as a list of days; tapping one opens its hourly detail
-          // in place.
-          Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 12),
-            child: Text(
-              l.sevenDayForecast,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: primary,
-                    fontWeight: FontWeight.w600,
+          // The verdict, and the way to act on it. It sits directly under the
+          // temperature and above every detail on purpose: the question this
+          // tab gets opened with is "can I go out today", and the forecast
+          // used to answer it two screenfuls down, in a badge with nothing to
+          // press.
+          const SizedBox(height: Dimens.spaceXl),
+          _SailWindowBlock(overview: overview).entrance(index: 1),
+
+          const SizedBox(height: Dimens.spaceXl),
+          NavisSection(
+            title: l.sevenDayForecast,
+            padding: EdgeInsets.zero,
+            child: overview.daily.isEmpty
+                ? Text(
+                    l.forecastNotAvailable,
+                    style: NavisType.bodySm.copyWith(color: context.inkMuted),
+                  )
+                : DailyForecastList(
+                    days: overview.daily,
+                    todayHours: overview.hourly,
                   ),
-            ),
-          ),
-          if (overview.daily.isNotEmpty)
-            DailyForecastList(
-              days: overview.daily,
-              todayHours: overview.hourly,
-            ).animate().fadeIn(
-                  delay: 300.ms,
-                  duration: 500.ms,
-                )
-          else
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                l.forecastNotAvailable,
-                style: TextStyle(color: secondary),
-              ),
-            ),
-          const SizedBox(height: 20),
+          ).entrance(index: 2),
 
-          // Current conditions, as a grid of metric tiles.
-          Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 12),
-            child: Text(
-              l.currentConditions,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-          ),
-          CurrentConditions(current: current).animate().fadeIn(
-                delay: 400.ms,
-                duration: 500.ms,
-              ),
-          const SizedBox(height: 12),
+          const SizedBox(height: Dimens.spaceXl),
+          NavisSection(
+            title: l.currentConditions,
+            padding: EdgeInsets.zero,
+            child: CurrentConditions(current: current),
+          ).entrance(index: 3),
 
-          // Navigation window suitability (from wind + waves).
-          _NavWindowBadge(overview: overview).animate().fadeIn(
-                delay: 450.ms,
-                duration: 400.ms,
-              ),
-
-          // Tides (high/low), when available.
           if (overview.tideExtremes.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            _TidesCard(extremes: overview.tideExtremes).animate().fadeIn(
-                  delay: 480.ms,
-                  duration: 400.ms,
-                ),
+            const SizedBox(height: Dimens.spaceXl),
+            _Tides(extremes: overview.tideExtremes).entrance(index: 4),
           ],
         ],
       ),
+    );
+  }
+}
+
+/// Temperature, sky, and today's range.
+class _Hero extends StatelessWidget {
+  const _Hero({required this.current, required this.today});
+
+  final Weather current;
+  final DailyWeather? today;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final condition = WeatherCondition.fromCode(current.weatherCode);
+
+    return Center(
+      child: Column(
+        children: [
+          Icon(
+            condition.icon,
+            color: condition.color(context),
+            size: Dimens.iconXl,
+          ),
+          const SizedBox(height: Dimens.spaceXs),
+          // Tabular figures: without them the reading twitches sideways every
+          // time the tens digit changes on a refresh.
+          Text(
+            '${current.temperature.round()}°',
+            style: NavisType.numeral.copyWith(color: context.ink),
+          ),
+          Text(
+            weatherDescription(l, current.weatherCode),
+            style: NavisType.body.copyWith(color: context.inkMuted),
+          ),
+          if (today != null) ...[
+            const SizedBox(height: Dimens.spaceXs),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.arrow_upward_rounded,
+                  size: Dimens.iconSm,
+                  color: context.inkMuted,
+                ),
+                Text(
+                  '${today!.temperatureMax.round()}°',
+                  style: NavisType.label.copyWith(color: context.ink),
+                ),
+                const SizedBox(width: Dimens.spaceMd),
+                Icon(
+                  Icons.arrow_downward_rounded,
+                  size: Dimens.iconSm,
+                  color: context.inkMuted,
+                ),
+                Text(
+                  '${today!.temperatureMin.round()}°',
+                  style: NavisType.label.copyWith(color: context.inkMuted),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// The forecast's answer to "can I go out", with the way to go out.
+///
+/// Two things changed here. The verdict now comes from
+/// [SailWindow.evaluate] — this screen had its own copy of the thresholds, so
+/// Today and the forecast could disagree about the same wind. And it carries
+/// the sail action: telling a sailor the conditions are perfect and leaving
+/// them to find the button on another tab is the whole reason this tab counted
+/// as inert.
+class _SailWindowBlock extends ConsumerWidget {
+  const _SailWindowBlock({required this.overview});
+
+  final WeatherOverview overview;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    final wind = overview.current.windSpeed;
+    final wave = overview.current.waveHeight;
+    final window = SailWindow.evaluate(windKnots: wind, waveMetres: wave);
+
+    final (tone, label, icon, hint) = switch (window) {
+      SailWindow.good => (
+          NavisTone.positive,
+          l.sailConditionsGood,
+          Icons.check_circle_rounded,
+          l.sailWindowGoodHint,
+        ),
+      SailWindow.moderate => (
+          NavisTone.caution,
+          l.sailConditionsModerate,
+          Icons.info_rounded,
+          l.sailWindowModerateHint,
+        ),
+      SailWindow.adverse => (
+          NavisTone.critical,
+          l.sailConditionsAdverse,
+          Icons.warning_amber_rounded,
+          l.sailWindowAdverseHint,
+        ),
+    };
+    final accent = context.toneAccent(tone);
+    final boat = ref.watch(activeBoatProvider);
+
+    return DecoratedBox(
+      // A neutral surface with the tone in the glyph and the edge, not a tinted
+      // fill. An amber wash over the dark canvas comes out brown — the exact
+      // colour this redesign already had to remove once — and on white it is a
+      // pale beige that reads as a disabled card. The tone belongs in the icon,
+      // where amber is amber in both themes.
+      decoration: BoxDecoration(
+        color: context.surfaceSunken,
+        borderRadius: BorderRadius.circular(Dimens.radiusSurface),
+        border: Border.all(color: context.washBorder(accent)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(Dimens.spaceLg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: accent, size: Dimens.iconLg),
+                const SizedBox(width: Dimens.spaceMd),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: NavisType.title3.copyWith(color: context.ink),
+                      ),
+                      Text(
+                        l.windWavesSummary(
+                          wind.round().toString(),
+                          Measure.decimal(locale, wave),
+                        ),
+                        style: NavisType.bodySm.copyWith(
+                          color: context.inkMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: Dimens.spaceSm),
+            Text(
+              hint,
+              style: NavisType.bodySm.copyWith(color: context.inkMuted),
+            ),
+            // No boat, or a guest without permission to record: then there is
+            // nothing honest to offer, and the block stays a verdict.
+            if (boat != null && BoatActions.canSail(boat)) ...[
+              const SizedBox(height: Dimens.spaceLg),
+              _SailAction(boat: boat, window: window),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SailAction extends ConsumerWidget {
+  const _SailAction({required this.boat, required this.window});
+
+  final Boat boat;
+  final SailWindow window;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
+    return NavisActionBar(
+      actions: [
+        NavisActionButton(
+          icon: Icons.sailing_rounded,
+          label: BoatActions.sailLabel(l, ref),
+          // Filled when the sea says go, outlined when it says think about it:
+          // the button is as loud as the conditions deserve, and never absent,
+          // because "adverse" is a judgement and the skipper's call.
+          primary: window == SailWindow.good,
+          onTap: () => BoatActions.sail(context, ref, boat),
+        ),
+      ],
+    );
+  }
+}
+
+/// Upcoming high and low water.
+class _Tides extends StatelessWidget {
+  const _Tides({required this.extremes});
+
+  final List<TideExtreme> extremes;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toLanguageTag();
+
+    // Range = how far the water rises and falls = highest − lowest.
+    final heights = extremes.map((e) => e.height).toList();
+    final range = heights.isEmpty
+        ? 0.0
+        : heights.reduce((a, b) => a > b ? a : b) -
+            heights.reduce((a, b) => a < b ? a : b);
+
+    return NavisList(
+      title: l.tides,
+      action: Text(
+        l.tideRange(Measure.decimal(locale, range)),
+        style: NavisType.overline.copyWith(color: context.inkMuted),
+      ),
+      children: [
+        for (final e in extremes)
+          NavisRow(
+            icon: e.isHigh
+                ? Icons.arrow_upward_rounded
+                : Icons.arrow_downward_rounded,
+            iconColor: e.isHigh ? context.accent : context.caution,
+            title: e.isHigh ? l.tideHigh : l.tideLow,
+            subtitle: NavisDateUtils.formatTime(e.time),
+            value: Measure.signedMetres(locale, e.height),
+          ),
+      ],
     );
   }
 }
@@ -262,6 +419,7 @@ class _NoLocation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     // Scrollable even though it fits, so the pull-to-refresh above it has a
     // gesture to work with.
     return LayoutBuilder(
@@ -269,221 +427,18 @@ class _NoLocation extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         child: ConstrainedBox(
           constraints: BoxConstraints(minHeight: constraints.maxHeight),
-          child: _body(context),
-        ),
-      ),
-    );
-  }
-
-  Widget _body(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 88,
-              height: 88,
-              decoration: BoxDecoration(
-                color: context.glassBg,
-                shape: BoxShape.circle,
-                border: Border.all(color: context.glassBorderColor),
-              ),
-              child: Icon(
-                _settingsHelps
-                    ? Icons.location_off
-                    : Icons.location_searching_rounded,
-                size: 40,
-                color: context.txtSecondary.withValues(alpha: 0.6),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              _message(l),
-              textAlign: TextAlign.center,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: context.txtSecondary),
-            ),
-            const SizedBox(height: 24),
-            if (_settingsHelps)
-              NavisButton(
-                label: l.openSettings,
-                icon: Icons.settings_outlined,
-                variant: NavisButtonVariant.secondary,
-                compact: true,
-                onPressed: Geolocator.openLocationSettings,
-              ),
-            const SizedBox(height: 10),
-            NavisButton(
-              label: l.retry,
-              icon: Icons.refresh_rounded,
-              variant: NavisButtonVariant.secondary,
-              compact: true,
-              onPressed: onRetry,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// A "good to sail" indicator based on current wind and wave conditions.
-class _NavWindowBadge extends StatelessWidget {
-  const _NavWindowBadge({required this.overview});
-
-  final WeatherOverview overview;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
-    final wind = overview.current.windSpeed;
-    final wave = overview.current.waveHeight;
-
-    final (color, label, icon) = switch (null) {
-      _ when wind <= 12 && wave <= 0.5 => (
-          AppColors.green,
-          l.sailConditionsGood,
-          Icons.check_circle,
-        ),
-      _ when wind <= 20 && wave <= 1.2 => (
-          AppColors.amber,
-          l.sailConditionsModerate,
-          Icons.info,
-        ),
-      _ => (
-          AppColors.red,
-          l.sailConditionsAdverse,
-          Icons.warning_amber_rounded,
-        ),
-    };
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.4), width: 0.5),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: color),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: context.txtPrimary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                Text(
-                  l.windWavesSummary(
-                    wind.round().toString(),
-                    wave.toStringAsFixed(1),
-                  ),
-                  style: TextStyle(color: context.txtSecondary, fontSize: 12),
-                ),
-              ],
-            ),
+          child: NavisEmptyState(
+            icon: _settingsHelps
+                ? Icons.location_off_rounded
+                : Icons.location_searching_rounded,
+            message: _message(l),
+            actionLabel: _settingsHelps ? l.openSettings : l.retry,
+            onAction:
+                _settingsHelps ? Geolocator.openLocationSettings : onRetry,
+            secondaryActionLabel: _settingsHelps ? l.retry : null,
+            onSecondaryAction: _settingsHelps ? onRetry : null,
           ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Upcoming high/low tides.
-class _TidesCard extends StatelessWidget {
-  const _TidesCard({required this.extremes});
-
-  final List<TideExtreme> extremes;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
-    String hhmm(DateTime t) =>
-        '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
-
-    // Carrera = how much the water rises and falls = highest − lowest.
-    final heights = extremes.map((e) => e.height).toList();
-    final range = heights.isEmpty
-        ? 0.0
-        : heights.reduce((a, b) => a > b ? a : b) -
-            heights.reduce((a, b) => a < b ? a : b);
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: context.glassBg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.glassBorderColor, width: 0.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.waves, color: AppColors.cyan, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                l.tides,
-                style: TextStyle(
-                  color: context.txtPrimary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                l.tideRange(range.toStringAsFixed(1)),
-                style: const TextStyle(
-                  color: AppColors.cyan,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          for (final e in extremes)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                children: [
-                  Icon(
-                    e.isHigh ? Icons.arrow_upward : Icons.arrow_downward,
-                    color: e.isHigh ? AppColors.cyan : AppColors.amber,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    e.isHigh ? l.tideHigh : l.tideLow,
-                    style: TextStyle(color: context.txtPrimary),
-                  ),
-                  const Spacer(),
-                  Text(
-                    hhmm(e.time),
-                    style: TextStyle(
-                      color: context.txtPrimary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    '${e.height >= 0 ? '+' : ''}${e.height.toStringAsFixed(1)} m',
-                    style: TextStyle(color: context.txtSecondary, fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-        ],
+        ),
       ),
     );
   }

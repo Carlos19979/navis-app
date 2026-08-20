@@ -1,10 +1,23 @@
 import 'package:flutter/material.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/app_typography.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
+import 'package:navis_mobile/core/theme/motion.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 
 enum NavisButtonVariant { primary, secondary, danger }
 
+/// The app's button.
+///
+/// Flat by design: the old one carried a coloured glow under every primary and
+/// danger button, which on a white canvas reads as a bruise. The lift is kept
+/// for exactly one control — the floating action button — where it is what
+/// makes it read as floating.
+///
+/// `primary` and `danger` fill with the **ink** accent, not the bright one, so
+/// the white label on top clears WCAG AA (5.55:1 and 6.54:1). `secondary` is a
+/// recessed surface with a hairline, not a tinted accent, so a screen can offer
+/// a second action without two things competing for the eye.
 class NavisButton extends StatefulWidget {
   const NavisButton({
     super.key,
@@ -32,27 +45,27 @@ class NavisButton extends StatefulWidget {
 class _NavisButtonState extends State<NavisButton> {
   bool _pressed = false;
 
-  LinearGradient get _gradient => switch (widget.variant) {
-        NavisButtonVariant.primary => AppColors.cyanGradient,
-        NavisButtonVariant.secondary => LinearGradient(
-            colors: [context.glassBg, context.glassBg],
-          ),
-        NavisButtonVariant.danger => AppColors.redGradient,
+  Color _fill(BuildContext context) => switch (widget.variant) {
+        NavisButtonVariant.primary => context.accent,
+        NavisButtonVariant.secondary => context.surfaceSunken,
+        NavisButtonVariant.danger => context.critical,
       };
 
-  Color get _textColor => switch (widget.variant) {
-        NavisButtonVariant.primary => Colors.white,
-        NavisButtonVariant.secondary => AppColors.cyan,
-        NavisButtonVariant.danger => Colors.white,
+  Color _label(BuildContext context) => switch (widget.variant) {
+        NavisButtonVariant.primary => context.onAccent,
+        NavisButtonVariant.secondary => context.ink,
+        NavisButtonVariant.danger => context.onAccent,
       };
 
   @override
   Widget build(BuildContext context) {
     final disabled = widget.isLoading || widget.isDisabled;
     final height = widget.compact ? 44.0 : 52.0;
+    final outlined = widget.variant == NavisButtonVariant.secondary;
 
     return Semantics(
       button: true,
+      enabled: !disabled,
       label: widget.label,
       child: GestureDetector(
         onTapDown: disabled ? null : (_) => setState(() => _pressed = true),
@@ -60,40 +73,25 @@ class _NavisButtonState extends State<NavisButton> {
         onTapCancel: disabled ? null : () => setState(() => _pressed = false),
         onTap: disabled ? null : widget.onPressed,
         child: AnimatedScale(
-          scale: _pressed ? 0.97 : 1.0,
-          duration: const Duration(milliseconds: 100),
+          scale: _pressed ? 0.98 : 1.0,
+          duration: Motion.fast,
+          curve: Motion.curve,
           child: AnimatedOpacity(
-            opacity: disabled ? 0.5 : 1.0,
-            duration: const Duration(milliseconds: 200),
+            opacity: disabled ? 0.45 : 1.0,
+            duration: Motion.fast,
             child: Container(
               height: height,
               width: widget.compact ? null : double.infinity,
               padding: widget.compact
-                  ? const EdgeInsets.symmetric(horizontal: 24)
+                  ? const EdgeInsets.symmetric(horizontal: Dimens.spaceXl)
                   : null,
               decoration: BoxDecoration(
-                gradient: _gradient,
-                borderRadius: BorderRadius.circular(14),
-                border: widget.variant == NavisButtonVariant.secondary
-                    ? Border.all(color: context.glassBorderColor)
-                    : null,
-                boxShadow: widget.variant != NavisButtonVariant.secondary
-                    ? [
-                        BoxShadow(
-                          color: (widget.variant == NavisButtonVariant.danger
-                                  ? AppColors.red
-                                  : AppColors.cyan)
-                              .withValues(alpha: disabled ? 0 : 0.3),
-                          blurRadius: 16,
-                          offset: const Offset(0, 4),
-                        ),
-                      ]
-                    : null,
+                color: _fill(context),
+                borderRadius: BorderRadius.circular(Dimens.radiusControl),
+                border: outlined ? Border.all(color: context.hairline) : null,
               ),
               child: Center(
-                child: widget.isLoading
-                    ? _buildLoadingIndicator()
-                    : _buildContent(),
+                child: widget.isLoading ? _loading(context) : _content(context),
               ),
             ),
           ),
@@ -102,36 +100,32 @@ class _NavisButtonState extends State<NavisButton> {
     );
   }
 
-  Widget _buildLoadingIndicator() {
+  Widget _loading(BuildContext context) {
     return SizedBox(
-      width: 24,
-      height: 24,
+      width: Dimens.iconLg,
+      height: Dimens.iconLg,
       child: CircularProgressIndicator(
         strokeWidth: 2.5,
-        color: _textColor,
+        color: _label(context),
       ),
     );
   }
 
-  Widget _buildContent() {
+  Widget _content(BuildContext context) {
+    final color = _label(context);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         if (widget.icon != null) ...[
-          Icon(widget.icon, size: 20, color: _textColor),
-          const SizedBox(width: 8),
+          Icon(widget.icon, size: Dimens.iconMd, color: color),
+          const SizedBox(width: Dimens.spaceSm),
         ],
         Flexible(
           child: Text(
             widget.label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: _textColor,
-              letterSpacing: 0.3,
-            ),
+            style: NavisType.label.copyWith(fontSize: 15, color: color),
           ),
         ),
       ],

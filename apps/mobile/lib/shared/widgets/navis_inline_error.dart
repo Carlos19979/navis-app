@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -35,10 +34,10 @@ class NavisInlineError extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.cloud_off_rounded,
             size: Dimens.iconSm,
-            color: AppColors.amber,
+            color: context.caution,
           ),
           const SizedBox(width: Dimens.spaceSm),
           Expanded(
@@ -61,7 +60,7 @@ class NavisInlineError extends StatelessWidget {
               ),
               child: Text(
                 l.retry,
-                style: const TextStyle(color: AppColors.cyan),
+                style: TextStyle(color: context.accent),
               ),
             ),
         ],

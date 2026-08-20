@@ -20,10 +20,8 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:navis_mobile/core/theme/app_theme.dart';
 import 'package:navis_mobile/features/anomaly/data/anomaly_repository.dart';
 import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
-import 'package:navis_mobile/features/boat/data/boat_share_repository.dart';
-import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
-import 'package:navis_mobile/features/boat/presentation/screens/boat_dashboard_screen.dart';
+import 'package:navis_mobile/features/boat/presentation/screens/today_screen.dart';
 import 'package:navis_mobile/features/community/presentation/screens/community_screen.dart';
 import 'package:navis_mobile/features/cost/domain/entities/cost_analytics.dart';
 import 'package:navis_mobile/features/cost/presentation/providers/cost_provider.dart';
@@ -38,31 +36,10 @@ import 'package:navis_mobile/features/weather/presentation/providers/weather_pro
 import 'package:navis_mobile/features/weather/presentation/screens/weather_screen.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 
-import '../helpers/billing.dart';
-import '../helpers/plan.dart';
-import '../helpers/test_helpers.dart';
+import '../helpers/helpers.dart';
 import 'golden_harness.dart';
 
-/// Boat list notifier stub (copied from boat_dashboard_golden_test.dart).
-class _FakeBoatsNotifier extends AsyncNotifier<List<Boat>>
-    implements BoatsNotifier {
-  _FakeBoatsNotifier(this._boats);
-  final List<Boat> _boats;
-
-  @override
-  Future<List<Boat>> build() async => _boats;
-  @override
-  Future<void> loadMore() async {}
-  @override
-  Future<void> refresh() async {}
-  @override
-  Future<Boat> createBoat(Boat boat) async => boat;
-  @override
-  Future<void> updateBoat(Boat boat) async {}
-  @override
-  Future<void> deleteBoat(String id) async {}
-}
-
+/// Boat list notifier stub.
 class _MockGroupRepository extends Mock implements GroupRepository {}
 
 /// 6.7" iPhone App Store Connect screenshot size: 430x932 logical @ DPR 3.0.
@@ -84,7 +61,10 @@ Future<void> _pumpAppStore(
 
   await tester.pumpWidget(
     ProviderScope(
-      overrides: overrides,
+      // The same baseline world the widget tests and the screen goldens get.
+      // Without it a screen that only asks «is there a boat?» reaches the real
+      // repository, and these shots are taken with no plugins at all.
+      overrides: [...defaultTestOverrides, ...overrides],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: AppTheme.dark,
@@ -106,7 +86,7 @@ void main() {
   setUpAll(loadTestFonts);
 
   // (a) Boat dashboard / list.
-  testWidgets('appstore — boat dashboard', (tester) async {
+  testWidgets('appstore — today', (tester) async {
     final boats = [
       makeBoat(),
       makeBoat(
@@ -118,22 +98,20 @@ void main() {
     ];
     await _pumpAppStore(
       tester,
-      const BoatDashboardScreen(),
+      const TodayScreen(),
       settle: false,
       overrides: [
-        ...planOverrides(),
-        boatsProvider.overrideWith(() => _FakeBoatsNotifier(boats)),
-        sharedBoatsProvider.overrideWith((ref) async => const <Boat>[]),
-        currentWeatherProvider.overrideWith((ref) async => makeWeather()),
-        boatDocumentSummaryProvider.overrideWith(
-          (ref, boatId) async =>
-              const DocumentSummary(total: 3, ok: 2, warning: 1),
+        ...await todayOverrides(
+          boats: boats,
+          readiness: fakeReadiness(score: 94),
+          summary: const DocumentSummary(total: 3, ok: 3),
         ),
+        ...planOverrides(),
       ],
     );
     await expectLater(
       find.byType(MaterialApp),
-      matchesGoldenFile('goldens/appstore/boat_dashboard.png'),
+      matchesGoldenFile('goldens/appstore/today.png'),
     );
   });
 
@@ -220,6 +198,9 @@ void main() {
       settle: false,
       overrides: [
         weatherOverviewProvider.overrideWith((ref) async => overview),
+        // With a boat, so the shot shows the forecast *and* the way out of the
+        // harbour — which is the point of the screen now.
+        boatsProvider.overrideWith(() => FakeBoatsNotifier([makeBoat()])),
       ],
     );
     await expectLater(

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/shared/widgets/navis_pulse_budget.dart';
 
@@ -61,11 +60,11 @@ class _NavisLoadingState extends State<NavisLoading>
                 width: 64,
                 height: 64,
                 decoration: BoxDecoration(
-                  gradient: AppColors.cyanGradient,
+                  gradient: context.accentGradient,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.cyan.withValues(alpha: 0.3),
+                      color: context.accent.withValues(alpha: 0.3),
                       blurRadius: 20,
                       spreadRadius: 2,
                     ),

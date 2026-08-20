@@ -4,7 +4,6 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:navis_mobile/core/config/env.dart';
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/features/profile/data/account_provider.dart';
@@ -395,7 +394,7 @@ class _TierSection extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Row(
                 children: [
-                  Icon(icon, size: 18, color: AppColors.cyan),
+                  Icon(icon, size: 18, color: context.accent),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -450,7 +449,7 @@ class _PackageTile extends StatelessWidget {
           color: context.dialogSurface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: selected ? AppColors.cyan : context.glassBorderColor,
+            color: selected ? context.accent : context.glassBorderColor,
             width: selected ? 2 : 1,
           ),
         ),
@@ -460,7 +459,7 @@ class _PackageTile extends StatelessWidget {
               selected
                   ? Icons.radio_button_checked_rounded
                   : Icons.radio_button_unchecked_rounded,
-              color: selected ? AppColors.cyan : context.txtSecondary,
+              color: selected ? context.accent : context.txtSecondary,
               size: 20,
             ),
             const SizedBox(width: 12),

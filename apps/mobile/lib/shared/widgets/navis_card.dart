@@ -1,16 +1,26 @@
 import 'package:flutter/material.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 
-/// The base card of the whole app: translucent gradient + hairline border.
+/// A raised surface closed by a hairline.
 ///
-/// It deliberately does NOT wrap its content in a [BackdropFilter]. Cards sit
-/// on the app gradient background, and blurring a smooth gradient gives back
-/// the same gradient — the effect was invisible while costing one blur pass
-/// per card (a list of ten cards paid ten of them every frame, which on iOS is
-/// among the most expensive things you can draw). Blur is kept only where
-/// there is real detail behind it: the app bar, the bottom nav and the map
-/// overlays.
+/// Two things it deliberately does **not** do, both of which cost a pass per
+/// card per frame — ten of them in a ten-row list, which is what showed up as
+/// foreground battery drain:
+///
+///  * **No [BackdropFilter].** Blur gives back what is behind it, and behind a
+///    card is a flat canvas (light) or a smooth gradient (dark). The effect was
+///    invisible and it invalidated every layer beneath. Blur is kept only where
+///    there is real detail behind it: map overlays, the in-trip dock, and the
+///    app bar when it floats over media (see `GlassContainer`).
+///  * **No drop shadow.** Depth comes from the hairline and from space. A soft
+///    navy shadow under every card is also what gave the light theme its grey,
+///    smudged look.
+///
+/// In the editorial layout most groupings want [NavisList] instead — a card is
+/// for content that is genuinely a distinct object (a boat with its photo, a
+/// modal panel), not for every group of rows.
 class NavisCard extends StatelessWidget {
   const NavisCard({
     super.key,
@@ -20,19 +30,49 @@ class NavisCard extends StatelessWidget {
     this.onTap,
     this.gradient,
     this.borderColor,
+    this.sunken = false,
   });
 
   final Widget child;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
   final VoidCallback? onTap;
+
+  /// Overrides the surface fill. Still a gradient for callers that pass one,
+  /// but the default is flat.
   final LinearGradient? gradient;
+
   final Color? borderColor;
+
+  /// Recessed instead of raised — for a group that reads as part of the page
+  /// rather than sitting on it.
+  final bool sunken;
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    Widget content = _buildGlassCard(isDark);
+    final fill = sunken ? context.surfaceSunken : context.surfaceRaised;
+
+    Widget content = ClipRRect(
+      borderRadius: BorderRadius.circular(Dimens.radiusSurface),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: gradient ??
+              LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [fill, fill],
+              ),
+          borderRadius: BorderRadius.circular(Dimens.radiusSurface),
+          border: Border.all(
+            color: borderColor ?? context.hairline,
+          ),
+        ),
+        child: Padding(
+          padding: padding ?? Insets.card,
+          child: child,
+        ),
+      ),
+    );
 
     if (margin != null) {
       content = Padding(padding: margin!, child: content);
@@ -43,34 +83,5 @@ class NavisCard extends StatelessWidget {
     }
 
     return content;
-  }
-
-  Widget _buildGlassCard(bool isDark) {
-    final defaultBorder =
-        isDark ? AppColors.glassBorder : AppColors.lightDivider;
-    final defaultGradient = isDark
-        ? AppColors.cardGradient
-        : const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xCCFFFFFF), Color(0x99FFFFFF)],
-          );
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: gradient ?? defaultGradient,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: borderColor ?? defaultBorder,
-            width: 0.5,
-          ),
-        ),
-        child: Padding(
-          padding: padding ?? const EdgeInsets.all(16),
-          child: child,
-        ),
-      ),
-    );
   }
 }

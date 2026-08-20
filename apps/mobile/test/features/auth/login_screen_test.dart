@@ -379,7 +379,7 @@ void main() {
         ));
         await tester.pumpAndSettle();
 
-        expect(find.byIcon(Icons.error_outline), findsOneWidget);
+        expect(find.byIcon(Icons.error_outline_rounded), findsOneWidget);
         expect(find.text('Network error'), findsOneWidget);
       });
 
@@ -388,7 +388,7 @@ void main() {
         await tester.pumpWidget(buildLoginScreen());
         await tester.pumpAndSettle();
 
-        expect(find.byIcon(Icons.error_outline), findsNothing);
+        expect(find.byIcon(Icons.error_outline_rounded), findsNothing);
       });
     });
 
@@ -446,7 +446,7 @@ void main() {
         await tester.tap(find.text('Forgot Password?'));
         await tester.pumpAndSettle();
 
-        expect(find.text('Reset Password'), findsOneWidget);
+        expect(find.text('Reset password'), findsOneWidget);
         expect(find.text('Send Reset Link'), findsOneWidget);
         expect(find.text('Cancel'), findsOneWidget);
       });
@@ -466,7 +466,7 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(seconds: 1));
 
-        expect(find.text('Reset Password'), findsNothing);
+        expect(find.text('Reset password'), findsNothing);
       });
 
       testWidgets('pre-fills email in reset dialog from form field',

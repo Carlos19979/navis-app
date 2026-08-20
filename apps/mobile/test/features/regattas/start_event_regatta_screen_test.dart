@@ -122,7 +122,7 @@ void main() {
         findsOneWidget,
       );
 
-      await tester.tap(find.text('Create group'));
+      await tester.tap(find.text('Create club'));
       await pumpScreen(tester);
 
       expect(spy.last, '/groups/new');
@@ -138,7 +138,7 @@ void main() {
 
       expect(find.text('Add a boat first.'), findsOneWidget);
 
-      await tester.tap(find.text('Add Boat'));
+      await tester.tap(find.text('Add boat'));
       await pumpScreen(tester);
 
       expect(spy.last, '/boats/new');
@@ -259,7 +259,9 @@ void main() {
       verify(() => mockRepo.schedule(
             groupId: any(named: 'groupId'),
             boatId: any(named: 'boatId'),
-            departurePort: 'Puerto de salida',
+            // Localized now: the fallback was a Spanish literal in code, so
+            // an English-locale user sent «Puerto de salida» to the API.
+            departurePort: 'Departure port',
             title: any(named: 'title'),
             scheduledAt: any(named: 'scheduledAt'),
           )).called(1);

@@ -135,7 +135,7 @@ void main() {
 
     // The crew member who hit "trip not found" was tapping a delete button that
     // was never theirs to press.
-    expect(find.byTooltip('Delete Trip'), findsNothing);
+    expect(find.byTooltip('Delete trip'), findsNothing);
     expect(find.byTooltip('Edit trip'), findsNothing);
     expect(find.byTooltip('Share trip'), findsNothing);
     expect(

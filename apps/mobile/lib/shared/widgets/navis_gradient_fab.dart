@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 
 /// The cyan-gradient FloatingActionButton used across screens, replacing the
 /// byte-identical gradient container + transparent FAB copied ~5 times.
@@ -26,11 +26,11 @@ class NavisGradientFab extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        gradient: AppColors.cyanGradient,
+        gradient: context.accentGradient,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.cyan.withValues(alpha: 0.4),
+            color: context.accent.withValues(alpha: 0.4),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as supa;
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/network/supabase_client.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
 import 'package:navis_mobile/features/auth/presentation/screens/auth_link_screen.dart';
@@ -12,8 +13,7 @@ import 'package:navis_mobile/features/auth/presentation/screens/check_email_scre
 import 'package:navis_mobile/features/auth/presentation/screens/login_screen.dart';
 import 'package:navis_mobile/features/auth/presentation/screens/register_screen.dart';
 import 'package:navis_mobile/features/auth/presentation/screens/reset_password_screen.dart';
-import 'package:navis_mobile/features/boat/presentation/screens/boat_dashboard_screen.dart';
-import 'package:navis_mobile/features/boat/presentation/screens/boat_detail_screen.dart';
+import 'package:navis_mobile/features/boat/presentation/screens/today_screen.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/boat_form_screen.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/document_detail_screen.dart';
 import 'package:navis_mobile/features/anchor/presentation/screens/anchor_alarm_screen.dart';
@@ -21,6 +21,7 @@ import 'package:navis_mobile/features/charts/presentation/screens/chart_screen.d
 import 'package:navis_mobile/features/charts/presentation/screens/offline_charts_screen.dart';
 import 'package:navis_mobile/features/documents/presentation/screens/document_form_screen.dart';
 import 'package:navis_mobile/features/documents/presentation/screens/document_list_screen.dart';
+import 'package:navis_mobile/features/maintenance/presentation/screens/expenses_screen.dart';
 import 'package:navis_mobile/features/maintenance/presentation/screens/maintenance_screen.dart';
 import 'package:navis_mobile/features/cost/presentation/screens/cost_analytics_screen.dart';
 import 'package:navis_mobile/features/readiness/presentation/screens/readiness_screen.dart';
@@ -40,7 +41,6 @@ import 'package:navis_mobile/features/logbook/presentation/screens/trip_recordin
 import 'package:navis_mobile/features/logbook/presentation/screens/trip_stats_screen.dart';
 import 'package:navis_mobile/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:navis_mobile/features/profile/presentation/screens/profile_screen.dart';
-import 'package:navis_mobile/features/profile/presentation/screens/settings_screen.dart';
 import 'package:navis_mobile/features/weather/presentation/screens/weather_screen.dart';
 import 'package:navis_mobile/shared/widgets/navis_bottom_nav.dart';
 
@@ -98,36 +98,37 @@ final routerProvider = Provider<GoRouter>((ref) {
       // pending recovery with no session left would otherwise strand the user
       // on a screen whose only button cannot work.
       if (isRecovering && isAuthenticated) {
-        return location == '/reset-password' ? null : '/reset-password';
+        return location == Routes.resetPassword ? null : Routes.resetPassword;
       }
 
-      final isAuthRoute = location == '/login' ||
-          location == '/register' ||
-          location == '/check-email' ||
-          location == '/reset-password';
+      final isAuthRoute = location == Routes.login ||
+          location == Routes.register ||
+          location == Routes.checkEmail ||
+          location == Routes.resetPassword;
 
       if (!isAuthenticated && !isAuthRoute) {
-        return '/login';
+        return Routes.login;
       }
 
       if (isAuthenticated && isAuthRoute) {
-        return '/boats';
+        return Routes.today;
       }
 
       return null;
     },
     routes: [
-      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
-        path: '/register',
+          path: Routes.login, builder: (context, state) => const LoginScreen()),
+      GoRoute(
+        path: Routes.register,
         builder: (context, state) => const RegisterScreen(),
       ),
       GoRoute(
-        path: '/check-email',
+        path: Routes.checkEmail,
         builder: (context, state) => const CheckEmailScreen(),
       ),
       GoRoute(
-        path: '/reset-password',
+        path: Routes.resetPassword,
         builder: (context, state) => const ResetPasswordScreen(),
       ),
       StatefulShellRoute.indexedStack(
@@ -138,15 +139,15 @@ final routerProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/boats',
-                builder: (context, state) => const BoatDashboardScreen(),
+                path: Routes.today,
+                builder: (context, state) => const TodayScreen(),
               ),
             ],
           ),
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/charts',
+                path: Routes.charts,
                 builder: (context, state) => const ChartScreen(),
               ),
             ],
@@ -154,7 +155,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/weather',
+                path: Routes.weather,
                 builder: (context, state) => const WeatherScreen(),
               ),
             ],
@@ -162,7 +163,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/community',
+                path: Routes.community,
                 builder: (context, state) => const CommunityScreen(),
               ),
             ],
@@ -170,7 +171,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/profile',
+                path: Routes.profile,
                 builder: (context, state) => const ProfileScreen(),
               ),
             ],
@@ -185,7 +186,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
-        path: '/groups/new',
+        path: Routes.newGroup,
         builder: (context, state) => const GroupFormScreen(),
       ),
       GoRoute(
@@ -228,14 +229,18 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
-        path: '/boats/new',
+        path: Routes.newBoat,
         builder: (context, state) => const BoatFormScreen(boatId: 'new'),
       ),
+      // Kept as a path even though the boat hub is gone: it is a notification
+      // deep-link target (`notification_link.dart` maps `boat` here) and the
+      // destination of nine `context.go('/boats')`-style calls. It now makes
+      // that boat the active one and shows its Today.
       GoRoute(
         path: '/boats/:id',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return BoatDetailScreen(boatId: id);
+          return TodayScreen(boatId: id);
         },
       ),
       GoRoute(
@@ -257,6 +262,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final boatId = state.pathParameters['id']!;
           return MaintenanceScreen(boatId: boatId);
+        },
+      ),
+      GoRoute(
+        path: '/boats/:id/expenses',
+        builder: (context, state) {
+          final boatId = state.pathParameters['id']!;
+          return ExpensesScreen(boatId: boatId);
         },
       ),
       GoRoute(
@@ -370,19 +382,22 @@ final routerProvider = Provider<GoRouter>((ref) {
           return TripEditScreen(tripId: id);
         },
       ),
+      // Settings folded into the Profile tab: everything it held is inline
+      // there now. The path stays as a redirect because it is a deep link and
+      // an old push target.
       GoRoute(
-        path: '/settings',
-        builder: (context, state) => const SettingsScreen(),
+        path: Routes.settings,
+        redirect: (context, state) => Routes.profile,
       ),
       // Saved chart areas. Reachable from the chart's download sheet and from
       // Settings, so the storage they cost is never hidden from the user.
       GoRoute(
-        path: '/charts/offline',
+        path: Routes.offlineCharts,
         builder: (context, state) => const OfflineChartsScreen(),
       ),
       // The bell's destination: the history of everything the API delivered.
       GoRoute(
-        path: '/notifications',
+        path: Routes.notifications,
         builder: (context, state) => const NotificationsScreen(),
       ),
     ],

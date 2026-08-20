@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/notifications/domain/entities/app_notification.dart';
@@ -48,15 +47,15 @@ class NotificationPreferencesCard extends ConsumerWidget {
             ),
           ),
           prefsAsync.when(
-            loading: () => const Padding(
-              padding: EdgeInsets.all(Dimens.spaceLg),
+            loading: () => Padding(
+              padding: const EdgeInsets.all(Dimens.spaceLg),
               child: Center(
                 child: SizedBox(
                   width: 20,
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: AppColors.cyan,
+                    color: context.accent,
                   ),
                 ),
               ),
@@ -82,8 +81,8 @@ class NotificationPreferencesCard extends ConsumerWidget {
                     title: Text(_label(l, prefs[i].category)),
                     subtitle: Text(_description(l, prefs[i].category)),
                     value: prefs[i].enabled,
-                    activeTrackColor: AppColors.cyan.withValues(alpha: 0.5),
-                    activeThumbColor: AppColors.cyan,
+                    activeTrackColor: context.accent.withValues(alpha: 0.5),
+                    activeThumbColor: context.accent,
                     onChanged: (value) =>
                         _toggle(context, ref, prefs[i].category, value),
                   ),

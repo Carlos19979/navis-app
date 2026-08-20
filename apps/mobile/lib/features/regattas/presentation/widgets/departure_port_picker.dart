@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/ports/presentation/providers/port_provider.dart';
 import 'package:navis_mobile/features/ports/presentation/widgets/port_selector_field.dart';
@@ -41,9 +41,9 @@ class DeparturePortPicker extends ConsumerWidget {
     final portsAsync = ref.watch(nearbyPortsProvider(params));
 
     return portsAsync.when(
-      loading: () => const Padding(
-        padding: EdgeInsets.symmetric(vertical: 16),
-        child: Center(child: CircularProgressIndicator(color: AppColors.cyan)),
+      loading: () => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Center(child: CircularProgressIndicator(color: context.accent)),
       ),
       error: (_, __) => PortSelectorField(
         label: '',

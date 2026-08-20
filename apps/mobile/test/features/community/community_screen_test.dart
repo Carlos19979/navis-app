@@ -9,7 +9,6 @@ import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/features/community/presentation/screens/community_screen.dart';
 import 'package:navis_mobile/features/events/domain/entities/event.dart';
 import 'package:navis_mobile/features/events/presentation/providers/event_provider.dart';
-import 'package:navis_mobile/features/events/presentation/screens/events_screen.dart';
 import 'package:navis_mobile/features/groups/data/repositories/group_repository.dart';
 import 'package:navis_mobile/features/groups/domain/entities/group.dart';
 import 'package:navis_mobile/features/groups/presentation/providers/group_provider.dart';
@@ -61,52 +60,55 @@ void main() {
     );
   }
 
-  /// Taps a top tab and pumps the tab transition plus the async providers.
-  Future<void> openTab(WidgetTester tester, String label) async {
-    await tester.tap(find.text(label));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.pump(const Duration(seconds: 1));
+  /// Everything is on one page now, so «go to the clubs» is a scroll, not a
+  /// tab tap — and often not even that, since the sections are stacked.
+  Future<void> reveal(WidgetTester tester, Finder target) async {
+    await pumpFrames(tester, frames: 8);
+    await scrollUntilVisible(tester, target, communityScrollKey);
   }
 
-  group('CommunityScreen tabs', () {
-    testWidgets('renders the three tabs with the regattas feed first',
+  /// Creating a club is the FAB now, not a CTA inside an empty tab.
+  Future<void> tapCreateClub(WidgetTester tester) async {
+    await pumpFrames(tester, frames: 8);
+    await tester.tap(find.byType(NavisGradientFab));
+    await pumpScreen(tester);
+  }
+
+  group('CommunityScreen is one feed', () {
+    testWidgets('regattas and both club sections are on the same page',
         (tester) async {
       setPhoneSize(tester);
       await tester.pumpWidget(buildSubject(events: [makeEvent()]));
-      await pumpScreen(tester);
 
-      expect(find.text('Regattas'), findsOneWidget);
-      expect(find.text('My groups'), findsOneWidget);
-      expect(find.text('Discover'), findsOneWidget);
-      // The Regattas tab embeds the events feed body.
-      expect(find.byType(EventsBody), findsOneWidget);
-      expect(find.text('Copa del Rey'), findsOneWidget);
+      final labels = await scrollAndCollectText(
+        tester,
+        find.byKey(communityScrollKey),
+      );
+
+      // Section headings, tracked uppercase — not tabs.
+      expect(labels, containsAll(['REGATTAS', 'MY CLUBS', 'DISCOVER CLUBS']));
+      expect(labels, contains('Copa del Rey'));
+      expect(find.byType(TabBar), findsNothing);
+
+      await drain(tester);
+      await tester.pump(const Duration(seconds: 5));
     });
 
-    testWidgets('FAB and join-by-code action only appear on clubs tabs',
+    testWidgets('both actions are always there, not behind a tab index',
         (tester) async {
       setPhoneSize(tester);
       await tester.pumpWidget(buildSubject());
-      await pumpScreen(tester);
+      await pumpFrames(tester, frames: 8);
 
-      expect(find.byType(NavisGradientFab), findsNothing);
-      expect(
-        find.widgetWithText(TextButton, 'Join by code'),
-        findsNothing,
-      );
-
-      await openTab(tester, 'My groups');
-
+      // The old screen hid the FAB and «join by code» on the regattas tab, so
+      // the same screen offered different doors depending on where you had
+      // left it.
       expect(find.byType(NavisGradientFab), findsOneWidget);
-      expect(
+      await scrollUntilVisible(
+        tester,
         find.widgetWithText(TextButton, 'Join by code'),
-        findsOneWidget,
+        communityScrollKey,
       );
-
-      await openTab(tester, 'Discover');
-
-      expect(find.byType(NavisGradientFab), findsOneWidget);
       expect(
         find.widgetWithText(TextButton, 'Join by code'),
         findsOneWidget,
@@ -124,10 +126,10 @@ void main() {
       await tester.pumpWidget(
         buildSubject(myGroups: () => completer.future),
       );
-      await pumpScreen(tester);
-      await openTab(tester, 'My groups');
+      await pumpFrames(tester, frames: 8);
 
-      expect(find.byType(NavisShimmer), findsOneWidget);
+      // One skeleton per section that is still loading.
+      expect(find.byType(NavisShimmer), findsWidgets);
 
       await drain(tester);
     });
@@ -137,8 +139,7 @@ void main() {
       await tester.pumpWidget(
         buildSubject(myGroups: () async => throw Exception('boom')),
       );
-      await pumpScreen(tester);
-      await openTab(tester, 'My groups');
+      await reveal(tester, find.byType(NavisErrorWidget));
 
       expect(find.byType(NavisErrorWidget), findsOneWidget);
 
@@ -150,11 +151,15 @@ void main() {
         (tester) async {
       setPhoneSize(tester);
       await tester.pumpWidget(buildSubject());
-      await pumpScreen(tester);
-      await openTab(tester, 'My groups');
+      final labels = await scrollAndCollectText(
+        tester,
+        find.byKey(communityScrollKey),
+      );
 
-      expect(find.text("You're not in any group yet."), findsOneWidget);
-      expect(find.text('Create group'), findsOneWidget);
+      // A section with nothing in it says so in one muted line; the way to
+      // create a club is the FAB, which is always on screen.
+      expect(labels, contains("You're not in a club yet."));
+      expect(find.byType(NavisGradientFab), findsOneWidget);
 
       await drain(tester);
       await tester.pump(const Duration(seconds: 5));
@@ -165,39 +170,31 @@ void main() {
       await tester.pumpWidget(
         buildSubject(myGroups: () async => [makeGroup()]),
       );
-      await pumpScreen(tester);
-      await openTab(tester, 'My groups');
+      await reveal(tester, find.text('Palma Sailing Club'));
 
       expect(find.text('Palma Sailing Club'), findsOneWidget);
     });
   });
 
   group('CommunityScreen create group gating', () {
-    testWidgets('Free tapping the empty CTA sees the paywall, no navigation',
+    testWidgets(
+        'Free tapping the create button sees the paywall, no navigation',
         (tester) async {
       setPhoneSize(tester);
       final spy = RouteSpy();
       await tester.pumpWidget(buildSubject(spy: spy));
-      await pumpScreen(tester);
-      await openTab(tester, 'My groups');
-
-      await tester.tap(find.text('Create group'));
-      await pumpScreen(tester);
+      await tapCreateClub(tester);
 
       expectPaywall();
       expect(spy.locations, isEmpty);
     });
 
-    testWidgets('Pro tapping the empty CTA navigates to /groups/new',
+    testWidgets('Pro tapping the create button navigates to /groups/new',
         (tester) async {
       setPhoneSize(tester);
       final spy = RouteSpy();
       await tester.pumpWidget(buildSubject(spy: spy, pro: true));
-      await pumpScreen(tester);
-      await openTab(tester, 'My groups');
-
-      await tester.tap(find.text('Create group'));
-      await pumpScreen(tester);
+      await tapCreateClub(tester);
 
       expectPaywall(shown: false);
       expect(spy.last, '/groups/new');
@@ -221,10 +218,8 @@ void main() {
           accountOverride: accountProvider.overrideWith((_) => account.future),
         ),
       );
-      await pumpScreen(tester);
-      await openTab(tester, 'My groups');
-
-      await tester.tap(find.text('Create group'));
+      await pumpFrames(tester, frames: 8);
+      await tester.tap(find.byType(NavisGradientFab));
       await tester.pump();
 
       // Nothing decided yet: no paywall on a maybe.
@@ -249,11 +244,7 @@ void main() {
           ),
         ),
       );
-      await pumpScreen(tester);
-      await openTab(tester, 'My groups');
-
-      await tester.tap(find.text('Create group'));
-      await pumpScreen(tester);
+      await tapCreateClub(tester);
 
       // A failed plan check is not evidence the user is on Free.
       expectPaywall(shown: false);
@@ -272,10 +263,9 @@ void main() {
       await tester.pumpWidget(
         buildSubject(discover: () => completer.future),
       );
-      await pumpScreen(tester);
-      await openTab(tester, 'Discover');
+      await pumpFrames(tester, frames: 8);
 
-      expect(find.byType(NavisShimmer), findsOneWidget);
+      expect(find.byType(NavisShimmer), findsWidgets);
 
       await drain(tester);
     });
@@ -285,8 +275,7 @@ void main() {
       await tester.pumpWidget(
         buildSubject(discover: () async => throw Exception('boom')),
       );
-      await pumpScreen(tester);
-      await openTab(tester, 'Discover');
+      await reveal(tester, find.byType(NavisErrorWidget));
 
       expect(find.byType(NavisErrorWidget), findsOneWidget);
 
@@ -297,10 +286,12 @@ void main() {
     testWidgets('empty shows the no-public-groups message', (tester) async {
       setPhoneSize(tester);
       await tester.pumpWidget(buildSubject());
-      await pumpScreen(tester);
-      await openTab(tester, 'Discover');
+      final labels = await scrollAndCollectText(
+        tester,
+        find.byKey(communityScrollKey),
+      );
 
-      expect(find.text('No public groups to discover.'), findsOneWidget);
+      expect(labels, contains('No public clubs to discover.'));
 
       await drain(tester);
       await tester.pump(const Duration(seconds: 5));
@@ -316,8 +307,7 @@ void main() {
       await tester.pumpWidget(
         buildSubject(discover: () async => [discoverable]),
       );
-      await pumpScreen(tester);
-      await openTab(tester, 'Discover');
+      await reveal(tester, find.text('Palma Sailing Club'));
 
       expect(find.text('Palma Sailing Club'), findsOneWidget);
       expect(find.text('Request'), findsOneWidget);
@@ -335,8 +325,7 @@ void main() {
       await tester.pumpWidget(
         buildSubject(discover: () async => [discoverable]),
       );
-      await pumpScreen(tester);
-      await openTab(tester, 'Discover');
+      await reveal(tester, find.text('Request'));
 
       await tester.tap(find.text('Request'));
       await pumpScreen(tester);
@@ -351,8 +340,7 @@ void main() {
       await tester.pumpWidget(
         buildSubject(discover: () async => [discoverable]),
       );
-      await pumpScreen(tester);
-      await openTab(tester, 'Discover');
+      await reveal(tester, find.text('Request'));
 
       await tester.tap(find.text('Request'));
       await pumpScreen(tester);
@@ -367,8 +355,7 @@ void main() {
       await tester.pumpWidget(
         buildSubject(discover: () async => [pending]),
       );
-      await pumpScreen(tester);
-      await openTab(tester, 'Discover');
+      await reveal(tester, find.text('Pending'));
 
       expect(find.text('Pending'), findsOneWidget);
       expect(find.text('Request'), findsNothing);
@@ -376,9 +363,17 @@ void main() {
   });
 
   group('CommunityScreen join by code', () {
+    // The sheet's own field: the feed has a search field of its own now, so
+    // `byType(TextField)` matches two.
+    final codeField = find.descendant(
+      of: find.byType(BottomSheet),
+      matching: find.byType(TextField),
+    );
+
     Future<void> openDialog(WidgetTester tester) async {
-      await openTab(tester, 'My groups');
-      await tester.tap(find.widgetWithText(TextButton, 'Join by code'));
+      final button = find.widgetWithText(TextButton, 'Join by code');
+      await reveal(tester, button);
+      await tester.tap(button);
       await pumpScreen(tester);
     }
 
@@ -393,7 +388,9 @@ void main() {
 
       expect(find.text('Join a club'), findsOneWidget);
 
-      await tester.enterText(find.byType(TextField), 'ABC123');
+      // Scoped to the sheet: the feed has its own search field now, so
+      // `byType(TextField)` matches two.
+      await tester.enterText(codeField, 'ABC123');
       await tester.pump();
       await tester.tap(find.text('Join'));
       await pumpScreen(tester);
@@ -409,7 +406,7 @@ void main() {
       await pumpScreen(tester);
       await openDialog(tester);
 
-      await tester.enterText(find.byType(TextField), 'WRONG1');
+      await tester.enterText(codeField, 'WRONG1');
       await tester.pump();
       await tester.tap(find.text('Join'));
       await pumpScreen(tester);

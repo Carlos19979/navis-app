@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/network/supabase_client.dart';
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/app_typography.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
+import 'package:navis_mobile/core/theme/tone.dart';
+import 'package:navis_mobile/shared/widgets/navis_list.dart';
+import 'package:navis_mobile/shared/widgets/navis_status_chip.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/groups/presentation/providers/group_provider.dart';
@@ -27,13 +32,6 @@ String _statusLabel(AppLocalizations l, String status) => switch (status) {
       _ => status,
     };
 
-const _statusColors = {
-  'planned': AppColors.cyan,
-  'recording': AppColors.green,
-  'completed': AppColors.textSecondary,
-  'cancelled': AppColors.red,
-};
-
 class RegattaDetailScreen extends ConsumerWidget {
   const RegattaDetailScreen({required this.regattaId, super.key});
 
@@ -47,7 +45,6 @@ class RegattaDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
       appBar: NavisAppBar(
         title: async.valueOrNull?.displayTitle ??
             AppLocalizations.of(context)!.regattaLabel,
@@ -92,60 +89,56 @@ class RegattaDetailScreen extends ConsumerWidget {
     );
   }
 
+  /// The regatta, as a heading with its state beside it.
   Widget _summary(BuildContext context, Regatta r) {
     final l = AppLocalizations.of(context)!;
-    final color = _statusColors[r.status] ?? context.txtSecondary;
-    return NavisCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  r.displayTitle,
-                  style: TextStyle(
-                    color: context.txtPrimary,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                r.displayTitle,
+                style: NavisType.title1.copyWith(color: context.ink),
               ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
+            ),
+            const SizedBox(width: Dimens.spaceMd),
+            // A filled chip only while it is actually running; «scheduled» and
+            // «completed» are states, and three filled pills in a column is
+            // noise.
+            if (r.isRecording)
+              NavisStatusChip(
+                label: _statusLabel(l, r.status),
+                tone: NavisTone.positive,
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
                 child: Text(
                   _statusLabel(l, r.status),
-                  style: TextStyle(
-                      color: color, fontSize: 12, fontWeight: FontWeight.w600),
+                  style: NavisType.label.copyWith(color: context.inkMuted),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          _row(context, Icons.place, r.departurePort),
-          if (r.scheduledAt != null)
-            _row(context, Icons.event,
-                NavisDateUtils.formatDateTime(r.scheduledAt!)),
-        ],
-      ),
-    );
-  }
-
-  Widget _row(BuildContext context, IconData icon, String text) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 6),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: context.txtSecondary),
-          const SizedBox(width: 8),
-          Text(text, style: TextStyle(color: context.txtSecondary)),
-        ],
-      ),
+          ],
+        ),
+        const SizedBox(height: Dimens.spaceMd),
+        NavisList(
+          padding: EdgeInsets.zero,
+          children: [
+            NavisRow(
+              icon: Icons.place_outlined,
+              title: r.departurePort,
+            ),
+            if (r.scheduledAt != null)
+              NavisRow(
+                icon: Icons.event_outlined,
+                title: NavisDateUtils.formatDateTime(r.scheduledAt!),
+              ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -158,14 +151,14 @@ class RegattaDetailScreen extends ConsumerWidget {
             label: l.prepareChecklistAndSail,
             icon: Icons.checklist,
             onPressed: () => context.push(
-              '/trips/${r.id}/checklist?groupId=${r.groupId ?? ''}',
+              Routes.tripChecklist(r.id, groupId: r.groupId),
             ),
           ),
           const SizedBox(height: 8),
           TextButton.icon(
-            icon: const Icon(Icons.cancel_outlined, color: AppColors.red),
+            icon: Icon(Icons.cancel_outlined, color: context.critical),
             label: Text(l.cancelRegatta,
-                style: const TextStyle(color: AppColors.red)),
+                style: TextStyle(color: context.critical)),
             onPressed: () => _cancel(context, ref, r),
           ),
         ],
@@ -175,7 +168,7 @@ class RegattaDetailScreen extends ConsumerWidget {
       return NavisCard(
         child: Row(
           children: [
-            const Icon(Icons.sailing, color: AppColors.green),
+            Icon(Icons.sailing, color: context.positive),
             const SizedBox(width: 12),
             Expanded(
               child: Text(l.regattaInProgress,
@@ -300,9 +293,9 @@ class _RsvpRow extends ConsumerWidget {
 
     return Row(
       children: [
-        pill('going', l.rsvpGoing, Icons.check_circle, AppColors.green),
-        pill('maybe', l.rsvpMaybe, Icons.help_outline, AppColors.amber),
-        pill('not_going', l.rsvpNotGoing, Icons.cancel, AppColors.red),
+        pill('going', l.rsvpGoing, Icons.check_circle, context.positive),
+        pill('maybe', l.rsvpMaybe, Icons.help_outline, context.caution),
+        pill('not_going', l.rsvpNotGoing, Icons.cancel, context.critical),
       ],
     );
   }
@@ -327,9 +320,9 @@ class _Participants extends ConsumerWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _count(context, l.rsvpGoingCount, going, AppColors.green),
-              _count(context, l.rsvpMaybe, maybe, AppColors.amber),
-              _count(context, l.rsvpNotGoingCount, notGoing, AppColors.red),
+              _count(context, l.rsvpGoingCount, going, context.positive),
+              _count(context, l.rsvpMaybe, maybe, context.caution),
+              _count(context, l.rsvpNotGoingCount, notGoing, context.critical),
             ],
           ),
         );
@@ -416,9 +409,9 @@ class _MemberRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (color, icon) = switch (rsvp) {
-      'going' => (AppColors.green, Icons.check_circle),
-      'maybe' => (AppColors.amber, Icons.help_outline),
-      'not_going' => (AppColors.red, Icons.cancel),
+      'going' => (context.positive, Icons.check_circle),
+      'maybe' => (context.caution, Icons.help_outline),
+      'not_going' => (context.critical, Icons.cancel),
       _ => (context.txtSecondary, Icons.remove_circle_outline),
     };
 
@@ -428,11 +421,11 @@ class _MemberRow extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 16,
-            backgroundColor: AppColors.cyan.withValues(alpha: 0.15),
+            backgroundColor: context.accent.withValues(alpha: 0.15),
             child: Text(
               name.isNotEmpty ? name[0].toUpperCase() : '?',
-              style: const TextStyle(
-                  color: AppColors.cyan, fontWeight: FontWeight.w700),
+              style:
+                  TextStyle(color: context.accent, fontWeight: FontWeight.w700),
             ),
           ),
           const SizedBox(width: 12),
@@ -448,7 +441,7 @@ class _MemberRow extends StatelessWidget {
                 ),
                 if (isOwner) ...[
                   const SizedBox(width: 6),
-                  const Icon(Icons.star, size: 13, color: AppColors.amber),
+                  Icon(Icons.star, size: 13, color: context.caution),
                 ],
               ],
             ),
