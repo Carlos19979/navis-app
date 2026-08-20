@@ -7,9 +7,12 @@ import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
+import 'package:navis_mobile/features/boat/presentation/boat_actions.dart';
+import 'package:navis_mobile/features/boat/presentation/providers/active_boat_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/charts/data/tile_provider.dart';
 import 'package:navis_mobile/features/charts/presentation/providers/chart_provider.dart';
@@ -24,6 +27,7 @@ import 'package:navis_mobile/features/ports/presentation/controllers/viewport_po
 import 'package:navis_mobile/features/ports/presentation/providers/port_provider.dart';
 import 'package:navis_mobile/features/ports/presentation/widgets/port_info_sheet.dart';
 import 'package:navis_mobile/features/ports/presentation/widgets/port_markers_layer.dart';
+import 'package:navis_mobile/shared/widgets/navis_action_button.dart';
 
 class ChartScreen extends ConsumerStatefulWidget {
   const ChartScreen({super.key});
@@ -161,7 +165,9 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final mapState = ref.watch(chartProvider);
+    final activeBoat = ref.watch(activeBoatProvider);
     final boatsAsync = ref.watch(boatsProvider);
     // Offline: clamp the tile layers to the deepest zoom actually on disk, so
     // zooming in upscales stored tiles instead of going blank.
@@ -395,7 +401,45 @@ class _ChartScreenState extends ConsumerState<ChartScreen> {
               },
             ),
 
+          // The two things a chart is for. Neither existed here: the tab drew
+          // the sea, the depths and the marks, and offered no way to go out on
+          // it — the closest button was two tabs away on Today.
+          //
+          // On-media fill rather than another frosted panel: the overlays that
+          // already blur keep it (they are legibility over imagery), but a bar
+          // this size would be a second full-width filter pass every frame,
+          // and 55% navy reads just as cleanly over tiles.
+          if (activeBoat != null)
+            Positioned(
+              left: Dimens.spaceLg,
+              right: Dimens.spaceLg,
+              bottom: Dimens.navClearance - Dimens.spaceXl,
+              child: NavisActionBar(
+                actions: [
+                  if (BoatActions.canSail(activeBoat))
+                    NavisActionButton(
+                      icon: Icons.sailing_rounded,
+                      label: BoatActions.sailLabel(l, ref),
+                      primary: true,
+                      onTap: () => BoatActions.sail(context, ref, activeBoat),
+                    ),
+                  NavisActionButton(
+                    icon: Icons.anchor_rounded,
+                    label: l.anchorActionShort,
+                    onDark: true,
+                    lockLabel: BoatActions.anchorLock(l, ref),
+                    onTap: () => BoatActions.anchor(context, ref, activeBoat),
+                  ),
+                ],
+              ),
+            ),
+
           MapControls(
+            // Cleared above the sail bar, so the zoom buttons are not sitting
+            // on «Zarpar».
+            bottomOffset: activeBoat == null
+                ? Dimens.navClearance
+                : Dimens.navClearance + 56,
             onZoomIn: () => _zoomBy(1),
             onZoomOut: () => _zoomBy(-1),
             onCenterGps: _centerOnGps,

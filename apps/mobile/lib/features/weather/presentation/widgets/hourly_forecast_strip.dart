@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import 'package:navis_mobile/core/theme/theme_colors.dart';
+import 'package:navis_mobile/core/utils/measure_utils.dart';
 import 'package:navis_mobile/features/weather/domain/entities/hourly_weather.dart';
 import 'package:navis_mobile/features/weather/presentation/widgets/weather_visuals.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -123,7 +124,9 @@ class _HourCell extends StatelessWidget {
     final precip = hour.precipitationProbability;
 
     return SizedBox(
-      width: 58,
+      // 66, since the units gained their space: at 58 the wind stat sat
+      // exactly at the edge and any widening overflowed the cell.
+      width: 66,
       child: Column(
         children: [
           Text(
@@ -162,13 +165,13 @@ class _HourCell extends StatelessWidget {
           if (hour.waveHeight != null)
             _MiniStat(
               icon: Icons.waves_rounded,
-              value: '${hour.waveHeight!.toStringAsFixed(1)}m',
+              value: Measure.waveHeight(locale, hour.waveHeight!),
               color: context.waveColor(hour.waveHeight!),
             ),
           const SizedBox(height: 3),
           _MiniStat(
             icon: Icons.air_rounded,
-            value: '${hour.windSpeed.round()}kt',
+            value: Measure.windKnots(locale, hour.windSpeed),
             color: context.windColor(hour.windSpeed),
           ),
         ],
@@ -195,12 +198,17 @@ class _MiniStat extends StatelessWidget {
       children: [
         Icon(icon, size: 11, color: color),
         const SizedBox(width: 2),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: color,
+        // Shrinks rather than overflows: the string's width depends on the
+        // locale's decimal separator and on the user's text scale.
+        Flexible(
+          child: Text(
+            value,
+            maxLines: 1,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
           ),
         ),
       ],

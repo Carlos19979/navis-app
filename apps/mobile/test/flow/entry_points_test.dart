@@ -4,7 +4,11 @@ import 'package:mocktail/mocktail.dart';
 
 import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
+import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/screens/today_screen.dart';
+import 'package:navis_mobile/features/charts/presentation/screens/chart_screen.dart';
+import 'package:navis_mobile/features/weather/presentation/providers/weather_provider.dart';
+import 'package:navis_mobile/features/weather/presentation/screens/weather_screen.dart';
 
 import '../helpers/helpers.dart';
 
@@ -167,6 +171,68 @@ void main() {
       expect(labels, contains('Leave shared boat'));
       // And is not shown the owner's tools.
       expect(labels, isNot(contains('Share boat')));
+    });
+  });
+
+  /// The matrix, extended past Today.
+  ///
+  /// The audit's other finding was that the two tabs a sailor opens *before*
+  /// leaving — the forecast and the chart — had no way to leave from. Reachable
+  /// «from Today» was never the requirement; reachable from where the user is
+  /// standing was.
+  group('sailing is reachable from the tab the user is on', () {
+    testWidgets('from the forecast', (tester) async {
+      setPhoneSize(tester);
+      await tester.pumpWidget(
+        buildTestApp(
+          const WeatherScreen(),
+          overrides: [
+            weatherOverviewProvider.overrideWith((ref) async => makeOverview()),
+            boatsProvider.overrideWith(() => FakeBoatsNotifier([makeBoat()])),
+          ],
+        ),
+      );
+      await pumpFrames(tester, frames: 8);
+      addTearDown(() => drain(tester));
+
+      expect(find.text('Start trip'), findsOneWidget);
+    });
+
+    testWidgets('from the chart', (tester) async {
+      setPhoneSize(tester);
+      installTileNoiseFilter();
+      installFakeGeo();
+      await tester.pumpWidget(
+        buildTestApp(
+          const ChartScreen(),
+          overrides: [
+            overridePorts(),
+            boatsProvider.overrideWith(() => FakeBoatsNotifier([makeBoat()])),
+          ],
+        ),
+      );
+      await pumpFrames(tester, frames: 8);
+      addTearDown(() => drain(tester));
+
+      expect(find.text('Start trip'), findsOneWidget);
+      expect(find.text('Anchor'), findsOneWidget);
+    });
+
+    testWidgets('and neither tab invents a boat it does not have',
+        (tester) async {
+      setPhoneSize(tester);
+      await tester.pumpWidget(
+        buildTestApp(
+          const WeatherScreen(),
+          overrides: [
+            weatherOverviewProvider.overrideWith((ref) async => makeOverview()),
+          ],
+        ),
+      );
+      await pumpFrames(tester, frames: 8);
+      addTearDown(() => drain(tester));
+
+      expect(find.text('Start trip'), findsNothing);
     });
   });
 }

@@ -12,6 +12,7 @@ export 'plugins.dart';
 export 'ports.dart';
 export 'prefs.dart';
 export 'pumping.dart';
+export 'recording.dart';
 export 'router.dart';
 export 'supabase.dart';
 export 'test_helpers.dart';

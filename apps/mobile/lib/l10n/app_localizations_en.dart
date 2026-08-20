@@ -733,6 +733,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get avgSpeed => 'Avg Speed';
 
   @override
+  String get resumeTripAction => 'Resume trip';
+
+  @override
+  String get sailWindowGoodHint =>
+      'Light wind and a calm sea. Good day to go out.';
+
+  @override
+  String get sailWindowModerateHint => 'Workable, with an eye on the wind.';
+
+  @override
+  String get sailWindowAdverseHint => 'Better to wait for it to drop.';
+
+  @override
   String get startTrip => 'Start trip';
 
   @override

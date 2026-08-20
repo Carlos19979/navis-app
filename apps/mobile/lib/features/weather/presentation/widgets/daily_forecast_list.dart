@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import 'package:navis_mobile/core/theme/dimens.dart';
+import 'package:navis_mobile/core/utils/measure_utils.dart';
 import 'package:navis_mobile/core/theme/motion.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/weather/domain/entities/daily_weather.dart';
@@ -241,21 +242,24 @@ class _DailyRow extends StatelessWidget {
               Icon(condition.icon, color: condition.color(context), size: 22),
               const SizedBox(width: 10),
               SizedBox(
-                width: 58,
+                // Wider since the units gained their space ("9 kt", not
+                // "9kt"): the old 58 was exactly the width of the un-spaced
+                // string and overflowed the moment it grew.
+                width: 68,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _MiniStat(
                       icon: Icons.air_rounded,
-                      value: '${day.windSpeed.round()}kt',
+                      value: Measure.windKnots(locale, day.windSpeed),
                       color: context.windColor(day.windSpeed),
                     ),
                     if (day.waveHeight != null) ...[
                       const SizedBox(height: 2),
                       _MiniStat(
                         icon: Icons.waves_rounded,
-                        value: '${day.waveHeight!.toStringAsFixed(1)}m',
+                        value: Measure.waveHeight(locale, day.waveHeight!),
                         color: context.waveColor(day.waveHeight!),
                       ),
                     ],
@@ -385,12 +389,18 @@ class _MiniStat extends StatelessWidget {
       children: [
         Icon(icon, size: 11, color: color),
         const SizedBox(width: 2),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: color,
+        // Shrinks rather than overflows: this sits in a fixed-width column and
+        // the string's length depends on the locale's decimal separator and on
+        // the user's text scale.
+        Flexible(
+          child: Text(
+            value,
+            maxLines: 1,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
           ),
         ),
       ],

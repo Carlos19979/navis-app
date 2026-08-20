@@ -145,6 +145,19 @@ extension ThemeColorsX on BuildContext {
   /// to read as outlined rather than filled.
   Color washBorder(Color color) => color.withValues(alpha: _dark ? 0.34 : 0.22);
 
+  // ── On media ────────────────────────────────────────────────────────────
+  // Over a photograph or a chart there is no theme: the ground is whatever the
+  // pixels underneath happen to be. So these two do not switch, and controls
+  // that float on media use them instead of a surface token — a light-theme
+  // surface over a satellite chart is unreadable in both themes.
+
+  /// The translucent navy a control sits on when it floats over media.
+  Color get onMedia => Palette.navy.withValues(alpha: 0.55);
+
+  /// Its edge: white at low alpha, so the control has a shape against both a
+  /// bright wake and a dark hull.
+  Color get onMediaBorder => Palette.onAccent.withValues(alpha: 0.28);
+
   // ── Legacy names ────────────────────────────────────────────────────────
   // Kept because 501 call sites use them. They now resolve through the ramps
   // above, so they are correct in both themes; the names are being migrated

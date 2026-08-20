@@ -11,11 +11,13 @@ import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/motion.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/theme/tone.dart';
+import 'package:navis_mobile/core/utils/measure_utils.dart';
 import 'package:navis_mobile/features/anchor/presentation/providers/anchor_watch_provider.dart';
 import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
 import 'package:navis_mobile/features/boat/data/boat_share_repository.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
+import 'package:navis_mobile/features/boat/presentation/boat_actions.dart';
 import 'package:navis_mobile/features/boat/presentation/boat_type_label.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/active_boat_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
@@ -42,6 +44,7 @@ import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/models/sail_window.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/join_by_code_sheet.dart';
+import 'package:navis_mobile/shared/widgets/navis_action_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_danger_zone.dart';
 import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_photo_viewer.dart';
@@ -637,6 +640,7 @@ class _ConditionsBlock extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toLanguageTag();
     final overview = ref.watch(weatherOverviewProvider).valueOrNull;
     if (overview == null) return const SizedBox.shrink();
 
@@ -661,7 +665,7 @@ class _ConditionsBlock extends ConsumerWidget {
         label: label,
         value: l.windWavesSummary(
           wind.round().toString(),
-          wave.toStringAsFixed(1),
+          Measure.decimal(locale, wave),
         ),
         child: ExcludeSemantics(
           child: InkWell(
@@ -690,7 +694,7 @@ class _ConditionsBlock extends ConsumerWidget {
                           Text(
                             l.windWavesSummary(
                               wind.round().toString(),
-                              wave.toStringAsFixed(1),
+                              Measure.decimal(locale, wave),
                             ),
                             style: NavisType.caption.copyWith(
                               color: context.inkMuted,
@@ -724,8 +728,6 @@ class _ActionsBlock extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
-    final canRecord = boat.permissions.canRecordTrips;
-    final anchorLocked = !ref.watch(effectiveTierProvider).canAnchorAlarm;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -734,123 +736,22 @@ class _ActionsBlock extends ConsumerWidget {
         Dimens.spaceLg,
         Dimens.spaceSm,
       ),
-      child: Row(
-        children: [
-          if (canRecord)
-            Expanded(
-              child: _Action(
-                icon: Icons.play_arrow_rounded,
-                label: l.startTrip,
-                primary: true,
-                onTap: () => context.push(Routes.boatPrecheck(boat.id)),
-              ),
+      child: NavisActionBar(
+        actions: [
+          if (BoatActions.canSail(boat))
+            NavisActionButton(
+              icon: Icons.play_arrow_rounded,
+              label: BoatActions.sailLabel(l, ref),
+              primary: true,
+              onTap: () => BoatActions.sail(context, ref, boat),
             ),
-          if (canRecord) const SizedBox(width: Dimens.spaceMd),
-          Expanded(
-            child: _Action(
-              icon: Icons.anchor_rounded,
-              label: l.anchorActionShort,
-              badge: anchorLocked ? l.plusBadge : null,
-              onTap: () => _openAnchorWatch(context, ref),
-            ),
+          NavisActionButton(
+            icon: Icons.anchor_rounded,
+            label: l.anchorActionShort,
+            lockLabel: BoatActions.anchorLock(l, ref),
+            onTap: () => BoatActions.anchor(context, ref, boat),
           ),
         ],
-      ),
-    );
-  }
-
-  /// Opens the anchor watch (Plus+).
-  ///
-  /// Blocked while a trip is recording: both drive the GPS stream, and running
-  /// them together is what the original guard existed to prevent.
-  Future<void> _openAnchorWatch(BuildContext context, WidgetRef ref) async {
-    final l = AppLocalizations.of(context)!;
-    if (ref.read(tripRecordingProvider).isActive) {
-      NavisSnackbar.info(context, l.anchorTripActiveBlock);
-      return;
-    }
-    if (!ref.read(effectiveTierProvider).canAnchorAlarm) {
-      final ok = await showPaywall(
-        context,
-        ref,
-        reason: l.paywallReasonAnchor,
-        requiredTier: PlanTier.plus,
-      );
-      if (!ok || !context.mounted) return;
-    }
-    if (context.mounted) unawaited(context.push(Routes.boatAnchor(boat.id)));
-  }
-}
-
-class _Action extends StatelessWidget {
-  const _Action({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.primary = false,
-    this.badge,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final bool primary;
-  final String? badge;
-
-  @override
-  Widget build(BuildContext context) {
-    final fg = primary ? context.onAccent : context.ink;
-    return Semantics(
-      button: true,
-      label: label,
-      child: ExcludeSemantics(
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(Dimens.radiusControl),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: primary ? context.accent : context.surfaceSunken,
-              borderRadius: BorderRadius.circular(Dimens.radiusControl),
-              border: primary ? null : Border.all(color: context.hairline),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: Dimens.spaceMd,
-                vertical: Dimens.spaceLg,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(icon, color: fg, size: Dimens.iconLg),
-                  const SizedBox(width: Dimens.spaceSm),
-                  Flexible(
-                    child: Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: NavisType.label.copyWith(color: fg),
-                    ),
-                  ),
-                  if (badge != null) ...[
-                    const SizedBox(width: Dimens.spaceSm),
-                    Icon(
-                      Icons.lock_outline_rounded,
-                      size: Dimens.iconSm,
-                      color: context.inkFaint,
-                    ),
-                    const SizedBox(width: 2),
-                    Text(
-                      badge!,
-                      style: NavisType.overline.copyWith(
-                        color: context.inkMuted,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }

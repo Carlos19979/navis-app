@@ -20,6 +20,8 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:navis_mobile/core/theme/app_theme.dart';
 import 'package:navis_mobile/features/anomaly/data/anomaly_repository.dart';
 import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
+import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
+import 'package:navis_mobile/features/boat/presentation/screens/today_screen.dart';
 import 'package:navis_mobile/features/community/presentation/screens/community_screen.dart';
 import 'package:navis_mobile/features/cost/domain/entities/cost_analytics.dart';
 import 'package:navis_mobile/features/cost/presentation/providers/cost_provider.dart';
@@ -36,7 +38,6 @@ import 'package:navis_mobile/l10n/app_localizations.dart';
 
 import '../helpers/helpers.dart';
 import 'golden_harness.dart';
-import 'package:navis_mobile/features/boat/presentation/screens/today_screen.dart';
 
 /// Boat list notifier stub (copied from boat_dashboard_golden_test.dart).
 class _MockGroupRepository extends Mock implements GroupRepository {}
@@ -60,7 +61,10 @@ Future<void> _pumpAppStore(
 
   await tester.pumpWidget(
     ProviderScope(
-      overrides: overrides,
+      // The same baseline world the widget tests and the screen goldens get.
+      // Without it a screen that only asks «is there a boat?» reaches the real
+      // repository, and these shots are taken with no plugins at all.
+      overrides: [...defaultTestOverrides, ...overrides],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: AppTheme.dark,
@@ -194,6 +198,9 @@ void main() {
       settle: false,
       overrides: [
         weatherOverviewProvider.overrideWith((ref) async => overview),
+        // With a boat, so the shot shows the forecast *and* the way out of the
+        // harbour — which is the point of the screen now.
+        boatsProvider.overrideWith(() => FakeBoatsNotifier([makeBoat()])),
       ],
     );
     await expectLater(

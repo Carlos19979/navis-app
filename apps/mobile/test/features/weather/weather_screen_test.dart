@@ -13,8 +13,10 @@ import 'package:navis_mobile/features/weather/presentation/widgets/current_condi
 import 'package:navis_mobile/features/weather/presentation/widgets/daily_forecast_list.dart';
 import 'package:navis_mobile/features/weather/presentation/widgets/hourly_forecast_strip.dart';
 
-import '../../helpers/geo.dart';
-import '../../helpers/test_helpers.dart';
+import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
+import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
+
+import '../../helpers/helpers.dart';
 
 void main() {
   // Disable flutter_animate durations so animations complete instantly
@@ -38,8 +40,13 @@ void main() {
     await tester.pumpWidget(
       buildTestApp(const WeatherScreen(), overrides: overrides),
     );
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 50));
+    // Eight frames, not two: the sections enter staggered now, and a delayed
+    // entrance is a real timer — a test that stopped pumping at 50 ms ended
+    // with one pending and failed on teardown rather than on an assertion.
+    await pumpFrames(tester, frames: 8);
+    // The empty state's float is bounded but longer than the test; dispose the
+    // tree so it does not outlive the case that built it.
+    addTearDown(() => drain(tester));
   }
 
   group('WeatherScreen', () {
@@ -175,12 +182,13 @@ void main() {
         expect(graded.length, 2);
       });
 
-      testWidgets('shows 7-Day Forecast header', (tester) async {
+      testWidgets('shows the forecast heading', (tester) async {
         await pumpScreen(tester, overrides: [
           weatherOverviewProvider.overrideWith((ref) async => makeOverview()),
         ]);
 
-        expect(find.text('7-Day Forecast'), findsOneWidget);
+        // Tracked uppercase now, like every other section heading.
+        expect(find.text('7-DAY FORECAST'), findsOneWidget);
       });
 
       testWidgets("expanding a future day loads that day's hourly forecast",
@@ -273,13 +281,13 @@ void main() {
         );
       });
 
-      testWidgets('shows location_off icon when overview is null',
+      testWidgets('shows the location-off icon when overview is null',
           (tester) async {
         await pumpScreen(tester, overrides: [
           weatherOverviewProvider.overrideWith((ref) async => null),
         ]);
 
-        expect(find.byIcon(Icons.location_off), findsOneWidget);
+        expect(find.byIcon(Icons.location_off_rounded), findsOneWidget);
       });
 
       testWidgets('does not show forecast widgets when no location',
@@ -368,9 +376,8 @@ void main() {
         expect(find.text('Something went wrong'), findsOneWidget);
 
         await tester.tap(find.text('Retry'));
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 50));
-        await tester.pump(const Duration(milliseconds: 50));
+        // Frames, not two 50 ms pumps: the reloaded page enters staggered.
+        await pumpFrames(tester, frames: 8);
 
         expect(find.text('24°'), findsOneWidget);
         expect(find.text('Something went wrong'), findsNothing);
@@ -442,7 +449,7 @@ void main() {
       });
     });
 
-    group('navigation window badge', () {
+    group('the sail window', () {
       testWidgets('wind <= 12 kn and waves <= 0.5 m show good conditions',
           (tester) async {
         await pumpScreen(tester, overrides: [
@@ -484,6 +491,97 @@ void main() {
       });
     });
 
+    /// The finding this phase exists for: the forecast could say the day was
+    /// perfect and offer nothing to do about it. The action is not decoration —
+    /// it is the reason the tab gets opened.
+    group('the sail action', () {
+      List<Override> withBoat({
+        BoatPermissions permissions = const BoatPermissions.all(),
+      }) =>
+          [
+            weatherOverviewProvider.overrideWith((ref) async => makeOverview()),
+            boatsProvider.overrideWith(
+              () => FakeBoatsNotifier([makeBoat(permissions: permissions)]),
+            ),
+          ];
+
+      testWidgets('is offered when there is a boat to sail', (tester) async {
+        setPhoneSize(tester);
+        await pumpScreen(tester, overrides: withBoat());
+
+        expect(find.text('Start trip'), findsOneWidget);
+      });
+
+      testWidgets('is absent with no boat, rather than dead', (tester) async {
+        await pumpScreen(tester, overrides: [
+          weatherOverviewProvider.overrideWith((ref) async => makeOverview()),
+        ]);
+
+        // The verdict still shows: the forecast is worth reading before you
+        // own anything.
+        expect(find.text('Good conditions to sail'), findsNothing);
+        expect(find.text('Moderate conditions'), findsOneWidget);
+        expect(find.text('Start trip'), findsNothing);
+      });
+
+      testWidgets('is absent for crew who may not record trips',
+          (tester) async {
+        setPhoneSize(tester);
+        await pumpScreen(
+          tester,
+          overrides: withBoat(
+            // Everything except recording: the flag under test is the only
+            // one that gates going out.
+            permissions: const BoatPermissions(
+              canViewDocuments: true,
+              canManageDocuments: true,
+              canManageMaintenance: true,
+              canManageExpenses: true,
+            ),
+          ),
+        );
+
+        // A button that refuses is worse than no button.
+        expect(find.text('Start trip'), findsNothing);
+        expect(find.text('Moderate conditions'), findsOneWidget);
+      });
+
+      testWidgets('says «resume» while a trip is already recording',
+          (tester) async {
+        setPhoneSize(tester);
+        await pumpScreen(tester, overrides: [
+          ...withBoat(),
+          recordingOverride(),
+        ]);
+
+        // Since recording survives leaving the map, «Start trip» while one is
+        // running was telling the user to do what they had already done.
+        expect(find.text('Resume trip'), findsOneWidget);
+        expect(find.text('Start trip'), findsNothing);
+      });
+
+      testWidgets('reads its verdict from the shared thresholds',
+          (tester) async {
+        setPhoneSize(tester);
+        // This screen used to carry its own copy of the wind/wave thresholds,
+        // so Today and the forecast could disagree about the same weather.
+        await pumpScreen(tester, overrides: [
+          ...withBoat(),
+          weatherOverviewProvider.overrideWith(
+            (ref) async => makeOverview(
+              current: makeWeather(windSpeed: 8, waveHeight: 0.3),
+            ),
+          ),
+        ]);
+
+        expect(find.text('Good conditions to sail'), findsOneWidget);
+        expect(
+          find.text('Light wind and a calm sea. Good day to go out.'),
+          findsOneWidget,
+        );
+      });
+    });
+
     group('tides card', () {
       testWidgets('shows high and low tide rows when extremes exist',
           (tester) async {
@@ -504,7 +602,7 @@ void main() {
           ),
         ]);
 
-        expect(find.text('Tides'), findsOneWidget);
+        expect(find.text('TIDES'), findsOneWidget);
         expect(find.text('High tide'), findsOneWidget);
         expect(find.text('Low tide'), findsOneWidget);
         expect(find.text('04:30'), findsOneWidget);
@@ -516,7 +614,7 @@ void main() {
           weatherOverviewProvider.overrideWith((ref) async => makeOverview()),
         ]);
 
-        expect(find.text('Tides'), findsNothing);
+        expect(find.text('TIDES'), findsNothing);
       });
     });
 

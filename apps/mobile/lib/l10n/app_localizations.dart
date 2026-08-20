@@ -1388,6 +1388,30 @@ abstract class AppLocalizations {
   /// **'Avg Speed'**
   String get avgSpeed;
 
+  /// No description provided for @resumeTripAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume trip'**
+  String get resumeTripAction;
+
+  /// No description provided for @sailWindowGoodHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Light wind and a calm sea. Good day to go out.'**
+  String get sailWindowGoodHint;
+
+  /// No description provided for @sailWindowModerateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Workable, with an eye on the wind.'**
+  String get sailWindowModerateHint;
+
+  /// No description provided for @sailWindowAdverseHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Better to wait for it to drop.'**
+  String get sailWindowAdverseHint;
+
   /// No description provided for @startTrip.
   ///
   /// In en, this message translates to:

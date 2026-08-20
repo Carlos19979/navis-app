@@ -25,6 +25,18 @@ abstract final class Measure {
   static String knots(String locale, double value, String unit) =>
       '${_decimals(locale, value, 1)} $unit';
 
+  /// Wind, as a whole number of knots: `12 kt`.
+  ///
+  /// Two decisions in one line. It rounds, unlike [knots]: that one is *speed
+  /// over ground*, where the tenth is the difference between two sail trims,
+  /// while nobody trims for a tenth of a knot of forecast wind and «9,0 kt» in
+  /// a weekly glance is three characters of noise per row. And the unit is the
+  /// symbol, not `l.knots` — that string is the *word* («nudos»), which is
+  /// right in prose and far too long for a 68 dp column; the symbol is `kt` in
+  /// both languages, like the `m` in [metres].
+  static String windKnots(String locale, double value) =>
+      '${_decimals(locale, value, 0)} kt';
+
   /// Engine hours: `120,0 h`.
   static String hours(String locale, double value, String unit) =>
       '${_decimals(locale, value, 1)} $unit';
@@ -32,6 +44,21 @@ abstract final class Measure {
   /// Litres of fuel: `607 L`.
   static String litres(String locale, double value, String unit) =>
       '${_decimals(locale, value, 0)} $unit';
+
+  /// A bare number, for the cases where the *string* already carries the unit
+  /// («Olas {wave} m»). Still goes through here: the unit was never the bug —
+  /// the decimal point was, and `toStringAsFixed` writes one whatever the
+  /// language.
+  static String decimal(String locale, double value, {int digits = 1}) =>
+      _decimals(locale, value, digits);
+
+  /// A height relative to a datum, sign always shown: `+1,2 m`, `-0,3 m`.
+  ///
+  /// Tide tables read as a delta, so the plus is information, not decoration —
+  /// and it was being glued on by hand next to a `toStringAsFixed`, which is
+  /// the same decimal-separator bug this class exists for.
+  static String signedMetres(String locale, double value) =>
+      '${value >= 0 ? '+' : ''}${_decimals(locale, value, 1)} m';
 
   /// Wave height: `0,4 m`.
   static String waveHeight(String locale, double value) =>

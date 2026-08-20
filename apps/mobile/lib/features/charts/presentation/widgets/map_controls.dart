@@ -20,6 +20,7 @@ class MapControls extends StatelessWidget {
     this.showPorts = false,
     this.onDownloadCharts,
     this.isDownloadingCharts = false,
+    this.bottomOffset = 120,
   });
 
   final VoidCallback onZoomIn;
@@ -37,11 +38,15 @@ class MapControls extends StatelessWidget {
   final VoidCallback? onDownloadCharts;
   final bool isDownloadingCharts;
 
+  /// How far above the bottom edge the stack floats. Raised on the chart, where
+  /// the sail/anchor bar now occupies the bottom of the screen.
+  final double bottomOffset;
+
   @override
   Widget build(BuildContext context) {
     return Positioned(
       right: 16,
-      bottom: 120,
+      bottom: bottomOffset,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: BackdropFilter(

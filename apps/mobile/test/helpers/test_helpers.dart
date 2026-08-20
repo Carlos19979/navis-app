@@ -24,6 +24,7 @@ import 'package:navis_mobile/features/weather/domain/entities/weather.dart';
 import 'package:navis_mobile/features/weather/domain/entities/weather_overview.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_permissions_provider.dart';
+import 'package:navis_mobile/features/boat/presentation/providers/active_boat_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/profile/presentation/providers/profile_provider.dart';
 
@@ -48,11 +49,70 @@ final _defaultBoatPermissionsOverride = boatPermissionsProvider.overrideWith(
   (ref, id) async => const BoatPermissions.all(),
 );
 
+/// A [BoatsNotifier] that just holds a list, and records deletions.
+class FakeBoatsNotifier extends AsyncNotifier<List<Boat>>
+    implements BoatsNotifier {
+  FakeBoatsNotifier(this._boats);
+
+  final List<Boat> _boats;
+
+  /// Ids the screen asked to delete, so the destructive path can be asserted
+  /// without a repository.
+  final deleted = <String>[];
+
+  @override
+  Future<List<Boat>> build() async => _boats;
+  @override
+  Future<void> loadMore() async {}
+  @override
+  Future<void> refresh() async {}
+  @override
+  Future<Boat> createBoat(Boat boat) async => boat;
+  @override
+  Future<void> updateBoat(Boat boat) async {}
+  @override
+  Future<void> deleteBoat(String id) async => deleted.add(id);
+}
+
+/// No boats, no shared boats, and no stored choice of active boat.
+///
+/// Needed since the forecast and the chart started offering «Zarpar»: both
+/// watch `activeBoatProvider`, which pulls in the boat list (sqflite, via the
+/// repository) *and* the remembered boat id (SharedPreferences). Without a
+/// baseline every screen that merely asks «is there a boat?» died on
+/// `databaseFactory not initialized` or on «sharedPreferencesProvider must be
+/// overridden».
+///
+/// Empty is the right baseline: a screen with no boat has to render, and a test
+/// that is about boats says so by overriding these. The active id is faked
+/// rather than backed by a mock prefs instance because [defaultTestOverrides]
+/// is a plain list and `SharedPreferences.getInstance()` is async — a test that
+/// needs real persistence still reaches for `prefsOverride`.
+final _defaultBoatsOverride =
+    boatsProvider.overrideWith(() => FakeBoatsNotifier(const []));
+final _defaultSharedBoatsOverride =
+    sharedBoatsProvider.overrideWith((ref) async => const <Boat>[]);
+final _defaultActiveBoatIdOverride =
+    activeBoatIdProvider.overrideWith(FakeActiveBoatNotifier.new);
+
+/// An active-boat choice held in memory, with no SharedPreferences behind it.
+class FakeActiveBoatNotifier extends Notifier<String?>
+    implements ActiveBoatNotifier {
+  @override
+  String? build() => null;
+
+  @override
+  void select(String? boatId) => state = boatId;
+}
+
 /// Overrides applied by every test app builder ([buildTestApp],
 /// [buildTestAppWithScaffold] and `buildRoutedTestApp` in router.dart).
 final defaultTestOverrides = <Override>[
   _defaultBoatOverride,
   _defaultBoatPermissionsOverride,
+  _defaultBoatsOverride,
+  _defaultSharedBoatsOverride,
+  _defaultActiveBoatIdOverride,
 ];
 
 Widget buildTestApp(

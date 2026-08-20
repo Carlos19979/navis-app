@@ -21,6 +21,9 @@ import 'package:navis_mobile/core/theme/palette.dart';
 /// | caption  | 12 / w500     | metadata                                   |
 /// | overline | 11 / w700     | list heading (uppercase, tracked)          |
 ///
+/// Plus [numeral], off the top of the scale, for the single figure a screen
+/// exists to show.
+///
 /// Numerals are **tabular** in [display], [title1] and [caption]: those are the
 /// styles that carry live figures (readiness score, total cost, distance,
 /// temperature), and proportional digits made them jitter on every update.
@@ -29,6 +32,20 @@ abstract final class NavisType {
   static const family = 'Inter';
 
   static const _tabular = <FontFeature>[FontFeature.tabularFigures()];
+
+  /// The one figure a screen is *about*: the temperature on the forecast, the
+  /// readiness score, the total on a cost report. Deliberately light — at this
+  /// size weight reads as shouting, and the thin stroke is what makes a big
+  /// number look drawn rather than merely large. One per screen; a second one
+  /// makes both of them ordinary.
+  static const numeral = TextStyle(
+    fontFamily: family,
+    fontSize: 72,
+    fontWeight: FontWeight.w200,
+    letterSpacing: -2,
+    height: 1,
+    fontFeatures: _tabular,
+  );
 
   static const display = TextStyle(
     fontFamily: family,
