@@ -1206,5 +1206,6 @@
   "todayNothingDue": "No hay nada pendiente",
   "anchorActionShort": "Fondeo",
   "alertsCount": "{count, plural, =1{1 aviso} other{{count} avisos}}",
-  "@alertsCount": {"placeholders": {"count": {"type": "int"}}}
+  "@alertsCount": {"placeholders": {"count": {"type": "int"}}},
+  "otherBoatsNeedAttention": "otro barco requiere atención"
 }

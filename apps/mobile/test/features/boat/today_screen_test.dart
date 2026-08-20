@@ -163,6 +163,38 @@ void main() {
       );
     });
 
+    testWidgets('the switcher carries a dot when another boat needs attention',
+        (tester) async {
+      setPhoneSize(tester);
+      await tester.pumpWidget(
+        await subject(
+          boats: threeBoats,
+          summary: const DocumentSummary(total: 2, expired: 1, ok: 1),
+        ),
+      );
+      await pumpFrames(tester, frames: 8);
+
+      // The "My boats" section is next to last on the page, so without this the
+      // only signal that another boat has an expired document is a long scroll
+      // away.
+      final badge = tester.widget<Badge>(find.byType(Badge).first);
+      expect(badge.isLabelVisible, isTrue);
+    });
+
+    testWidgets('and no dot when the others are fine', (tester) async {
+      setPhoneSize(tester);
+      await tester.pumpWidget(
+        await subject(
+          boats: threeBoats,
+          summary: const DocumentSummary(total: 2, ok: 2),
+        ),
+      );
+      await pumpFrames(tester, frames: 8);
+
+      final badge = tester.widget<Badge>(find.byType(Badge).first);
+      expect(badge.isLabelVisible, isFalse);
+    });
+
     testWidgets('tapping another boat scrolls back to the top', (tester) async {
       // A real phone viewport, not `setPhoneSize`'s 1080x1920: at that height
       // the whole page fits and there is no scroll offset to observe.

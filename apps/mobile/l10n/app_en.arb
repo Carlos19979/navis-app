@@ -1330,5 +1330,6 @@
   "todayNothingDue": "Nothing needs doing",
   "anchorActionShort": "Anchor",
   "alertsCount": "{count, plural, =1{1 alert} other{{count} alerts}}",
-  "@alertsCount": {"placeholders": {"count": {"type": "int"}}}
+  "@alertsCount": {"placeholders": {"count": {"type": "int"}}},
+  "otherBoatsNeedAttention": "another boat needs attention"
 }

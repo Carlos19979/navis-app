@@ -5527,6 +5527,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 alert} other{{count} alerts}}'**
   String alertsCount(int count);
+
+  /// No description provided for @otherBoatsNeedAttention.
+  ///
+  /// In en, this message translates to:
+  /// **'another boat needs attention'**
+  String get otherBoatsNeedAttention;
 }
 
 class _AppLocalizationsDelegate

@@ -3,10 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:navis_mobile/core/theme/app_typography.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
+import 'package:navis_mobile/core/theme/tone.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/presentation/boat_type_label.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/active_boat_provider.dart';
+import 'package:navis_mobile/features/boat/presentation/screens/today_screen.dart';
+import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_list.dart';
 
@@ -24,6 +27,7 @@ class BoatSwitcher extends ConsumerWidget {
     final l = AppLocalizations.of(context)!;
     final boats = ref.watch(allBoatsProvider);
     final canSwitch = boats.length > 1;
+    final othersNeedAttention = canSwitch && _othersNeedAttention(ref, boats);
 
     final title = Row(
       mainAxisSize: MainAxisSize.min,
@@ -38,10 +42,22 @@ class BoatSwitcher extends ConsumerWidget {
         ),
         if (canSwitch) ...[
           const SizedBox(width: Dimens.spaceXs),
-          Icon(
-            Icons.expand_more_rounded,
-            size: Dimens.iconMd,
-            color: context.inkMuted,
+          // A dot on the chevron when *another* boat has something pending.
+          //
+          // Without it, the only place that says so is the "My boats" section
+          // near the bottom of the page: an owner of three boats had to scroll
+          // past everything to find out that boat B's insurance had expired.
+          // This keeps Today about one boat and still answers "does another one
+          // need me?" without scrolling.
+          Badge(
+            isLabelVisible: othersNeedAttention,
+            backgroundColor: context.caution,
+            smallSize: 7,
+            child: Icon(
+              Icons.expand_more_rounded,
+              size: Dimens.iconMd,
+              color: context.inkMuted,
+            ),
           ),
         ],
       ],
@@ -52,7 +68,10 @@ class BoatSwitcher extends ConsumerWidget {
     return Semantics(
       button: true,
       label: l.changeBoat,
-      value: boat.name,
+      // Spoken, not just drawn: a dot is invisible to a screen reader.
+      value: othersNeedAttention
+          ? '${boat.name}, ${l.otherBoatsNeedAttention}'
+          : boat.name,
       child: InkWell(
         onTap: () => _showPicker(context, ref, boats),
         borderRadius: BorderRadius.circular(Dimens.radiusChip),
@@ -62,6 +81,20 @@ class BoatSwitcher extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  /// Whether any boat other than the active one has an alert.
+  ///
+  /// Reads the same document summary the rows below use, so the dot and the
+  /// chips can never disagree.
+  bool _othersNeedAttention(WidgetRef ref, List<Boat> boats) {
+    for (final other in boats) {
+      if (other.id == boat.id) continue;
+      final summary =
+          ref.watch(boatDocumentSummaryProvider(other.id)).valueOrNull;
+      if (documentsTone(summary) != NavisTone.neutral) return true;
+    }
+    return false;
   }
 
   Future<void> _showPicker(

@@ -2971,4 +2971,7 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get otherBoatsNeedAttention => 'another boat needs attention';
 }
