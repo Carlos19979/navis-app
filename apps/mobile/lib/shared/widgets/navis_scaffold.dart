@@ -5,9 +5,10 @@ import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 
 /// The standard screen chrome: transparent [Scaffold] + [NavisAppBar] over the
-/// nautical [GradientBackground], inside a [SafeArea]. Replaces the
-/// `Scaffold → NavisAppBar → GradientBackground → SafeArea` boilerplate copied
-/// across nearly every screen and centralizes bottom-nav clearance.
+/// page canvas, inside a [SafeArea]. Replaces the
+/// `Scaffold → NavisAppBar → GradientBackground → SafeArea` boilerplate that
+/// 26 of the app's 37 screens still copy by hand, and centralizes bottom-nav
+/// clearance.
 class NavisScaffold extends StatelessWidget {
   const NavisScaffold({
     super.key,
@@ -18,7 +19,7 @@ class NavisScaffold extends StatelessWidget {
     this.appBarBottom,
     this.floatingActionButton,
     this.transparentAppBar = false,
-    this.showProfileAction = true,
+    this.appBarOverMedia = false,
     this.safeAreaBottom = true,
     this.bottomNavClearance = false,
   });
@@ -29,11 +30,14 @@ class NavisScaffold extends StatelessWidget {
   final List<Widget>? actions;
   final PreferredSizeWidget? appBarBottom;
   final Widget? floatingActionButton;
+
+  /// No app-bar fill and no hairline; pair with body artwork that reads
+  /// through.
   final bool transparentAppBar;
 
-  /// Whether the app bar appends the profile shortcut. Set false once Profile
-  /// is a first-class tab (phase 2).
-  final bool showProfileAction;
+  /// Blurred app bar, for a screen whose body is a map or a photograph.
+  final bool appBarOverMedia;
+
   final bool safeAreaBottom;
 
   /// When true, pads the body bottom by [Dimens.navClearance] so its last item
@@ -51,20 +55,23 @@ class NavisScaffold extends StatelessWidget {
     // above the nav clearance (16 = the FAB's own default margin).
     final fab = floatingActionButton != null && !safeAreaBottom
         ? Padding(
-            padding: const EdgeInsets.only(bottom: Dimens.navClearance - 16),
+            padding: const EdgeInsets.only(
+              bottom: Dimens.navClearance - Dimens.spaceLg,
+            ),
             child: floatingActionButton,
           )
         : floatingActionButton;
+
     return Scaffold(
       backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: transparentAppBar,
+      extendBodyBehindAppBar: transparentAppBar || appBarOverMedia,
       appBar: NavisAppBar(
         title: title,
         showBack: showBack,
         actions: actions,
         transparent: transparentAppBar,
+        overMedia: appBarOverMedia,
         bottom: appBarBottom,
-        showProfileAction: showProfileAction,
       ),
       floatingActionButton: fab,
       body: GradientBackground(

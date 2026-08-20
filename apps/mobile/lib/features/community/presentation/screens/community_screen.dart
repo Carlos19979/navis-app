@@ -102,7 +102,6 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
 
     return NavisScaffold(
       title: l.community,
-      showProfileAction: false,
       appBarBottom: TabBar(
         controller: _tabs,
         labelColor: AppColors.cyan,

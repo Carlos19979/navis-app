@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:navis_mobile/core/theme/app_theme.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
 
-/// NavisCard is the base card of the app, so a `BackdropFilter` inside it cost
-/// one blur pass per card per frame (ten of them in a ten-row list) for an
-/// effect that is invisible over the app's smooth gradient background. These
-/// tests pin the two per-card costs that must never come back: **no blur** and
-/// **no drop shadow**.
+/// NavisCard is the base surface of the app, so anything it draws is drawn once
+/// per card per frame — ten times over in a ten-row list, which is what showed
+/// up as foreground battery drain. These tests pin the two costs that must never
+/// come back: **no blur** and **no drop shadow**.
 ///
-/// The card's *fill* is an aesthetic choice and has moved: it used to be a
+/// The card's *fill* is an aesthetic choice and it has moved: it used to be a
 /// translucent veil over the ocean gradient, and in the editorial design it is
-/// an opaque surface separated by a hairline. That change is deliberate, so the
-/// assertion here is about cost, not about translucency — a solid fill is free,
-/// a shadow and a blur are not.
+/// an opaque surface closed by a hairline. That change is deliberate, so the
+/// assertions here are about cost, not about translucency — a solid fill is
+/// free, a shadow and a blur are not.
 void main() {
   Future<BoxDecoration> pumpAndReadDecoration(
     WidgetTester tester, {
@@ -23,7 +24,7 @@ void main() {
   }) async {
     await tester.pumpWidget(
       MaterialApp(
-        theme: ThemeData(brightness: brightness),
+        theme: brightness == Brightness.dark ? AppTheme.dark : AppTheme.light,
         home: Scaffold(
           body: NavisCard(
             gradient: gradient,
@@ -33,15 +34,17 @@ void main() {
         ),
       ),
     );
-    final container = tester.widget<Container>(
+    // The card paints with a DecoratedBox rather than a Container: it needs a
+    // decoration and nothing else Container offers.
+    final box = tester.widget<DecoratedBox>(
       find
           .descendant(
             of: find.byType(NavisCard),
-            matching: find.byType(Container),
+            matching: find.byType(DecoratedBox),
           )
           .first,
     );
-    return container.decoration! as BoxDecoration;
+    return box.decoration as BoxDecoration;
   }
 
   group('NavisCard', () {
@@ -60,8 +63,7 @@ void main() {
         );
 
         // A shadow per card is the other per-frame cost, and on the light
-        // canvas it also reads as grey smudge. Hierarchy comes from the
-        // hairline below.
+        // canvas it also reads as a grey smudge. Depth comes from the hairline.
         expect(
           decoration.boxShadow,
           anyOf(isNull, isEmpty),
@@ -71,13 +73,17 @@ void main() {
       }
     });
 
-    testWidgets('keeps the hairline border', (tester) async {
+    testWidgets('keeps the hairline border at the surface radius',
+        (tester) async {
       final decoration = await pumpAndReadDecoration(tester);
 
       expect(decoration.border, isNotNull);
-      expect(decoration.borderRadius, BorderRadius.circular(16));
+      expect(
+        decoration.borderRadius,
+        BorderRadius.circular(Dimens.radiusSurface),
+      );
       final side = (decoration.border! as Border).top;
-      expect(side.width, 0.5);
+      expect(side.width, Dimens.hairline);
     });
 
     testWidgets('honours a caller gradient and border colour', (tester) async {
@@ -98,7 +104,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: NavisCard(
-              margin: const EdgeInsets.all(24),
+              margin: const EdgeInsets.all(Dimens.spaceXl),
               onTap: () => taps++,
               child: const Text('tappable'),
             ),
@@ -117,7 +123,7 @@ void main() {
               ),
             )
             .map((p) => p.padding),
-        contains(const EdgeInsets.all(24)),
+        contains(const EdgeInsets.all(Dimens.spaceXl)),
       );
     });
   });

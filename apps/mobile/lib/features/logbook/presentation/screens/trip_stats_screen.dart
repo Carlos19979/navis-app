@@ -18,7 +18,7 @@ import 'package:navis_mobile/shared/widgets/navis_empty_state.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_period_picker.dart';
 import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
-import 'package:navis_mobile/shared/widgets/navis_stat_tile.dart';
+import 'package:navis_mobile/shared/widgets/navis_metric.dart';
 
 /// Which slice of the logbook is on screen. Per boat, and reset when the screen
 /// is left: coming back to "everything" is the useful default.
@@ -101,39 +101,39 @@ class _StatsBody extends ConsumerWidget {
         const SizedBox(height: 16),
         _HeadlineCard(period: period, stats: stats),
         const SizedBox(height: 12),
-        NavisStatGrid(children: [
-          NavisStatTile(
+        NavisMetricGrid(children: [
+          NavisMetric(
             icon: Icons.route_rounded,
             value: stats.trips.toString(),
             label: l.totalTrips,
             color: AppColors.cyan,
           ),
-          NavisStatTile(
+          NavisMetric(
             icon: Icons.anchor_rounded,
             value: stats.portCount.toString(),
             label: l.portsVisited,
             color: AppColors.cyan,
           ),
-          NavisStatTile(
+          NavisMetric(
             icon: Icons.speed_rounded,
             value: _knots(stats.topSpeedKn),
             label: l.topSpeed,
             color: AppColors.red,
           ),
-          NavisStatTile(
+          NavisMetric(
             icon: Icons.trending_up_rounded,
             value: stats.avgSpeedKn == null ? '—' : _knots(stats.avgSpeedKn!),
             label: l.averageSpeed,
             color: AppColors.green,
           ),
-          NavisStatTile(
+          NavisMetric(
             icon: Icons.local_gas_station_rounded,
             value:
                 stats.fuelL > 0 ? '${stats.fuelL.toStringAsFixed(0)} L' : '—',
             label: l.fuelConsumed,
             color: AppColors.amber,
           ),
-          NavisStatTile(
+          NavisMetric(
             icon: Icons.engineering_rounded,
             value: stats.engineHours > 0
                 ? '${stats.engineHours.toStringAsFixed(1)} h'

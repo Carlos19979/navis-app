@@ -31,7 +31,6 @@ class NotificationsScreen extends ConsumerWidget {
     return NavisScaffold(
       title: l.notifications,
       showBack: true,
-      showProfileAction: false,
       actions: [
         if (hasUnread)
           TextButton(

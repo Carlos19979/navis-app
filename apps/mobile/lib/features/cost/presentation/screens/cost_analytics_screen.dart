@@ -22,7 +22,7 @@ import 'package:navis_mobile/shared/widgets/navis_period_picker.dart';
 import 'package:navis_mobile/shared/widgets/navis_scaffold.dart';
 import 'package:navis_mobile/shared/widgets/navis_section.dart';
 import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
-import 'package:navis_mobile/shared/widgets/navis_stat_tile.dart';
+import 'package:navis_mobile/shared/widgets/navis_metric.dart';
 
 /// What the boat costs, for whatever period the owner picks.
 ///
@@ -182,27 +182,27 @@ class _RatioGrid extends StatelessWidget {
     String money(double? value) =>
         value == null ? '—' : Money.format(locale, value);
 
-    return NavisStatGrid(
+    return NavisMetricGrid(
       children: [
-        NavisStatTile(
+        NavisMetric(
           icon: Icons.straighten_rounded,
           value: money(stats.costPerNm),
           label: l.costPerNmLabel,
           color: AppColors.cyan,
         ),
-        NavisStatTile(
+        NavisMetric(
           icon: Icons.route_rounded,
           value: money(stats.costPerTrip),
           label: l.costPerTripLabel,
           color: AppColors.green,
         ),
-        NavisStatTile(
+        NavisMetric(
           icon: Icons.engineering_rounded,
           value: money(stats.costPerEngineHour),
           label: l.costPerEngineHourLabel,
           color: AppColors.amber,
         ),
-        NavisStatTile(
+        NavisMetric(
           icon: Icons.opacity_rounded,
           value: stats.litresPerNm == null
               ? '—'
@@ -210,7 +210,7 @@ class _RatioGrid extends StatelessWidget {
           label: l.costFuelEfficiency,
           color: AppColors.cyan,
         ),
-        NavisStatTile(
+        NavisMetric(
           icon: Icons.local_gas_station_rounded,
           value: stats.pricePerLiter == null
               ? '—'
@@ -218,7 +218,7 @@ class _RatioGrid extends StatelessWidget {
           label: l.costAvgPricePerLiter,
           color: AppColors.amber,
         ),
-        NavisStatTile(
+        NavisMetric(
           icon: Icons.water_drop_outlined,
           value: stats.fuelLiters > 0
               ? '${stats.fuelLiters.toStringAsFixed(0)} L'

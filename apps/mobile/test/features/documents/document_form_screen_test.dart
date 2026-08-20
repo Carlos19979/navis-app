@@ -586,11 +586,19 @@ void main() {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
+      // Scroll it into view first, like the sibling test above: the scan area
+      // sits below the fold, and tapping an off-screen finder silently misses.
+      await tester.ensureVisible(find.text('Add Scan'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Add Scan'));
       await tester.pumpAndSettle();
 
-      // Dismiss by tapping outside
-      await tester.tapAt(Offset.zero);
+      // Dismiss by tapping the barrier above the sheet. Deliberately not
+      // Offset.zero: the very corner of the screen belongs to the app bar's
+      // back button, so a miss there leaves the sheet open and pops the route
+      // instead — which is how this assertion used to fail for the wrong
+      // reason.
+      await tester.tapAt(const Offset(400, 120));
       await tester.pumpAndSettle();
 
       expect(find.text('Take Photo'), findsNothing);

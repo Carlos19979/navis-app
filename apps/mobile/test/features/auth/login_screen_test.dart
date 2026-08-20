@@ -379,7 +379,7 @@ void main() {
         ));
         await tester.pumpAndSettle();
 
-        expect(find.byIcon(Icons.error_outline), findsOneWidget);
+        expect(find.byIcon(Icons.error_outline_rounded), findsOneWidget);
         expect(find.text('Network error'), findsOneWidget);
       });
 
@@ -388,7 +388,7 @@ void main() {
         await tester.pumpWidget(buildLoginScreen());
         await tester.pumpAndSettle();
 
-        expect(find.byIcon(Icons.error_outline), findsNothing);
+        expect(find.byIcon(Icons.error_outline_rounded), findsNothing);
       });
     });
 

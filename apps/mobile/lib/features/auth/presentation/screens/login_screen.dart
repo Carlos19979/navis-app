@@ -7,11 +7,13 @@ import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/core/network/notification_service.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/auth/domain/auth_state.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
+import 'package:navis_mobile/shared/widgets/navis_alert.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -223,33 +225,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                     // -- Error Display --
                     if (authState.errorMessage != null)
-                      GlassContainer(
-                        borderRadius: 12,
-                        padding: const EdgeInsets.all(14),
-                        margin: const EdgeInsets.only(bottom: 20),
-                        borderColor: AppColors.red.withValues(alpha: 0.4),
-                        opacity: 0.06,
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.error_outline,
-                              color: AppColors.red.withValues(
-                                alpha: 0.9,
-                              ),
-                              size: 20,
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                authState.errorMessage!,
-                                style: const TextStyle(
-                                  color: AppColors.red,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                      NavisAlert(
+                        message: authState.errorMessage!,
+                        margin: const EdgeInsets.only(bottom: Dimens.spaceXl),
                       ).animate().fadeIn(duration: 300.ms).shakeX(
                             hz: 3,
                             amount: 4,
