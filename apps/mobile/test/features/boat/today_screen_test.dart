@@ -504,7 +504,7 @@ void main() {
   });
 
   group('the states around the data', () {
-    testWidgets('no boats at all gets the value proposition and a CTA',
+    testWidgets('no boats at all offers both adding and joining one',
         (tester) async {
       setPhoneSize(tester);
       await tester.pumpWidget(await subject());
@@ -512,6 +512,23 @@ void main() {
 
       expect(find.textContaining('No boats yet'), findsOneWidget);
       expect(find.text('Add Boat'), findsOneWidget);
+      // Crew invited to someone else's boat have no boat of their own to add.
+      // Joining lived in the old boat list's app bar, and moving it into the
+      // "My boats" section — which only exists once you have a boat — made the
+      // whole crew sign-up path a dead end.
+      expect(find.text('Join a boat'), findsOneWidget);
+    });
+
+    testWidgets('and joining from there opens the code sheet', (tester) async {
+      setPhoneSize(tester);
+      await tester.pumpWidget(await subject());
+      await pumpFrames(tester, frames: 8);
+
+      await tester.tap(find.text('Join a boat'));
+      await pumpFrames(tester, frames: 8);
+
+      expect(find.byType(BottomSheet), findsOneWidget);
+      expect(find.text('Invite code'), findsWidgets);
     });
 
     testWidgets('a failed load explains itself and offers a retry',

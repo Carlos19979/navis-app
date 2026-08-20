@@ -268,12 +268,20 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                 message: error.toString(),
                 onRetry: () => ref.invalidate(boatsProvider),
               ),
+            // Two ways out, not one. Joining used to live in the app bar of
+            // the boat list, which meant it was on screen above the empty
+            // state; on Today it moved into the "My boats" section, which only
+            // exists once you *have* a boat. That left a crew member invited to
+            // someone else's boat — no boat of their own to add — with no way
+            // to enter the code at all.
             (_, null) => NavisEmptyState(
                 icon: Icons.sailing_outlined,
                 message: l.noBoats,
                 description: l.noBoatsValueProp,
                 actionLabel: l.addBoat,
                 onAction: _onAddBoat,
+                secondaryActionLabel: l.joinBoat,
+                onSecondaryAction: _joinBoat,
               ),
             (_, final active?) => _TodayBody(
                 boat: active,
