@@ -19,6 +19,7 @@ import 'package:navis_mobile/features/boat/presentation/providers/boat_permissio
 import 'package:navis_mobile/features/boat/presentation/widgets/permission_gate.dart';
 import 'package:navis_mobile/features/documents/domain/entities/document.dart';
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
+import 'package:navis_mobile/features/documents/presentation/document_type_label.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
@@ -92,38 +93,6 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
     'navigation_license',
     'custom',
   ];
-
-  static String _localizedDocType(AppLocalizations l, String type) =>
-      switch (type) {
-        'itb' => l.docTypeItb,
-        'insurance_rc' => l.docTypeInsuranceRc,
-        'insurance_full' => l.docTypeInsuranceFull,
-        'life_raft' => l.docTypeLifeRaft,
-        'extinguisher' => l.docTypeFireExtinguisher,
-        'flares' => l.docTypeFlares,
-        'first_aid' => l.docTypeFirstAidKit,
-        'medical_cert' => l.docTypeMedicalCertificate,
-        'radio_cert' => l.docTypeRadioLicense,
-        'navigation_license' => l.docTypeNavigationLicense,
-        // Legacy rows created before the canonical alignment keep rendering
-        // through the old display names.
-        'Registration' => l.docTypeRegistration,
-        'Insurance' => l.docTypeInsurance,
-        'Inspection' => l.docTypeInspection,
-        'License' => l.docTypeLicense,
-        'Safety Certificate' => l.docTypeSafetyCertificate,
-        'Radio License' => l.docTypeRadioLicense,
-        'Pollution Certificate' => l.docTypePollutionCertificate,
-        'Medical Certificate' => l.docTypeMedicalCertificate,
-        'Life Raft' => l.docTypeLifeRaft,
-        'Fire Extinguisher' => l.docTypeFireExtinguisher,
-        'Flares' => l.docTypeFlares,
-        'First Aid Kit' => l.docTypeFirstAidKit,
-        'Fishing Permit' => l.docTypeFishingPermit,
-        'Other' => l.other,
-        'custom' => l.docTypeCustom,
-        _ => type,
-      };
 
   @override
   void initState() {
@@ -553,7 +522,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                                   return DropdownMenuItem(
                                     value: type,
                                     child: Text(
-                                      _localizedDocType(l, type),
+                                      documentTypeLabel(l, type),
                                     ),
                                   );
                                 }).toList(),

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/app/routes.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
+import 'package:navis_mobile/core/theme/motion.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/documents/domain/entities/document.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
@@ -104,7 +105,7 @@ class _DocumentList extends ConsumerWidget {
             ref.invalidate(boatPermissionsProvider(boatId));
           },
           child: ListView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+            padding: Insets.gutterWithNav,
             // A read-only member gets the padlock and the reason at the top of
             // the list, not a silently missing button.
             itemCount: sorted.length + (canManage ? 0 : 1),
@@ -125,19 +126,7 @@ class _DocumentList extends ConsumerWidget {
               return DocumentCard(
                 document: doc,
                 onTap: () => context.push(Routes.document(doc.id)),
-              )
-                  .animate()
-                  .fadeIn(
-                    duration: 400.ms,
-                    delay: (50 * index).ms,
-                  )
-                  .slideY(
-                    begin: 0.1,
-                    end: 0,
-                    duration: 400.ms,
-                    delay: (50 * index).ms,
-                    curve: Curves.easeOutCubic,
-                  );
+              ).entrance(index: index);
             },
           ),
         );

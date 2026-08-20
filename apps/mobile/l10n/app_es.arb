@@ -57,7 +57,7 @@
   "readinessAttention": "Requiere atención",
   "readinessNotReady": "No está listo",
   "readinessAllGood": "Todo en regla",
-  "readinessItemsNeedAttention": "{count, plural, =1{1 cosa requiere atención} other{{count} cosas requieren atención}}",
+  "readinessItemsNeedAttention": "{count, plural, =1{1 cosa pendiente} other{{count} cosas pendientes}}",
   "@readinessItemsNeedAttention": {
     "placeholders": {
       "count": {
