@@ -38,7 +38,9 @@ class ProfileScreen extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       // No back button: this is a tab root, and one drawn here pops the
       // shell's whole stack.
-      appBar: NavisAppBar(title: l.profile),
+      // «Cuenta», not «Perfil»: Settings folded into this screen, so the
+      // title has to name both halves.
+      appBar: NavisAppBar(title: l.account),
       body: GradientBackground(
         child: SafeArea(
           child: SingleChildScrollView(

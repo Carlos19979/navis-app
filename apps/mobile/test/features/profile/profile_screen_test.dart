@@ -223,11 +223,13 @@ void main() {
         expect(find.text('C'), findsOneWidget);
       });
 
-      testWidgets('displays Profile title in app bar', (tester) async {
+      testWidgets('is titled Account, since Settings lives here now',
+          (tester) async {
         await tester.pumpWidget(buildProfileScreen());
         await tester.pumpAndSettle();
 
-        expect(find.text('Profile'), findsOneWidget);
+        expect(find.text('Account'), findsOneWidget);
+        expect(find.text('Profile'), findsNothing);
       });
 
       testWidgets('displays member since date when createdAt is set',

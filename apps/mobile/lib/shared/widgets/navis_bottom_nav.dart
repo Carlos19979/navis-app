@@ -41,7 +41,7 @@ class NavisBottomNav extends ConsumerWidget {
       _NavItem(Icons.map_outlined, Icons.map_rounded, l.charts),
       _NavItem(Icons.cloud_outlined, Icons.cloud_rounded, l.weather),
       _NavItem(Icons.groups_outlined, Icons.groups_rounded, l.community),
-      _NavItem(Icons.person_outline_rounded, Icons.person_rounded, l.profile),
+      _NavItem(Icons.person_outline_rounded, Icons.person_rounded, l.account),
     ];
 
     // A dark-navy glass pill floats over content in both themes; on light it

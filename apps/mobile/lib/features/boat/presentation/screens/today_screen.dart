@@ -503,7 +503,7 @@ class _PlainHeader extends StatelessWidget {
             icon: const Icon(Icons.person_outline_rounded),
             iconSize: Dimens.iconLg,
             color: context.inkMuted,
-            tooltip: l.profile,
+            tooltip: l.account,
             onPressed: () => context.go(Routes.profile),
           ),
         ],

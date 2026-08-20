@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/core/theme/app_typography.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
@@ -12,7 +13,6 @@ import 'package:navis_mobile/features/notifications/presentation/providers/notif
 import 'package:navis_mobile/features/notifications/presentation/providers/notification_link.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_async_view.dart';
-import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_scaffold.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 
@@ -32,12 +32,12 @@ class NotificationsScreen extends ConsumerWidget {
       showBack: true,
       actions: [
         if (hasUnread)
-          TextButton(
+          IconButton(
+            // An icon, because the label is five words in both languages and
+            // ran off the edge of the bar next to the title.
+            icon: const Icon(Icons.done_all_rounded),
+            tooltip: l.markAllRead,
             onPressed: () => _markAllRead(context, ref),
-            child: Text(
-              l.markAllRead,
-              style: TextStyle(color: context.accent),
-            ),
           ),
       ],
       // A pushed screen never sees the bottom nav, so it uses the plain screen
@@ -115,84 +115,75 @@ class _NotificationTile extends StatelessWidget {
     final l = AppLocalizations.of(context)!;
     final unread = !notification.isRead;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: Dimens.spaceSm),
-      child: NavisCard(
-        padding: EdgeInsets.zero,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(Dimens.radiusMd),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(Dimens.spaceMd),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color:
-                        context.accent.withValues(alpha: unread ? 0.18 : 0.08),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    _iconFor(notification.category),
-                    size: Dimens.iconSm,
-                    color: unread
-                        ? context.accent
-                        : context.accent.withValues(alpha: 0.6),
-                  ),
+    // A row with a hairline, not a card with a tinted icon disc: a feed of
+    // twenty notifications was twenty framed boxes, each opening with the same
+    // circle, and the unread ones had no way left to stand out. Unread is now
+    // carried by weight and one dot.
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: context.hairline)),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: Dimens.spaceLg),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Icon(
+                  _iconFor(notification.category),
+                  size: Dimens.iconLg,
+                  color: unread ? context.accent : context.inkFaint,
                 ),
-                const SizedBox(width: Dimens.spaceMd),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+              ),
+              const SizedBox(width: Dimens.spaceLg),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      notification.title,
+                      style: (unread ? NavisType.title3 : NavisType.body)
+                          .copyWith(color: context.ink),
+                    ),
+                    if (notification.body.isNotEmpty) ...[
+                      const SizedBox(height: 2),
                       Text(
-                        notification.title,
-                        style: TextStyle(
-                          fontWeight:
-                              unread ? FontWeight.w700 : FontWeight.w500,
-                          color: context.txtPrimary,
-                        ),
-                      ),
-                      if (notification.body.isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          notification.body,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: context.txtSecondary,
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: Dimens.spaceXs),
-                      Text(
-                        _timeLabel(context, l, notification.createdAt),
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: context.txtSecondary.withValues(alpha: 0.8),
+                        notification.body,
+                        style: NavisType.bodySm.copyWith(
+                          color: context.inkMuted,
                         ),
                       ),
                     ],
-                  ),
-                ),
-                if (unread)
-                  Semantics(
-                    label: l.unreadNotifications(1),
-                    child: Container(
-                      margin:
-                          const EdgeInsets.only(left: Dimens.spaceSm, top: 4),
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: context.accent,
-                        shape: BoxShape.circle,
+                    const SizedBox(height: Dimens.spaceXs),
+                    Text(
+                      _timeLabel(context, l, notification.createdAt),
+                      style: NavisType.caption.copyWith(
+                        color: context.inkMuted,
                       ),
                     ),
+                  ],
+                ),
+              ),
+              if (unread)
+                Semantics(
+                  label: l.unreadNotifications(1),
+                  child: Container(
+                    margin: const EdgeInsets.only(
+                      left: Dimens.spaceSm,
+                      top: 6,
+                    ),
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: context.accent,
+                      shape: BoxShape.circle,
+                    ),
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
         ),
       ),
