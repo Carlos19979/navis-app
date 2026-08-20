@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/logbook/presentation/providers/logbook_provider.dart';
@@ -44,7 +45,7 @@ class LogbookScreen extends ConsumerWidget {
                 icon: Icons.route_outlined,
                 message: l.noTrips,
                 actionLabel: l.recordTrip,
-                onAction: () => context.push('/boats/$boatId/precheck'),
+                onAction: () => context.push(Routes.boatPrecheck(boatId)),
               );
             }
 
@@ -99,7 +100,7 @@ class LogbookScreen extends ConsumerWidget {
                 true)
             ? NavisGradientFab(
                 icon: Icons.play_arrow,
-                onPressed: () => context.push('/boats/$boatId/precheck'),
+                onPressed: () => context.push(Routes.boatPrecheck(boatId)),
                 tooltip: l.startTrip,
                 heroTag: 'record_trip',
                 label: l.startTrip,

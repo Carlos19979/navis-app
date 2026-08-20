@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/events/domain/entities/event.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -154,7 +155,7 @@ class _CalendarViewState extends State<CalendarView> {
                               e.startDate.month == _currentMonth.month &&
                               e.startDate.day == day,
                         );
-                        context.go('/events/${event.id}');
+                        context.go(Routes.event(event.id));
                       }
                     : null,
                 child: AnimatedContainer(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/distance_utils.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
@@ -16,7 +17,7 @@ class TripCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return NavisCard(
       margin: const EdgeInsets.only(bottom: 10),
-      onTap: () => context.push('/trips/${trip.id}'),
+      onTap: () => context.push(Routes.trip(trip.id)),
       padding: const EdgeInsets.all(14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

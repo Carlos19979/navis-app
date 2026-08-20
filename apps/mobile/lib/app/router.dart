@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as supa;
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/network/supabase_client.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
 import 'package:navis_mobile/features/auth/presentation/screens/auth_link_screen.dart';
@@ -97,36 +98,37 @@ final routerProvider = Provider<GoRouter>((ref) {
       // pending recovery with no session left would otherwise strand the user
       // on a screen whose only button cannot work.
       if (isRecovering && isAuthenticated) {
-        return location == '/reset-password' ? null : '/reset-password';
+        return location == Routes.resetPassword ? null : Routes.resetPassword;
       }
 
-      final isAuthRoute = location == '/login' ||
-          location == '/register' ||
-          location == '/check-email' ||
-          location == '/reset-password';
+      final isAuthRoute = location == Routes.login ||
+          location == Routes.register ||
+          location == Routes.checkEmail ||
+          location == Routes.resetPassword;
 
       if (!isAuthenticated && !isAuthRoute) {
-        return '/login';
+        return Routes.login;
       }
 
       if (isAuthenticated && isAuthRoute) {
-        return '/boats';
+        return Routes.today;
       }
 
       return null;
     },
     routes: [
-      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
-        path: '/register',
+          path: Routes.login, builder: (context, state) => const LoginScreen()),
+      GoRoute(
+        path: Routes.register,
         builder: (context, state) => const RegisterScreen(),
       ),
       GoRoute(
-        path: '/check-email',
+        path: Routes.checkEmail,
         builder: (context, state) => const CheckEmailScreen(),
       ),
       GoRoute(
-        path: '/reset-password',
+        path: Routes.resetPassword,
         builder: (context, state) => const ResetPasswordScreen(),
       ),
       StatefulShellRoute.indexedStack(
@@ -137,7 +139,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/boats',
+                path: Routes.today,
                 builder: (context, state) => const TodayScreen(),
               ),
             ],
@@ -145,7 +147,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/charts',
+                path: Routes.charts,
                 builder: (context, state) => const ChartScreen(),
               ),
             ],
@@ -153,7 +155,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/weather',
+                path: Routes.weather,
                 builder: (context, state) => const WeatherScreen(),
               ),
             ],
@@ -161,7 +163,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/community',
+                path: Routes.community,
                 builder: (context, state) => const CommunityScreen(),
               ),
             ],
@@ -169,7 +171,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/profile',
+                path: Routes.profile,
                 builder: (context, state) => const ProfileScreen(),
               ),
             ],
@@ -184,7 +186,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
-        path: '/groups/new',
+        path: Routes.newGroup,
         builder: (context, state) => const GroupFormScreen(),
       ),
       GoRoute(
@@ -227,7 +229,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
-        path: '/boats/new',
+        path: Routes.newBoat,
         builder: (context, state) => const BoatFormScreen(boatId: 'new'),
       ),
       // Kept as a path even though the boat hub is gone: it is a notification
@@ -374,18 +376,18 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
-        path: '/settings',
+        path: Routes.settings,
         builder: (context, state) => const SettingsScreen(),
       ),
       // Saved chart areas. Reachable from the chart's download sheet and from
       // Settings, so the storage they cost is never hidden from the user.
       GoRoute(
-        path: '/charts/offline',
+        path: Routes.offlineCharts,
         builder: (context, state) => const OfflineChartsScreen(),
       ),
       // The bell's destination: the history of everything the API delivered.
       GoRoute(
-        path: '/notifications',
+        path: Routes.notifications,
         builder: (context, state) => const NotificationsScreen(),
       ),
     ],

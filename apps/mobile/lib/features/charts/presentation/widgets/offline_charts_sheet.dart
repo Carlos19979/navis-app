@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/byte_utils.dart';
@@ -220,7 +221,7 @@ class _OfflineChartsSheetState extends ConsumerState<_OfflineChartsSheet> {
                   onPressed: () {
                     final router = GoRouter.of(context);
                     Navigator.of(context).pop();
-                    router.push('/charts/offline');
+                    router.push(Routes.offlineCharts);
                   },
                   child: Text(l.manageSavedAreas),
                 ),

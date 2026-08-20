@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/network/storage_service.dart';
 import 'package:navis_mobile/core/network/supabase_client.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
@@ -178,7 +179,7 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
         if (_isEdit) {
           context.pop();
         } else {
-          context.go('/boats');
+          context.go(Routes.today);
         }
       }
     } catch (e) {
@@ -613,7 +614,7 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                               .deleteBoat(widget.boatId);
                           if (!context.mounted) return;
                           NavisSnackbar.success(context, l.delete);
-                          context.go('/boats');
+                          context.go(Routes.today);
                         } catch (e) {
                           if (context.mounted) {
                             NavisSnackbar.error(context, l.failedToDelete);

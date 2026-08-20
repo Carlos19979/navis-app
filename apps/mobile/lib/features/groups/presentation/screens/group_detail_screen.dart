@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/network/supabase_client.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
@@ -84,7 +85,7 @@ class GroupDetailScreen extends ConsumerWidget {
                           label: Text(l.scheduleAction,
                               style: TextStyle(color: context.accent)),
                           onPressed: () =>
-                              context.push('/groups/$groupId/schedule'),
+                              context.push(Routes.groupSchedule(groupId)),
                         ),
                       ],
                     ),
@@ -397,7 +398,7 @@ class _RegattasSection extends ConsumerWidget {
     final color = context.tripStatusColor(r.status);
     return NavisCard(
       margin: const EdgeInsets.only(bottom: 8),
-      onTap: () => context.push('/regattas/${r.id}'),
+      onTap: () => context.push(Routes.regatta(r.id)),
       child: Row(
         children: [
           Icon(

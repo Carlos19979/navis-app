@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/billing/billing.dart';
@@ -71,7 +72,7 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
       if (!purchased || !mounted) return;
     }
     if (!mounted) return;
-    unawaited(context.push('/groups/new'));
+    unawaited(context.push(Routes.newGroup));
   }
 
   Future<void> _joinByCode() async {
@@ -163,7 +164,7 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
   }
 
   void _openGroup(Group group) {
-    unawaited(context.push('/groups/${group.id}'));
+    unawaited(context.push(Routes.group(group.id)));
   }
 }
 

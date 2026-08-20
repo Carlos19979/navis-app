@@ -1,3 +1,5 @@
+import 'package:navis_mobile/app/routes.dart';
+
 /// Maps a notification's `{type, id}` deep-link pair to an app route.
 ///
 /// Shared by the two ways a notification is opened: tapping the system push
@@ -8,12 +10,12 @@ String? notificationPath(String? type, String? id) {
   if (type == null || id == null || id.isEmpty) return null;
 
   return switch (type) {
-    'document' => '/documents/$id',
-    'regatta' => '/regattas/$id',
-    'group' => '/groups/$id',
-    'event' => '/events/$id',
-    'trip' => '/trips/$id',
-    'boat' => '/boats/$id',
+    'document' => Routes.document(id),
+    'regatta' => Routes.regatta(id),
+    'group' => Routes.group(id),
+    'event' => Routes.event(id),
+    'trip' => Routes.trip(id),
+    'boat' => Routes.boat(id),
     _ => null,
   };
 }

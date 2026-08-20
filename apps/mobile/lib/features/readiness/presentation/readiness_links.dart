@@ -1,3 +1,5 @@
+import 'package:navis_mobile/app/routes.dart';
+
 /// Deep links for readiness entries.
 ///
 /// Push notifications carry a `{type, id}` payload that the notification
@@ -15,10 +17,10 @@ String? readinessRoute({
   String ref = '',
 }) {
   if (boatId.isEmpty) return null;
-  if (ref == 'engine_service') return '/boats/$boatId/maintenance';
+  if (ref == 'engine_service') return Routes.boatMaintenance(boatId);
   return switch (category) {
-    'maintenance' => '/boats/$boatId/maintenance',
-    'documents' || 'safety_gear' => '/boats/$boatId/documents',
+    'maintenance' => Routes.boatMaintenance(boatId),
+    'documents' || 'safety_gear' => Routes.boatDocuments(boatId),
     _ => null,
   };
 }

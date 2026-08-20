@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -47,7 +48,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       ref.read(passwordRecoveryProvider.notifier).complete();
       if (!mounted) return;
       NavisSnackbar.success(context, l.resetPwSuccess);
-      context.go('/boats');
+      context.go(Routes.today);
     } catch (_) {
       if (mounted) {
         setState(() => _submitting = false);
@@ -61,7 +62,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   /// the account open to whoever opened the email.
   Future<void> _onCancel() async {
     await ref.read(authProvider.notifier).logout();
-    if (mounted) context.go('/login');
+    if (mounted) context.go(Routes.login);
   }
 
   @override

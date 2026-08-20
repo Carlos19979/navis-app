@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/deeplinks/auth_deep_link.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
@@ -111,7 +112,7 @@ class _AuthLinkScreenState extends ConsumerState<AuthLinkScreen> {
                         const SizedBox(height: 28),
                         NavisButton(
                           label: l.backToLogin,
-                          onPressed: () => context.go('/login'),
+                          onPressed: () => context.go(Routes.login),
                         ),
                       ],
                     )

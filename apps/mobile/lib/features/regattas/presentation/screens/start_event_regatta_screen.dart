@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
@@ -70,7 +71,7 @@ class _StartEventRegattaScreenState
       ref.invalidate(groupRegattasProvider(_groupId!));
       if (!mounted) return;
       NavisSnackbar.success(context, l.joinedWithGroup);
-      context.pushReplacement('/regattas/${regatta.id}');
+      context.pushReplacement(Routes.regatta(regatta.id));
     } catch (_) {
       if (!mounted) return;
       setState(() => _saving = false);
@@ -134,7 +135,7 @@ class _StartEventRegattaScreenState
                         label: l.createGroup,
                         variant: NavisButtonVariant.secondary,
                         compact: true,
-                        onPressed: () => context.push('/groups/new'),
+                        onPressed: () => context.push(Routes.newGroup),
                       ),
                     ],
                   ),
@@ -172,7 +173,7 @@ class _StartEventRegattaScreenState
                         label: l.addBoat,
                         variant: NavisButtonVariant.secondary,
                         compact: true,
-                        onPressed: () => context.push('/boats/new'),
+                        onPressed: () => context.push(Routes.newBoat),
                       ),
                     ],
                   ),

@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -57,7 +58,7 @@ class TripDetailScreen extends ConsumerWidget {
               IconButton(
                 icon: const Icon(Icons.edit_outlined),
                 tooltip: l.editTrip,
-                onPressed: () => context.push('/trips/$tripId/edit'),
+                onPressed: () => context.push(Routes.tripEdit(tripId)),
               ),
               IconButton(
                 icon: Icon(

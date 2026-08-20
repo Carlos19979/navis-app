@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/money_utils.dart';
@@ -74,7 +75,7 @@ class _EmptyCosts extends StatelessWidget {
       message: l.costEmptyMessage,
       description: l.costEmptyDescription,
       actionLabel: l.costEmptyAction,
-      onAction: () => context.push('/boats/$boatId/maintenance'),
+      onAction: () => context.push(Routes.boatMaintenance(boatId)),
     );
   }
 }
@@ -142,7 +143,7 @@ class _CostBody extends ConsumerWidget {
           NavisSectionHeader(
             label: l.costByCategory,
             trailing: TextButton(
-              onPressed: () => context.push('/boats/$boatId/maintenance'),
+              onPressed: () => context.push(Routes.boatMaintenance(boatId)),
               child: Text(l.costViewExpenses),
             ),
           ),
@@ -351,7 +352,7 @@ class _Anomalies extends ConsumerWidget {
               borderColor: context.caution.withValues(alpha: 0.4),
               onTap: a.tripId.isEmpty
                   ? null
-                  : () => context.push('/trips/${a.tripId}'),
+                  : () => context.push(Routes.trip(a.tripId)),
               child: Row(
                 children: [
                   Icon(

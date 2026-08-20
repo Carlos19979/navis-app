@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/config/checklist_preference.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
@@ -228,8 +229,11 @@ class _PreTripChecklistScreenState
       ref.invalidate(regattaProvider(widget.tripId!));
       if (!mounted) return;
       context.pushReplacement(
-        '/boats/${regatta.boatId}/record'
-        '?tripId=${widget.tripId}&regatta=true',
+        Routes.boatRecord(
+          regatta.boatId,
+          tripId: widget.tripId,
+          regatta: true,
+        ),
       );
     } catch (_) {
       if (!mounted) return;
@@ -240,12 +244,12 @@ class _PreTripChecklistScreenState
 
   /// Boat: no persistence — just go straight to recording (auto-start).
   void _startSoloTrip() {
-    final port = widget.departurePort;
-    final portQuery = (port != null && port.isNotEmpty)
-        ? '&port=${Uri.encodeComponent(port)}'
-        : '';
     context.pushReplacement(
-      '/boats/${widget.boatId}/record?autostart=true$portQuery',
+      Routes.boatRecord(
+        widget.boatId!,
+        autostart: true,
+        port: widget.departurePort,
+      ),
     );
   }
 

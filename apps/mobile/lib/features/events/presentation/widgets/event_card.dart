@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/events/domain/entities/event.dart';
@@ -20,7 +21,7 @@ class EventCard extends StatelessWidget {
     return NavisCard(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
-      onTap: () => context.go('/events/${event.id}'),
+      onTap: () => context.go(Routes.event(event.id)),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

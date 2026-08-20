@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/auth/presentation/providers/auth_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -79,7 +80,7 @@ class _CheckEmailScreenState extends ConsumerState<CheckEmailScreen> {
                   TextButton(
                     onPressed: () {
                       ref.read(authProvider.notifier).backToLogin();
-                      context.go('/login');
+                      context.go(Routes.login);
                     },
                     child: Text(
                       l.backToLogin,

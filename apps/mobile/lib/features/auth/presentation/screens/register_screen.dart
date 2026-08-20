@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/auth/domain/auth_state.dart';
@@ -53,9 +54,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (next.status == AuthStatus.authenticated) {
-        context.go('/boats');
+        context.go(Routes.today);
       } else if (next.status == AuthStatus.pendingEmailConfirmation) {
-        context.go('/check-email');
+        context.go(Routes.checkEmail);
       }
     });
 
@@ -267,7 +268,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
                     // -- Login Link --
                     GestureDetector(
-                      onTap: () => context.go('/login'),
+                      onTap: () => context.go(Routes.login),
                       child: Text.rich(
                         TextSpan(
                           text: '${l.hasAccount} ',

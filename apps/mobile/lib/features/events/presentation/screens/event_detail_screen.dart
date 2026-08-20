@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -261,7 +262,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                           label: l.joinAsGroup,
                           icon: Icons.groups,
                           onPressed: () => context.push(
-                            '/events/${widget.eventId}/start-regatta',
+                            Routes.eventStartRegatta(widget.eventId),
                           ),
                         ),
                         const SizedBox(height: 10),

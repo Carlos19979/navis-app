@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/features/groups/presentation/providers/group_provider.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
@@ -45,7 +46,7 @@ class _GroupFormScreenState extends ConsumerState<GroupFormScreen> {
       ref.invalidate(myGroupsProvider);
       if (!mounted) return;
       NavisSnackbar.success(context, l.groupCreated);
-      context.pushReplacement('/groups/${group.id}');
+      context.pushReplacement(Routes.group(group.id));
     } catch (_) {
       if (!mounted) return;
       setState(() => _saving = false);

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
@@ -139,7 +140,7 @@ class _ScheduleRegattaScreenState extends ConsumerState<ScheduleRegattaScreen> {
                             label: l.addBoat,
                             variant: NavisButtonVariant.secondary,
                             compact: true,
-                            onPressed: () => context.push('/boats/new'),
+                            onPressed: () => context.push(Routes.newBoat),
                           ),
                         ],
                       ),

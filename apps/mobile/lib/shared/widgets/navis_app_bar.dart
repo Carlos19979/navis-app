@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/theme/app_typography.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/palette.dart';
@@ -113,7 +114,7 @@ class _BackButton extends StatelessWidget {
         if (context.canPop()) {
           context.pop();
         } else {
-          context.go('/boats');
+          context.go(Routes.today);
         }
       },
     );

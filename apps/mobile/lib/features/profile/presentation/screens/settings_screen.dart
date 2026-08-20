@@ -5,6 +5,7 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/config/checklist_preference.dart';
 import 'package:navis_mobile/core/config/settings_service.dart';
 import 'package:navis_mobile/core/database/local_database.dart';
@@ -221,7 +222,7 @@ class SettingsScreen extends ConsumerWidget {
                         Icons.chevron_right,
                         color: context.txtSecondary,
                       ),
-                      onTap: () => context.push('/charts/offline'),
+                      onTap: () => context.push(Routes.offlineCharts),
                     ),
                     Divider(
                       height: 1,
@@ -323,7 +324,7 @@ class SettingsScreen extends ConsumerWidget {
                           if (confirmed == true) {
                             await ref.read(authProvider.notifier).logout();
                             if (context.mounted) {
-                              context.go('/login');
+                              context.go(Routes.login);
                             }
                           }
                         },
@@ -444,7 +445,7 @@ class SettingsScreen extends ConsumerWidget {
       // stale either way, so proceed to login.
     }
     if (context.mounted) {
-      context.go('/login');
+      context.go(Routes.login);
     }
   }
 

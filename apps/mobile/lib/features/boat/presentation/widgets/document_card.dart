@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
 import 'package:navis_mobile/features/boat/presentation/widgets/expiry_indicator.dart';
@@ -47,7 +48,7 @@ class DocumentCard extends StatelessWidget {
     return NavisCard(
       margin: const EdgeInsets.only(bottom: 10),
       padding: EdgeInsets.zero,
-      onTap: onTap ?? () => context.go('/documents/${document.id}'),
+      onTap: onTap ?? () => context.go(Routes.document(document.id)),
       child: IntrinsicHeight(
         child: Row(
           children: [

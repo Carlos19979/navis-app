@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/network/supabase_client.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/navis_date_utils.dart';
@@ -152,7 +153,7 @@ class RegattaDetailScreen extends ConsumerWidget {
             label: l.prepareChecklistAndSail,
             icon: Icons.checklist,
             onPressed: () => context.push(
-              '/trips/${r.id}/checklist?groupId=${r.groupId ?? ''}',
+              Routes.tripChecklist(r.id, groupId: r.groupId),
             ),
           ),
           const SizedBox(height: 8),

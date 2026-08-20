@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/network/storage_service.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -378,14 +379,16 @@ class _DocumentActions extends ConsumerWidget {
         IconButton(
           icon: const Icon(Icons.edit_outlined),
           tooltip: l.editDocument,
-          onPressed: () =>
-              context.push('/documents/$documentId/edit?boatId=$boatId'),
+          onPressed: () => context.push(
+            Routes.documentEdit(documentId, boatId: boatId),
+          ),
         ),
         IconButton(
           icon: Icon(Icons.autorenew, color: context.accent),
           tooltip: l.renewDocument,
-          onPressed: () => context
-              .push('/documents/$documentId/edit?boatId=$boatId&renew=true'),
+          onPressed: () => context.push(
+            Routes.documentEdit(documentId, boatId: boatId, renew: true),
+          ),
         ),
         IconButton(
           icon: Icon(Icons.delete_outlined, color: context.critical),

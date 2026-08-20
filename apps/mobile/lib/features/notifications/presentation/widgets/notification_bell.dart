@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/notifications/presentation/providers/notification_feed_provider.dart';
@@ -32,7 +33,7 @@ class NotificationBell extends ConsumerWidget {
         padding: const EdgeInsets.only(right: Dimens.spaceXs),
         child: IconButton(
           tooltip: l.notifications,
-          onPressed: () => context.push('/notifications'),
+          onPressed: () => context.push(Routes.notifications),
           icon: Stack(
             clipBehavior: Clip.none,
             children: [

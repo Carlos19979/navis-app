@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/config/env.dart';
 import 'package:navis_mobile/core/network/notification_service.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
@@ -178,7 +179,7 @@ class ProfileScreen extends ConsumerWidget {
                       _ProfileTile(
                         icon: Icons.settings_outlined,
                         title: l.settings,
-                        onTap: () => context.push('/settings'),
+                        onTap: () => context.push(Routes.settings),
                       ),
                       Divider(
                         height: 1,
@@ -299,7 +300,7 @@ class ProfileScreen extends ConsumerWidget {
               await notificationService.unregisterDevice();
               await ref.read(authProvider.notifier).logout();
               if (ctx.mounted) {
-                context.go('/login');
+                context.go(Routes.login);
               }
             },
             style: FilledButton.styleFrom(

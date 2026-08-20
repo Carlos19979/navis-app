@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/readiness/data/readiness_repository.dart';
@@ -50,7 +51,7 @@ class ReadinessCard extends ConsumerWidget {
             ? l.readinessAllGood
             : l.readinessItemsNeedAttention(count);
         return NavisCard(
-          onTap: () => context.push('/boats/$boatId/readiness'),
+          onTap: () => context.push(Routes.boatReadiness(boatId)),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: Dimens.spaceXs),
             child: Row(

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/deeplinks/join_deep_link.dart';
 import 'package:navis_mobile/core/theme/app_typography.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
@@ -142,12 +143,15 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       final state = ref.read(tripRecordingProvider);
       if (restored && mounted && state.boatId != null) {
         // The screen sees the already-active recording and won't auto-start.
-        final params = [
-          if (state.isRegatta && state.trip != null) 'tripId=${state.trip!.id}',
-          if (state.isRegatta) 'regatta=true',
-        ];
-        final query = params.isEmpty ? '' : '?${params.join('&')}';
-        unawaited(context.push('/boats/${state.boatId}/record$query'));
+        unawaited(
+          context.push(
+            Routes.boatRecord(
+              state.boatId!,
+              tripId: state.isRegatta ? state.trip?.id : null,
+              regatta: state.isRegatta,
+            ),
+          ),
+        );
       }
     } else {
       // Load the session so discard() can clean up the server-side trip too.
@@ -174,7 +178,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       if (!purchased || !mounted) return;
     }
     if (!mounted) return;
-    unawaited(context.push('/boats/new'));
+    unawaited(context.push(Routes.newBoat));
   }
 
   Future<void> _joinBoat() async {
@@ -418,7 +422,7 @@ class _TodayHeader extends StatelessWidget {
             iconSize: Dimens.iconLg,
             color: context.inkMuted,
             tooltip: l.profile,
-            onPressed: () => context.go('/profile'),
+            onPressed: () => context.go(Routes.profile),
           ),
         ],
       ),
@@ -474,7 +478,7 @@ class _StatusRow extends StatelessWidget {
       value: '${readiness.score}',
       child: ExcludeSemantics(
         child: InkWell(
-          onTap: () => context.push('/boats/${boat.id}/readiness'),
+          onTap: () => context.push(Routes.boatReadiness(boat.id)),
           child: Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: Dimens.spaceLg,
@@ -561,7 +565,7 @@ class _ConditionsBlock extends ConsumerWidget {
         ),
         child: ExcludeSemantics(
           child: InkWell(
-            onTap: () => context.go('/weather'),
+            onTap: () => context.go(Routes.weather),
             borderRadius: BorderRadius.circular(Dimens.radiusControl),
             child: DecoratedBox(
               decoration: BoxDecoration(
@@ -638,7 +642,7 @@ class _ActionsBlock extends ConsumerWidget {
                 icon: Icons.play_arrow_rounded,
                 label: l.startTrip,
                 primary: true,
-                onTap: () => context.push('/boats/${boat.id}/precheck'),
+                onTap: () => context.push(Routes.boatPrecheck(boat.id)),
               ),
             ),
           if (canRecord) const SizedBox(width: Dimens.spaceMd),
@@ -674,7 +678,7 @@ class _ActionsBlock extends ConsumerWidget {
       );
       if (!ok || !context.mounted) return;
     }
-    if (context.mounted) unawaited(context.push('/boats/${boat.id}/anchor'));
+    if (context.mounted) unawaited(context.push(Routes.boatAnchor(boat.id)));
   }
 }
 
@@ -782,7 +786,7 @@ class _ComingUpBlock extends ConsumerWidget {
       action: hasMore
           ? _TextAction(
               label: l.seeAll,
-              onTap: () => context.push('/boats/${boat.id}/readiness'),
+              onTap: () => context.push(Routes.boatReadiness(boat.id)),
             )
           : null,
       children: [
@@ -860,22 +864,22 @@ class _SectionsBlock extends ConsumerWidget {
               icon: Icons.description_outlined,
               value: documentsValue(l, summary),
               valueTone: documentsTone(summary),
-              onTap: () => context.push('/boats/${boat.id}/documents'),
+              onTap: () => context.push(Routes.boatDocuments(boat.id)),
             ),
             NavisRow(
               title: l.logbook,
               icon: Icons.route_outlined,
-              onTap: () => context.push('/boats/${boat.id}/trips'),
+              onTap: () => context.push(Routes.boatTrips(boat.id)),
             ),
             NavisRow(
               title: l.tripStatistics,
               icon: Icons.query_stats_rounded,
-              onTap: () => context.push('/boats/${boat.id}/stats'),
+              onTap: () => context.push(Routes.boatStats(boat.id)),
             ),
             NavisRow(
               title: l.maintenanceAndExpenses,
               icon: Icons.build_outlined,
-              onTap: () => context.push('/boats/${boat.id}/maintenance'),
+              onTap: () => context.push(Routes.boatMaintenance(boat.id)),
             ),
             NavisRow(
               title: l.costTitle,
@@ -887,7 +891,7 @@ class _SectionsBlock extends ConsumerWidget {
                 ref,
                 allowed: tier.canCostAnalytics,
                 reason: l.paywallReasonCostAnalytics,
-                route: '/boats/${boat.id}/costs',
+                route: Routes.boatCosts(boat.id),
               ),
             ),
             if (boat.isOwner)
@@ -901,7 +905,7 @@ class _SectionsBlock extends ConsumerWidget {
                   ref,
                   allowed: tier.canSharedCoordination,
                   reason: l.paywallReasonShared,
-                  route: '/boats/${boat.id}/bookings',
+                  route: Routes.boatBookings(boat.id),
                 ),
               ),
           ],
@@ -932,7 +936,7 @@ class _SectionsBlock extends ConsumerWidget {
               NavisRow(
                 title: l.editBoat,
                 icon: Icons.edit_outlined,
-                onTap: () => context.push('/boats/${boat.id}/edit'),
+                onTap: () => context.push(Routes.boatEdit(boat.id)),
               ),
             ],
           ),

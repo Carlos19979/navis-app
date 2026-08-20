@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/documents/domain/entities/document.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
@@ -56,7 +57,7 @@ class DocumentListScreen extends ConsumerWidget {
       floatingActionButton: canView && canManage
           ? NavisGradientFab(
               icon: Icons.add,
-              onPressed: () => context.push('/boats/$boatId/documents/new'),
+              onPressed: () => context.push(Routes.newDocument(boatId)),
               tooltip: l.newDocument,
             )
           : null,
@@ -88,7 +89,7 @@ class _DocumentList extends ConsumerWidget {
             message: l.noDocuments,
             actionLabel: canManage ? l.newDocument : null,
             onAction: canManage
-                ? () => context.push('/boats/$boatId/documents/new')
+                ? () => context.push(Routes.newDocument(boatId))
                 : null,
           );
         }
@@ -123,7 +124,7 @@ class _DocumentList extends ConsumerWidget {
               final doc = sorted[canManage ? index : index - 1];
               return DocumentCard(
                 document: doc,
-                onTap: () => context.push('/documents/${doc.id}'),
+                onTap: () => context.push(Routes.document(doc.id)),
               )
                   .animate()
                   .fadeIn(

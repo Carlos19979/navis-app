@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/network/notification_service.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
@@ -145,7 +146,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         notificationService.requestPermission().then((_) {
           notificationService.registerDevice();
         });
-        context.go('/boats');
+        context.go(Routes.today);
       }
     });
 
@@ -360,7 +361,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                     // -- Register Link --
                     GestureDetector(
-                      onTap: () => context.go('/register'),
+                      onTap: () => context.go(Routes.register),
                       child: Text.rich(
                         TextSpan(
                           text: '${l.noAccount} ',
