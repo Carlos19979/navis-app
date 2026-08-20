@@ -6,9 +6,11 @@ import 'package:navis_mobile/features/logbook/presentation/providers/logbook_pro
 import 'package:navis_mobile/shared/widgets/crew_chips_field.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
+import 'package:navis_mobile/shared/widgets/navis_section.dart';
+import 'package:navis_mobile/shared/widgets/navis_text_field.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
-import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_loading.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 
@@ -104,6 +106,14 @@ class _TripEditScreenState extends ConsumerState<TripEditScreen> {
     }
   }
 
+  /// Optional, but a number if filled in.
+  String? _optionalNumber(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    return double.tryParse(value.trim()) == null
+        ? AppLocalizations.of(context)!.validNumber
+        : null;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_loaded) {
@@ -125,111 +135,71 @@ class _TripEditScreenState extends ConsumerState<TripEditScreen> {
           showBack: true,
         ),
         body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: Insets.screenWithNav,
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                NavisCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      TextFormField(
-                        controller: _departurePortController,
-                        textInputAction: TextInputAction.next,
-                        decoration: InputDecoration(
-                          labelText: l.departurePort,
-                          prefixIcon: const Icon(Icons.flight_takeoff),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return l.pleaseEnterDeparturePort;
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _arrivalPortController,
-                        textInputAction: TextInputAction.next,
-                        decoration: InputDecoration(
-                          labelText: l.arrivalPortOptional,
-                          prefixIcon: const Icon(Icons.flight_land),
-                        ),
-                      ),
-                    ],
-                  ),
+                // Grouped by heading instead of by card. Three stacked cards
+                // put a frame around every pair of fields, and the fields are
+                // already framed — so the form read as six nested boxes.
+                NavisSectionHeader(label: l.tripRoute),
+                const SizedBox(height: Dimens.spaceSm),
+                NavisTextField(
+                  controller: _departurePortController,
+                  label: l.departurePort,
+                  prefixIcon: Icons.sailing_rounded,
+                  textInputAction: TextInputAction.next,
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? l.pleaseEnterDeparturePort
+                      : null,
                 ),
-                const SizedBox(height: 16),
-                NavisCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      TextFormField(
-                        controller: _engineHoursController,
-                        keyboardType: TextInputType.number,
-                        textInputAction: TextInputAction.next,
-                        decoration: InputDecoration(
-                          labelText: l.engineHoursOptional,
-                          prefixIcon: const Icon(Icons.engineering),
-                        ),
-                        validator: (value) {
-                          if (value != null && value.isNotEmpty) {
-                            if (double.tryParse(value.trim()) == null) {
-                              return l.validNumber;
-                            }
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _fuelController,
-                        keyboardType: TextInputType.number,
-                        textInputAction: TextInputAction.next,
-                        decoration: InputDecoration(
-                          labelText: l.fuelUsedOptional,
-                          prefixIcon: const Icon(Icons.local_gas_station),
-                        ),
-                        validator: (value) {
-                          if (value != null && value.isNotEmpty) {
-                            if (double.tryParse(value.trim()) == null) {
-                              return l.validNumber;
-                            }
-                          }
-                          return null;
-                        },
-                      ),
-                    ],
-                  ),
+                const SizedBox(height: Dimens.spaceMd),
+                NavisTextField(
+                  controller: _arrivalPortController,
+                  label: l.arrivalPortOptional,
+                  prefixIcon: Icons.anchor_rounded,
+                  textInputAction: TextInputAction.next,
                 ),
-                const SizedBox(height: 16),
-                NavisCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CrewChipsField(
-                        label: l.crewMembers,
-                        initial: _crew,
-                        suggestions: _crewSuggestions,
-                        onChanged: (crew) => _crew = crew,
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _notesController,
-                        maxLines: 3,
-                        textInputAction: TextInputAction.done,
-                        decoration: InputDecoration(
-                          labelText: l.notesOptional,
-                          prefixIcon: const Icon(Icons.notes),
-                          alignLabelWithHint: true,
-                        ),
-                      ),
-                    ],
-                  ),
+                const SizedBox(height: Dimens.spaceXl),
+                NavisSectionHeader(label: l.engineSectionTitle),
+                const SizedBox(height: Dimens.spaceSm),
+                NavisTextField(
+                  controller: _engineHoursController,
+                  label: l.engineHoursOptional,
+                  prefixIcon: Icons.engineering_rounded,
+                  keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.next,
+                  validator: _optionalNumber,
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: Dimens.spaceMd),
+                NavisTextField(
+                  controller: _fuelController,
+                  label: l.fuelUsedOptional,
+                  prefixIcon: Icons.local_gas_station_rounded,
+                  keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.next,
+                  validator: _optionalNumber,
+                ),
+                const SizedBox(height: Dimens.spaceXl),
+                NavisSectionHeader(label: l.crew),
+                const SizedBox(height: Dimens.spaceSm),
+                CrewChipsField(
+                  label: l.crewMembers,
+                  initial: _crew,
+                  suggestions: _crewSuggestions,
+                  onChanged: (crew) => _crew = crew,
+                ),
+                const SizedBox(height: Dimens.spaceMd),
+                NavisTextField(
+                  controller: _notesController,
+                  label: l.notesOptional,
+                  prefixIcon: Icons.notes_rounded,
+                  maxLines: 3,
+                  textInputAction: TextInputAction.done,
+                ),
+                const SizedBox(height: Dimens.spaceXxl),
                 NavisButton(
                   label: l.updateTrip,
                   onPressed: _onSave,

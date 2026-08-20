@@ -7,6 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
+import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/anchor/presentation/providers/anchor_watch_provider.dart';
 import 'package:navis_mobile/features/billing/billing.dart';
@@ -213,7 +214,7 @@ class _DragBanner extends ConsumerWidget {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: context.critical,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(Dimens.radiusControl),
             boxShadow: [
               BoxShadow(
                 color: context.critical.withValues(alpha: 0.5),
@@ -304,7 +305,7 @@ class _ControlPanel extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: context.dialogSurface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(Dimens.radiusSurface),
         border: Border.all(color: context.glassBorderColor),
       ),
       child: Column(

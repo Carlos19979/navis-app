@@ -9,7 +9,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 
-import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/boat/data/permission_errors.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
@@ -458,7 +458,9 @@ class _TripRecordingScreenState extends ConsumerState<TripRecordingScreen> {
     );
 
     return Scaffold(
-      backgroundColor: AppColors.navy,
+      // The chart's own water colour, not the dark theme's navy: this screen is
+      // a map in both themes, and the sea is the same colour in both.
+      backgroundColor: OpenSeaMapTileProvider.waterBackground,
       body: saving
           ? Center(
               child: Column(
@@ -674,14 +676,13 @@ class _GlassIconButton extends StatelessWidget {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: AppColors.navy.withValues(alpha: 0.7),
+            // On-media tokens: this control floats over the chart, where a
+            // theme surface would be unreadable in one theme or the other.
+            color: context.onMedia,
             shape: BoxShape.circle,
-            border: Border.all(
-              color: AppColors.glassBorder,
-              width: 0.5,
-            ),
+            border: Border.all(color: context.onMediaBorder),
           ),
-          child: Icon(icon, color: context.ink, size: 22),
+          child: Icon(icon, color: context.onAccent, size: Dimens.iconLg),
         ),
       ),
     );

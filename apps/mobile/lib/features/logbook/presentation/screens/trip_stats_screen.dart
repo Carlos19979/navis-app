@@ -4,6 +4,10 @@ import 'package:intl/intl.dart';
 
 import 'package:go_router/go_router.dart';
 import 'package:navis_mobile/app/routes.dart';
+import 'package:navis_mobile/core/theme/app_typography.dart';
+import 'package:navis_mobile/core/utils/measure_utils.dart';
+import 'package:navis_mobile/shared/widgets/navis_list.dart';
+import 'package:navis_mobile/shared/widgets/navis_section.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/logbook/domain/entities/trip.dart';
@@ -14,12 +18,14 @@ import 'package:navis_mobile/shared/models/analytics_period.dart';
 import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_bar_chart.dart';
-import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_empty_state.dart';
 import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_period_picker.dart';
 import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
 import 'package:navis_mobile/shared/widgets/navis_metric.dart';
+
+/// Nothing to show for a figure that has no value yet.
+const _dash = '\u2014';
 
 /// Which slice of the logbook is on screen. Per boat, and reset when the screen
 /// is left: coming back to "everything" is the useful default.
@@ -87,6 +93,7 @@ class _StatsBody extends ConsumerWidget {
       period = const AnalyticsPeriod.allTime();
     }
 
+    final locale = Localizations.localeOf(context).toLanguageTag();
     final selected = trips.where((t) => period.contains(t.departureTime));
     final stats = aggregateTrips(selected);
 
@@ -105,44 +112,42 @@ class _StatsBody extends ConsumerWidget {
         _HeadlineCard(period: period, stats: stats),
         const SizedBox(height: 12),
         NavisMetricGrid(children: [
+          // No per-metric colour: six figures in four different accents is
+          // colour used as decoration, and it leaves nothing for the one
+          // number that would actually need flagging.
           NavisMetric(
             icon: Icons.route_rounded,
             value: stats.trips.toString(),
             label: l.totalTrips,
-            color: context.accent,
           ),
           NavisMetric(
             icon: Icons.anchor_rounded,
             value: stats.portCount.toString(),
             label: l.portsVisited,
-            color: context.accent,
           ),
           NavisMetric(
             icon: Icons.speed_rounded,
-            value: _knots(stats.topSpeedKn),
+            value: _knots(locale, l, stats.topSpeedKn),
             label: l.topSpeed,
-            color: context.critical,
           ),
           NavisMetric(
             icon: Icons.trending_up_rounded,
-            value: stats.avgSpeedKn == null ? '—' : _knots(stats.avgSpeedKn!),
+            value: _knots(locale, l, stats.avgSpeedKn),
             label: l.averageSpeed,
-            color: context.positive,
           ),
           NavisMetric(
             icon: Icons.local_gas_station_rounded,
-            value:
-                stats.fuelL > 0 ? '${stats.fuelL.toStringAsFixed(0)} L' : '—',
+            value: stats.fuelL > 0
+                ? Measure.litres(locale, stats.fuelL, 'L')
+                : _dash,
             label: l.fuelConsumed,
-            color: context.caution,
           ),
           NavisMetric(
             icon: Icons.engineering_rounded,
             value: stats.engineHours > 0
-                ? '${stats.engineHours.toStringAsFixed(1)} h'
-                : '—',
+                ? Measure.hours(locale, stats.engineHours, 'h')
+                : _dash,
             label: l.totalEngineHours,
-            color: context.caution,
           ),
         ]),
         const SizedBox(height: 12),
@@ -165,8 +170,13 @@ class _StatsBody extends ConsumerWidget {
     );
   }
 
-  static String _knots(double value) =>
-      value > 0 ? '${value.toStringAsFixed(1)} kn' : '—';
+  /// `kt`, not `kn`: this screen was the only place in the app using the other
+  /// abbreviation, so the same speed read differently here than on the trip it
+  /// came from.
+  static String _knots(String locale, AppLocalizations l, double? value) =>
+      value == null || value <= 0
+          ? _dash
+          : Measure.knots(locale, value, l.knots);
 
   /// Trips per month for the selected year. Tapping a bar drills into that
   /// month, which is also the discoverable way into the month filter.
@@ -205,58 +215,51 @@ class _HeadlineCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    return NavisCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            _periodLabel(context, l, period),
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: context.txtSecondary,
-                  letterSpacing: 0.4,
-                ),
-          ),
-          const SizedBox(height: 6),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Flexible(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    stats.distanceNm.toStringAsFixed(1),
-                    maxLines: 1,
-                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                          color: context.accent,
-                          fontWeight: FontWeight.w800,
-                        ),
+    final locale = Localizations.localeOf(context).toLanguageTag();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          _periodLabel(context, l, period),
+          style: NavisType.overline.copyWith(color: context.inkMuted),
+        ),
+        const SizedBox(height: Dimens.spaceXs),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  Measure.decimal(
+                    locale,
+                    stats.distanceNm,
+                    digits: stats.distanceNm < 10 ? 1 : 0,
                   ),
+                  maxLines: 1,
+                  style: NavisType.numeral.copyWith(color: context.ink),
                 ),
               ),
-              const SizedBox(width: 6),
-              Text(
-                'NM',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: context.accent.withValues(alpha: 0.8),
-                      fontWeight: FontWeight.w700,
-                    ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            l.statsHoursAndTrips(
-              stats.hours.toStringAsFixed(1),
-              stats.trips,
             ),
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: context.txtSecondary,
-                ),
+            const SizedBox(width: Dimens.spaceSm),
+            Text(
+              l.nauticalMiles,
+              style: NavisType.title3.copyWith(color: context.inkMuted),
+            ),
+          ],
+        ),
+        const SizedBox(height: Dimens.spaceXs),
+        Text(
+          l.statsHoursAndTrips(
+            Measure.decimal(locale, stats.hours),
+            stats.trips,
           ),
-        ],
-      ),
+          style: NavisType.bodySm.copyWith(color: context.inkMuted),
+        ),
+      ],
     );
   }
 
@@ -286,58 +289,36 @@ class _AveragesCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toLanguageTag();
     final rows = <(IconData, String, String)>[
       if (stats.avgTripNm != null)
         (
           Icons.straighten_rounded,
           l.statsAvgTrip,
-          '${stats.avgTripNm!.toStringAsFixed(1)} NM',
+          Measure.nauticalMiles(locale, stats.avgTripNm!, l.nauticalMiles),
         ),
       if (stats.longestTripNm > 0)
         (
           Icons.flag_rounded,
           l.statsLongestTrip,
-          '${stats.longestTripNm.toStringAsFixed(1)} NM',
+          Measure.nauticalMiles(locale, stats.longestTripNm, l.nauticalMiles),
         ),
       if (stats.litresPerNm != null)
         (
           Icons.opacity_rounded,
           l.statsLitresPerNm,
-          '${stats.litresPerNm!.toStringAsFixed(2)} L/NM',
+          '${Measure.decimal(locale, stats.litresPerNm!, digits: 2)} '
+              'L/${l.nauticalMiles}',
         ),
     ];
     if (rows.isEmpty) return const SizedBox.shrink();
 
-    return NavisCard(
-      child: Column(
-        children: [
-          for (final (index, row) in rows.indexed) ...[
-            if (index > 0)
-              Divider(
-                  height: 18, color: context.glassBorderColor, thickness: 0.5),
-            Row(
-              children: [
-                Icon(row.$1, size: 18, color: context.accent),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    row.$2,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: context.txtSecondary,
-                        ),
-                  ),
-                ),
-                Text(
-                  row.$3,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
+    return NavisList(
+      padding: EdgeInsets.zero,
+      children: [
+        for (final (icon, label, value) in rows)
+          NavisRow(icon: icon, title: label, value: value),
+      ],
     );
   }
 }
@@ -360,20 +341,15 @@ class _PortsCard extends StatelessWidget {
     final shown = ports.take(_maxShown).toList();
     final rest = ports.length - shown.length;
 
-    return NavisCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            l.portsVisited,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        NavisSectionHeader(label: l.portsVisited),
+        Padding(
+          padding: const EdgeInsets.only(top: Dimens.spaceSm),
+          child: Wrap(
+            spacing: Dimens.spaceSm,
+            runSpacing: Dimens.spaceSm,
             children: [
               for (final port in shown)
                 Container(
@@ -381,31 +357,22 @@ class _PortsCard extends StatelessWidget {
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: context.glassBg,
-                    borderRadius: BorderRadius.circular(Dimens.radiusMd),
-                    border: Border.all(
-                      color: context.glassBorderColor,
-                      width: 0.5,
-                    ),
+                    borderRadius: BorderRadius.circular(Dimens.radiusChip),
+                    border: Border.all(color: context.hairline),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         port.port,
-                        style: TextStyle(
-                          color: context.txtPrimary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
+                        style: NavisType.label.copyWith(color: context.ink),
                       ),
                       if (port.visits > 1) ...[
                         const SizedBox(width: 6),
                         Text(
                           '×${port.visits}',
-                          style: TextStyle(
-                            color: context.accent,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
+                          style: NavisType.caption.copyWith(
+                            color: context.inkMuted,
                           ),
                         ),
                       ],
@@ -417,13 +384,15 @@ class _PortsCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 6),
                   child: Text(
                     l.statsMorePorts(rest),
-                    style: TextStyle(color: context.txtSecondary, fontSize: 13),
+                    style: NavisType.bodySm.copyWith(
+                      color: context.inkMuted,
+                    ),
                   ),
                 ),
             ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
