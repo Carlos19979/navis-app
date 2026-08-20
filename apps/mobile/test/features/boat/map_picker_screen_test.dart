@@ -8,32 +8,6 @@ import 'package:navis_mobile/features/ports/domain/entities/port.dart';
 
 import '../../helpers/helpers.dart';
 
-/// Ignores tile/network-image plumbing errors that FlutterMap surfaces in
-/// widget tests (same pattern as the W1 chart spike): they are cosmetic —
-/// there is no network or path_provider in the test environment.
-void installTileNoiseFilter() {
-  final originalOnError = FlutterError.onError;
-  FlutterError.onError = (details) {
-    final message = details.exceptionAsString();
-    const tolerated = [
-      'MissingPluginException',
-      'HTTP request failed',
-      'NetworkImage',
-      'CachedNetworkImageProvider',
-      'HttpException',
-      'SocketException',
-      'Failed host lookup',
-      'Connection refused',
-      'Connection closed',
-      'Couldn\'t download or retrieve file',
-      'HttpExceptionWithStatus',
-    ];
-    if (tolerated.any(message.contains)) return;
-    originalOnError?.call(details);
-  };
-  addTearDown(() => FlutterError.onError = originalOnError);
-}
-
 void main() {
   Widget buildSubject({
     double? initialLatitude,

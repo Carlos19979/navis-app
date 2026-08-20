@@ -330,28 +330,12 @@ void main() {
 
     testWidgets('renders the map card when track points exist', (tester) async {
       setPhoneSize(tester);
-      // Ignore tile/network-image plumbing errors from FlutterMap in tests
-      // (same pattern as the W1 chart spike).
-      final originalOnError = FlutterError.onError;
-      FlutterError.onError = (details) {
-        final message = details.exceptionAsString();
-        const tolerated = [
-          'MissingPluginException',
-          'HTTP request failed',
-          'NetworkImage',
-          'CachedNetworkImageProvider',
-          'HttpException',
-          'SocketException',
-          'Failed host lookup',
-          'Connection refused',
-          'Connection closed',
-          'Couldn\'t download or retrieve file',
-          'HttpExceptionWithStatus',
-        ];
-        if (tolerated.any(message.contains)) return;
-        originalOnError?.call(details);
-      };
-      addTearDown(() => FlutterError.onError = originalOnError);
+      // The shared filter, not a copy of its list: this test carried its own
+      // and it had gone stale — it predates the offline tile store, so it
+      // tolerated raw HTTP errors but not the DioException the store's
+      // fetcher actually throws. It passed only while few enough tiles
+      // resolved inside the pumped frames.
+      installTileNoiseFilter();
 
       final trip = makeTrip().copyWith(
         trackPoints: [

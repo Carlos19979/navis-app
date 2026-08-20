@@ -1,5 +1,4 @@
 // ignore_for_file: lines_longer_than_80_chars
-import 'package:flutter/foundation.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -42,29 +41,9 @@ void main() {
     setPhoneSize(tester);
     installFakeGeo();
 
-    // Scoped filter: ignore tile/network-image plumbing errors only.
-    final originalOnError = FlutterError.onError;
-    FlutterError.onError = (details) {
-      final message = details.exceptionAsString();
-      const tolerated = [
-        'MissingPluginException',
-        'HTTP request failed',
-        'NetworkImage',
-        'CachedNetworkImageProvider',
-        'HttpException',
-        'SocketException',
-        'Failed host lookup',
-        'Connection refused',
-        'Connection closed',
-        'Couldn\'t download or retrieve file',
-        'HttpExceptionWithStatus',
-        'DioException',
-        'databaseFactory not initialized',
-      ];
-      if (tolerated.any(message.contains)) return;
-      originalOnError?.call(details);
-    };
-    addTearDown(() => FlutterError.onError = originalOnError);
+    // The list this spike introduced now lives in `helpers/map_noise.dart`,
+    // and there is exactly one of it: three copies had drifted apart.
+    installTileNoiseFilter();
 
     await tester.pumpWidget(
       buildTestApp(

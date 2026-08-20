@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -187,6 +188,7 @@ Trip makeTrip({
   double? fuelConsumedL,
   double? engineHours,
   bool? canManage,
+  List<TrackPoint>? trackPoints,
 }) {
   final departure = departureTime ?? DateTime(2026, 4, 26, 10);
   return Trip(
@@ -203,6 +205,11 @@ Trip makeTrip({
     fuelConsumedL: fuelConsumedL,
     engineHours: engineHours,
     canManage: canManage,
+    // Null by default, which is what a trip recorded before track storage
+    // looks like — but a *default* of null meant the trip-detail golden was
+    // taken without a track, and the map card only renders when there is one.
+    // The map has been there all along; the fixture was hiding it.
+    trackPoints: trackPoints,
     crewMembers: const ['Carlos', 'Maria'],
     notes: 'Great trip',
     createdAt: DateTime(2026, 4, 26),
@@ -611,4 +618,25 @@ Anomaly makeAnomaly({
     distanceNm: distanceNm,
     excessLiters: excessLiters,
   );
+}
+
+/// A short coastal track with a speed profile, for the screens that draw one.
+///
+/// Rising then falling knots on purpose: the trip map colours each segment by
+/// speed, so a constant track would render as one flat line and prove nothing.
+List<TrackPoint> sampleTrack() {
+  const start = (39.5696, 2.6502); // Palma
+  final points = <TrackPoint>[];
+  for (var i = 0; i < 24; i++) {
+    final t = i / 23;
+    points.add(
+      TrackPoint(
+        latitude: start.$1 + 0.16 * t + 0.02 * math.sin(t * math.pi * 3),
+        longitude: start.$2 - 0.30 * t + 0.03 * math.cos(t * math.pi * 2),
+        timestamp: DateTime(2026, 4, 26, 10).add(Duration(minutes: i * 11)),
+        speedKnots: 2 + 9 * math.sin(t * math.pi),
+      ),
+    );
+  }
+  return points;
 }

@@ -9,6 +9,7 @@ import 'package:latlong2/latlong.dart';
 
 import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/theme/app_colors.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
 import 'package:navis_mobile/core/utils/distance_utils.dart';
@@ -149,11 +150,18 @@ class TripDetailScreen extends ConsumerWidget {
                     height: 220,
                     child: FlutterMap(
                       options: MapOptions(
-                        initialCenter: LatLng(
-                          trackPoints.first.latitude,
-                          trackPoints.first.longitude,
+                        // Framed to the whole track, not centred on its first
+                        // point at a fixed zoom 12 — a trip longer than a few
+                        // miles ran straight off the card, so the preview
+                        // showed the start and none of the voyage.
+                        initialCameraFit: CameraFit.bounds(
+                          bounds: _trackBounds(trackPoints),
+                          padding: const EdgeInsets.all(Dimens.spaceXl),
+                          // A short hop is a handful of points inside a few
+                          // hundred metres; fitting that literally zooms past
+                          // any tile that exists.
+                          maxZoom: 15,
                         ),
-                        initialZoom: 12,
                         minZoom: 3,
                         maxZoom: 18,
                         // Navy while tiles load, instead of flutter_map's
@@ -387,6 +395,26 @@ class TripDetailScreen extends ConsumerWidget {
         value: trip.notes!,
       ),
     );
+  }
+
+  /// The rectangle that holds every point of the track.
+  ///
+  /// `LatLngBounds.fromPoints` throws on an empty list, and the caller already
+  /// guards on `trackPoints.isNotEmpty`, but a single-point track would give a
+  /// zero-area box — so it is nudged outwards to something a camera can fit.
+  LatLngBounds _trackBounds(List<TrackPoint> trackPoints) {
+    final points = [
+      for (final p in trackPoints) LatLng(p.latitude, p.longitude),
+    ];
+    final bounds = LatLngBounds.fromPoints(points);
+    if (bounds.north == bounds.south && bounds.east == bounds.west) {
+      const nudge = 0.002; // ~200 m
+      return LatLngBounds(
+        LatLng(bounds.south - nudge, bounds.west - nudge),
+        LatLng(bounds.north + nudge, bounds.east + nudge),
+      );
+    }
+    return bounds;
   }
 
   List<Polyline> _buildSpeedPolylines(
