@@ -41,12 +41,23 @@ class _TripEditScreenState extends ConsumerState<TripEditScreen> {
     _loadTrip();
   }
 
+  /// A number as the user would type it: «3», not «3.0»; «3.5» stays «3.5».
+  static String _editable(double? value) {
+    if (value == null) return '';
+    return value == value.roundToDouble()
+        ? value.toStringAsFixed(0)
+        : value.toString();
+  }
+
   Future<void> _loadTrip() async {
     final trip = await ref.read(tripProvider(widget.tripId).future);
     _departurePortController.text = trip.departurePort;
     _arrivalPortController.text = trip.arrivalPort ?? '';
-    _engineHoursController.text = trip.engineHours?.toStringAsFixed(1) ?? '';
-    _fuelController.text = trip.fuelConsumedL?.toStringAsFixed(1) ?? '';
+    // Seeded for *editing*, so the decimal point stays (that is what
+    // `double.parse` reads) but a whole number is not padded to «3.0» — the
+    // form should hand back what the user typed, not a formatter's idea of it.
+    _engineHoursController.text = _editable(trip.engineHours);
+    _fuelController.text = _editable(trip.fuelConsumedL);
     _crew = List.of(trip.crewMembers ?? const []);
     _notesController.text = trip.notes ?? '';
     setState(() => _loaded = true);

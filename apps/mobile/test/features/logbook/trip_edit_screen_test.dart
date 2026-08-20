@@ -54,7 +54,8 @@ void main() {
       expect(find.text('Palma de Mallorca'), findsOneWidget);
       expect(find.text('Port de Soller'), findsOneWidget);
       expect(find.text('12.5'), findsOneWidget);
-      expect(find.text('30.0'), findsOneWidget);
+      // «30», not «30.0»: the field is seeded the way the user would type it.
+      expect(find.text('30'), findsOneWidget);
       expect(find.text('Great trip'), findsOneWidget);
       expect(find.text('Update trip'), findsOneWidget);
     });
@@ -100,7 +101,7 @@ void main() {
       await pumpScreen(tester);
 
       await tester.enterText(
-        find.widgetWithText(TextFormField, '30.0'),
+        find.widgetWithText(TextFormField, '30'),
         'lots',
       );
       await tester.ensureVisible(find.text('Update trip'));

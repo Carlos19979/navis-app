@@ -504,6 +504,12 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                               const SizedBox(height: 16),
                               DropdownButtonFormField<String>(
                                 initialValue: _selectedType,
+                                // Expanded and ellipsised: «Certificado
+                                // anticontaminación» next to a prefix icon
+                                // overflowed the field by 27 px, which is a
+                                // yellow-and-black stripe on a real phone at a
+                                // large text scale.
+                                isExpanded: true,
                                 decoration: InputDecoration(
                                   labelText: l.documentType,
                                   prefixIcon:
@@ -514,6 +520,8 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                                     value: type,
                                     child: Text(
                                       documentTypeLabel(l, type),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   );
                                 }).toList(),
