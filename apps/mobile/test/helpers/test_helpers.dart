@@ -492,6 +492,8 @@ Expense makeExpense({
   DateTime? incurredOn,
   String? notes,
   String? invoiceUrl,
+  double? liters,
+  double? pricePerLiter,
 }) {
   return Expense(
     id: id,
@@ -501,6 +503,8 @@ Expense makeExpense({
     incurredOn: incurredOn ?? DateTime(2026, 4, 20),
     notes: notes,
     invoiceUrl: invoiceUrl,
+    liters: liters,
+    pricePerLiter: pricePerLiter,
   );
 }
 

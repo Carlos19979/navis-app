@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 import 'package:navis_mobile/core/theme/chart_colors.dart';
+import 'package:navis_mobile/core/theme/app_typography.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
+import 'package:navis_mobile/core/utils/measure_utils.dart';
 import 'package:navis_mobile/core/utils/money_utils.dart';
 import 'package:navis_mobile/features/cost/domain/cost_period_stats.dart';
 import 'package:navis_mobile/l10n/app_localizations.dart';
@@ -89,17 +91,21 @@ class CostHeadlineCard extends StatelessWidget {
             child: Text(
               Money.format(locale, stats.total),
               maxLines: 1,
-              style: theme.textTheme.displaySmall?.copyWith(
-                color: context.accent,
-                fontWeight: FontWeight.w800,
-              ),
+              style: NavisType.numeral.copyWith(color: context.ink),
             ),
           ),
           if (stats.distanceNm > 0 || stats.trips > 0) ...[
             const SizedBox(height: 4),
             Text(
               l.costPeriodUsage(
-                stats.distanceNm.toStringAsFixed(1),
+                // Number only — the string already carries the unit (and it is
+                // «MN» in Spanish). Same trap as the wave height, which came
+                // out as «0,8 m m».
+                Measure.decimal(
+                  locale,
+                  stats.distanceNm,
+                  digits: stats.distanceNm < 10 ? 1 : 0,
+                ),
                 stats.trips,
               ),
               style: theme.textTheme.bodyMedium?.copyWith(
@@ -209,7 +215,7 @@ class CostRunRateCard extends StatelessWidget {
               Icon(
                 Icons.speed_rounded,
                 size: Dimens.iconSm,
-                color: context.positive,
+                color: context.inkMuted,
               ),
               const SizedBox(width: Dimens.spaceSm),
               Text(
@@ -230,7 +236,7 @@ class CostRunRateCard extends StatelessWidget {
                     l.costPerMonthValue(Money.format(locale, monthly)),
                     maxLines: 1,
                     style: theme.textTheme.titleLarge?.copyWith(
-                      color: context.positive,
+                      color: context.ink,
                       fontWeight: FontWeight.w800,
                     ),
                   ),

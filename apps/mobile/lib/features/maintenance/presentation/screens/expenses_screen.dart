@@ -307,9 +307,13 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             e.liters!,
             digits: e.liters! % 1 == 0 ? 0 : 1,
           ),
-          Money.formatPrecise(
+          // Number only: the string already ends in «€/L». Third time this
+          // trap has bitten in this redesign — «0,8 m m», «142 NM NM», and
+          // now «1,66 € €/L».
+          Measure.decimal(
             locale,
             e.pricePerLiter ?? (e.amount / e.liters!),
+            digits: 2,
           ),
         ),
     ].join(' · ');
@@ -421,6 +425,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
   Future<void> _editExpense(BuildContext context, WidgetRef ref,
       {Expense? existing}) async {
     final l = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toLanguageTag();
     var category = existing?.category ?? '';
     final amountCtrl =
         TextEditingController(text: existing?.amount.toStringAsFixed(0) ?? '');
@@ -528,11 +533,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                     return Padding(
                       padding: const EdgeInsets.only(top: 6, bottom: 10),
                       child: Text(
-                        l.pricePerLiterValue((a / li).toStringAsFixed(2)),
-                        style: TextStyle(
-                          color: context.accent,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                        l.pricePerLiterValue(
+                          Measure.decimal(locale, a / li, digits: 2),
+                        ),
+                        style: NavisType.label.copyWith(
+                          color: context.inkMuted,
                         ),
                       ),
                     );

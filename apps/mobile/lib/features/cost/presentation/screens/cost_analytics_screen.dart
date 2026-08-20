@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:navis_mobile/app/routes.dart';
+import 'package:navis_mobile/core/theme/app_typography.dart';
+import 'package:navis_mobile/core/utils/measure_utils.dart';
 import 'package:navis_mobile/core/theme/dimens.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/core/utils/money_utils.dart';
@@ -188,27 +190,24 @@ class _RatioGrid extends StatelessWidget {
           icon: Icons.straighten_rounded,
           value: money(stats.costPerNm),
           label: l.costPerNmLabel,
-          color: context.accent,
         ),
         NavisMetric(
           icon: Icons.route_rounded,
           value: money(stats.costPerTrip),
           label: l.costPerTripLabel,
-          color: context.positive,
         ),
         NavisMetric(
           icon: Icons.engineering_rounded,
           value: money(stats.costPerEngineHour),
           label: l.costPerEngineHourLabel,
-          color: context.caution,
         ),
         NavisMetric(
           icon: Icons.opacity_rounded,
           value: stats.litresPerNm == null
               ? '—'
-              : '${stats.litresPerNm!.toStringAsFixed(2)} L/NM',
+              : '${Measure.decimal(locale, stats.litresPerNm!, digits: 2)} '
+                  'L/${l.nauticalMiles}',
           label: l.costFuelEfficiency,
-          color: context.accent,
         ),
         NavisMetric(
           icon: Icons.local_gas_station_rounded,
@@ -216,15 +215,13 @@ class _RatioGrid extends StatelessWidget {
               ? '—'
               : Money.perUnit(locale, stats.pricePerLiter!, 'L', precise: true),
           label: l.costAvgPricePerLiter,
-          color: context.caution,
         ),
         NavisMetric(
           icon: Icons.water_drop_outlined,
           value: stats.fuelLiters > 0
-              ? '${stats.fuelLiters.toStringAsFixed(0)} L'
+              ? Measure.litres(locale, stats.fuelLiters, 'L')
               : '—',
           label: l.costLitersPurchased,
-          color: context.positive,
         ),
       ],
     );
@@ -367,16 +364,12 @@ class _Anomalies extends ConsumerWidget {
                       children: [
                         Text(
                           l.anomalyFuelHigh(a.deviationPct.round()),
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: context.txtPrimary,
-                          ),
+                          style: NavisType.title3.copyWith(color: context.ink),
                         ),
                         Text(
                           NavisDateUtils.formatDate(a.date),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: context.txtSecondary,
+                          style: NavisType.caption.copyWith(
+                            color: context.inkMuted,
                           ),
                         ),
                         // The litres are only money once there is a €/L to
@@ -390,10 +383,8 @@ class _Anomalies extends ConsumerWidget {
                                 a.excessLiters * pricePerLiter,
                               ),
                             ),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: context.caution,
-                              fontWeight: FontWeight.w700,
+                            style: NavisType.caption.copyWith(
+                              color: context.inkMuted,
                             ),
                           ),
                       ],
@@ -402,7 +393,7 @@ class _Anomalies extends ConsumerWidget {
                   Icon(
                     Icons.chevron_right_rounded,
                     size: Dimens.iconSm,
-                    color: context.txtSecondary,
+                    color: context.inkFaint,
                   ),
                 ],
               ),
@@ -410,10 +401,7 @@ class _Anomalies extends ConsumerWidget {
           ),
         Text(
           l.anomaliesExplainer,
-          style: Theme.of(context)
-              .textTheme
-              .bodySmall
-              ?.copyWith(color: context.txtSecondary),
+          style: NavisType.bodySm.copyWith(color: context.inkMuted),
         ),
       ],
     );
