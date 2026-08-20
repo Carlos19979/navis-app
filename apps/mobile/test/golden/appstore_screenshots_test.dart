@@ -39,7 +39,7 @@ import 'package:navis_mobile/l10n/app_localizations.dart';
 import '../helpers/helpers.dart';
 import 'golden_harness.dart';
 
-/// Boat list notifier stub (copied from boat_dashboard_golden_test.dart).
+/// Boat list notifier stub.
 class _MockGroupRepository extends Mock implements GroupRepository {}
 
 /// 6.7" iPhone App Store Connect screenshot size: 430x932 logical @ DPR 3.0.
@@ -111,7 +111,7 @@ void main() {
     );
     await expectLater(
       find.byType(MaterialApp),
-      matchesGoldenFile('goldens/appstore/boat_dashboard.png'),
+      matchesGoldenFile('goldens/appstore/today.png'),
     );
   });
 
