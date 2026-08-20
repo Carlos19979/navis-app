@@ -56,7 +56,7 @@ void main() {
       expect(find.text('12.5'), findsOneWidget);
       expect(find.text('30.0'), findsOneWidget);
       expect(find.text('Great trip'), findsOneWidget);
-      expect(find.text('Update Trip'), findsOneWidget);
+      expect(find.text('Update trip'), findsOneWidget);
     });
 
     testWidgets('empty departure port shows validation error', (tester) async {
@@ -68,8 +68,8 @@ void main() {
         find.widgetWithText(TextFormField, 'Palma de Mallorca'),
         '',
       );
-      await tester.ensureVisible(find.text('Update Trip'));
-      await tester.tap(find.text('Update Trip'));
+      await tester.ensureVisible(find.text('Update trip'));
+      await tester.tap(find.text('Update trip'));
       await pumpScreen(tester);
 
       expect(find.text('Please enter the departure port'), findsOneWidget);
@@ -86,8 +86,8 @@ void main() {
         find.widgetWithText(TextFormField, '12.5'),
         'abc',
       );
-      await tester.ensureVisible(find.text('Update Trip'));
-      await tester.tap(find.text('Update Trip'));
+      await tester.ensureVisible(find.text('Update trip'));
+      await tester.tap(find.text('Update trip'));
       await pumpScreen(tester);
 
       expect(find.text('Please enter a valid number'), findsOneWidget);
@@ -103,8 +103,8 @@ void main() {
         find.widgetWithText(TextFormField, '30.0'),
         'lots',
       );
-      await tester.ensureVisible(find.text('Update Trip'));
-      await tester.tap(find.text('Update Trip'));
+      await tester.ensureVisible(find.text('Update trip'));
+      await tester.tap(find.text('Update trip'));
       await pumpScreen(tester);
 
       expect(find.text('Please enter a valid number'), findsOneWidget);
@@ -124,8 +124,8 @@ void main() {
         find.widgetWithText(TextFormField, 'Palma de Mallorca'),
         'Andratx',
       );
-      await tester.ensureVisible(find.text('Update Trip'));
-      await tester.tap(find.text('Update Trip'));
+      await tester.ensureVisible(find.text('Update trip'));
+      await tester.tap(find.text('Update trip'));
       await pumpScreen(tester);
 
       final saved = verify(() => mockRepo.updateTrip(captureAny()))
@@ -149,8 +149,8 @@ void main() {
       await tester.pumpWidget(buildSubject());
       await pumpScreen(tester);
 
-      await tester.ensureVisible(find.text('Update Trip'));
-      await tester.tap(find.text('Update Trip'));
+      await tester.ensureVisible(find.text('Update trip'));
+      await tester.tap(find.text('Update trip'));
       await pumpScreen(tester);
 
       expectSnackbar(tester, 'Failed to update trip');

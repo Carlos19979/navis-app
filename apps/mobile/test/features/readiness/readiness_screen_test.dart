@@ -52,8 +52,10 @@ void main() {
       await pumpScreen(tester);
 
       expect(
-        find.text('Unlock the full readiness check '
-            '(safety gear + maintenance) with Pro'),
+        // The upsell names Plus now: the full check is a Plus feature, and the
+        // copy promised Pro.
+        find.text('The full check — safety gear and maintenance — '
+            'is part of Navis Plus'),
         findsOneWidget,
       );
       expect(find.text('Documents'), findsOneWidget);

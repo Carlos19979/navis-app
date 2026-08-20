@@ -22,7 +22,20 @@ String documentTypeLabel(AppLocalizations l, String type) => switch (type) {
       'radio_cert' => l.docTypeRadioLicense,
       'navigation_license' => l.docTypeNavigationLicense,
       // Legacy rows created before the canonical alignment keep rendering
-      // through the old display names.
+      // through the old display names — and through their snake_case forms,
+      // which is what the API stores for the same types. Without these a
+      // «safety_certificate» fell through to the prettifier and showed up in
+      // English inside a Spanish list.
+      'safety_certificate' => l.docTypeSafetyCertificate,
+      'pollution_certificate' => l.docTypePollutionCertificate,
+      'medical_certificate' => l.docTypeMedicalCertificate,
+      'radio_license' => l.docTypeRadioLicense,
+      'fishing_permit' => l.docTypeFishingPermit,
+      'fire_extinguisher' => l.docTypeFireExtinguisher,
+      'first_aid_kit' => l.docTypeFirstAidKit,
+      'registration' => l.docTypeRegistration,
+      'inspection' => l.docTypeInspection,
+      'license' => l.docTypeLicense,
       'Registration' => l.docTypeRegistration,
       'Insurance' => l.docTypeInsurance,
       'Inspection' => l.docTypeInspection,

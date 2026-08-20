@@ -75,8 +75,8 @@ void main() {
       await tester.pumpWidget(buildSubject(notifier: notifier));
       await pumpScreen(tester);
 
-      await tester.ensureVisible(find.text('Create Boat'));
-      await tester.tap(find.text('Create Boat'));
+      await tester.ensureVisible(find.text('Create boat'));
+      await tester.tap(find.text('Create boat'));
       await pumpScreen(tester);
 
       expect(find.text('Please enter the boat name'), findsOneWidget);
@@ -93,8 +93,8 @@ void main() {
         find.widgetWithText(TextFormField, 'Boat name'),
         'Luna Azul',
       );
-      await tester.ensureVisible(find.text('Create Boat'));
-      await tester.tap(find.text('Create Boat'));
+      await tester.ensureVisible(find.text('Create boat'));
+      await tester.tap(find.text('Create boat'));
       await pumpScreen(tester);
 
       expect(
@@ -118,8 +118,8 @@ void main() {
         find.widgetWithText(TextFormField, 'Registration number'),
         'ES-MAL-3-1234',
       );
-      await tester.ensureVisible(find.text('Create Boat'));
-      await tester.tap(find.text('Create Boat'));
+      await tester.ensureVisible(find.text('Create boat'));
+      await tester.tap(find.text('Create boat'));
       await pumpScreen(tester);
 
       expect(find.text('Please enter the length'), findsOneWidget);
@@ -144,8 +144,8 @@ void main() {
         find.widgetWithText(TextFormField, 'Length'),
         'twelve',
       );
-      await tester.ensureVisible(find.text('Create Boat'));
-      await tester.tap(find.text('Create Boat'));
+      await tester.ensureVisible(find.text('Create boat'));
+      await tester.tap(find.text('Create boat'));
       await pumpScreen(tester);
 
       expect(find.text('Please enter a valid number'), findsOneWidget);
@@ -190,8 +190,8 @@ void main() {
         find.widgetWithText(TextFormField, 'Length'),
         '12.5',
       );
-      await tester.ensureVisible(find.text('Create Boat'));
-      await tester.tap(find.text('Create Boat'));
+      await tester.ensureVisible(find.text('Create boat'));
+      await tester.tap(find.text('Create boat'));
       await pumpScreen(tester);
 
       expect(notifier.created, hasLength(1));
@@ -224,8 +224,8 @@ void main() {
         find.widgetWithText(TextFormField, 'Length'),
         '12.5',
       );
-      await tester.ensureVisible(find.text('Create Boat'));
-      await tester.tap(find.text('Create Boat'));
+      await tester.ensureVisible(find.text('Create boat'));
+      await tester.tap(find.text('Create boat'));
       await pumpScreen(tester);
 
       expectSnackbar(tester, 'Failed to save boat');
@@ -249,7 +249,7 @@ void main() {
       expect(find.text('ES-MAL-3-1234'), findsOneWidget);
       expect(find.text('12.5'), findsOneWidget);
       expect(find.text('Palma de Mallorca'), findsOneWidget);
-      expect(find.text('Update Boat'), findsOneWidget);
+      expect(find.text('Update boat'), findsOneWidget);
       expect(find.text('Delete boat'), findsOneWidget);
     });
 
@@ -329,7 +329,7 @@ void main() {
 
       expect(find.text('Gallery'), findsOneWidget);
       expect(find.byType(NavisPhotoThumb), findsNWidgets(2));
-      expect(find.byTooltip('Add Photo'), findsOneWidget);
+      expect(find.byTooltip('Add photo'), findsOneWidget);
     });
 
     testWidgets('removing a photo drops it from the saved boat',
@@ -348,8 +348,8 @@ void main() {
       await pumpScreen(tester);
       expect(find.byType(NavisPhotoThumb), findsOneWidget);
 
-      await tester.ensureVisible(find.text('Update Boat'));
-      await tester.tap(find.text('Update Boat'));
+      await tester.ensureVisible(find.text('Update boat'));
+      await tester.tap(find.text('Update boat'));
       await pumpScreen(tester);
 
       expect(notifier.updated, hasLength(1));
@@ -368,12 +368,12 @@ void main() {
       ));
       await pumpScreen(tester);
 
-      await tester.ensureVisible(find.byTooltip('Add Photo'));
-      await tester.tap(find.byTooltip('Add Photo'));
+      await tester.ensureVisible(find.byTooltip('Add photo'));
+      await tester.tap(find.byTooltip('Add photo'));
       await pumpScreen(tester);
 
       expectPaywall();
-      expect(find.text('Take Photo'), findsNothing);
+      expect(find.text('Take photo'), findsNothing);
 
       await drain(tester);
     });

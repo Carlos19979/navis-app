@@ -82,7 +82,7 @@ void main() {
         await tester.pumpWidget(buildRegisterScreen());
         await tester.pumpAndSettle();
 
-        expect(find.text('Create Account'), findsOneWidget);
+        expect(find.text('Create account'), findsOneWidget);
       });
 
       testWidgets('displays subtitle text', (tester) async {

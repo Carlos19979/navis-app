@@ -176,7 +176,11 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       final purchased = await showPaywall(
         context,
         ref,
-        reason: l.paywallReasonBoatLimit,
+        reason: l.paywallReasonBoatLimit(tier.maxBoats),
+        // Plus is what answers «I want a second boat»; Pro is the next step up
+        // and the sheet lists it too. The copy used to promise Pro for a boat
+        // Plus already allows.
+        requiredTier: PlanTier.plus,
       );
       if (!purchased || !mounted) return;
     }
@@ -973,9 +977,15 @@ class _SectionsBlock extends ConsumerWidget {
     required bool allowed,
     required String reason,
     required String route,
+    PlanTier requiredTier = PlanTier.pro,
   }) async {
     if (!allowed) {
-      final ok = await showPaywall(context, ref, reason: reason);
+      final ok = await showPaywall(
+        context,
+        ref,
+        reason: reason,
+        requiredTier: requiredTier,
+      );
       if (!ok || !context.mounted) return;
     }
     if (context.mounted) unawaited(context.push(route));

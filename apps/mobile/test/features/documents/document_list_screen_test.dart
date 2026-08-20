@@ -218,7 +218,7 @@ void main() {
       expect(fab, findsOneWidget);
 
       final fabWidget = tester.widget<FloatingActionButton>(fab);
-      expect(fabWidget.tooltip, 'New Document');
+      expect(fabWidget.tooltip, 'New document');
     });
 
     testWidgets('FAB navigates to new document page', (tester) async {
@@ -241,7 +241,7 @@ void main() {
         find.text('No documents yet'),
         findsOneWidget,
       );
-      expect(find.text('New Document'), findsOneWidget);
+      expect(find.text('New document'), findsOneWidget);
     });
 
     testWidgets('empty state Add Document button navigates', (tester) async {
@@ -249,7 +249,7 @@ void main() {
       await tester.pumpWidget(buildSubject(docs: []));
       await pumpScreen(tester);
 
-      await tester.tap(find.text('New Document'));
+      await tester.tap(find.text('New document'));
       await pumpScreen(tester);
 
       expect(find.text('New Document Page'), findsOneWidget);
@@ -383,7 +383,7 @@ void main() {
       await pumpScreen(tester);
 
       // _formatType converts underscores to spaces and capitalizes
-      expect(find.text('Safety Certificate'), findsOneWidget);
+      expect(find.text('Safety certificate'), findsOneWidget);
     });
 
     testWidgets(

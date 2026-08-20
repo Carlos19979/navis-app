@@ -280,7 +280,7 @@ void main() {
 
       expect(find.text('Record service'), findsOneWidget);
       expect(find.text('What was done? (e.g. oil change)'), findsOneWidget);
-      expect(find.text('Engine Hours (optional)'), findsOneWidget);
+      expect(find.text('Engine hours (optional)'), findsOneWidget);
       expect(find.text('Cost € (opt.)'), findsOneWidget);
       expect(find.text('Provider (opt.)'), findsOneWidget);
 
@@ -579,7 +579,7 @@ void main() {
 
       expect(find.text('Photos'), findsOneWidget);
       expect(find.byType(NavisPhotoStrip), findsOneWidget);
-      expect(find.byTooltip('Add Photo'), findsOneWidget);
+      expect(find.byTooltip('Add photo'), findsOneWidget);
 
       await tester.enterText(
         find.widgetWithText(TextField, 'What was done? (e.g. oil change)'),
@@ -611,13 +611,13 @@ void main() {
       // photo: Free's AttachmentLimit (1) is already used up.
       await tester.tap(find.text('Engine service'));
       await pumpScreen(tester);
-      await tester.ensureVisible(find.byTooltip('Add Photo'));
-      await tester.tap(find.byTooltip('Add Photo'));
+      await tester.ensureVisible(find.byTooltip('Add photo'));
+      await tester.tap(find.byTooltip('Add photo'));
       await pumpScreen(tester);
 
       expectPaywall();
       // The source picker never opened.
-      expect(find.text('Take Photo'), findsNothing);
+      expect(find.text('Take photo'), findsNothing);
 
       await drain(tester);
     });

@@ -108,7 +108,7 @@ void main() {
 
     // The anchor watch is a Plus+ capability; the reason used to name Pro.
     expect(
-      find.text('Unlock the anchor watch with Navis Plus'),
+      find.text('Unlock the anchor alarm'),
       findsOneWidget,
     );
     expect(find.text('Drop anchor here'), findsNothing);

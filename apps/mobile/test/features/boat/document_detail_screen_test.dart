@@ -177,7 +177,7 @@ void main() {
       );
       await pumpScreen(tester);
 
-      await tester.tap(find.byTooltip('Edit Document'));
+      await tester.tap(find.byTooltip('Edit document'));
       await pumpScreen(tester);
 
       expect(spy.last, '/documents/doc-1/edit?boatId=boat-1');
@@ -192,7 +192,7 @@ void main() {
       );
       await pumpScreen(tester);
 
-      await tester.tap(find.byTooltip('Renew Document'));
+      await tester.tap(find.byTooltip('Renew document'));
       await pumpScreen(tester);
 
       expect(spy.last, '/documents/doc-1/edit?boatId=boat-1&renew=true');
@@ -208,7 +208,7 @@ void main() {
       await tester.tap(find.byTooltip('Delete'));
       await pumpScreen(tester);
 
-      expect(find.text('Delete Document'), findsOneWidget);
+      expect(find.text('Delete document'), findsOneWidget);
 
       await tester.tap(find.text('Delete'));
       await pumpScreen(tester);

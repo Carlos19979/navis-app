@@ -750,8 +750,12 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
                   urls: photoUrls,
                   signed: true,
                   maxPhotos: _logPhotoCap(ref),
-                  onLimitReached: () =>
-                      showPaywall(ctx, ref, reason: l.paywallReasonLogPhotos),
+                  onLimitReached: () => showPaywall(
+                    ctx,
+                    ref,
+                    reason: l.paywallReasonLogPhotos,
+                    requiredTier: PlanTier.plus,
+                  ),
                   upload: (file) {
                     final userId = supabaseClient.auth.currentUser?.id;
                     if (userId == null) {

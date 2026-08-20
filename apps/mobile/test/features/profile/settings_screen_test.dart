@@ -193,7 +193,7 @@ void main() {
         await tester.pumpWidget(buildSettingsScreenWithPrefs());
         await tester.pumpAndSettle();
 
-        expect(find.text('Dark Mode'), findsOneWidget);
+        expect(find.text('Dark mode'), findsOneWidget);
         expect(find.byType(SwitchListTile), findsWidgets);
       });
 
@@ -227,7 +227,7 @@ void main() {
         await tester.pumpAndSettle();
 
         final darkModeSwitch = find.ancestor(
-          of: find.text('Dark Mode'),
+          of: find.text('Dark mode'),
           matching: find.byType(SwitchListTile),
         );
 

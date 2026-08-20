@@ -81,7 +81,7 @@ void main() {
       );
       await pumpFrames(tester);
 
-      expect(find.text('Event Details'), findsOneWidget);
+      expect(find.text('Event details'), findsOneWidget);
     });
 
     testWidgets('displays event name', (tester) async {

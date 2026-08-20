@@ -446,7 +446,7 @@ void main() {
         await tester.tap(find.text('Forgot Password?'));
         await tester.pumpAndSettle();
 
-        expect(find.text('Reset Password'), findsOneWidget);
+        expect(find.text('Reset password'), findsOneWidget);
         expect(find.text('Send Reset Link'), findsOneWidget);
         expect(find.text('Cancel'), findsOneWidget);
       });
@@ -466,7 +466,7 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(seconds: 1));
 
-        expect(find.text('Reset Password'), findsNothing);
+        expect(find.text('Reset password'), findsNothing);
       });
 
       testWidgets('pre-fills email in reset dialog from form field',

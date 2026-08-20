@@ -389,8 +389,12 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                         NavisPhotoStrip(
                           urls: _galleryUrls,
                           maxPhotos: _galleryCap(),
-                          onLimitReached: () => showPaywall(context, ref,
-                              reason: l.paywallReasonGallery),
+                          onLimitReached: () => showPaywall(
+                            context,
+                            ref,
+                            reason: l.paywallReasonGallery,
+                            requiredTier: PlanTier.plus,
+                          ),
                           upload: (file) {
                             final userId = supabaseClient.auth.currentUser?.id;
                             if (userId == null) {

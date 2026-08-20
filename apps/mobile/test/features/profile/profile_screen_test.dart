@@ -262,7 +262,7 @@ void main() {
         await tester.pumpWidget(buildProfileScreen());
         await tester.pumpAndSettle();
 
-        expect(find.text('Help & Support'), findsOneWidget);
+        expect(find.text('Help & support'), findsOneWidget);
         expect(find.byIcon(Icons.help_outline), findsOneWidget);
       });
 
@@ -298,7 +298,7 @@ void main() {
         // Was a count of chevron icons, which is a proxy that broke the moment
         // the settings sections — with chevrons of their own — moved onto this
         // screen. The rows are what matters.
-        expect(find.text('Help & Support'), findsOneWidget);
+        expect(find.text('Help & support'), findsOneWidget);
         expect(find.text('Email us'), findsOneWidget);
         expect(find.text('About Navis'), findsOneWidget);
       });

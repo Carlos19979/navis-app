@@ -53,7 +53,7 @@ void main() {
 
       expect(find.text('Photos'), findsOneWidget);
       expect(find.byType(NavisPhotoThumb), findsNWidgets(2));
-      expect(find.byTooltip('Add Photo'), findsOneWidget);
+      expect(find.byTooltip('Add photo'), findsOneWidget);
     });
 
     testWidgets('add tile picks a photo, uploads it and appends the url',
@@ -70,9 +70,9 @@ void main() {
       ));
       await pumpScreen(tester);
 
-      await tester.tap(find.byTooltip('Add Photo'));
+      await tester.tap(find.byTooltip('Add photo'));
       await pumpScreen(tester);
-      await tester.tap(find.text('Take Photo'));
+      await tester.tap(find.text('Take photo'));
       await pumpScreen(tester);
 
       expect(uploaded?.path, 'fake-photo.jpg');
@@ -92,12 +92,12 @@ void main() {
       ));
       await pumpScreen(tester);
 
-      await tester.tap(find.byTooltip('Add Photo'));
+      await tester.tap(find.byTooltip('Add photo'));
       await pumpScreen(tester);
 
       expect(limitHit, isTrue);
       // Declined (no upgrade): the source picker never opens.
-      expect(find.text('Take Photo'), findsNothing);
+      expect(find.text('Take photo'), findsNothing);
     });
 
     testWidgets('remove button drops the photo', (tester) async {

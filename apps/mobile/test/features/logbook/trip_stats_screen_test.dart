@@ -117,7 +117,7 @@ void main() {
       await pumpScreen(tester, trips: twoSeasons());
 
       for (final label in [
-        'Total Trips',
+        'Total trips',
         'Top speed',
         'Average speed',
         'Fuel consumed',
@@ -174,7 +174,7 @@ void main() {
       expect(find.text('20'), findsOneWidget);
       expect(find.textContaining('1 trip'), findsOneWidget);
       // The monthly chart is a year-level view; a single month does not need it.
-      expect(find.text('Monthly Activity'), findsNothing);
+      expect(find.text('Monthly activity'), findsNothing);
     });
 
     testWidgets('the monthly chart is shown for a year', (tester) async {
@@ -183,13 +183,13 @@ void main() {
       await tester.tap(find.text('2026'));
       await pumpFrames(tester);
       await tester.scrollUntilVisible(
-        find.text('Monthly Activity'),
+        find.text('Monthly activity'),
         200,
         scrollable: pageScroll(),
       );
       await tester.pump();
 
-      expect(find.text('Monthly Activity'), findsOneWidget);
+      expect(find.text('Monthly activity'), findsOneWidget);
     });
 
     testWidgets('lists which ports were visited, not just how many',
