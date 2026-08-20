@@ -1803,7 +1803,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareBoat => 'Share boat';
 
   @override
-  String get shareBoatSubtitle => 'Crew and co-owners';
+  String get shareBoatSubtitle => 'Invite someone with a code';
 
   @override
   String get leaveSharedBoat => 'Leave shared boat';
@@ -2369,7 +2369,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get boatCrewTitle => 'Crew and permissions';
 
   @override
-  String get boatCrewSubtitle => 'Who has access and what they can do';
+  String get boatCrewSubtitle => 'See who joined and adjust permissions';
 
   @override
   String get boatCrewExplainer =>

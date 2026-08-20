@@ -45,4 +45,14 @@ void main() {
     final screenHeight = tester.getSize(find.byType(Scaffold).first).height;
     expect(screenHeight - fabBottom, lessThan(Dimens.navClearance - 16));
   });
+
+  testWidgets('the app bar carries no profile shortcut', (tester) async {
+    setPhoneSize(tester);
+    await tester.pumpWidget(subject(safeAreaBottom: true));
+    await pumpScreen(tester);
+
+    // Every NavisScaffold screen is pushed and already has a back button;
+    // Profile is a bottom-nav tab, so the shortcut was pure duplication.
+    expect(find.byIcon(Icons.person_outline_rounded), findsNothing);
+  });
 }
