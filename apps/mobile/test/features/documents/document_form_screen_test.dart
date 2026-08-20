@@ -104,7 +104,8 @@ void main() {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
-      expect(find.text('Notes'), findsAtLeastNWidgets(1));
+      // Section headings are tracked uppercase.
+      expect(find.text('NOTES'), findsAtLeastNWidgets(1));
     });
 
     testWidgets('shows document type dropdown', (tester) async {
@@ -492,7 +493,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      expect(find.text('Last Renewal'), findsOneWidget);
+      expect(find.text('LAST RENEWAL'), findsOneWidget);
       expect(find.text('Renewal Cost'), findsOneWidget);
       expect(find.text('Provider / Company'), findsOneWidget);
     });

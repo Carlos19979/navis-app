@@ -12,6 +12,11 @@ import 'package:image_picker/image_picker.dart';
 import 'package:navis_mobile/app/routes.dart';
 import 'package:navis_mobile/core/network/storage_service.dart';
 import 'package:navis_mobile/core/network/supabase_client.dart';
+import 'package:navis_mobile/core/theme/app_typography.dart';
+import 'package:navis_mobile/core/theme/dimens.dart';
+import 'package:navis_mobile/core/utils/measure_utils.dart';
+import 'package:navis_mobile/shared/widgets/navis_section.dart';
+import 'package:navis_mobile/shared/widgets/navis_text_field.dart';
 import 'package:navis_mobile/core/theme/theme_colors.dart';
 import 'package:navis_mobile/features/billing/billing.dart';
 import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
@@ -209,6 +214,7 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
     }
 
     final l = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toLanguageTag();
 
     return GradientBackground(
       child: Scaffold(
@@ -410,183 +416,135 @@ class _BoatFormScreenState extends ConsumerState<BoatFormScreen>
                       ),
                 ],
                 const SizedBox(height: 20),
-                // Form fields section
-                NavisCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        l.boatDetailsSection,
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _nameController,
-                        textInputAction: TextInputAction.next,
-                        decoration: InputDecoration(
-                          labelText: l.boatName,
-                          prefixIcon: const Icon(Icons.sailing_outlined),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return l.pleaseEnterBoatName;
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _registrationController,
-                        textInputAction: TextInputAction.next,
-                        decoration: InputDecoration(
-                          labelText: l.registration,
-                          prefixIcon: const Icon(Icons.tag),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return l.pleaseEnterRegistration;
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        initialValue: _selectedType,
-                        decoration: InputDecoration(
-                          labelText: l.boatType,
-                          prefixIcon: const Icon(Icons.category_outlined),
-                        ),
-                        items: _boatTypes.map((type) {
-                          return DropdownMenuItem(
-                            value: type,
-                            child: Text(localizedBoatType(l, type)),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() => _selectedType = value);
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _lengthController,
-                        keyboardType: TextInputType.number,
-                        textInputAction: TextInputAction.next,
-                        decoration: InputDecoration(
-                          labelText: l.length,
-                          // The unit as a suffix, not «Eslora (m)» in the
-                          // label: the label is shared with the read-only row
-                          // and the passport, where the value already carries
-                          // its unit.
-                          suffixText: 'm',
-                          prefixIcon: const Icon(Icons.straighten),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return l.pleaseEnterLength;
-                          }
-                          if (double.tryParse(value.trim()) == null) {
-                            return l.validNumber;
-                          }
-                          return null;
-                        },
-                      ),
-                    ],
-                  ),
-                ).animate().fadeIn(duration: 400.ms, delay: 50.ms).slideY(
-                      begin: 0.05,
-                      end: 0,
-                      duration: 400.ms,
-                      delay: 50.ms,
-                    ),
-                const SizedBox(height: 16),
-                // Home port section
-                NavisCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        l.homePort,
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _homePortController,
-                        textInputAction: TextInputAction.done,
-                        decoration: InputDecoration(
-                          labelText: l.homePortOptional,
-                          prefixIcon: const Icon(Icons.anchor),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      NavisButton(
-                        label: _homePortLat != null
-                            ? 'Location set (${_homePortLat!.toStringAsFixed(3)}, ${_homePortLon!.toStringAsFixed(3)})'
-                            : l.pickLocationOnMap,
-                        icon: _homePortLat != null
-                            ? Icons.check_circle
-                            : Icons.map_outlined,
-                        variant: NavisButtonVariant.secondary,
-                        compact: true,
-                        onPressed: () async {
-                          final result =
-                              await Navigator.of(context).push<MapPickerResult>(
-                            MaterialPageRoute(
-                              builder: (_) => MapPickerScreen(
-                                initialLatitude: _homePortLat,
-                                initialLongitude: _homePortLon,
-                              ),
-                            ),
-                          );
-                          if (result != null) {
-                            setState(() {
-                              _homePortLat = result.point.latitude;
-                              _homePortLon = result.point.longitude;
-                              _homePortController.text = result.name ?? '';
-                            });
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                ).animate().fadeIn(duration: 400.ms, delay: 100.ms).slideY(
-                      begin: 0.05,
-                      end: 0,
-                      duration: 400.ms,
-                      delay: 100.ms,
-                    ),
-                const SizedBox(height: 24),
-                Text(
-                  l.engineSectionTitle,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                // Grouped by heading, not by card: the fields are already
+                // framed, so a card around each pair read as nested boxes.
+                NavisSectionHeader(label: l.boatDetailsSection),
+                const SizedBox(height: Dimens.spaceSm),
+                NavisTextField(
+                  controller: _nameController,
+                  label: l.boatName,
+                  prefixIcon: Icons.sailing_outlined,
+                  textInputAction: TextInputAction.next,
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? l.pleaseEnterBoatName
+                      : null,
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: Dimens.spaceMd),
+                NavisTextField(
+                  controller: _registrationController,
+                  label: l.registration,
+                  prefixIcon: Icons.tag_rounded,
+                  textInputAction: TextInputAction.next,
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? l.pleaseEnterRegistration
+                      : null,
+                ),
+                const SizedBox(height: Dimens.spaceMd),
+                DropdownButtonFormField<String>(
+                  initialValue: _selectedType,
+                  decoration: InputDecoration(
+                    labelText: l.boatType,
+                    prefixIcon: const Icon(Icons.category_outlined),
+                  ),
+                  items: _boatTypes
+                      .map(
+                        (type) => DropdownMenuItem(
+                          value: type,
+                          child: Text(localizedBoatType(l, type)),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value != null) setState(() => _selectedType = value);
+                  },
+                ),
+                const SizedBox(height: Dimens.spaceMd),
+                NavisTextField(
+                  controller: _lengthController,
+                  label: l.length,
+                  prefixIcon: Icons.straighten_rounded,
+                  keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.next,
+                  // The unit as a suffix, not «Eslora (m)» in the label: the
+                  // label is shared with the read-only row and the passport,
+                  // where the value already carries its unit.
+                  suffix: Text(
+                    'm',
+                    style: NavisType.label.copyWith(color: context.inkMuted),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return l.pleaseEnterLength;
+                    }
+                    return double.tryParse(value.trim()) == null
+                        ? l.validNumber
+                        : null;
+                  },
+                ),
+                const SizedBox(height: Dimens.spaceXl),
+                const SizedBox(height: 16),
+                NavisSectionHeader(label: l.homePort),
+                const SizedBox(height: Dimens.spaceSm),
+                NavisTextField(
+                  controller: _homePortController,
+                  label: l.homePortOptional,
+                  prefixIcon: Icons.anchor_rounded,
+                  textInputAction: TextInputAction.done,
+                ),
+                const SizedBox(height: Dimens.spaceMd),
+                NavisButton(
+                  // Localized: this said «Location set (39.570, 2.630)» in
+                  // English, in a Spanish-first app, with the coordinates
+                  // formatted by hand.
+                  label: _homePortLat != null
+                      ? l.locationSetAt(
+                          Measure.decimal(locale, _homePortLat!, digits: 3),
+                          Measure.decimal(locale, _homePortLon!, digits: 3),
+                        )
+                      : l.pickLocationOnMap,
+                  icon: _homePortLat != null
+                      ? Icons.check_circle_rounded
+                      : Icons.map_outlined,
+                  variant: NavisButtonVariant.secondary,
+                  compact: true,
+                  onPressed: () async {
+                    final result =
+                        await Navigator.of(context).push<MapPickerResult>(
+                      MaterialPageRoute(
+                        builder: (_) => MapPickerScreen(
+                          initialLatitude: _homePortLat,
+                          initialLongitude: _homePortLon,
+                        ),
+                      ),
+                    );
+                    if (result != null) {
+                      setState(() {
+                        _homePortLat = result.point.latitude;
+                        _homePortLon = result.point.longitude;
+                        _homePortController.text = result.name ?? '';
+                      });
+                    }
+                  },
+                ),
+                const SizedBox(height: Dimens.spaceXl),
+                NavisSectionHeader(label: l.engineSectionTitle),
+                const SizedBox(height: Dimens.spaceXs),
                 Text(
                   l.engineSectionHint,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: context.txtSecondary,
-                      ),
+                  style: NavisType.bodySm.copyWith(color: context.inkMuted),
                 ),
-                const SizedBox(height: 12),
-                TextFormField(
+                const SizedBox(height: Dimens.spaceMd),
+                NavisTextField(
                   controller: _engineHoursController,
+                  label: l.engineHoursCurrent,
+                  prefixIcon: Icons.speed_rounded,
                   keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: l.engineHoursCurrent,
-                    prefixIcon: const Icon(Icons.speed),
-                    suffixText: 'h',
+                  suffix: Text(
+                    'h',
+                    style: NavisType.label.copyWith(color: context.inkMuted),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: Dimens.spaceXxl),
                 NavisButton(
                   label: _isEdit ? l.updateBoat : l.createBoat,
                   onPressed: _onSave,

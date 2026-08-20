@@ -2630,6 +2630,12 @@ abstract class AppLocalizations {
   /// **'Boat Details'**
   String get boatDetailsSection;
 
+  /// No description provided for @locationSetAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Location set ({lat}, {lon})'**
+  String locationSetAt(String lat, String lon);
+
   /// No description provided for @pickLocationOnMap.
   ///
   /// In en, this message translates to:

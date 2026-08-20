@@ -24,6 +24,7 @@ import 'package:navis_mobile/shared/widgets/gradient_background.dart';
 import 'package:navis_mobile/shared/widgets/navis_app_bar.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
 import 'package:navis_mobile/shared/widgets/navis_card.dart';
+import 'package:navis_mobile/shared/widgets/navis_section.dart';
 import 'package:navis_mobile/shared/widgets/navis_dialog.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 
@@ -499,16 +500,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                l.documentType,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelLarge
-                                    ?.copyWith(
-                                      color: context.accent,
-                                      letterSpacing: 0.8,
-                                    ),
-                              ),
+                              NavisSectionHeader(label: l.documentType),
                               const SizedBox(height: 16),
                               DropdownButtonFormField<String>(
                                 initialValue: _selectedType,
@@ -581,16 +573,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                l.notes,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelLarge
-                                    ?.copyWith(
-                                      color: context.accent,
-                                      letterSpacing: 0.8,
-                                    ),
-                              ),
+                              NavisSectionHeader(label: l.notes),
                               const SizedBox(height: 16),
                               _buildAlertDaysField(context, l),
                               const SizedBox(height: 16),
@@ -615,16 +598,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen>
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  l.lastRenewal,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .labelLarge
-                                      ?.copyWith(
-                                        color: context.accent,
-                                        letterSpacing: 0.8,
-                                      ),
-                                ),
+                                NavisSectionHeader(label: l.lastRenewal),
                                 const SizedBox(height: 16),
                                 TextFormField(
                                   controller: _renewalCostController,

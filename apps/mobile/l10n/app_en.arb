@@ -617,6 +617,10 @@
   "failedToSaveBoat": "Failed to save boat",
   "newBoat": "New Boat",
   "boatDetailsSection": "Boat Details",
+  "locationSetAt": "Location set ({lat}, {lon})",
+  "@locationSetAt": {
+    "placeholders": { "lat": { "type": "String" }, "lon": { "type": "String" } }
+  },
   "pickLocationOnMap": "Pick location on map",
   "updateBoat": "Update Boat",
   "createBoat": "Create Boat",

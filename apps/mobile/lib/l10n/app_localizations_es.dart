@@ -1393,6 +1393,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get boatDetailsSection => 'Detalles del Barco';
 
   @override
+  String locationSetAt(String lat, String lon) {
+    return 'Ubicación fijada ($lat, $lon)';
+  }
+
+  @override
   String get pickLocationOnMap => 'Seleccionar ubicación en mapa';
 
   @override

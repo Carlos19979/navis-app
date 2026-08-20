@@ -603,6 +603,7 @@
   "failedToSaveBoat": "Error al guardar barco",
   "newBoat": "Nuevo Barco",
   "boatDetailsSection": "Detalles del Barco",
+  "locationSetAt": "Ubicación fijada ({lat}, {lon})",
   "pickLocationOnMap": "Seleccionar ubicación en mapa",
   "updateBoat": "Actualizar Barco",
   "createBoat": "Crear Barco",
