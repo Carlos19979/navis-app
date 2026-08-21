@@ -691,11 +691,14 @@ HTML landing page with a Leaflet/OpenSeaMap map of the route (the share/growth p
 
 ## Maintenance & Expenses (per boat)
 
-### GET / POST /api/v1/boats/:id/maintenance · DELETE …/maintenance/:logId
-Service logs `{ type, performed_at, engine_hours?, cost?, provider?, notes?, invoice_url?, photo_urls?[] }`. `photo_urls` (≤10, private bucket signed URLs) is Pro beyond the first (`AttachmentLimit`).
+### GET / POST /api/v1/boats/:id/maintenance · PUT / DELETE …/maintenance/:logId
+One task's history entries `{ task_id, type, performed_at, engine_hours?, cost?, provider?, notes?, invoice_url?, photo_urls?[] }`. `photo_urls` (≤10, private bucket signed URLs) is Plus+ beyond the first (`AttachmentLimit`). The app no longer POSTs here — entries are born from completing a task (below) — but PUT/DELETE still correct one.
 
 ### GET / POST / PUT / DELETE /api/v1/boats/:id/maintenance/tasks[/:taskId]
-Recurring plan `{ name, interval_months?, interval_hours? }`. Due state is derived server-side and drives the `maintenance-due` reminder cron (Pro).
+Maintenance tasks `{ name, kind, interval_months?, interval_hours?, next_due_date?, next_due_hours? }`, where `kind` ∈ `periodic|one_off`. A periodic task needs at least one interval and **stores** its `next_due_date` (defaulted to today + interval when omitted), so it expires and warns on the documents thresholds (`expired`/`critical` ≤30d/`warning` ≤90d/`ok`); a one-off task carries no schedule and reads `unscheduled`. The response adds the derived `status`, `next_due_days`, `hours_until_due`, `last_performed_at` and `times_done`.
+
+### POST /api/v1/boats/:id/maintenance/tasks/:taskId/complete
+The task was carried out: `{ performed_at?, engine_hours?, cost?, provider?, notes?, invoice_url?, photo_urls?[] }`, everything optional (`performed_at` defaults to today). In one transaction it writes the history entry and rolls a periodic task's `next_due_date` (and `next_due_hours`) past it — the "reset" of an expired task — and answers `201` with the task's new state. This is what drives the `maintenance-due` reminder cron's dedup slot forward.
 
 ### GET / POST /api/v1/boats/:id/expenses · DELETE …/expenses/:expenseId
 Expenses `{ category, amount, incurred_on, notes? }`.

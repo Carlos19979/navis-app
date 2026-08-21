@@ -21,26 +21,27 @@ func NewMaintenanceTaskRepo(pool *pgxpool.Pool) *MaintenanceTaskRepo {
 	return &MaintenanceTaskRepo{pool: pool}
 }
 
-const maintenanceTaskColumns = `id, boat_id, user_id, name, interval_months,
-	interval_hours, created_at, updated_at`
+const maintenanceTaskColumns = `id, boat_id, user_id, name, kind, interval_months,
+	interval_hours, next_due_date, next_due_hours, created_at, updated_at`
 
 func scanMaintenanceTask(row interface {
 	Scan(...any) error
 }) (*domain.MaintenanceTask, error) {
 	t := &domain.MaintenanceTask{}
-	err := row.Scan(&t.ID, &t.BoatID, &t.UserID, &t.Name, &t.IntervalMonths,
-		&t.IntervalHours, &t.CreatedAt, &t.UpdatedAt)
+	err := row.Scan(&t.ID, &t.BoatID, &t.UserID, &t.Name, &t.Kind, &t.IntervalMonths,
+		&t.IntervalHours, &t.NextDueDate, &t.NextDueHours, &t.CreatedAt, &t.UpdatedAt)
 	return t, err
 }
 
 // Create inserts a maintenance task.
 func (r *MaintenanceTaskRepo) Create(ctx context.Context, t *domain.MaintenanceTask) (*domain.MaintenanceTask, error) {
 	query := `INSERT INTO maintenance_tasks
-		(boat_id, user_id, name, interval_months, interval_hours)
-		VALUES ($1,$2,$3,$4,$5)
+		(boat_id, user_id, name, kind, interval_months, interval_hours, next_due_date, next_due_hours)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
 		RETURNING ` + maintenanceTaskColumns
-	out, err := scanMaintenanceTask(r.pool.QueryRow(ctx, query,
-		t.BoatID, t.UserID, t.Name, t.IntervalMonths, t.IntervalHours))
+	out, err := scanMaintenanceTask(querier(ctx, r.pool).QueryRow(ctx, query,
+		t.BoatID, t.UserID, t.Name, t.Kind, t.IntervalMonths, t.IntervalHours,
+		t.NextDueDate, t.NextDueHours))
 	if err != nil {
 		return nil, fmt.Errorf("inserting maintenance task: %w", err)
 	}
@@ -50,11 +51,13 @@ func (r *MaintenanceTaskRepo) Create(ctx context.Context, t *domain.MaintenanceT
 // Update modifies a maintenance task scoped to its boat.
 func (r *MaintenanceTaskRepo) Update(ctx context.Context, t *domain.MaintenanceTask) (*domain.MaintenanceTask, error) {
 	query := `UPDATE maintenance_tasks
-		SET name=$1, interval_months=$2, interval_hours=$3, updated_at=now()
-		WHERE id=$4 AND boat_id=$5
+		SET name=$1, kind=$2, interval_months=$3, interval_hours=$4,
+		    next_due_date=$5, next_due_hours=$6, updated_at=now()
+		WHERE id=$7 AND boat_id=$8
 		RETURNING ` + maintenanceTaskColumns
-	out, err := scanMaintenanceTask(r.pool.QueryRow(ctx, query,
-		t.Name, t.IntervalMonths, t.IntervalHours, t.ID, t.BoatID))
+	out, err := scanMaintenanceTask(querier(ctx, r.pool).QueryRow(ctx, query,
+		t.Name, t.Kind, t.IntervalMonths, t.IntervalHours,
+		t.NextDueDate, t.NextDueHours, t.ID, t.BoatID))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, domain.ErrNotFound
@@ -64,12 +67,13 @@ func (r *MaintenanceTaskRepo) Update(ctx context.Context, t *domain.MaintenanceT
 	return out, nil
 }
 
-// ListByBoat returns a boat's maintenance tasks, oldest first (stable order).
+// ListByBoat returns a boat's maintenance tasks, soonest due first so the plan
+// reads in the order it needs attention; one-off jobs (no date) come last.
 func (r *MaintenanceTaskRepo) ListByBoat(ctx context.Context, boatID string) ([]domain.MaintenanceTask, error) {
-	rows, err := r.pool.Query(ctx,
+	rows, err := querier(ctx, r.pool).Query(ctx,
 		`SELECT `+maintenanceTaskColumns+` FROM maintenance_tasks
 		 WHERE boat_id = $1
-		 ORDER BY created_at ASC`, boatID)
+		 ORDER BY next_due_date ASC NULLS LAST, created_at ASC`, boatID)
 	if err != nil {
 		return nil, fmt.Errorf("listing maintenance tasks: %w", err)
 	}
@@ -87,7 +91,7 @@ func (r *MaintenanceTaskRepo) ListByBoat(ctx context.Context, boatID string) ([]
 
 // GetByID returns a single maintenance task on a boat (caller enforces access).
 func (r *MaintenanceTaskRepo) GetByID(ctx context.Context, boatID, id string) (*domain.MaintenanceTask, error) {
-	out, err := scanMaintenanceTask(r.pool.QueryRow(ctx,
+	out, err := scanMaintenanceTask(querier(ctx, r.pool).QueryRow(ctx,
 		`SELECT `+maintenanceTaskColumns+` FROM maintenance_tasks WHERE boat_id = $1 AND id = $2`,
 		boatID, id))
 	if err != nil {
@@ -113,23 +117,17 @@ func (r *MaintenanceTaskRepo) Delete(ctx context.Context, boatID, id string) err
 }
 
 // ListAllWithLatest returns every task across all boats joined with its boat
-// context (name, owner, engine hours) and latest service log. Input for the
-// maintenance-due notification cron.
+// context (name, owner, engine hours). Input for the maintenance-due reminder
+// cron. No history join: a task carries its own due date now, and the boat's
+// engine hours are all the hours limit is measured against.
 func (r *MaintenanceTaskRepo) ListAllWithLatest(ctx context.Context) ([]domain.MaintenanceTaskWithLatest, error) {
-	rows, err := r.pool.Query(ctx, `
-		SELECT t.id, t.boat_id, t.name, t.interval_months, t.interval_hours,
-		       t.created_at, t.updated_at,
-		       b.name, b.user_id, b.engine_hours,
-		       l.performed_at, l.engine_hours
+	rows, err := querier(ctx, r.pool).Query(ctx, `
+		SELECT t.id, t.boat_id, t.name, t.kind, t.interval_months, t.interval_hours,
+		       t.next_due_date, t.next_due_hours, t.created_at, t.updated_at,
+		       b.name, b.user_id, b.engine_hours
 		FROM maintenance_tasks t
 		JOIN boats b ON b.id = t.boat_id
-		LEFT JOIN LATERAL (
-			SELECT performed_at, engine_hours
-			FROM maintenance_logs
-			WHERE task_id = t.id
-			ORDER BY performed_at DESC
-			LIMIT 1
-		) l ON true`)
+		WHERE t.kind = 'periodic'`)
 	if err != nil {
 		return nil, fmt.Errorf("listing tasks for notify: %w", err)
 	}
@@ -139,11 +137,11 @@ func (r *MaintenanceTaskRepo) ListAllWithLatest(ctx context.Context) ([]domain.M
 	for rows.Next() {
 		var row domain.MaintenanceTaskWithLatest
 		if err := rows.Scan(
-			&row.Task.ID, &row.Task.BoatID, &row.Task.Name,
+			&row.Task.ID, &row.Task.BoatID, &row.Task.Name, &row.Task.Kind,
 			&row.Task.IntervalMonths, &row.Task.IntervalHours,
+			&row.Task.NextDueDate, &row.Task.NextDueHours,
 			&row.Task.CreatedAt, &row.Task.UpdatedAt,
 			&row.BoatName, &row.OwnerID, &row.EngineHours,
-			&row.LastPerformedAt, &row.LastEngineHours,
 		); err != nil {
 			return nil, fmt.Errorf("scanning task for notify: %w", err)
 		}

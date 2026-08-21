@@ -19,6 +19,7 @@ type maintenanceService interface {
 	AddTask(ctx context.Context, t *domain.MaintenanceTask) (*domain.MaintenanceTask, error)
 	ListTasks(ctx context.Context, userID, boatID string) ([]domain.MaintenanceTaskView, error)
 	UpdateTask(ctx context.Context, userID string, t *domain.MaintenanceTask) (*domain.MaintenanceTask, error)
+	CompleteTask(ctx context.Context, userID, boatID, taskID string, c domain.MaintenanceCompletion) (*domain.MaintenanceTaskView, error)
 	DeleteTask(ctx context.Context, userID, boatID, id string) error
 	AddExpense(ctx context.Context, e *domain.Expense) (*domain.Expense, error)
 	ListExpenses(ctx context.Context, userID, boatID string) ([]domain.Expense, error)
@@ -156,6 +157,28 @@ func (h *MaintenanceHandler) ListTasks(w http.ResponseWriter, r *http.Request) {
 	JSON(w, http.StatusOK, dto.MaintenanceTaskListFromDomain(views))
 }
 
+// taskFromRequest builds the domain task from a create/update payload. The
+// service fills in whichever limit the payload left out.
+func taskFromRequest(r *http.Request, userID string, req dto.CreateMaintenanceTaskRequest) (*domain.MaintenanceTask, error) {
+	task := &domain.MaintenanceTask{
+		BoatID:         chi.URLParam(r, "id"),
+		UserID:         userID,
+		Name:           req.Name,
+		Kind:           req.TaskKind(),
+		IntervalMonths: req.IntervalMonths,
+		IntervalHours:  req.IntervalHours,
+		NextDueHours:   req.NextDueHours,
+	}
+	if req.NextDueDate != nil {
+		due, err := dto.ParseDate(*req.NextDueDate)
+		if err != nil {
+			return nil, err
+		}
+		task.NextDueDate = &due
+	}
+	return task, nil
+}
+
 // CreateTask handles POST /boats/{boatId}/maintenance/tasks.
 func (h *MaintenanceHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	userID, ok := requireUserID(w, r)
@@ -166,24 +189,17 @@ func (h *MaintenanceHandler) CreateTask(w http.ResponseWriter, r *http.Request) 
 	if !ok {
 		return
 	}
-	task := &domain.MaintenanceTask{
-		BoatID:         chi.URLParam(r, "id"),
-		UserID:         userID,
-		Name:           req.Name,
-		IntervalMonths: req.IntervalMonths,
-		IntervalHours:  req.IntervalHours,
+	task, err := taskFromRequest(r, userID, req)
+	if err != nil {
+		Error(w, http.StatusBadRequest, "invalid next_due_date", "BAD_REQUEST")
+		return
 	}
 	created, err := h.svc.AddTask(r.Context(), task)
 	if err != nil {
 		MapDomainError(w, err)
 		return
 	}
-	status := domain.MaintenancePending // new task with an interval, never logged
-	if created.IntervalMonths == nil && created.IntervalHours == nil {
-		status = domain.MaintenanceNoPlan
-	}
-	JSON(w, http.StatusCreated, dto.MaintenanceTaskResponseFromDomain(
-		&domain.MaintenanceTaskView{Task: *created, Status: status}))
+	JSON(w, http.StatusCreated, dto.MaintenanceTaskResponseFromDomain(newTaskView(created)))
 }
 
 // UpdateTask handles PUT /boats/{boatId}/maintenance/tasks/{taskId}.
@@ -196,27 +212,66 @@ func (h *MaintenanceHandler) UpdateTask(w http.ResponseWriter, r *http.Request) 
 	if !ok {
 		return
 	}
-	task := &domain.MaintenanceTask{
-		ID:             chi.URLParam(r, "taskId"),
-		BoatID:         chi.URLParam(r, "id"),
-		UserID:         userID,
-		Name:           req.Name,
-		IntervalMonths: req.IntervalMonths,
-		IntervalHours:  req.IntervalHours,
+	task, err := taskFromRequest(r, userID, req)
+	if err != nil {
+		Error(w, http.StatusBadRequest, "invalid next_due_date", "BAD_REQUEST")
+		return
 	}
+	task.ID = chi.URLParam(r, "taskId")
 	updated, err := h.svc.UpdateTask(r.Context(), userID, task)
 	if err != nil {
 		MapDomainError(w, err)
 		return
 	}
-	// The client refetches the list (with full derived state) after mutating; a
-	// coarse status here just avoids an empty field.
-	status := domain.MaintenancePending
-	if updated.IntervalMonths == nil && updated.IntervalHours == nil {
-		status = domain.MaintenanceNoPlan
+	JSON(w, http.StatusOK, dto.MaintenanceTaskResponseFromDomain(newTaskView(updated)))
+}
+
+// newTaskView wraps a just-written task with the state its stored limits imply.
+// The client refetches the list right after mutating, so this only has to be
+// coherent, not complete (no history is read here, hence no times-done count).
+func newTaskView(t *domain.MaintenanceTask) *domain.MaintenanceTaskView {
+	view := &domain.MaintenanceTaskView{Task: *t, Status: domain.MaintenanceUnscheduled}
+	if t.Periodic() {
+		view.Status = domain.MaintenanceOK
 	}
-	JSON(w, http.StatusOK, dto.MaintenanceTaskResponseFromDomain(
-		&domain.MaintenanceTaskView{Task: *updated, Status: status}))
+	return view
+}
+
+// CompleteTask handles POST /boats/{boatId}/maintenance/tasks/{taskId}/complete:
+// the task was carried out. Writes the history entry and rolls a periodic task's
+// due date forward, which is how the owner "resets" an expired task.
+func (h *MaintenanceHandler) CompleteTask(w http.ResponseWriter, r *http.Request) {
+	userID, ok := requireUserID(w, r)
+	if !ok {
+		return
+	}
+	req, ok := decodeAndValidate[dto.CompleteMaintenanceTaskRequest](w, r)
+	if !ok {
+		return
+	}
+	completion := domain.MaintenanceCompletion{
+		EngineHours: req.EngineHours,
+		Cost:        req.Cost,
+		Provider:    req.Provider,
+		Notes:       req.Notes,
+		InvoiceURL:  req.InvoiceURL,
+		PhotoURLs:   req.PhotoURLs,
+	}
+	if req.PerformedAt != nil {
+		performedAt, err := dto.ParseDate(*req.PerformedAt)
+		if err != nil {
+			Error(w, http.StatusBadRequest, "invalid performed_at date", "BAD_REQUEST")
+			return
+		}
+		completion.PerformedAt = performedAt
+	}
+	view, err := h.svc.CompleteTask(r.Context(), userID,
+		chi.URLParam(r, "id"), chi.URLParam(r, "taskId"), completion)
+	if err != nil {
+		MapDomainError(w, err)
+		return
+	}
+	JSON(w, http.StatusCreated, dto.MaintenanceTaskResponseFromDomain(view))
 }
 
 // DeleteTask handles DELETE /boats/{boatId}/maintenance/tasks/{taskId}.

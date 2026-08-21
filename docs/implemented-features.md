@@ -336,32 +336,45 @@ The tab exposed the data model, not the job: a FAB that created **tasks** and a
 second `+` inside a section called "Other records" that created **logs**, with a
 task's own history hidden inside its detail sheet. An owner had to understand
 what a "task" was before being able to write down that the oil was changed.
-- **One FAB — "Record service".** A plan entry is no longer something you
-  create: the record sheet carries *Repeats every [months] [engine hours]*, and
-  filling it creates the task and links the log in the same save
-  (`MaintenanceRepository.addTask` now returns the created task, so the log gets
-  its `task_id` without a re-fetch). On an already-linked service those same
-  fields re-schedule the plan entry.
-- **Linking is a chip, not a dropdown.** Tapping a plan chip names the service,
-  links it and shows that entry's interval — one tap fills three fields.
-- **One history.** "Other records" (= the logs that failed to link) is gone; the
-  tab lists every service newest-first, 5 + "See all". Plan entries are sorted
-  by urgency (overdue → due soon → pending → ok → no schedule).
-- **Suggestions are onboarding.** The template chips (oil, filters, anodes…) now
-  show only while the plan is empty.
-- A plan entry's form survives only for rename / re-schedule / delete, reached
-  from its detail sheet. "Add task" as a UI concept is gone, and with it the
-  strings `maintenancePlanTitle`, `maintenanceOtherTitle`, `addTask`,
-  `noTaskOption`, `taskField`, `maintenanceTypeHint`.
-- **The API is untouched**: the same `POST /maintenance/tasks` + `POST
-  /maintenance`, now reached through one flow instead of two.
-- Golden baselines for the maintenance screen are stale until regenerated
-  locally (`flutter test --update-goldens --tags golden`); goldens are excluded
-  from CI.
+- **The task is the only object.** A task is a job on the boat and it is either
+  *periodic* — it stores its own `next_due_date`, expires and warns on the
+  documents thresholds, and rolls forward when marked done — or *one-off*, a job
+  that only keeps a history. Kind is a two-segment choice at the top of the one
+  create/edit sheet; picking one-off takes the whole schedule off the form.
+- **One button: "Hecho".** `POST /maintenance/tasks/:id/complete` writes the
+  history entry and moves the due date in one transaction, and the sheet opens
+  prefilled with today — two taps for the whole flow. Gone with it: the
+  nine-field "record service" form, the client-side orchestration that created a
+  task then a log then maybe re-scheduled it (three branches, ~90 lines), and
+  `_taskByName`, the heuristic that guessed the link by lowercasing names.
+- **Same vocabulary as documents.** `MaintenanceStatus` is now
+  `ok|warning|critical|expired|unscheduled` on the same 90/30-day bands, rendered
+  by the extracted `NavisStatusBadge` (which `DocumentStatusBadge` now wraps).
+  The dateless `pending` state is gone: a task has a date from the moment it is
+  created, so a never-serviced task finally warns instead of sitting silent.
+  Readiness scores a maintenance `warning` at -4 with no attention item, exactly
+  like a document three months out.
+- **Engine hours are secondary.** They live behind "Opciones avanzadas" and can
+  only bring a service forward, never push it out. Suggestion chips now carry a
+  month interval too, so a suggested task has a date even on an engine nobody
+  logs hours for.
+- **History twice over.** Each task lists its own times-carried-out in its detail
+  sheet (with `times_done`), and the boat-wide history stays at the bottom of the
+  tab, 5 + "See all".
+- Migration `00042` backfills `next_due_date` from "last service + interval" (or
+  creation date), reclassifies interval-less tasks as one-off, and **adopts the
+  orphan logs** — grouping the ones with no `task_id` per boat by what was done
+  and giving each group a one-off task, so all history lives under a task.
+- Retired strings: `recordService`, `maintenanceUpcomingTitle`,
+  `maintenanceDueSoonLabel`, `maintenanceNoInterval`, `maintenancePartOfPlan`,
+  `maintenanceWhatWasDone`, `maintenanceRepeatEvery`, `maintenanceIntervalMonths`,
+  `maintenanceIntervalHours`, `maintenanceRepeatHint(Free)`.
+- Golden baselines for the maintenance screen were regenerated locally
+  (`flutter test --update-goldens --tags golden`); goldens are excluded from CI.
 
 ## Cron jobs (all UTC)
 - `0 8 * * *` document-expiry (`ExpirationChecker`) → owners; plan reminder quota (Free=1 nearest doc); dedup `notification_logs`.
-- `15 8 * * *` maintenance-due (`MaintenanceChecker`, #47) → Pro owners; dedup `maintenance_notification_logs`.
+- `15 8 * * *` maintenance-due (`MaintenanceChecker`, #47) → Plus+ owners, for tasks within 30 days of their stored due date or past it; dedup `maintenance_notification_logs` keyed on that date.
 - `0 9 * * *` regatta reminders (next 36h) → group members (`RegattaNotifier`).
 - `*/15 * * * *` live-event alert → interested users. Dedup via `sent_notifications`.
 - (Removed: overdue float-plan alert — see Float plan row.)

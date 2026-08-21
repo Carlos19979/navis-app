@@ -355,27 +355,51 @@ MaintenanceTask makeMaintenanceTask({
   String id = 'task-1',
   String boatId = 'boat-1',
   String name = 'Engine oil change',
+  MaintenanceKind kind = MaintenanceKind.periodic,
   MaintenanceStatus status = MaintenanceStatus.ok,
   int? intervalMonths = 12,
   double? intervalHours,
   DateTime? lastPerformedAt,
   double? lastEngineHours,
   DateTime? nextDueDate,
+  double? nextDueHours,
   int? nextDueDays = 90,
   double? hoursUntilDue,
+  int timesDone = 1,
 }) {
   return MaintenanceTask(
     id: id,
     boatId: boatId,
     name: name,
+    kind: kind,
     status: status,
     intervalMonths: intervalMonths,
     intervalHours: intervalHours,
     lastPerformedAt: lastPerformedAt ?? DateTime(2026, 3, 15),
     lastEngineHours: lastEngineHours,
     nextDueDate: nextDueDate ?? DateTime(2027, 3, 15),
+    nextDueHours: nextDueHours,
     nextDueDays: nextDueDays,
     hoursUntilDue: hoursUntilDue,
+    timesDone: timesDone,
+  );
+}
+
+/// A one-off job: a history and no calendar, so no interval and no due date.
+MaintenanceTask makeOneOffTask({
+  String id = 'task-oneoff',
+  String boatId = 'boat-1',
+  String name = 'Bilge pump',
+  int timesDone = 1,
+}) {
+  return MaintenanceTask(
+    id: id,
+    boatId: boatId,
+    name: name,
+    kind: MaintenanceKind.oneOff,
+    status: MaintenanceStatus.unscheduled,
+    lastPerformedAt: DateTime(2026, 3, 15),
+    timesDone: timesDone,
   );
 }
 

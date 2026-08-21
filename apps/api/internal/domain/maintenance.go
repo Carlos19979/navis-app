@@ -2,8 +2,9 @@ package domain
 
 import "time"
 
-// MaintenanceLog is a service record for a boat (oil change, antifouling…).
-// TaskID optionally links it to a recurring MaintenanceTask; nil = a one-off.
+// MaintenanceLog is one entry in a task's history: the record of a job being
+// carried out. TaskID is the task it belongs to; it stays nullable only for
+// rows written before every log was adopted by a task (migration 00042).
 type MaintenanceLog struct {
 	ID          string
 	BoatID      string
@@ -21,48 +22,88 @@ type MaintenanceLog struct {
 	UpdatedAt   time.Time
 }
 
-// MaintenanceTask is a recurring service plan for a boat component (oil, anodes,
-// antifouling…). IntervalMonths and/or IntervalHours define how often it is due;
-// with neither set it is a history-only bucket that never flags as due.
+// MaintenanceTaskKind separates a job that comes back on a schedule from one
+// that simply happens now and then. It is the only thing the owner decides when
+// creating a task, and it is what makes a due date meaningful.
+type MaintenanceTaskKind string
+
+// MaintenanceTaskKind values.
+const (
+	// MaintenanceKindPeriodic repeats: it carries an interval, a next due date
+	// and it expires like a document.
+	MaintenanceKindPeriodic MaintenanceTaskKind = "periodic"
+	// MaintenanceKindOneOff is a job with a history and no calendar (a repair).
+	MaintenanceKindOneOff MaintenanceTaskKind = "one_off"
+)
+
+// MaintenanceTask is a maintenance job on a boat (oil, anodes, antifouling, a
+// pump that broke...). A periodic task owns its NextDueDate — stored, not
+// re-derived from its history — so it expires and warns exactly like a
+// document, and it has a date to warn about from the moment it is created.
+// NextDueHours is the same idea for engines serviced by running hours; it is
+// secondary and only ever brings the due state forward.
 type MaintenanceTask struct {
 	ID             string
 	BoatID         string
 	UserID         string
 	Name           string
+	Kind           MaintenanceTaskKind
 	IntervalMonths *int
 	IntervalHours  *float64
+	NextDueDate    *time.Time
+	NextDueHours   *float64
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 }
 
-// MaintenanceTaskView is a task plus its derived due-state, for the client to
-// render the plan without recomputing "due" logic.
+// Periodic reports whether the task repeats on a schedule.
+func (t MaintenanceTask) Periodic() bool {
+	return t.Kind == MaintenanceKindPeriodic
+}
+
+// MaintenanceCompletion is the record of carrying a task out: the history entry
+// to write, whose date also decides where the next due date lands.
+type MaintenanceCompletion struct {
+	PerformedAt time.Time
+	EngineHours *float64
+	Cost        *float64
+	Provider    *string
+	Notes       *string
+	InvoiceURL  *string
+	PhotoURLs   []string
+}
+
+// MaintenanceTaskView is a task plus its derived state, so the client renders
+// the plan without recomputing "when does this expire".
 type MaintenanceTaskView struct {
 	Task            MaintenanceTask
 	Status          MaintenanceTaskStatus
 	LastPerformedAt *time.Time
 	LastEngineHours *float64
-	NextDueDate     *time.Time
-	DueDays         int      // days until the date-based service (meaningful when NextDueDate != nil)
-	HoursUntilDue   *float64 // engine hours until the hours-based service (nil = n/a)
+	DueDays         int      // days until the due date (meaningful when Task.NextDueDate != nil)
+	HoursUntilDue   *float64 // engine hours until the hours limit (nil = n/a)
+	TimesDone       int      // how many times it has been carried out
 }
 
-// MaintenanceTaskStatus is the derived due-state of a maintenance task.
+// MaintenanceTaskStatus is the derived state of a maintenance task. The values
+// mirror documents.status on purpose: an owner should not have to learn a second
+// vocabulary for "this expires soon".
 type MaintenanceTaskStatus string
 
-// MaintenanceTaskStatus values.
+// MaintenanceTaskStatus values, sharing the documents thresholds (90/30 days).
 const (
-	MaintenanceOK      MaintenanceTaskStatus = "ok"       // done, next service not near
-	MaintenanceDueSoon MaintenanceTaskStatus = "due_soon" // within the warning window
-	MaintenanceOverdue MaintenanceTaskStatus = "overdue"  // past due (date or hours)
-	MaintenancePending MaintenanceTaskStatus = "pending"  // has interval, never logged
-	MaintenanceNoPlan  MaintenanceTaskStatus = "none"     // history-only (no interval)
+	MaintenanceOK       MaintenanceTaskStatus = "ok"       // due date comfortably ahead
+	MaintenanceWarning  MaintenanceTaskStatus = "warning"  // within 90 days
+	MaintenanceCritical MaintenanceTaskStatus = "critical" // within 30 days
+	MaintenanceExpired  MaintenanceTaskStatus = "expired"  // past due
+	// MaintenanceUnscheduled is a one-off task: it has a history, never a date.
+	MaintenanceUnscheduled MaintenanceTaskStatus = "unscheduled"
 )
 
-// MaintenanceDueNotice is a due/overdue task occurrence ready to notify:
-// the task's evaluated state plus the owner and boat context the
-// notification needs. DueKey pins the concrete occurrence (see the
-// maintenance_notification_logs migration).
+// MaintenanceDueNotice is a task close to (or past) its due date, ready to
+// notify: its evaluated state plus the owner and boat context the notification
+// needs. DueKey pins the concrete occurrence so servicing the task opens a new
+// dedup slot (see the maintenance_notification_logs migration).
 type MaintenanceDueNotice struct {
 	TaskID        string
 	TaskName      string
@@ -76,15 +117,15 @@ type MaintenanceDueNotice struct {
 	DueKey        string
 }
 
-// MaintenanceTaskWithLatest is a task joined with its boat context and the
-// latest service log, for cross-boat due evaluation (notification cron).
+// MaintenanceTaskWithLatest is a task joined with its boat context, for
+// cross-boat due evaluation (the notification cron). The due date lives on the
+// task itself, so no history join is needed — only the boat's engine hours,
+// which the hours limit is measured against.
 type MaintenanceTaskWithLatest struct {
-	Task            MaintenanceTask
-	BoatName        string
-	OwnerID         string
-	EngineHours     float64
-	LastPerformedAt *time.Time
-	LastEngineHours *float64
+	Task        MaintenanceTask
+	BoatName    string
+	OwnerID     string
+	EngineHours float64
 }
 
 // Expense is a cost associated with a boat (fuel, mooring, insurance…).

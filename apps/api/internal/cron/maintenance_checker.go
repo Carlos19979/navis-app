@@ -20,7 +20,7 @@ type dueNoticeLister interface {
 }
 
 // MaintenanceChecker runs a daily cron job that notifies boat owners about
-// maintenance tasks that are due soon or overdue. Scheduled maintenance
+// maintenance tasks within 30 days of their due date, or past it. Scheduled maintenance
 // reminders are a Pro capability: Free owners are skipped (they still see
 // the due state in-app on the maintenance and readiness screens).
 type MaintenanceChecker struct {
@@ -189,7 +189,7 @@ func (mc *MaintenanceChecker) ownerIsPro(ctx context.Context, userID string) boo
 
 // buildMaintenanceMessage renders the notification title/body for a due task.
 func buildMaintenanceMessage(n domain.MaintenanceDueNotice) (string, string) {
-	if n.Status == domain.MaintenanceOverdue {
+	if n.Status == domain.MaintenanceExpired {
 		title := fmt.Sprintf("Mantenimiento vencido: %s", n.TaskName)
 		body := fmt.Sprintf("%s de %s esta vencido.", n.TaskName, n.BoatName)
 		if n.NextDueDate != nil && n.DueDays < 0 {

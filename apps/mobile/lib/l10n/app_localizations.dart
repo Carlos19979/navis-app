@@ -1046,12 +1046,6 @@ abstract class AppLocalizations {
   /// **'No maintenance tasks yet'**
   String get noMaintenanceTasks;
 
-  /// No description provided for @maintenanceUpcomingTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Upcoming'**
-  String get maintenanceUpcomingTitle;
-
   /// No description provided for @maintenanceHistoryTitle.
   ///
   /// In en, this message translates to:
@@ -1094,71 +1088,143 @@ abstract class AppLocalizations {
   /// **'Every (engine hours)'**
   String get taskIntervalHoursLabel;
 
-  /// No description provided for @recordService.
-  ///
-  /// In en, this message translates to:
-  /// **'Record service'**
-  String get recordService;
-
-  /// No description provided for @maintenanceDueSoonLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'due soon'**
-  String get maintenanceDueSoonLabel;
-
-  /// No description provided for @maintenanceNoInterval.
-  ///
-  /// In en, this message translates to:
-  /// **'no schedule'**
-  String get maintenanceNoInterval;
-
   /// No description provided for @maintenanceHistoryEmpty.
   ///
   /// In en, this message translates to:
   /// **'No services recorded yet'**
   String get maintenanceHistoryEmpty;
 
-  /// No description provided for @maintenancePartOfPlan.
+  /// No description provided for @maintenanceScheduleTitle.
   ///
   /// In en, this message translates to:
-  /// **'Part of the plan (optional)'**
-  String get maintenancePartOfPlan;
+  /// **'Recurring services'**
+  String get maintenanceScheduleTitle;
 
-  /// No description provided for @maintenanceWhatWasDone.
+  /// No description provided for @maintenanceOneOffTitle.
   ///
   /// In en, this message translates to:
-  /// **'What was done? (e.g. oil change)'**
-  String get maintenanceWhatWasDone;
+  /// **'One-off jobs'**
+  String get maintenanceOneOffTitle;
 
-  /// No description provided for @maintenanceRepeatEvery.
+  /// No description provided for @maintenanceNewTask.
   ///
   /// In en, this message translates to:
-  /// **'Repeats every'**
-  String get maintenanceRepeatEvery;
+  /// **'New service'**
+  String get maintenanceNewTask;
 
-  /// No description provided for @maintenanceIntervalMonths.
+  /// No description provided for @maintenanceKindPeriodic.
   ///
   /// In en, this message translates to:
-  /// **'Months'**
-  String get maintenanceIntervalMonths;
+  /// **'Recurring'**
+  String get maintenanceKindPeriodic;
 
-  /// No description provided for @maintenanceIntervalHours.
+  /// No description provided for @maintenanceKindOneOff.
   ///
   /// In en, this message translates to:
-  /// **'Engine hours'**
-  String get maintenanceIntervalHours;
+  /// **'One-off'**
+  String get maintenanceKindOneOff;
 
-  /// No description provided for @maintenanceRepeatHint.
+  /// No description provided for @maintenanceKindPeriodicHint.
   ///
   /// In en, this message translates to:
-  /// **'Leave empty for a one-off service. With an interval it joins the plan and we remind you when it is due.'**
-  String get maintenanceRepeatHint;
+  /// **'It falls due every so often, and we warn you before it does.'**
+  String get maintenanceKindPeriodicHint;
 
-  /// No description provided for @maintenanceRepeatHintFree.
+  /// No description provided for @maintenanceKindPeriodicHintFree.
   ///
   /// In en, this message translates to:
-  /// **'Leave empty for a one-off service. With an interval it joins the plan and the app shows you when it is due.'**
-  String get maintenanceRepeatHintFree;
+  /// **'It falls due every so often, and the app shows you when.'**
+  String get maintenanceKindPeriodicHintFree;
+
+  /// No description provided for @maintenanceKindOneOffHint.
+  ///
+  /// In en, this message translates to:
+  /// **'No date: it just keeps a history of every time you do it.'**
+  String get maintenanceKindOneOffHint;
+
+  /// No description provided for @maintenanceNextDueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Next due'**
+  String get maintenanceNextDueLabel;
+
+  /// No description provided for @maintenanceNextDueUnset.
+  ///
+  /// In en, this message translates to:
+  /// **'Set how many months'**
+  String get maintenanceNextDueUnset;
+
+  /// No description provided for @maintenanceAdvanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get maintenanceAdvanced;
+
+  /// No description provided for @maintenanceHoursHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A hard-working engine brings the service forward.'**
+  String get maintenanceHoursHint;
+
+  /// No description provided for @maintenanceDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get maintenanceDone;
+
+  /// No description provided for @maintenanceMarkDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as done'**
+  String get maintenanceMarkDone;
+
+  /// No description provided for @maintenanceTaskHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Times carried out'**
+  String get maintenanceTaskHistoryTitle;
+
+  /// No description provided for @maintenanceEmptyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Add whatever needs doing every so often and we will warn you, just like with documents.'**
+  String get maintenanceEmptyDescription;
+
+  /// No description provided for @maintenanceNeverDone.
+  ///
+  /// In en, this message translates to:
+  /// **'never recorded'**
+  String get maintenanceNeverDone;
+
+  /// No description provided for @maintenanceDoneSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Done, added to the history'**
+  String get maintenanceDoneSaved;
+
+  /// No description provided for @maintenanceOverdueBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} d overdue'**
+  String maintenanceOverdueBy(int days);
+
+  /// No description provided for @maintenancePerformedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Carried out on {date}'**
+  String maintenancePerformedOn(String date);
+
+  /// No description provided for @maintenanceDoneRolled.
+  ///
+  /// In en, this message translates to:
+  /// **'Done · next on {date}'**
+  String maintenanceDoneRolled(String date);
+
+  /// No description provided for @maintenanceTimesDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 time} other{{count} times}}'**
+  String maintenanceTimesDone(int count);
 
   /// No description provided for @maintenanceRemindersPlus.
   ///

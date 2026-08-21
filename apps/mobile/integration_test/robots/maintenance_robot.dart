@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import 'package:navis_mobile/features/maintenance/presentation/widgets/expense_period_picker.dart';
 import 'package:navis_mobile/shared/widgets/navis_button.dart';
+import 'package:navis_mobile/shared/widgets/navis_card.dart';
 import 'package:navis_mobile/shared/widgets/navis_text_field.dart';
 
 import '../helpers/pumping.dart';
@@ -27,34 +28,13 @@ class MaintenanceRobot {
     await pumpFor(tester, const Duration(milliseconds: 500));
   }
 
-  /// Records a one-off service with a cost through the bottom sheet
-  /// (app-bar action, tooltip 'Record service').
-  Future<void> recordService({
-    required String type,
-    required String cost,
-  }) async {
-    await ensureMaintenanceTab();
-    await tapUntil(
-      tester,
-      find.byTooltip('Record service'),
-      find.widgetWithText(NavisButton, 'Save'),
-    );
-    await pumpFor(tester, const Duration(milliseconds: 400));
-    await _sheetField('Type (e.g. oil change)', type);
-    await _sheetField('Cost € (opt.)', cost);
-    await tapUntilGone(
-      tester,
-      find.widgetWithText(NavisButton, 'Save'),
-      find.widgetWithText(NavisButton, 'Save'),
-    );
-  }
-
-  /// Adds a recurring task (months interval) via the FAB (tooltip 'Add task').
+  /// Creates a recurring task through the FAB sheet: name, interval, and the
+  /// due date the sheet derives from it.
   Future<void> addTask({required String name, String months = '12'}) async {
     await ensureMaintenanceTab();
     await tapUntil(
       tester,
-      find.byTooltip('Add task'),
+      find.byTooltip('New service'),
       find.widgetWithText(NavisTextField, 'Task name'),
     );
     await pumpFor(tester, const Duration(milliseconds: 400));
@@ -66,6 +46,64 @@ class MaintenanceRobot {
       find.widgetWithText(NavisButton, 'Save'),
     );
     await pumpUntilFound(tester, find.text(name));
+  }
+
+  /// Creates a one-off job: same sheet, with the schedule switched off.
+  Future<void> addOneOffTask({required String name}) async {
+    await ensureMaintenanceTab();
+    await tapUntil(
+      tester,
+      find.byTooltip('New service'),
+      find.widgetWithText(NavisTextField, 'Task name'),
+    );
+    await pumpFor(tester, const Duration(milliseconds: 400));
+    await _sheetField('Task name', name);
+    await tester.tap(find.text('One-off').last);
+    await pumpFor(tester, const Duration(milliseconds: 300));
+    await tapUntilGone(
+      tester,
+      find.widgetWithText(NavisButton, 'Save'),
+      find.widgetWithText(NavisButton, 'Save'),
+    );
+    await pumpUntilFound(tester, find.text(name));
+  }
+
+  /// Marks a task as done with a cost — the one button that writes the history
+  /// entry and moves the due date.
+  Future<void> markTaskDone({
+    required String name,
+    required String cost,
+  }) async {
+    await ensureMaintenanceTab();
+    await pumpUntilFound(tester, find.text(name));
+    // The Done button sits on the task's own card.
+    final card = find.ancestor(
+      of: find.text(name),
+      matching: find.byType(NavisCard),
+    );
+    await tapUntil(
+      tester,
+      find.descendant(of: card.first, matching: find.text('Done')),
+      find.widgetWithText(NavisTextField, 'Cost € (opt.)'),
+    );
+    await pumpFor(tester, const Duration(milliseconds: 400));
+    await _sheetField('Cost € (opt.)', cost);
+    await tapUntilGone(
+      tester,
+      find.widgetWithText(NavisButton, 'Save'),
+      find.widgetWithText(NavisButton, 'Save'),
+    );
+    await pumpFor(tester, const Duration(seconds: 1));
+  }
+
+  /// Opens a task and checks it lists the times it has been carried out.
+  Future<void> checkTaskHistory({required String name}) async {
+    await ensureMaintenanceTab();
+    await tapUntil(tester, find.text(name), find.text('Times carried out'));
+    await pumpFor(tester, const Duration(milliseconds: 400));
+    // Dismiss the sheet by tapping the barrier above it.
+    await tester.tapAt(const Offset(20, 20));
+    await pumpFor(tester, const Duration(milliseconds: 400));
   }
 
   Future<void> openExpensesTab() async {

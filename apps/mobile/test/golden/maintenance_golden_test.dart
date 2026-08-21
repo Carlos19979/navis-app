@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:navis_mobile/features/boat/domain/entities/boat_permissions.dart';
+import 'package:navis_mobile/features/boat/presentation/providers/boat_permissions_provider.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/maintenance/data/maintenance_models.dart';
 import 'package:navis_mobile/features/maintenance/data/maintenance_repository.dart';
@@ -22,24 +24,25 @@ void main() {
 
   final tasks = [
     makeMaintenanceTask(
-      id: 't-overdue',
+      id: 't-expired',
       name: 'Anodes',
-      status: MaintenanceStatus.overdue,
+      status: MaintenanceStatus.expired,
       nextDueDays: -3,
     ),
     makeMaintenanceTask(
-      id: 't-due-soon',
+      id: 't-critical',
       name: 'Filters',
-      status: MaintenanceStatus.dueSoon,
+      status: MaintenanceStatus.critical,
       nextDueDays: 5,
     ),
     makeMaintenanceTask(
-      id: 't-pending',
+      id: 't-warning',
       name: 'Coolant',
-      status: MaintenanceStatus.pending,
-      nextDueDays: null,
+      status: MaintenanceStatus.warning,
+      nextDueDays: 60,
     ),
     makeMaintenanceTask(id: 't-ok', name: 'Impeller'),
+    makeOneOffTask(),
   ];
 
   final logs = [makeMaintenanceLog()];
@@ -53,6 +56,11 @@ void main() {
         settle: false,
         overrides: [
           boatProvider.overrideWith((ref, id) async => makeBoat(id: id)),
+          // The owner's view: without this the harness renders the read-only
+          // member screen, which is missing the Done button the tab is about.
+          boatPermissionsProvider.overrideWith(
+            (ref, id) async => const BoatPermissions.all(),
+          ),
           maintenanceRepositoryProvider
               .overrideWithValue(_MockMaintenanceRepository()),
           maintenanceTasksProvider.overrideWith((ref, id) async => tasks),

@@ -145,7 +145,7 @@ func main() {
 		boatRepo, profileRepo)
 	sharedSvc := service.NewSharedService(bookingRepo, expenseSplitRepo, expenseRepo, boatRepo, profileRepo, notifySvc)
 	anomalySvc := service.NewAnomalyService(tripRepo, boatRepo, profileRepo)
-	maintenanceSvc := service.NewMaintenanceService(maintenanceRepo, maintenanceTaskRepo, expenseRepo, boatRepo, profileRepo, notifySvc)
+	maintenanceSvc := service.NewMaintenanceService(maintenanceRepo, maintenanceTaskRepo, expenseRepo, boatRepo, profileRepo, notifySvc, postgres.NewTxManager(pool))
 	regattaSvc := service.NewRegattaService(tripRepo, participantRepo, checklistRepo, groupMemberRepo, notifySvc)
 	portSvc := service.NewPortService(portRepo)
 	weatherSvc := service.NewWeatherService(weatherProvider)

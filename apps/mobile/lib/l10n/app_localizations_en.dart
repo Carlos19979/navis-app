@@ -543,9 +543,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noMaintenanceTasks => 'No maintenance tasks yet';
 
   @override
-  String get maintenanceUpcomingTitle => 'Upcoming';
-
-  @override
   String get maintenanceHistoryTitle => 'History';
 
   @override
@@ -567,39 +564,92 @@ class AppLocalizationsEn extends AppLocalizations {
   String get taskIntervalHoursLabel => 'Every (engine hours)';
 
   @override
-  String get recordService => 'Record service';
-
-  @override
-  String get maintenanceDueSoonLabel => 'due soon';
-
-  @override
-  String get maintenanceNoInterval => 'no schedule';
-
-  @override
   String get maintenanceHistoryEmpty => 'No services recorded yet';
 
   @override
-  String get maintenancePartOfPlan => 'Part of the plan (optional)';
+  String get maintenanceScheduleTitle => 'Recurring services';
 
   @override
-  String get maintenanceWhatWasDone => 'What was done? (e.g. oil change)';
+  String get maintenanceOneOffTitle => 'One-off jobs';
 
   @override
-  String get maintenanceRepeatEvery => 'Repeats every';
+  String get maintenanceNewTask => 'New service';
 
   @override
-  String get maintenanceIntervalMonths => 'Months';
+  String get maintenanceKindPeriodic => 'Recurring';
 
   @override
-  String get maintenanceIntervalHours => 'Engine hours';
+  String get maintenanceKindOneOff => 'One-off';
 
   @override
-  String get maintenanceRepeatHint =>
-      'Leave empty for a one-off service. With an interval it joins the plan and we remind you when it is due.';
+  String get maintenanceKindPeriodicHint =>
+      'It falls due every so often, and we warn you before it does.';
 
   @override
-  String get maintenanceRepeatHintFree =>
-      'Leave empty for a one-off service. With an interval it joins the plan and the app shows you when it is due.';
+  String get maintenanceKindPeriodicHintFree =>
+      'It falls due every so often, and the app shows you when.';
+
+  @override
+  String get maintenanceKindOneOffHint =>
+      'No date: it just keeps a history of every time you do it.';
+
+  @override
+  String get maintenanceNextDueLabel => 'Next due';
+
+  @override
+  String get maintenanceNextDueUnset => 'Set how many months';
+
+  @override
+  String get maintenanceAdvanced => 'Advanced';
+
+  @override
+  String get maintenanceHoursHint =>
+      'A hard-working engine brings the service forward.';
+
+  @override
+  String get maintenanceDone => 'Done';
+
+  @override
+  String get maintenanceMarkDone => 'Mark as done';
+
+  @override
+  String get maintenanceTaskHistoryTitle => 'Times carried out';
+
+  @override
+  String get maintenanceEmptyDescription =>
+      'Add whatever needs doing every so often and we will warn you, just like with documents.';
+
+  @override
+  String get maintenanceNeverDone => 'never recorded';
+
+  @override
+  String get maintenanceDoneSaved => 'Done, added to the history';
+
+  @override
+  String maintenanceOverdueBy(int days) {
+    return '$days d overdue';
+  }
+
+  @override
+  String maintenancePerformedOn(String date) {
+    return 'Carried out on $date';
+  }
+
+  @override
+  String maintenanceDoneRolled(String date) {
+    return 'Done · next on $date';
+  }
+
+  @override
+  String maintenanceTimesDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count times',
+      one: '1 time',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get maintenanceRemindersPlus => 'Get reminded with Navis Plus';

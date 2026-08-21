@@ -40,7 +40,7 @@ func (r *MaintenanceRepo) Create(ctx context.Context, m *domain.MaintenanceLog) 
 		(boat_id, user_id, task_id, type, performed_at, engine_hours, cost, provider, notes, invoice_url, photo_urls)
 		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
 		RETURNING ` + maintenanceColumns
-	out, err := scanMaintenance(r.pool.QueryRow(ctx, query,
+	out, err := scanMaintenance(querier(ctx, r.pool).QueryRow(ctx, query,
 		m.BoatID, m.UserID, m.TaskID, m.Type, m.PerformedAt, m.EngineHours, m.Cost, m.Provider, m.Notes, m.InvoiceURL,
 		photoArray(m.PhotoURLs)))
 	if err != nil {

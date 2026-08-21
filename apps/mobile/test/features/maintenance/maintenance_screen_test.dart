@@ -17,6 +17,7 @@ import 'package:navis_mobile/shared/widgets/navis_error_widget.dart';
 import 'package:navis_mobile/shared/widgets/navis_gradient_fab.dart';
 import 'package:navis_mobile/shared/widgets/navis_photo_strip.dart';
 import 'package:navis_mobile/shared/widgets/navis_shimmer.dart';
+import 'package:navis_mobile/shared/widgets/navis_status_badge.dart';
 
 import 'package:navis_mobile/features/maintenance/presentation/widgets/expense_period_picker.dart';
 
@@ -140,27 +141,28 @@ void main() {
     });
   });
 
-  group('MaintenanceScreen task status labels', () {
-    testWidgets('renders each status tier with its label', (tester) async {
+  group('MaintenanceScreen task states', () {
+    testWidgets('each tier gets the documents badge and its due wording',
+        (tester) async {
       setPhoneSize(tester);
       final tasks = [
         makeMaintenanceTask(
-          id: 't-overdue',
+          id: 't-expired',
           name: 'Anodes',
-          status: MaintenanceStatus.overdue,
+          status: MaintenanceStatus.expired,
           nextDueDays: -3,
         ),
         makeMaintenanceTask(
-          id: 't-due-soon',
+          id: 't-critical',
           name: 'Filters',
-          status: MaintenanceStatus.dueSoon,
+          status: MaintenanceStatus.critical,
           nextDueDays: 5,
         ),
         makeMaintenanceTask(
-          id: 't-pending',
+          id: 't-warning',
           name: 'Coolant',
-          status: MaintenanceStatus.pending,
-          nextDueDays: null,
+          status: MaintenanceStatus.warning,
+          nextDueDays: 60,
         ),
         // Factory defaults: status ok, next due in 90 days.
         makeMaintenanceTask(id: 't-ok', name: 'Impeller'),
@@ -168,24 +170,47 @@ void main() {
       await tester.pumpWidget(buildSubject(tasks: () async => tasks));
       await pumpScreen(tester);
 
-      expect(find.text('overdue'), findsOneWidget);
-      expect(find.text('in 5 d'), findsOneWidget);
-      expect(find.text('not logged yet'), findsOneWidget);
-      expect(find.text('in 90 d'), findsOneWidget);
+      // The same words a document uses, so the two screens read alike.
+      expect(find.text('Expired'), findsOneWidget);
+      expect(find.text('Critical'), findsOneWidget);
+      expect(find.text('Warning'), findsOneWidget);
+      expect(find.text('Valid'), findsOneWidget);
+      // The due wording sits in the subtitle, next to the interval.
+      expect(find.textContaining('3 d overdue'), findsOneWidget);
+      expect(find.textContaining('in 5 d'), findsOneWidget);
+      expect(find.textContaining('in 60 d'), findsOneWidget);
     });
 
-    testWidgets('hours-until-due wins over days when nearer', (tester) async {
+    // Past three months, "in 300 days" says less than the date itself.
+    testWidgets('a far-off task shows its date, not a day count',
+        (tester) async {
       setPhoneSize(tester);
       final task = makeMaintenanceTask(
-        status: MaintenanceStatus.dueSoon,
-        nextDueDays: 30,
-        hoursUntilDue: 12,
+        nextDueDays: 300,
+        nextDueDate: DateTime(2027, 3, 15),
       );
       await tester.pumpWidget(buildSubject(tasks: () async => [task]));
       await pumpScreen(tester);
 
-      expect(find.text('in 12 h'), findsOneWidget);
-      expect(find.text('in 30 d'), findsNothing);
+      expect(find.textContaining('next 15/03/2027'), findsOneWidget);
+      expect(find.textContaining('in 300 d'), findsNothing);
+    });
+
+    testWidgets('a one-off job has its own section and no badge',
+        (tester) async {
+      setPhoneSize(tester);
+      await tester.pumpWidget(
+        buildSubject(
+          tasks: () async => [makeMaintenanceTask(), makeOneOffTask()],
+        ),
+      );
+      await pumpScreen(tester);
+
+      expect(find.text('Recurring services'), findsOneWidget);
+      expect(find.text('One-off jobs'), findsOneWidget);
+      expect(find.text('Bilge pump'), findsOneWidget);
+      // Nothing to expire against, so no status pill at all.
+      expect(find.byType(NavisStatusBadge), findsOneWidget);
     });
   });
 
@@ -224,12 +249,16 @@ void main() {
           .captured
           .single as Map<String, dynamic>;
       expect(body['name'], 'Engine oil');
+      // A suggestion now carries a month interval too, so the task it creates
+      // has a date to expire against even on an engine nobody logs hours for.
+      expect(body['kind'], 'periodic');
+      expect(body['interval_months'], 12);
       expect(body['interval_hours'], 100);
     });
   });
 
   group('MaintenanceScreen member permissions', () {
-    testWidgets('canEdit=false hides FAB, chips and record-service icon',
+    testWidgets('canEdit=false hides the FAB, the chips and Done',
         (tester) async {
       setPhoneSize(tester);
       await tester.pumpWidget(
@@ -241,7 +270,7 @@ void main() {
       await pumpScreen(tester);
 
       expect(find.byType(NavisGradientFab), findsNothing);
-      expect(find.byTooltip('Record service'), findsNothing);
+      expect(find.text('Done'), findsNothing);
       expect(find.text('Suggested'), findsNothing);
       // Blocked with a reason, not silently stripped of its buttons.
       expect(find.byType(BlockedActionCard), findsOneWidget);
@@ -270,189 +299,239 @@ void main() {
     });
   });
 
-  group('MaintenanceScreen sheets', () {
-    testWidgets('record-service sheet opens with fields and saves a log',
+  group('MaintenanceScreen task sheet', () {
+    testWidgets('creates a recurring task with an interval and a due date',
         (tester) async {
       setPhoneSize(tester);
-      when(() => mockRepo.addLog(boatId, any())).thenAnswer((_) async {});
-      await tester.pumpWidget(
-        buildSubject(tasks: () async => [makeMaintenanceTask()]),
-      );
-      await pumpScreen(tester);
-
-      await tester.tap(find.byTooltip('Record service'));
-      await pumpScreen(tester);
-
-      expect(find.text('Record service'), findsOneWidget);
-      expect(find.text('What was done? (e.g. oil change)'), findsOneWidget);
-      expect(find.text('Engine Hours (optional)'), findsOneWidget);
-      expect(find.text('Cost € (opt.)'), findsOneWidget);
-      expect(find.text('Provider (opt.)'), findsOneWidget);
-
-      await tester.enterText(
-        find.widgetWithText(TextField, 'What was done? (e.g. oil change)'),
-        'Oil change',
-      );
-      await tester.ensureVisible(find.text('Save'));
-      await tester.tap(find.text('Save'));
-      await pumpScreen(tester);
-
-      final body = verify(() => mockRepo.addLog(boatId, captureAny()))
-          .captured
-          .single as Map<String, dynamic>;
-      expect(body['type'], 'Oil change');
-    });
-
-    testWidgets('an interval turns the service into a plan entry',
-        (tester) async {
-      setPhoneSize(tester);
-      when(() => mockRepo.addLog(boatId, any())).thenAnswer((_) async {});
       when(() => mockRepo.addTask(boatId, any()))
-          .thenAnswer((_) async => makeMaintenanceTask(id: 'new-task'));
+          .thenAnswer((_) async => makeMaintenanceTask());
       await tester.pumpWidget(buildSubject());
       await pumpScreen(tester);
 
-      await tester.tap(find.byTooltip('Record service'));
+      await tester.tap(find.byTooltip('New service'));
       await pumpScreen(tester);
 
+      expect(find.text('Task name'), findsOneWidget);
+      expect(find.text('Recurring'), findsOneWidget);
+      expect(find.text('One-off'), findsOneWidget);
+      expect(find.text('Every (months)'), findsOneWidget);
+      expect(find.text('Next due'), findsOneWidget);
+
       await tester.enterText(
-        find.widgetWithText(TextField, 'What was done? (e.g. oil change)'),
+        find.widgetWithText(TextField, 'Task name'),
         'Antifouling',
       );
-      await tester.enterText(find.widgetWithText(TextField, 'Months'), '12');
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Every (months)'),
+        '12',
+      );
       await tester.ensureVisible(find.text('Save'));
       await tester.tap(find.text('Save'));
       await pumpScreen(tester);
 
-      // The plan entry is created from the service, not from a second form.
-      final task = verify(() => mockRepo.addTask(boatId, captureAny()))
+      final body = verify(() => mockRepo.addTask(boatId, captureAny()))
           .captured
           .single as Map<String, dynamic>;
-      expect(task['name'], 'Antifouling');
-      expect(task['interval_months'], 12);
-
-      // ...and the log is linked to it in the same save.
-      final log = verify(() => mockRepo.addLog(boatId, captureAny()))
-          .captured
-          .single as Map<String, dynamic>;
-      expect(log['type'], 'Antifouling');
-      expect(log['task_id'], 'new-task');
+      expect(body['name'], 'Antifouling');
+      expect(body['kind'], 'periodic');
+      expect(body['interval_months'], 12);
+      // Saying "every 12 months" is enough: the date follows the interval, so
+      // the task can warn from the day it is created.
+      expect(body['next_due_date'], isNotNull);
     });
 
-    testWidgets('no interval leaves the service unlinked', (tester) async {
+    testWidgets('a one-off task is saved without any schedule', (tester) async {
       setPhoneSize(tester);
-      when(() => mockRepo.addLog(boatId, any())).thenAnswer((_) async {});
+      when(() => mockRepo.addTask(boatId, any()))
+          .thenAnswer((_) async => makeOneOffTask());
       await tester.pumpWidget(buildSubject());
       await pumpScreen(tester);
 
-      await tester.tap(find.byTooltip('Record service'));
+      await tester.tap(find.byTooltip('New service'));
       await pumpScreen(tester);
-
       await tester.enterText(
-        find.widgetWithText(TextField, 'What was done? (e.g. oil change)'),
+        find.widgetWithText(TextField, 'Task name'),
         'Bilge pump',
       );
+      await tester.tap(find.text('One-off'));
+      await pumpScreen(tester);
+
+      // Picking one-off takes the whole schedule off the form.
+      expect(find.text('Every (months)'), findsNothing);
+      expect(find.text('Next due'), findsNothing);
+
       await tester.ensureVisible(find.text('Save'));
       await tester.tap(find.text('Save'));
       await pumpScreen(tester);
 
-      verifyNever(() => mockRepo.addTask(any(), any()));
-      final log = verify(() => mockRepo.addLog(boatId, captureAny()))
+      final body = verify(() => mockRepo.addTask(boatId, captureAny()))
           .captured
           .single as Map<String, dynamic>;
-      expect(log['task_id'], isNull);
+      expect(body['kind'], 'one_off');
+      expect(body['interval_months'], isNull);
+      expect(body['next_due_date'], isNull);
     });
 
-    testWidgets('picking a plan chip links the service to it', (tester) async {
+    // Engine hours only ever bring a service forward, so they stay folded away
+    // for the owners who service by the calendar.
+    testWidgets('engine hours live behind Advanced', (tester) async {
       setPhoneSize(tester);
-      when(() => mockRepo.addLog(boatId, any())).thenAnswer((_) async {});
-      await tester.pumpWidget(
-        buildSubject(tasks: () async => [makeMaintenanceTask()]),
+      when(() => mockRepo.addTask(boatId, any()))
+          .thenAnswer((_) async => makeMaintenanceTask());
+      await tester.pumpWidget(buildSubject());
+      await pumpScreen(tester);
+
+      await tester.tap(find.byTooltip('New service'));
+      await pumpScreen(tester);
+
+      expect(find.text('Every (engine hours)'), findsNothing);
+
+      await tester.ensureVisible(find.text('Advanced'));
+      await tester.tap(find.text('Advanced'));
+      await pumpScreen(tester);
+
+      expect(find.text('Every (engine hours)'), findsOneWidget);
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Task name'),
+        'Engine oil',
       );
-      await pumpScreen(tester);
-
-      await tester.tap(find.byTooltip('Record service'));
-      await pumpScreen(tester);
-
-      // The chip names the service and links it in one tap.
-      await tester.tap(find.widgetWithText(ChoiceChip, 'Engine oil change'));
-      await pumpScreen(tester);
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Every (engine hours)'),
+        '100',
+      );
       await tester.ensureVisible(find.text('Save'));
       await tester.tap(find.text('Save'));
       await pumpScreen(tester);
 
-      final log = verify(() => mockRepo.addLog(boatId, captureAny()))
+      final body = verify(() => mockRepo.addTask(boatId, captureAny()))
           .captured
           .single as Map<String, dynamic>;
-      expect(log['type'], 'Engine oil change');
-      expect(log['task_id'], 'task-1');
+      expect(body['interval_hours'], 100);
+    });
+
+    // The API cannot store a recurring task with nothing to roll by, and the
+    // owner should not be bounced back for leaving one field empty.
+    testWidgets('a recurring task with no interval falls back to a year',
+        (tester) async {
+      setPhoneSize(tester);
+      when(() => mockRepo.addTask(boatId, any()))
+          .thenAnswer((_) async => makeMaintenanceTask());
+      await tester.pumpWidget(buildSubject());
+      await pumpScreen(tester);
+
+      await tester.tap(find.byTooltip('New service'));
+      await pumpScreen(tester);
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Task name'),
+        'Life raft service',
+      );
+      await tester.ensureVisible(find.text('Save'));
+      await tester.tap(find.text('Save'));
+      await pumpScreen(tester);
+
+      final body = verify(() => mockRepo.addTask(boatId, captureAny()))
+          .captured
+          .single as Map<String, dynamic>;
+      expect(body['interval_months'], 12);
+      expect(body['next_due_date'], isNotNull);
     });
   });
 
-  group('MaintenanceScreen plan matching', () {
-    testWidgets('a service named like a plan entry links to it',
+  group('MaintenanceScreen marking a task done', () {
+    testWidgets('Done records the job and reports the new date',
         (tester) async {
       setPhoneSize(tester);
-      when(() => mockRepo.addLog(boatId, any())).thenAnswer((_) async {});
+      when(() => mockRepo.completeTask(boatId, 'task-1', any())).thenAnswer(
+        (_) async => makeMaintenanceTask(nextDueDate: DateTime(2027, 8, 21)),
+      );
       await tester.pumpWidget(
-        buildSubject(
-          tasks: () async =>
-              [makeMaintenanceTask(id: 'task-9', name: 'Antifouling')],
-        ),
+        buildSubject(tasks: () async => [makeMaintenanceTask()]),
       );
       await pumpScreen(tester);
 
-      await tester.tap(find.byTooltip('Record service'));
+      await tester.tap(find.text('Done'));
       await pumpScreen(tester);
+
+      // Prefilled with today: one tap on Save is the whole flow.
+      expect(find.textContaining('Carried out on'), findsOneWidget);
+      expect(find.text('Cost € (opt.)'), findsOneWidget);
+      // The form no longer asks what was done, nor how often it repeats.
+      expect(find.text('What was done? (e.g. oil change)'), findsNothing);
+      expect(find.text('Every (months)'), findsNothing);
+
       await tester.enterText(
-        find.widgetWithText(TextField, 'What was done? (e.g. oil change)'),
-        '  antifouling ',
+        find.widgetWithText(TextField, 'Cost € (opt.)'),
+        '180',
       );
       await tester.ensureVisible(find.text('Save'));
       await tester.tap(find.text('Save'));
       await pumpScreen(tester);
 
-      // No twin entry, and the plan's schedule is left alone: the interval
-      // fields were never prefilled, so empty means "said nothing".
-      verifyNever(() => mockRepo.addTask(any(), any()));
-      verifyNever(() => mockRepo.updateTask(any(), any(), any()));
-      final log = verify(() => mockRepo.addLog(boatId, captureAny()))
-          .captured
-          .single as Map<String, dynamic>;
-      expect(log['task_id'], 'task-9');
+      final body = verify(
+        () => mockRepo.completeTask(boatId, 'task-1', captureAny()),
+      ).captured.single as Map<String, dynamic>;
+      expect(body['cost'], 180);
+      expect(body['performed_at'], isNotNull);
+      // Where the task landed is the part worth confirming.
+      expect(find.textContaining('next on 21/08/2027'), findsOneWidget);
+
+      await drain(tester);
     });
 
-    testWidgets('typing an interval on a matched entry reschedules it',
+    testWidgets('the task detail sheet lists that task\'s own history',
         (tester) async {
       setPhoneSize(tester);
-      when(() => mockRepo.addLog(boatId, any())).thenAnswer((_) async {});
-      when(() => mockRepo.updateTask(boatId, any(), any()))
-          .thenAnswer((_) async {});
       await tester.pumpWidget(
         buildSubject(
-          // The factory already schedules it every 12 months.
-          tasks: () async =>
-              [makeMaintenanceTask(id: 'task-9', name: 'Antifouling')],
+          tasks: () async => [makeMaintenanceTask(timesDone: 2)],
+          logs: () async => [
+            makeMaintenanceLog(id: 'l1', type: 'Oil change', taskId: 'task-1'),
+            makeMaintenanceLog(id: 'l2', type: 'Hull job', taskId: 'other'),
+          ],
         ),
       );
       await pumpScreen(tester);
 
-      await tester.tap(find.byTooltip('Record service'));
+      await tester.tap(find.text('Engine oil change'));
       await pumpScreen(tester);
-      await tester.enterText(
-        find.widgetWithText(TextField, 'What was done? (e.g. oil change)'),
-        'Antifouling',
+
+      expect(find.text('Times carried out'), findsOneWidget);
+      expect(find.text('Mark as done'), findsOneWidget);
+      // Only this task's entries — the boat-wide list behind the sheet still
+      // holds the other one, so scope the check to the sheet itself.
+      final sheet = find.byType(BottomSheet);
+      expect(
+        find.descendant(of: sheet, matching: find.text('Oil change')),
+        findsOneWidget,
       );
-      await tester.enterText(find.widgetWithText(TextField, 'Months'), '24');
+      expect(
+        find.descendant(of: sheet, matching: find.text('Hull job')),
+        findsNothing,
+      );
+
+      await drain(tester);
+    });
+
+    testWidgets('a failed completion keeps the sheet\'s work in a snackbar',
+        (tester) async {
+      setPhoneSize(tester);
+      when(() => mockRepo.completeTask(boatId, 'task-1', any()))
+          .thenThrow(Exception('boom'));
+      await tester.pumpWidget(
+        buildSubject(tasks: () async => [makeMaintenanceTask()]),
+      );
+      await pumpScreen(tester);
+
+      await tester.tap(find.text('Done'));
+      await pumpScreen(tester);
       await tester.ensureVisible(find.text('Save'));
       await tester.tap(find.text('Save'));
       await pumpScreen(tester);
 
-      verifyNever(() => mockRepo.addTask(any(), any()));
-      final body = verify(
-        () => mockRepo.updateTask(boatId, 'task-9', captureAny()),
-      ).captured.single as Map<String, dynamic>;
-      expect(body['interval_months'], 24);
+      expect(find.text('Could not save'), findsOneWidget);
+
+      await drain(tester);
     });
   });
 
@@ -462,16 +541,13 @@ void main() {
       await tester.pumpWidget(buildSubject(pro: false));
       await pumpScreen(tester);
 
-      await tester.tap(find.byTooltip('Record service'));
+      await tester.tap(find.byTooltip('New service'));
       await pumpScreen(tester);
       await tester.ensureVisible(find.text('Get reminded with Navis Plus'));
 
       // The cron is Plus+, so Free must not read a promise of a reminder.
       expect(find.text('Get reminded with Navis Plus'), findsOneWidget);
-      expect(
-        find.textContaining('we remind you when it is due'),
-        findsNothing,
-      );
+      expect(find.textContaining('we warn you'), findsNothing);
     });
 
     testWidgets('a paid plan keeps the reminder promise', (tester) async {
@@ -479,19 +555,17 @@ void main() {
       await tester.pumpWidget(buildSubject());
       await pumpScreen(tester);
 
-      await tester.tap(find.byTooltip('Record service'));
+      await tester.tap(find.byTooltip('New service'));
       await pumpScreen(tester);
 
       expect(find.text('Get reminded with Navis Plus'), findsNothing);
-      expect(
-        find.textContaining('we remind you when it is due'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('we warn you'), findsOneWidget);
     });
   });
 
   group('MaintenanceScreen history', () {
-    testWidgets('lists linked services too', (tester) async {
+    testWidgets('lists every entry, whichever task it belongs to',
+        (tester) async {
       setPhoneSize(tester);
       await tester.pumpWidget(
         buildSubject(
@@ -504,8 +578,8 @@ void main() {
       );
       await pumpScreen(tester);
 
-      // Both kinds share one history: a linked service used to be visible
-      // only inside its plan entry.
+      // The boat-wide history stands next to each task's own: a service used
+      // to be visible only inside its plan entry.
       expect(find.text('History'), findsOneWidget);
       expect(find.text('Oil change'), findsOneWidget);
       expect(find.text('Bilge pump'), findsOneWidget);
@@ -568,36 +642,33 @@ void main() {
       expect(find.byType(NavisPhotoThumb), findsNWidgets(2));
     });
 
-    testWidgets(
-        'record-service sheet has the photo strip and saves '
-        'photo_urls', (tester) async {
+    testWidgets('the completion sheet has the photo strip and sends photo_urls',
+        (tester) async {
       setPhoneSize(tester);
-      when(() => mockRepo.addLog(boatId, any())).thenAnswer((_) async {});
+      when(() => mockRepo.completeTask(boatId, 'task-1', any()))
+          .thenAnswer((_) async => makeMaintenanceTask());
       await tester.pumpWidget(
         buildSubject(tasks: () async => [makeMaintenanceTask()]),
       );
       await pumpScreen(tester);
 
-      await tester.tap(find.byTooltip('Record service'));
+      await tester.tap(find.text('Done'));
       await pumpScreen(tester);
 
       expect(find.text('Photos'), findsOneWidget);
       expect(find.byType(NavisPhotoStrip), findsOneWidget);
       expect(find.byTooltip('Add Photo'), findsOneWidget);
 
-      await tester.enterText(
-        find.widgetWithText(TextField, 'What was done? (e.g. oil change)'),
-        'Impeller swap',
-      );
       await tester.ensureVisible(find.text('Save'));
       await tester.tap(find.text('Save'));
       await pumpScreen(tester);
 
-      final body = verify(() => mockRepo.addLog(boatId, captureAny()))
-          .captured
-          .single as Map<String, dynamic>;
-      expect(body['type'], 'Impeller swap');
+      final body = verify(
+        () => mockRepo.completeTask(boatId, 'task-1', captureAny()),
+      ).captured.single as Map<String, dynamic>;
       expect(body['photo_urls'], isA<List<String>>());
+
+      await drain(tester);
     });
 
     testWidgets('Free plan: adding beyond one photo shows the paywall',
@@ -611,8 +682,8 @@ void main() {
       );
       await pumpScreen(tester);
 
-      // Open the edit sheet from the log card, then try to add a second
-      // photo: Free's AttachmentLimit (1) is already used up.
+      // Open the history-entry sheet from the log card, then try to add a
+      // second photo: Free's AttachmentLimit (1) is already used up.
       await tester.tap(find.text('engine_service'));
       await pumpScreen(tester);
       await tester.ensureVisible(find.byTooltip('Add Photo'));

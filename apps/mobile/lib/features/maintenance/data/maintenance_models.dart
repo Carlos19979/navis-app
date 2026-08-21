@@ -1,5 +1,6 @@
-/// A maintenance/service record for a boat. [taskId] links it to a recurring
-/// task; null = a one-off entry.
+/// One entry in a task's history: the record of a job being carried out.
+/// [taskId] is the task it belongs to — every entry has one, bar rows written
+/// before the API adopted the loose ones (migration 00042).
 class MaintenanceLog {
   const MaintenanceLog({
     required this.id,
@@ -43,42 +44,66 @@ class MaintenanceLog {
   final String? invoiceUrl;
 
   /// Service-evidence photos (impeller/anode wear...). Free plan keeps one
-  /// per log; Pro up to ten — mirrored server-side.
+  /// per entry; Plus and Pro up to ten — mirrored server-side.
   final List<String> photoUrls;
 }
 
-/// The derived due-state of a maintenance task, mirroring the server.
+/// Whether a task comes back on a schedule or just happens now and then. It is
+/// the only thing the owner picks when creating one, and what decides whether
+/// the task can expire at all.
+enum MaintenanceKind {
+  periodic('periodic'),
+  oneOff('one_off');
+
+  const MaintenanceKind(this.api);
+
+  final String api;
+
+  static MaintenanceKind fromApi(String? v) =>
+      v == 'one_off' ? MaintenanceKind.oneOff : MaintenanceKind.periodic;
+}
+
+/// The server-derived state of a maintenance task. Same vocabulary and same
+/// thresholds as a document's expiry (90/30 days), so the two read alike.
 enum MaintenanceStatus {
   ok,
-  dueSoon,
-  overdue,
-  pending, // has an interval, never logged
-  none; // history-only (no interval)
+  warning,
+  critical,
+  expired,
+  unscheduled; // a one-off job: it has a history, never a date
 
   static MaintenanceStatus fromApi(String? v) => switch (v) {
         'ok' => MaintenanceStatus.ok,
-        'due_soon' => MaintenanceStatus.dueSoon,
-        'overdue' => MaintenanceStatus.overdue,
-        'pending' => MaintenanceStatus.pending,
-        _ => MaintenanceStatus.none,
+        'warning' => MaintenanceStatus.warning,
+        'critical' => MaintenanceStatus.critical,
+        'expired' => MaintenanceStatus.expired,
+        _ => MaintenanceStatus.unscheduled,
       };
+
+  /// Whether the task is asking to be done now (or should already have been).
+  bool get needsAttention =>
+      this == MaintenanceStatus.critical || this == MaintenanceStatus.expired;
 }
 
-/// A recurring maintenance task (a boat component with its own service interval)
-/// plus its server-derived due-state.
+/// A maintenance job on a boat. A periodic one carries the date it is next due
+/// — stored server-side, editable, and rolled forward when the task is marked
+/// done, which is what "resetting" an expired task means.
 class MaintenanceTask {
   const MaintenanceTask({
     required this.id,
     required this.boatId,
     required this.name,
+    required this.kind,
     required this.status,
     this.intervalMonths,
     this.intervalHours,
+    this.nextDueDate,
+    this.nextDueHours,
     this.lastPerformedAt,
     this.lastEngineHours,
-    this.nextDueDate,
     this.nextDueDays,
     this.hoursUntilDue,
+    this.timesDone = 0,
   });
 
   factory MaintenanceTask.fromJson(Map<String, dynamic> json) {
@@ -87,30 +112,36 @@ class MaintenanceTask {
       id: json['id'] as String,
       boatId: json['boat_id'] as String,
       name: json['name'] as String,
+      kind: MaintenanceKind.fromApi(json['kind'] as String?),
       status: MaintenanceStatus.fromApi(json['status'] as String?),
       intervalMonths: (json['interval_months'] as num?)?.toInt(),
       intervalHours: (json['interval_hours'] as num?)?.toDouble(),
+      nextDueDate: parseDate(json['next_due_date']),
+      nextDueHours: (json['next_due_hours'] as num?)?.toDouble(),
       lastPerformedAt: parseDate(json['last_performed_at']),
       lastEngineHours: (json['last_engine_hours'] as num?)?.toDouble(),
-      nextDueDate: parseDate(json['next_due_date']),
       nextDueDays: (json['next_due_days'] as num?)?.toInt(),
       hoursUntilDue: (json['hours_until_due'] as num?)?.toDouble(),
+      timesDone: (json['times_done'] as num?)?.toInt() ?? 0,
     );
   }
 
   final String id;
   final String boatId;
   final String name;
+  final MaintenanceKind kind;
   final MaintenanceStatus status;
   final int? intervalMonths;
   final double? intervalHours;
+  final DateTime? nextDueDate;
+  final double? nextDueHours;
   final DateTime? lastPerformedAt;
   final double? lastEngineHours;
-  final DateTime? nextDueDate;
   final int? nextDueDays;
   final double? hoursUntilDue;
+  final int timesDone;
 
-  bool get hasInterval => intervalMonths != null || intervalHours != null;
+  bool get isPeriodic => kind == MaintenanceKind.periodic;
 }
 
 /// A cost associated with a boat.
