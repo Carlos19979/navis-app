@@ -9,13 +9,17 @@ import (
 	"github.com/Carlos19979/navis-app/apps/api/internal/testutil"
 )
 
-// mockMaintenanceRepo is a minimal port.MaintenanceRepository for readiness tests.
+// mockMaintenanceRepo is a minimal port.MaintenanceRepository. Created entries
+// join the list it serves, so a completed task's own history is observable.
 type mockMaintenanceRepo struct {
-	logs []domain.MaintenanceLog
-	err  error
+	logs    []domain.MaintenanceLog
+	created []domain.MaintenanceLog
+	err     error
 }
 
 func (m *mockMaintenanceRepo) Create(_ context.Context, l *domain.MaintenanceLog) (*domain.MaintenanceLog, error) {
+	m.created = append(m.created, *l)
+	m.logs = append(m.logs, *l)
 	return l, nil
 }
 
@@ -72,15 +76,24 @@ func daysFromNow(days int) time.Time {
 	return time.Now().Add(time.Duration(days) * 24 * time.Hour)
 }
 
-// monthsTask is a 12-month (by default) service task with a fixed id.
-func monthsTask(months int) domain.MaintenanceTask {
+// monthsTask is a periodic task on a month interval, due dueInDays from now.
+func monthsTask(months, dueInDays int) domain.MaintenanceTask {
 	m := months
-	return domain.MaintenanceTask{ID: testTaskID, Name: "Engine oil", IntervalMonths: &m}
+	due := daysFromNow(dueInDays)
+	return domain.MaintenanceTask{
+		ID: testTaskID, Name: "Engine oil", Kind: domain.MaintenanceKindPeriodic,
+		IntervalMonths: &m, NextDueDate: &due,
+	}
 }
 
-func hoursTask(hours float64) domain.MaintenanceTask {
-	h := hours
-	return domain.MaintenanceTask{ID: testTaskID, Name: "Engine oil", IntervalHours: &h}
+// hoursTask is a periodic task driven only by engine hours: no due date, so its
+// state comes entirely from the boat's reading against dueAtHours.
+func hoursTask(interval, dueAtHours float64) domain.MaintenanceTask {
+	h, due := interval, dueAtHours
+	return domain.MaintenanceTask{
+		ID: testTaskID, Name: "Engine oil", Kind: domain.MaintenanceKindPeriodic,
+		IntervalHours: &h, NextDueHours: &due,
+	}
 }
 
 // logFor builds a maintenance log linked to a task.
@@ -118,7 +131,7 @@ func TestReadinessService_Get_ReadyWhenAllValid(t *testing.T) {
 	)
 	// A 12-month task serviced 30 days ago: green.
 	maint := &mockMaintenanceRepo{logs: []domain.MaintenanceLog{logFor(testTaskID, daysFromNow(-30), nil)}}
-	svc := NewReadinessService(docs, maint, taskRepo(monthsTask(12)), plainBoats(0), &testutil.FakeProfileRepo{Plan: domain.PlanPro})
+	svc := NewReadinessService(docs, maint, taskRepo(monthsTask(12, 335)), plainBoats(0), &testutil.FakeProfileRepo{Plan: domain.PlanPro})
 
 	r, err := svc.Get(context.Background(), "user-1", "boat-1")
 	if err != nil {
@@ -144,11 +157,11 @@ func TestReadinessService_Get_MaintenanceOverdueByHours(t *testing.T) {
 		domain.Document{Type: domain.DocumentTypeITB, ExpiryDate: daysFromNow(200)},
 	)
 	lastHours := 120.0
-	// Task due every 100 h, last serviced at 120 h; boat now at 230 h (>220) → overdue.
+	// Task due at 220 h; boat now at 230 h → past its hours limit.
 	maint := &mockMaintenanceRepo{logs: []domain.MaintenanceLog{
 		logFor(testTaskID, daysFromNow(-30), &lastHours),
 	}}
-	svc := NewReadinessService(docs, maint, taskRepo(hoursTask(100)), plainBoats(230), &testutil.FakeProfileRepo{Plan: domain.PlanPro})
+	svc := NewReadinessService(docs, maint, taskRepo(hoursTask(100, 220)), plainBoats(230), &testutil.FakeProfileRepo{Plan: domain.PlanPro})
 
 	r, err := svc.Get(context.Background(), "user-1", "boat-1")
 	if err != nil {
@@ -168,28 +181,50 @@ func TestReadinessService_Get_MaintenanceOverdueByHours(t *testing.T) {
 	}
 }
 
-func TestReadinessService_Get_MaintenancePendingWhenNeverLogged(t *testing.T) {
+func TestReadinessService_Get_MaintenanceCriticalWhenDueSoon(t *testing.T) {
 	t.Parallel()
 	docs := readinessDocs(domain.Document{Type: domain.DocumentTypeITB, ExpiryDate: daysFromNow(200)})
-	// Task with an interval but no logs → pending nudge (attention, not blocking).
+	// A task due in 20 days, never serviced. What used to be a dateless
+	// "pending" nudge is now a real date, so it flags on the same 30-day
+	// threshold as a document about to expire.
 	maint := &mockMaintenanceRepo{}
-	svc := NewReadinessService(docs, maint, taskRepo(monthsTask(12)), plainBoats(0), &testutil.FakeProfileRepo{Plan: domain.PlanPro})
+	svc := NewReadinessService(docs, maint, taskRepo(monthsTask(12, 20)), plainBoats(0), &testutil.FakeProfileRepo{Plan: domain.PlanPro})
 
 	r, err := svc.Get(context.Background(), "user-1", "boat-1")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if r.Status != domain.ReadinessAttention {
-		t.Errorf("status = %q, want attention (pending task)", r.Status)
+		t.Errorf("status = %q, want attention (task due in 20 days)", r.Status)
 	}
 	var found bool
 	for _, it := range r.Attention {
-		if it.Ref == "engine_service" && it.Reason == "pending" {
+		if it.Ref == "engine_service" && it.Reason == "due_soon" {
 			found = true
 		}
 	}
 	if !found {
-		t.Errorf("attention = %+v, want a pending engine_service item", r.Attention)
+		t.Errorf("attention = %+v, want a due_soon engine_service item", r.Attention)
+	}
+}
+
+// 90 days out costs a little score and nothing else — exactly what a document
+// three months from expiry does, so maintenance reads the same as paperwork.
+func TestReadinessService_Get_MaintenanceWarningCostsScoreWithoutAnItem(t *testing.T) {
+	t.Parallel()
+	docs := readinessDocs(domain.Document{Type: domain.DocumentTypeITB, ExpiryDate: daysFromNow(200)})
+	maint := &mockMaintenanceRepo{}
+	svc := NewReadinessService(docs, maint, taskRepo(monthsTask(12, 60)), plainBoats(0), &testutil.FakeProfileRepo{Plan: domain.PlanPro})
+
+	r, err := svc.Get(context.Background(), "user-1", "boat-1")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if r.Score != 96 {
+		t.Errorf("score = %d, want 96 (a warning costs 4)", r.Score)
+	}
+	if len(r.Attention) != 0 {
+		t.Errorf("attention = %+v, want 0 (a warning is not a finding)", r.Attention)
 	}
 }
 
@@ -233,12 +268,14 @@ func TestReadinessService_Get_NoMaintenancePlanIsReadyAndUnpenalized(t *testing.
 	}
 }
 
-func TestReadinessService_Get_HistoryOnlyTaskIsIgnored(t *testing.T) {
+func TestReadinessService_Get_OneOffTaskIsIgnored(t *testing.T) {
 	t.Parallel()
 	docs := readinessDocs(domain.Document{Type: domain.DocumentTypeITB, ExpiryDate: daysFromNow(200)})
-	// A task with no interval is history-only: no attention, category stays ready.
+	// A one-off job has a history and no calendar: nothing to be late for.
 	maint := &mockMaintenanceRepo{}
-	historyTask := domain.MaintenanceTask{ID: testTaskID, Name: "Hull repair"}
+	historyTask := domain.MaintenanceTask{
+		ID: testTaskID, Name: "Hull repair", Kind: domain.MaintenanceKindOneOff,
+	}
 	svc := NewReadinessService(docs, maint, taskRepo(historyTask), plainBoats(0), &testutil.FakeProfileRepo{Plan: domain.PlanPro})
 
 	r, err := svc.Get(context.Background(), "user-1", "boat-1")
@@ -249,10 +286,10 @@ func TestReadinessService_Get_HistoryOnlyTaskIsIgnored(t *testing.T) {
 		t.Errorf("status = %q, want ready", r.Status)
 	}
 	if len(r.Attention) != 0 {
-		t.Errorf("attention = %+v, want 0 (history-only task)", r.Attention)
+		t.Errorf("attention = %+v, want 0 (one-off task)", r.Attention)
 	}
 	if r.Score != 100 {
-		t.Errorf("score = %d, want 100 (history-only task costs nothing)", r.Score)
+		t.Errorf("score = %d, want 100 (a one-off task costs nothing)", r.Score)
 	}
 }
 
@@ -263,7 +300,7 @@ func TestReadinessService_Get_NotReadyWhenGearExpired(t *testing.T) {
 	)
 	// A green maintenance task so only the extinguisher flags.
 	maint := &mockMaintenanceRepo{logs: []domain.MaintenanceLog{logFor(testTaskID, daysFromNow(-30), nil)}}
-	svc := NewReadinessService(docs, maint, taskRepo(monthsTask(12)), plainBoats(0), &testutil.FakeProfileRepo{Plan: domain.PlanPro})
+	svc := NewReadinessService(docs, maint, taskRepo(monthsTask(12, 335)), plainBoats(0), &testutil.FakeProfileRepo{Plan: domain.PlanPro})
 
 	r, err := svc.Get(context.Background(), "user-1", "boat-1")
 	if err != nil {

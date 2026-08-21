@@ -27,13 +27,15 @@ void j04Maintenance() {
 
     // Boat detail hub → Maintenance & expenses.
     await boat.openDetail('Aurora');
-    final maintenanceMarker = find.byTooltip('Record service');
+    final maintenanceMarker = find.byTooltip('New service');
     await boat.openTile('Maintenance & expenses', maintenanceMarker);
 
-    // One-off service with a cost + a recurring task.
-    await maint.recordService(type: 'Oil change', cost: '120');
-    await pumpUntilFound(tester, find.textContaining('Oil change'));
+    // A one-off job carried out with a cost, plus a recurring service.
+    await maint.addOneOffTask(name: 'Oil change');
+    await maint.markTaskDone(name: 'Oil change', cost: '120');
     await maint.addTask(name: 'Antifouling', months: '18');
+    // Each task keeps its own history of every time it was carried out.
+    await maint.checkTaskHistory(name: 'Oil change');
 
     // Cost intelligence (Pro) hangs off the hub, not off the Maintenance app bar
     // (its Icons.insights_rounded action was removed on purpose). The 120 € just

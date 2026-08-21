@@ -56,7 +56,7 @@ func TestMaintenanceChecker_NotifiesProOwner(t *testing.T) {
 	notifier := &testutil.FakeNotificationProvider{}
 	logs := &mockMaintNotifLogRepo{existing: map[string]bool{}}
 	mc := NewMaintenanceChecker(
-		&mockNoticeLister{notices: []domain.MaintenanceDueNotice{dueNotice(domain.MaintenanceDueSoon)}},
+		&mockNoticeLister{notices: []domain.MaintenanceDueNotice{dueNotice(domain.MaintenanceCritical)}},
 		logs,
 		&testutil.FakeProfileRepo{Plan: domain.PlanPro},
 		notifier,
@@ -88,7 +88,7 @@ func TestMaintenanceChecker_SkipsFreeOwner(t *testing.T) {
 	t.Parallel()
 	notifier := &testutil.FakeNotificationProvider{}
 	mc := NewMaintenanceChecker(
-		&mockNoticeLister{notices: []domain.MaintenanceDueNotice{dueNotice(domain.MaintenanceOverdue)}},
+		&mockNoticeLister{notices: []domain.MaintenanceDueNotice{dueNotice(domain.MaintenanceExpired)}},
 		&mockMaintNotifLogRepo{existing: map[string]bool{}},
 		&testutil.FakeProfileRepo{Plan: domain.PlanFree},
 		notifier,
@@ -104,10 +104,10 @@ func TestMaintenanceChecker_SkipsFreeOwner(t *testing.T) {
 
 func TestMaintenanceChecker_DedupsSameOccurrence(t *testing.T) {
 	t.Parallel()
-	n := dueNotice(domain.MaintenanceDueSoon)
+	n := dueNotice(domain.MaintenanceCritical)
 	notifier := &testutil.FakeNotificationProvider{}
 	logs := &mockMaintNotifLogRepo{existing: map[string]bool{
-		"task-1|due_soon|" + n.DueKey: true,
+		"task-1|critical|" + n.DueKey: true,
 	}}
 	mc := NewMaintenanceChecker(
 		&mockNoticeLister{notices: []domain.MaintenanceDueNotice{n}},
@@ -126,7 +126,7 @@ func TestMaintenanceChecker_DedupsSameOccurrence(t *testing.T) {
 
 func TestBuildMaintenanceMessage_Variants(t *testing.T) {
 	t.Parallel()
-	n := dueNotice(domain.MaintenanceDueSoon)
+	n := dueNotice(domain.MaintenanceCritical)
 	title, body := buildMaintenanceMessage(n)
 	if title != "Mantenimiento proximo: Engine oil" {
 		t.Errorf("title = %q", title)
@@ -135,7 +135,7 @@ func TestBuildMaintenanceMessage_Variants(t *testing.T) {
 		t.Error("body empty")
 	}
 
-	n.Status = domain.MaintenanceOverdue
+	n.Status = domain.MaintenanceExpired
 	n.DueDays = -5
 	title, _ = buildMaintenanceMessage(n)
 	if title != "Mantenimiento vencido: Engine oil" {

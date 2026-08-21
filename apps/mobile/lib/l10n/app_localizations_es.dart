@@ -547,9 +547,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get noMaintenanceTasks => 'Aún no hay tareas de mantenimiento';
 
   @override
-  String get maintenanceUpcomingTitle => 'Próximos';
-
-  @override
   String get maintenanceHistoryTitle => 'Historial';
 
   @override
@@ -571,40 +568,92 @@ class AppLocalizationsEs extends AppLocalizations {
   String get taskIntervalHoursLabel => 'Cada (horas de motor)';
 
   @override
-  String get recordService => 'Registrar servicio';
-
-  @override
-  String get maintenanceDueSoonLabel => 'pronto';
-
-  @override
-  String get maintenanceNoInterval => 'sin intervalo';
-
-  @override
   String get maintenanceHistoryEmpty => 'Aún no hay servicios registrados';
 
   @override
-  String get maintenancePartOfPlan => 'Del plan (opcional)';
+  String get maintenanceScheduleTitle => 'Revisiones periódicas';
 
   @override
-  String get maintenanceWhatWasDone =>
-      '¿Qué se ha hecho? (ej. cambio de aceite)';
+  String get maintenanceOneOffTitle => 'Trabajos puntuales';
 
   @override
-  String get maintenanceRepeatEvery => 'Se repite cada';
+  String get maintenanceNewTask => 'Nueva revisión';
 
   @override
-  String get maintenanceIntervalMonths => 'Meses';
+  String get maintenanceKindPeriodic => 'Periódica';
 
   @override
-  String get maintenanceIntervalHours => 'Horas de motor';
+  String get maintenanceKindOneOff => 'Puntual';
 
   @override
-  String get maintenanceRepeatHint =>
-      'Déjalo vacío si es puntual. Con un intervalo entra en el plan y te avisamos cuando toque.';
+  String get maintenanceKindPeriodicHint =>
+      'Caduca cada cierto tiempo y te avisamos antes de que toque.';
 
   @override
-  String get maintenanceRepeatHintFree =>
-      'Déjalo vacío si es puntual. Con un intervalo entra en el plan y la app te muestra cuándo toca.';
+  String get maintenanceKindPeriodicHintFree =>
+      'Caduca cada cierto tiempo y la app te muestra cuándo toca.';
+
+  @override
+  String get maintenanceKindOneOffHint =>
+      'Sin fecha: solo guarda el historial de cada vez que la hagas.';
+
+  @override
+  String get maintenanceNextDueLabel => 'Próxima revisión';
+
+  @override
+  String get maintenanceNextDueUnset => 'Indica cada cuántos meses';
+
+  @override
+  String get maintenanceAdvanced => 'Opciones avanzadas';
+
+  @override
+  String get maintenanceHoursHint =>
+      'Si el motor corre mucho, la revisión se adelanta.';
+
+  @override
+  String get maintenanceDone => 'Hecho';
+
+  @override
+  String get maintenanceMarkDone => 'Marcar como hecha';
+
+  @override
+  String get maintenanceTaskHistoryTitle => 'Veces realizada';
+
+  @override
+  String get maintenanceEmptyDescription =>
+      'Añade lo que hay que revisar cada cierto tiempo y te avisamos como con los documentos.';
+
+  @override
+  String get maintenanceNeverDone => 'sin registrar';
+
+  @override
+  String get maintenanceDoneSaved => 'Hecho, registrado en el historial';
+
+  @override
+  String maintenanceOverdueBy(int days) {
+    return 'venció hace $days d';
+  }
+
+  @override
+  String maintenancePerformedOn(String date) {
+    return 'Realizada el $date';
+  }
+
+  @override
+  String maintenanceDoneRolled(String date) {
+    return 'Hecho · próxima el $date';
+  }
+
+  @override
+  String maintenanceTimesDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count veces',
+      one: '1 vez',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get maintenanceRemindersPlus => 'Que te avisemos es de Navis Plus';

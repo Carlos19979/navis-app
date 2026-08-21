@@ -69,27 +69,58 @@ func MaintenanceListFromDomain(logs []domain.MaintenanceLog) []MaintenanceRespon
 	return out
 }
 
-// CreateMaintenanceTaskRequest is the payload to create/update a recurring task.
+// CreateMaintenanceTaskRequest is the payload to create or update a maintenance
+// task. Kind decides everything else: a periodic task needs an interval and gets
+// a due date (defaulted server-side when omitted), a one-off task carries no
+// schedule at all.
 type CreateMaintenanceTaskRequest struct {
 	Name           string   `json:"name" validate:"required,max=80"`
-	IntervalMonths *int     `json:"interval_months" validate:"omitempty,gt=0"`
+	Kind           string   `json:"kind" validate:"omitempty,oneof=periodic one_off"`
+	IntervalMonths *int     `json:"interval_months" validate:"omitempty,gt=0,lte=600"`
 	IntervalHours  *float64 `json:"interval_hours" validate:"omitempty,gt=0"`
+	NextDueDate    *string  `json:"next_due_date" validate:"omitempty,datetime=2006-01-02"`
+	NextDueHours   *float64 `json:"next_due_hours" validate:"omitempty,gte=0"`
+}
+
+// TaskKind resolves the requested kind, defaulting to periodic (the only kind
+// that existed before, and what an omitted field used to mean).
+func (r CreateMaintenanceTaskRequest) TaskKind() domain.MaintenanceTaskKind {
+	if r.Kind == string(domain.MaintenanceKindOneOff) {
+		return domain.MaintenanceKindOneOff
+	}
+	return domain.MaintenanceKindPeriodic
+}
+
+// CompleteMaintenanceTaskRequest is the payload for marking a task done. Every
+// field is optional: the whole point is that confirming the job takes one tap,
+// with the detail available to whoever wants to fill it in.
+type CompleteMaintenanceTaskRequest struct {
+	PerformedAt *string  `json:"performed_at" validate:"omitempty,datetime=2006-01-02"`
+	EngineHours *float64 `json:"engine_hours" validate:"omitempty,gte=0"`
+	Cost        *float64 `json:"cost"`
+	Provider    *string  `json:"provider"`
+	Notes       *string  `json:"notes"`
+	InvoiceURL  *string  `json:"invoice_url"`
+	PhotoURLs   []string `json:"photo_urls" validate:"omitempty,max=10,dive,url"`
 }
 
 // MaintenanceTaskResponse is the API representation of a task plus its derived
-// due-state (status, last service, next-due date/hours).
+// state (status, last service, times done, what is left until due).
 type MaintenanceTaskResponse struct {
 	ID              string   `json:"id"`
 	BoatID          string   `json:"boat_id"`
 	Name            string   `json:"name"`
+	Kind            string   `json:"kind"`
 	IntervalMonths  *int     `json:"interval_months"`
 	IntervalHours   *float64 `json:"interval_hours"`
+	NextDueDate     *string  `json:"next_due_date"`
+	NextDueHours    *float64 `json:"next_due_hours"`
 	Status          string   `json:"status"`
 	LastPerformedAt *string  `json:"last_performed_at"`
 	LastEngineHours *float64 `json:"last_engine_hours"`
-	NextDueDate     *string  `json:"next_due_date"`
 	NextDueDays     *int     `json:"next_due_days"`
 	HoursUntilDue   *float64 `json:"hours_until_due"`
+	TimesDone       int      `json:"times_done"`
 }
 
 // MaintenanceTaskResponseFromDomain converts a task view to a response.
@@ -98,18 +129,21 @@ func MaintenanceTaskResponseFromDomain(v *domain.MaintenanceTaskView) Maintenanc
 		ID:              v.Task.ID,
 		BoatID:          v.Task.BoatID,
 		Name:            v.Task.Name,
+		Kind:            string(v.Task.Kind),
 		IntervalMonths:  v.Task.IntervalMonths,
 		IntervalHours:   v.Task.IntervalHours,
+		NextDueHours:    v.Task.NextDueHours,
 		Status:          string(v.Status),
 		LastEngineHours: v.LastEngineHours,
 		HoursUntilDue:   v.HoursUntilDue,
+		TimesDone:       v.TimesDone,
 	}
 	if v.LastPerformedAt != nil {
 		s := v.LastPerformedAt.Format("2006-01-02")
 		resp.LastPerformedAt = &s
 	}
-	if v.NextDueDate != nil {
-		s := v.NextDueDate.Format("2006-01-02")
+	if v.Task.NextDueDate != nil {
+		s := v.Task.NextDueDate.Format("2006-01-02")
 		resp.NextDueDate = &s
 		d := v.DueDays
 		resp.NextDueDays = &d

@@ -14,9 +14,10 @@ import (
 const (
 	readinessCriticalDays = 30
 	readinessWarningDays  = 90
-	// The next service flags amber this close to its date/hours limit.
-	maintenanceDueSoonDays  = 30
-	maintenanceDueSoonHours = 10
+	// The engine-hours limit of a maintenance task, in the same three bands as
+	// the dates above but measured in running hours.
+	maintenanceCriticalHours = 10
+	maintenanceWarningHours  = 30
 )
 
 // ReadinessService synthesizes a boat's "ready to sail" score from documents,
@@ -145,11 +146,11 @@ func (s *ReadinessService) Get(ctx context.Context, userID, boatID string) (*dom
 // neglected plan (many due tasks) can't sink the whole readiness score.
 const maxMaintenancePenalty = 40
 
-// maintenanceCategory evaluates the boat's per-component maintenance plan. Each
-// task with an interval flags due_soon (amber) / overdue (red) / pending (never
-// logged), whichever limit — date or hours — comes first. Tasks with no interval
-// are history-only and ignored. Returns the category, the attention items, and
-// the score penalty.
+// maintenanceCategory evaluates the boat's maintenance tasks. Each periodic task
+// is scored on the same bands as a document — expired, critical (<=30d),
+// warning (<=90d) — so 60 days from a service reads the same here as on an
+// insurance policy. One-off tasks have no calendar and are not part of the
+// signal. Returns the category, the attention items, and the score penalty.
 //
 // A boat with no plan is **ready with 0/0**, not flagged: defining a maintenance
 // schedule is opt-in, and charging a brand-new boat 10 points for not having one
@@ -171,30 +172,31 @@ func (s *ReadinessService) maintenanceCategory(ctx context.Context, boat *domain
 	for _, t := range tasks {
 		ev := evaluateTask(t, logsForTask(logs, t.ID), boat.EngineHours, now)
 		switch ev.Status {
-		case domain.MaintenanceNoPlan:
-			continue // history-only task: not part of the signal
-		case domain.MaintenanceOverdue:
+		case domain.MaintenanceUnscheduled:
+			continue // one-off job: no due date, not part of the signal
+		case domain.MaintenanceExpired:
 			cat.Total++
 			cat.Expired++
 			penalty += 15
 			items = append(items, maintenanceItem(t, ev, domain.ReadinessNotReady))
-		case domain.MaintenanceDueSoon:
+		case domain.MaintenanceCritical:
 			cat.Total++
 			cat.Critical++
 			penalty += 8
 			items = append(items, maintenanceItem(t, ev, domain.ReadinessAttention))
-		case domain.MaintenancePending:
+		case domain.MaintenanceWarning:
+			// Same as a document three months out: it costs a little score but
+			// it is not something to put on the attention list yet.
 			cat.Total++
-			cat.Critical++
-			penalty += 8
-			items = append(items, maintenanceItem(t, ev, domain.ReadinessAttention))
+			cat.Warning++
+			penalty += 4
 		case domain.MaintenanceOK:
 			cat.Total++
 			cat.OK++
 		}
 	}
 
-	// Only history-only tasks existed: nothing to flag, same as no plan.
+	// Only one-off tasks existed: nothing to flag, same as no plan.
 	if cat.Total == 0 {
 		cat.Status = domain.ReadinessReady
 		return cat, nil, 0
@@ -232,16 +234,15 @@ func maintenanceItem(t domain.MaintenanceTask, ev taskEval, st domain.ReadinessS
 	}
 }
 
-// maintenanceReason maps a task status to the client-facing reason string.
+// maintenanceReason maps a task status to the client-facing reason string. The
+// values stay "overdue"/"due_soon" so existing clients keep their copy.
 func maintenanceReason(st domain.MaintenanceTaskStatus) string {
 	switch st {
-	case domain.MaintenanceOverdue:
+	case domain.MaintenanceExpired:
 		return "overdue"
-	case domain.MaintenanceDueSoon:
+	case domain.MaintenanceCritical:
 		return "due_soon"
-	case domain.MaintenancePending:
-		return "pending"
-	case domain.MaintenanceOK, domain.MaintenanceNoPlan:
+	case domain.MaintenanceOK, domain.MaintenanceWarning, domain.MaintenanceUnscheduled:
 		return ""
 	default:
 		return ""

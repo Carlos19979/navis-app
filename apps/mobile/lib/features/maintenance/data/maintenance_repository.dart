@@ -18,13 +18,6 @@ class MaintenanceRepository {
     return data.map(MaintenanceLog.fromJson).toList();
   }
 
-  Future<void> addLog(String boatId, Map<String, dynamic> body) async {
-    await _apiClient.post<Map<String, dynamic>>(
-      '/api/v1/boats/$boatId/maintenance',
-      data: body,
-    );
-  }
-
   Future<void> updateLog(
       String boatId, String id, Map<String, dynamic> body) async {
     await _apiClient.put<Map<String, dynamic>>(
@@ -44,15 +37,29 @@ class MaintenanceRepository {
     return data.map(MaintenanceTask.fromJson).toList();
   }
 
-  /// Returns the created task: recording a service with an interval creates
-  /// the plan entry and links the log to it in the same flow, so the caller
-  /// needs the new id without a re-fetch.
   Future<MaintenanceTask> addTask(
     String boatId,
     Map<String, dynamic> body,
   ) async {
     final res = await _apiClient.post<Map<String, dynamic>>(
       '/api/v1/boats/$boatId/maintenance/tasks',
+      data: body,
+    );
+    final data = res.data!['data'] as Map<String, dynamic>;
+    return MaintenanceTask.fromJson(data);
+  }
+
+  /// Marks a task as carried out. The API writes the history entry and rolls a
+  /// periodic task's due date past it in one transaction, and answers with the
+  /// task's new state — so the client never stitches those two together (and
+  /// can never leave one done without the other).
+  Future<MaintenanceTask> completeTask(
+    String boatId,
+    String taskId,
+    Map<String, dynamic> body,
+  ) async {
+    final res = await _apiClient.post<Map<String, dynamic>>(
+      '/api/v1/boats/$boatId/maintenance/tasks/$taskId/complete',
       data: body,
     );
     final data = res.data!['data'] as Map<String, dynamic>;

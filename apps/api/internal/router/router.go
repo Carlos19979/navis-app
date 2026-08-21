@@ -188,6 +188,7 @@ func New(
 						r.Get("/", maintenanceH.ListTasks)
 						r.Post("/", maintenanceH.CreateTask)
 						r.Put("/{taskId}", maintenanceH.UpdateTask)
+						r.Post("/{taskId}/complete", maintenanceH.CompleteTask)
 						r.Delete("/{taskId}", maintenanceH.DeleteTask)
 					})
 					r.Put("/{logId}", maintenanceH.UpdateLog)
