@@ -23,7 +23,7 @@ Mapa actual (fuente: `profile.go`):
 
 | Capacidad | Método | Free | Plus | Pro |
 |---|---|---|---|---|
-| Barcos | `MaxBoats` | 1 | 2 | 5 |
+| Barcos | `MaxBoats` | 1 | 1 | 1 |
 | Recordatorios caducidad docs | `ReminderDocLimit` | 1 | ∞ | ∞ |
 | Adjuntos por documento | `AttachmentLimit` | 1 | ∞ | ∞ |
 | Galería de fotos del barco | `GalleryLimit` | 1 | 10 | 10 |
@@ -72,7 +72,7 @@ con solo documentos". Cada persona real de Navis mapea a un carril:
 |---|---|---|---|
 | **Solo-documentos** | Guardar seguro/ITB/licencias y que le avisen antes de caducar | **Free → Plus** | Entrada más ancha del embudo + **combustible de la pata de partnerships** (seguros) |
 | **Dueño casual** | 1 barco, uso ocasional, tranquilidad | **Free → Plus** | Volumen, viralidad |
-| **Dueño entusiasta / prosumer** | Analítica, costes, pasaporte PDF, 2-3 barcos | **Pro** | Máximo ingreso por usuario B2C |
+| **Dueño entusiasta / prosumer** | Analítica, costes, pasaporte PDF | **Pro** | Máximo ingreso por usuario B2C |
 | **Copropietarios / barco compartido** | Repartir gastos y reservar turnos entre tripulación | Dueño paga **Pro**; tripulación **Free** | Viralidad (cada tripulante = lead) |
 | **Club náutico / comunidad** | Crear club, gestionar socios, eventos/regatas | **Pro** → puente a **Fleet** | Trae a sus socios (B2C) + candidato B2B |
 | **Charter / escuela / gestor de flota** | Gestionar N barcos, personal con roles, reservas de clientes, facturar | **Fleet (B2B)** 🆕 | **El motor de "vivir de esto"** |
@@ -83,12 +83,19 @@ con solo documentos". Cada persona real de Navis mapea a un carril:
 
 Leyenda: **MANTENER** · **CAMBIAR** · **MOVER** · **NUEVO**.
 
-### 2.1 Número de barcos — CAMBIAR (Pro 5 → 3)
-`MaxBoats` Pro pasa de **5 a 3**. Motivo: casi ningún particular real tiene 4-5 barcos;
-quien los tiene **es de facto una flota**. Dejar Pro en 5 invita a que un charter pequeño
-compre Pro (69,99 €/año) en vez de Fleet → canibalización. Con tope 3 y "ilimitado" solo
-en Fleet, cerramos esa fuga con pérdida B2C despreciable.
-- Free 1 · Plus 2 · Pro 3 · Fleet ∞.
+### 2.1 Número de barcos — CAMBIADO A 1 EN TODOS LOS TIERS (2026-08-21)
+`MaxBoats` = **1 en Free, Plus y Pro** (`domain.MaxBoatsPerAccount`). El barco deja de ser
+un diferenciador de tier.
+- Motivo: el producto entero está construido alrededor de "tu barco" (home, readiness,
+  recordatorios, costes). Vender "hasta 2/3 barcos" prometía una experiencia multi-barco
+  que la app no da, y era la línea más débil del paywall.
+- El razonamiento anterior (bajar Pro de 5 a 3 para no canibalizar Fleet) apunta en la
+  misma dirección y se lleva al extremo: quien necesita varios barcos **es una flota** y
+  su sitio es Fleet, no Pro.
+- Free 1 · Plus 1 · Pro 1 · Fleet ∞ (futuro).
+- Consecuencias aplicadas: sin paywall al añadir barco (el upgrade no sube el tope; el FAB
+  desaparece al llegar al límite), fuera las líneas "Hasta N barcos" del paywall y de las
+  fichas de tienda.
 
 ### 2.2 Recordatorios de caducidad de documentos — MANTENER
 Free 1 / Plus+ ∞. Es el **gancho anti-multa** y está perfectamente colocado: es la razón
@@ -335,7 +342,7 @@ La gestión bonita es la consecuencia, no el gancho.
 |---|---|---|---|
 | **0. Lanzar lo que ya hay** | Terminar setup RevenueCat + App Store/Play (config, no código), sandbox test, salir con Free/Plus/Pro | Bajo (config) | Ingresos B2C |
 | **0.5 Arreglar bug del CHECK** | Migración que reabra `profiles.plan` a `free/plus/pro/fleet` (§0.1) — **bloquea Plus/Fleet** | Trivial | Todo lo de pago |
-| **1. Ajustes quirúrgicos B2C** | Pro 5→3 barcos; `==PlanPro`→`atLeast(PlanPro)`; split básico a Free/Plus (`shared_service`); subir Pro anual a 89,99; corregir bug de precios en `payments-setup.md` | Bajo (código pequeño en `profile.go`, `shared_service.go`, DTO, `billing.dart`) | Viralidad + LTV |
+| **1. Ajustes quirúrgicos B2C** | 1 barco en todos los tiers (antes Pro 5→3); `==PlanPro`→`atLeast(PlanPro)`; split básico a Free/Plus (`shared_service`); subir Pro anual a 89,99; corregir bug de precios en `payments-setup.md` | Bajo (código pequeño en `profile.go`, `shared_service.go`, DTO, `billing.dart`) | Viralidad + LTV |
 | **2. Construir Fleet** | Migración orgs + `organization_members` + `boats.organization_id`; `PlanFleet` + gating; adapter Stripe + webhook; panel de flota; roles de personal; plan efectivo = max(personal, org) | **Alto** (el proyecto real) | "Vivir de esto" |
 | **3. Venta B2B beachhead** | Cerrar 5-10 charters/clubs a mano en 1 región (en paralelo a fase 2) | Comercial | Ingresos estables |
 | **4. Preparar partnerships** | Columna `partner_consent`; no bloquear en Términos; estructura de datos de caducidad (ya lista) | Muy bajo | Pata 3 futura |
@@ -346,7 +353,7 @@ La gestión bonita es la consecuencia, no el gancho.
 ## 8. Resumen de cambios de código concretos
 
 - `apps/api/internal/domain/profile.go`
-  - `MaxBoats`: Pro `5 → 3`; añadir `PlanFleet → Unlimited`.
+  - `MaxBoats`: 1 en todos los tiers B2C (hecho); añadir `PlanFleet → Unlimited`.
   - Añadir `PlanFleet`, ampliar `rank()`, `Valid()`.
   - `== PlanPro` → `atLeast(PlanPro)` en: `CanCreateGroups`, `CanUseCostAnalytics`,
     `CanExportPassport`, `CanUseSharedCoordination`, `CanUseAnomalyAlerts`.
@@ -440,7 +447,8 @@ categoría se organiza en **dos anclas + dos clusters**:
 ### Estado de los ajustes de fase 1 (aplicados en rama `feat/tier-fixes-mobile-launch`)
 - ✅ Migración `00038` (CHECK `free/plus/pro`).
 - ✅ Split de gastos básico liberado a todos los tiers (bookings siguen Pro).
-- ✅ Pro 5 → **3 barcos** (`profile.go` + `billing.dart` + tests + docs).
+- ✅ Pro 5 → 3 barcos y, desde 2026-08-21, **1 barco en todos los tiers**
+  (`profile.go` + `billing.dart` + tests + docs).
 - ✅ Corrección de precio inconsistente en `payments-setup.md`.
 - ⏸️ Refactor `atLeast(PlanPro)` → diferido a la fase Fleet (junto con `PlanFleet`).
 

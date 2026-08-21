@@ -203,12 +203,13 @@ func TestBoatService_Create_PlanLimits(t *testing.T) {
 		existingBoats int
 		wantErr       error
 	}{
-		{"free plan under limit succeeds", domain.PlanFree, 0, nil},
+		// One boat per account on every tier: paying does not raise the cap.
+		{"free plan with no boat succeeds", domain.PlanFree, 0, nil},
 		{"free plan at limit of 1 rejected", domain.PlanFree, 1, domain.ErrPlanLimit},
-		{"plus plan under limit succeeds", domain.PlanPlus, 1, nil},
-		{"plus plan at limit of 2 rejected", domain.PlanPlus, 2, domain.ErrPlanLimit},
-		{"pro plan under limit succeeds", domain.PlanPro, 2, nil},
-		{"pro plan at limit of 3 rejected", domain.PlanPro, 3, domain.ErrPlanLimit},
+		{"plus plan with no boat succeeds", domain.PlanPlus, 0, nil},
+		{"plus plan at limit of 1 rejected", domain.PlanPlus, 1, domain.ErrPlanLimit},
+		{"pro plan with no boat succeeds", domain.PlanPro, 0, nil},
+		{"pro plan at limit of 1 rejected", domain.PlanPro, 1, domain.ErrPlanLimit},
 	}
 
 	for _, tt := range tests {

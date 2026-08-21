@@ -24,8 +24,11 @@ func TestMeResponseFromDomain_TierEntitlements(t *testing.T) {
 	if plus.CostAnalytics || plus.SharedCoordination || plus.ExportPassport {
 		t.Error("Plus should NOT unlock cost analytics / shared / passport")
 	}
-	if plus.MaxBoats != 2 {
-		t.Errorf("Plus MaxBoats = %d, want 2", plus.MaxBoats)
+	// Every tier is capped at one boat, so the entitlement must not vary.
+	for name, ent := range map[string]Entitlements{"free": free, "plus": plus, "pro": pro} {
+		if ent.MaxBoats != domain.MaxBoatsPerAccount {
+			t.Errorf("%s MaxBoats = %d, want %d", name, ent.MaxBoats, domain.MaxBoatsPerAccount)
+		}
 	}
 	// Free has none of the paid capabilities.
 	if free.AnchorAlarm || free.FullReadiness || free.CostAnalytics {

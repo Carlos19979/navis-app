@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:navis_mobile/features/boat/data/boat_share_repository.dart';
 import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/domain/repositories/boat_repository.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
@@ -74,18 +75,19 @@ void main() {
     registerFallbackValue(FakeRoute());
   });
 
-  final testBoats = [
-    makeBoat(),
-    makeBoat(
-      id: 'boat-2',
-      name: 'Sea Runner',
-      type: 'motorboat',
-      registration: 'ES-BCN-7-5678',
-    ),
-  ];
+  // The owned boat, plus one shared with the user. With a one-boat cap per
+  // account, that is the only way the dashboard shows more than one card.
+  final ownedBoat = makeBoat();
+  final sharedBoat = makeBoat(
+    id: 'boat-2',
+    name: 'Sea Runner',
+    type: 'motorboat',
+    registration: 'ES-BCN-7-5678',
+  );
 
   Widget buildSubject({
     List<Boat> boats = const [],
+    List<Boat> shared = const [],
     bool useError = false,
     bool isPro = false,
     RouteSpy? spy,
@@ -97,6 +99,9 @@ void main() {
         boatsProvider.overrideWith(
           () => useError ? ErrorBoatsNotifier() : FakeBoatsNotifier(boats),
         ),
+        // Sync, not `async =>`: an extra async frame starts the card
+        // entrance animations after pumpScreen and leaves pending timers.
+        sharedBoatsProvider.overrideWith((ref) => shared),
         ...planOverrides(pro: isPro),
         currentWeatherProvider.overrideWith((ref) async => null),
         boatDocumentSummaryProvider.overrideWith(
@@ -109,7 +114,8 @@ void main() {
   group('BoatDashboardScreen', () {
     testWidgets('shows app bar with title', (tester) async {
       setPhoneSize(tester);
-      await tester.pumpWidget(buildSubject(boats: testBoats));
+      await tester
+          .pumpWidget(buildSubject(boats: [ownedBoat], shared: [sharedBoat]));
       await pumpScreen(tester);
 
       expect(find.text('My Boats'), findsOneWidget);
@@ -118,7 +124,8 @@ void main() {
     testWidgets('renders boat cards with name, type, and registration',
         (tester) async {
       setPhoneSize(tester);
-      await tester.pumpWidget(buildSubject(boats: testBoats));
+      await tester
+          .pumpWidget(buildSubject(boats: [ownedBoat], shared: [sharedBoat]));
       await pumpScreen(tester);
 
       expect(find.text('Luna Azul'), findsOneWidget);
@@ -131,7 +138,8 @@ void main() {
 
     testWidgets('shows length and home port info chips', (tester) async {
       setPhoneSize(tester);
-      await tester.pumpWidget(buildSubject(boats: testBoats));
+      await tester
+          .pumpWidget(buildSubject(boats: [ownedBoat], shared: [sharedBoat]));
       await pumpScreen(tester);
 
       expect(find.text('12.5 m'), findsNWidgets(2));
@@ -141,7 +149,8 @@ void main() {
     testWidgets('a card carries no Documents/Logbook shortcuts',
         (tester) async {
       setPhoneSize(tester);
-      await tester.pumpWidget(buildSubject(boats: testBoats));
+      await tester
+          .pumpWidget(buildSubject(boats: [ownedBoat], shared: [sharedBoat]));
       await pumpScreen(tester);
 
       // The card is the boat, nothing else: both sections live one tap deeper,
@@ -150,9 +159,10 @@ void main() {
       expect(find.text('Logbook'), findsNothing);
     });
 
-    testWidgets('shows FAB with add tooltip', (tester) async {
+    testWidgets('shows FAB with add tooltip while under the one-boat cap',
+        (tester) async {
       setPhoneSize(tester);
-      await tester.pumpWidget(buildSubject(boats: testBoats));
+      await tester.pumpWidget(buildSubject());
       await pumpScreen(tester);
 
       final fab = find.byType(FloatingActionButton);
@@ -162,13 +172,11 @@ void main() {
       expect(fabWidget.tooltip, 'Add new boat');
     });
 
-    testWidgets('FAB navigates to new boat page when under plan limit',
+    testWidgets('FAB navigates to new boat page when no boat is owned yet',
         (tester) async {
       setPhoneSize(tester);
       final spy = RouteSpy();
-      await tester.pumpWidget(
-        buildSubject(boats: testBoats, isPro: true, spy: spy),
-      );
+      await tester.pumpWidget(buildSubject(spy: spy));
       await pumpScreen(tester);
 
       await tester.tap(find.byType(FloatingActionButton));
@@ -177,41 +185,18 @@ void main() {
       expect(spy.last, '/boats/new');
     });
 
-    testWidgets('FAB shows paywall when free plan boat limit is reached',
+    testWidgets('no FAB once the account holds its boat, on any tier',
         (tester) async {
-      setPhoneSize(tester);
-      final spy = RouteSpy();
-      await tester.pumpWidget(buildSubject(boats: testBoats, spy: spy));
-      await pumpScreen(tester);
+      // One boat per account on every plan, so a "+" here could only refuse.
+      for (final isPro in [false, true]) {
+        setPhoneSize(tester);
+        await tester.pumpWidget(
+          buildSubject(boats: [makeBoat()], isPro: isPro),
+        );
+        await pumpScreen(tester);
 
-      await tester.tap(find.byType(FloatingActionButton));
-      await pumpScreen(tester);
-
-      expect(spy.locations, isEmpty);
-      expectPaywall();
-    });
-
-    testWidgets('FAB shows plan-limit snackbar for Pro at the 5-boat limit',
-        (tester) async {
-      setPhoneSize(tester);
-      final spy = RouteSpy();
-      final fiveBoats = [
-        for (var i = 0; i < 5; i++)
-          makeBoat(id: 'boat-$i', name: 'Boat $i', registration: 'ES-V-$i'),
-      ];
-      await tester.pumpWidget(
-        buildSubject(boats: fiveBoats, isPro: true, spy: spy),
-      );
-      await pumpScreen(tester);
-
-      await tester.tap(find.byType(FloatingActionButton));
-      await pumpScreen(tester);
-
-      expect(spy.locations, isEmpty);
-      expectPaywall(shown: false);
-      expectSnackbar(tester, "You've reached your plan's boat limit.");
-
-      await drain(tester);
+        expect(find.byType(FloatingActionButton), findsNothing);
+      }
     });
 
     testWidgets('shows empty state when no boats', (tester) async {
@@ -388,7 +373,8 @@ void main() {
     testWidgets('boat card navigates to detail', (tester) async {
       setPhoneSize(tester);
       final spy = RouteSpy();
-      await tester.pumpWidget(buildSubject(boats: testBoats, spy: spy));
+      await tester.pumpWidget(
+          buildSubject(boats: [ownedBoat], shared: [sharedBoat], spy: spy));
       await pumpScreen(tester);
 
       await tester.tap(find.text('Luna Azul'));
@@ -404,8 +390,9 @@ void main() {
           const BoatDashboardScreen(),
           overrides: [
             boatsProvider.overrideWith(
-              () => FakeBoatsNotifier(testBoats),
+              () => FakeBoatsNotifier([ownedBoat]),
             ),
+            sharedBoatsProvider.overrideWith((ref) => [sharedBoat]),
             currentWeatherProvider.overrideWith((ref) async => null),
             boatDocumentSummaryProvider.overrideWith(
               (ref, boatId) async => const DocumentSummary(
@@ -425,7 +412,8 @@ void main() {
 
     testWidgets('pull to refresh works on boat list', (tester) async {
       setPhoneSize(tester);
-      await tester.pumpWidget(buildSubject(boats: testBoats));
+      await tester
+          .pumpWidget(buildSubject(boats: [ownedBoat], shared: [sharedBoat]));
       await pumpScreen(tester);
 
       await tester.fling(

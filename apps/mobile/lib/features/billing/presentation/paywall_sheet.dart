@@ -41,12 +41,14 @@ Future<bool> showPaywall(
   return result ?? false;
 }
 
+// Boat count is deliberately absent from both lists: every tier is capped at
+// one boat, so an "up to N boats" line would promise a limit no paid tier
+// lifts.
 List<(IconData, String)> _plusBenefits(AppLocalizations l) => [
       (Icons.notifications_active_rounded, l.proBenefitReminders),
       (Icons.build_rounded, l.proBenefitMaintenance),
       (Icons.health_and_safety_rounded, l.proBenefitReadiness),
       (Icons.anchor_rounded, l.proBenefitAnchor),
-      (Icons.directions_boat_rounded, l.plusBenefitBoats),
     ];
 
 List<(IconData, String)> _proBenefits(AppLocalizations l) => [
@@ -54,7 +56,6 @@ List<(IconData, String)> _proBenefits(AppLocalizations l) => [
       (Icons.calendar_month_rounded, l.proBenefitShared),
       (Icons.workspace_premium_rounded, l.proBenefitPassport),
       (Icons.groups_rounded, l.proBenefitGroups),
-      (Icons.directions_boat_rounded, l.proBenefitBoats),
     ];
 
 /// Which tier a package belongs to, by product identifier convention

@@ -107,15 +107,9 @@ void main() {
 
   // (a) Boat dashboard / list.
   testWidgets('appstore — boat dashboard', (tester) async {
-    final boats = [
-      makeBoat(),
-      makeBoat(
-        id: 'boat-2',
-        name: 'Sea Runner',
-        type: 'motorboat',
-        registration: 'ES-BCN-7-5678',
-      ),
-    ];
+    // One boat: the store screenshot must show what a real account looks like,
+    // and an account holds a single boat.
+    final boats = [makeBoat()];
     await _pumpAppStore(
       tester,
       const BoatDashboardScreen(),

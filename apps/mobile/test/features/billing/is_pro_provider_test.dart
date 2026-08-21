@@ -66,7 +66,6 @@ void main() {
       expect(PlanTier.plus.canCostAnalytics, isFalse);
       expect(PlanTier.plus.canSharedCoordination, isFalse);
       expect(PlanTier.plus.canExportPassport, isFalse);
-      expect(PlanTier.plus.maxBoats, 2);
     });
 
     test('Pro unlocks everything', () {
@@ -75,13 +74,19 @@ void main() {
       expect(PlanTier.pro.canExportPassport, isTrue);
       expect(PlanTier.pro.canCreateGroups, isTrue);
       expect(PlanTier.pro.canAnchorAlarm, isTrue);
-      expect(PlanTier.pro.maxBoats, 3);
     });
 
     test('Free unlocks nothing paid', () {
       expect(PlanTier.free.canAnchorAlarm, isFalse);
       expect(PlanTier.free.canFullReadiness, isFalse);
-      expect(PlanTier.free.maxBoats, 1);
+    });
+
+    test('every tier is capped at one boat', () {
+      // Boat count is not a tier perk: paying must not raise the cap.
+      for (final tier in PlanTier.values) {
+        expect(tier.maxBoats, 1, reason: '${tier.name} should allow one boat');
+      }
+      expect(maxBoatsPerAccount, 1);
     });
   });
 }
