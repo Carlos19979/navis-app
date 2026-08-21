@@ -22,24 +22,14 @@ class BoatRobot {
     await tapUntil(tester, _addBoatTrigger(), find.text('New Boat'));
   }
 
-  /// On the Free plan at the boat limit, the add action opens the paywall
-  /// instead of the form.
-  ///
-  /// Located by [paywallSheetKey], never by its heading: the heading names the
-  /// tier(s) actually on offer ('Navis Pro' for a Pro-only gate, 'Navis Plus &
-  /// Pro' when both apply), so matching text made the assertion depend on which
-  /// packages the store returned.
-  Future<void> startAddBoatExpectingPaywall() async {
-    await tapUntil(tester, _addBoatTrigger(), _paywall());
+  /// At the one-boat cap the dashboard offers no way in: no FAB, no empty-state
+  /// CTA, and no paywall either (paying does not lift the cap).
+  Future<void> expectNoAddBoatTrigger() async {
+    await pumpFor(tester, const Duration(milliseconds: 600));
+    expect(find.byType(FloatingActionButton), findsNothing);
+    expect(find.text('Add Boat'), findsNothing);
+    expect(find.byKey(paywallSheetKey), findsNothing);
   }
-
-  Future<void> dismissPaywall() async {
-    // Modal bottom sheet: tapping the barrier above it dismisses.
-    await tester.tapAt(const Offset(200, 60));
-    await pumpUntilGone(tester, _paywall());
-  }
-
-  Finder _paywall() => find.byKey(paywallSheetKey);
 
   /// Empty dashboards offer the empty-state CTA; populated ones the FAB.
   Finder _addBoatTrigger() {

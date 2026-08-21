@@ -38,15 +38,9 @@ class _FakeBoatsNotifier extends AsyncNotifier<List<Boat>>
 void main() {
   setUpAll(loadTestFonts);
 
-  final boats = [
-    makeBoat(),
-    makeBoat(
-      id: 'boat-2',
-      name: 'Sea Runner',
-      type: 'motorboat',
-      registration: 'ES-BCN-7-5678',
-    ),
-  ];
+  // One owned boat: with a one-boat cap per account, a two-card owned list is
+  // no longer a state any user can reach.
+  final boats = [makeBoat()];
 
   for (final brightness in Brightness.values) {
     testWidgets('boat dashboard — ${brightness.name}', (tester) async {

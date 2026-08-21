@@ -622,6 +622,8 @@ The `type` field is free text; the above are suggestions for the UI.
 Returns the current user's plan and derived entitlements.
 `{ plan: "free|pro", is_pro, entitlements: { max_boats, boat_count, can_create_groups, reminder_doc_limit, maintenance_schedules, attachment_limit, gallery_limit, full_readiness, cost_analytics, export_passport, shared_coordination, anomaly_alerts } }`
 (legacy `max_boats|boat_count|can_create_groups` also mirrored at the top level).
+`max_boats` is **1 on every plan** — boat count is not a tier perk; `POST /boats` returns
+402 `PLAN_LIMIT` for a second boat regardless of tier.
 
 ### PUT /api/v1/me/plan
 Dev-only switcher, registered only when `APP_ENV != production`. Body `{ "plan": "free|pro" }`.

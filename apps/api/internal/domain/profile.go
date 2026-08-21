@@ -52,21 +52,20 @@ func (p Plan) IsPro() bool {
 	return p == PlanPro
 }
 
-// MaxBoats returns how many boats the plan allows (Free 1 / Plus 2 / Pro 3).
-// Pro is capped low on purpose: a genuine private owner rarely holds 4+ boats,
-// so anyone above this is effectively a fleet and belongs on the (future) Fleet
-// tier — this keeps Pro from cannibalising B2B.
-func (p Plan) MaxBoats() int {
-	switch p {
-	case PlanPro:
-		return 3
-	case PlanPlus:
-		return 2
-	case PlanFree:
-		return 1
-	default:
-		return 1
-	}
+// MaxBoatsPerAccount is how many boats a single account may hold, on every
+// plan. Navis is deliberately a one-boat product for now: the whole experience
+// (home screen, readiness, reminders, costs) is built around "your boat", and a
+// multi-boat cap sold as a paid perk promised an experience the app does not
+// yet deliver. Anyone who genuinely needs several belongs on the (future) Fleet
+// tier, so boat count is no longer a tier differentiator.
+const MaxBoatsPerAccount = 1
+
+// MaxBoats returns how many boats the plan allows — currently
+// [MaxBoatsPerAccount] on every tier. Kept per-plan (rather than inlining the
+// constant at the call sites) so raising the cap for a tier stays a one-line
+// change here, and so the entitlement the client reads keeps its shape.
+func (Plan) MaxBoats() int {
+	return MaxBoatsPerAccount
 }
 
 // CanCreateGroups reports whether the plan may create groups/clubs and events

@@ -13,9 +13,7 @@ import 'package:navis_mobile/features/boat/domain/entities/boat.dart';
 import 'package:navis_mobile/features/boat/data/boat_share_repository.dart';
 import 'package:navis_mobile/features/boat/presentation/providers/boat_provider.dart';
 import 'package:navis_mobile/features/billing/billing.dart';
-import 'package:navis_mobile/features/billing/presentation/paywall_sheet.dart';
 import 'package:navis_mobile/features/notifications/presentation/widgets/notification_bell.dart';
-import 'package:navis_mobile/features/profile/data/account_provider.dart';
 import 'package:navis_mobile/shared/widgets/navis_snackbar.dart';
 import 'package:navis_mobile/features/boat/presentation/widgets/boat_header.dart';
 import 'package:navis_mobile/features/documents/presentation/providers/document_provider.dart';
@@ -127,27 +125,18 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
     }
   }
 
-  Future<void> _onAddBoat() async {
-    final l = AppLocalizations.of(context)!;
-    final tier = ref.read(effectiveTierProvider);
+  /// Opens the create-boat form, unless the account already holds its boat.
+  ///
+  /// No paywall here: the one-boat cap is the same on every tier, so offering
+  /// an upgrade would sell something that does not lift the limit. The check
+  /// stays as a guard — the FAB is hidden at the cap, but the empty-state CTA
+  /// shares this path.
+  void _onAddBoat() {
     final boats = ref.read(boatsProvider).valueOrNull ?? const [];
-
-    if (boats.length >= tier.maxBoats) {
-      if (tier == PlanTier.pro) {
-        NavisSnackbar.info(
-          context,
-          l.planBoatLimitReached,
-        );
-        return;
-      }
-      final purchased = await showPaywall(
-        context,
-        ref,
-        reason: l.paywallReasonBoatLimit,
-      );
-      if (!purchased || !mounted) return;
+    if (boats.length >= maxBoatsPerAccount) {
+      NavisSnackbar.info(context, AppLocalizations.of(context)!.boatLimitOne);
+      return;
     }
-    if (!mounted) return;
     context.go('/boats/new');
   }
 
@@ -215,10 +204,42 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
     _handlingInvite = null;
   }
 
+  /// The gradient "add boat" FAB. Only built while the account is under the
+  /// one-boat cap.
+  Widget _addBoatFab(AppLocalizations l) => Padding(
+        padding: const EdgeInsets.only(bottom: Dimens.navClearance),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: AppColors.cyanGradient,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.cyan.withValues(alpha: 0.4),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: FloatingActionButton(
+            onPressed: _onAddBoat,
+            tooltip: l.addNewBoat,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(
+              Icons.add,
+              color: Colors.white,
+              semanticLabel: l.addNewBoat,
+            ),
+          ),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     final boatsAsync = ref.watch(boatsProvider);
-    ref.watch(accountProvider); // warm the plan for FAB gating
     // An invite code from a link the app was opened with. This screen is the
     // first authenticated thing the user sees, which is why it consumes it.
     // `fireImmediately` matters: the link can land before this screen exists
@@ -233,6 +254,7 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
       _scheduleInvite(pending);
     }
     final l = AppLocalizations.of(context)!;
+    final ownedCount = boatsAsync.valueOrNull?.length ?? 0;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -347,36 +369,10 @@ class _BoatDashboardScreenState extends ConsumerState<BoatDashboardScreen> {
           );
         },
       ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: Dimens.navClearance),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: AppColors.cyanGradient,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.cyan.withValues(alpha: 0.4),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: FloatingActionButton(
-            onPressed: _onAddBoat,
-            tooltip: l.addNewBoat,
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(
-              Icons.add,
-              color: Colors.white,
-              semanticLabel: l.addNewBoat,
-            ),
-          ),
-        ),
-      ),
+      // No add button once the account holds its one boat: a "+" that can only
+      // refuse is worse than no "+". It comes back if that boat is deleted.
+      floatingActionButton:
+          ownedCount >= maxBoatsPerAccount ? null : _addBoatFab(l),
     );
   }
 }

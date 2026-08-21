@@ -1714,12 +1714,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proBenefitMaintenance => 'Scheduled maintenance reminders';
 
   @override
-  String get proBenefitBoats => 'Up to 3 boats';
-
-  @override
-  String get plusBenefitBoats => 'Up to 2 boats';
-
-  @override
   String get paywallTitle => 'Navis Plus & Pro';
 
   @override
@@ -1738,11 +1732,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proBenefitAttachments => 'Unlimited document attachments';
 
   @override
-  String get planBoatLimitReached => 'You\'ve reached your plan\'s boat limit.';
-
-  @override
-  String get paywallReasonBoatLimit =>
-      'Your Free plan allows 1 boat. Go Pro to manage up to 3.';
+  String get boatLimitOne => 'Navis manages one boat per account for now.';
 
   @override
   String get joinBoat => 'Join a boat';

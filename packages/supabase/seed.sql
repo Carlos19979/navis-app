@@ -14,7 +14,6 @@ DO $$
 DECLARE
   test_user_id UUID := '00000000-0000-0000-0000-000000000001';
   boat_1_id    UUID := 'b0000000-0000-0000-0000-000000000001';
-  boat_2_id    UUID := 'b0000000-0000-0000-0000-000000000002';
   doc_1_id     UUID := 'd0000000-0000-0000-0000-000000000001';
   doc_2_id     UUID := 'd0000000-0000-0000-0000-000000000002';
   doc_3_id     UUID := 'd0000000-0000-0000-0000-000000000003';
@@ -56,12 +55,14 @@ INSERT INTO auth.identities (
   now(), now(), now()
 ) ON CONFLICT DO NOTHING;
 
--- ─── Boats ─────────────────────────────────────────────────────────
+-- ─── Boat ──────────────────────────────────────────────────────────
+-- One boat only: an account is capped at one boat on every plan
+-- (domain.MaxBoatsPerAccount), so a two-boat fixture is a state the API would
+-- refuse to create. Documents and trips that used to hang off the second boat
+-- now hang off this one.
 INSERT INTO boats (id, user_id, name, registration, type, length_m, home_port, home_port_location, engine_hours) VALUES
   (boat_1_id, test_user_id, 'Luna Azul', 'ES-MAL-3-1234', 'sailboat', 12.50, 'Palma de Mallorca',
-    ST_MakePoint(2.6347, 39.5696)::geography, 342.5),
-  (boat_2_id, test_user_id, 'Rayo Veloz', 'ES-BCN-7-5678', 'motorboat', 7.80, 'Port Olimpic Barcelona',
-    ST_MakePoint(2.2008, 41.3877)::geography, 128.0);
+    ST_MakePoint(2.6347, 39.5696)::geography, 342.5);
 
 -- ─── Documents ─────────────────────────────────────────────────────
 -- Doc 1: OK (expires in 8 months)
@@ -76,11 +77,11 @@ INSERT INTO documents (id, boat_id, user_id, type, expiry_date, last_renewal_dat
 
 -- Doc 3: CRITICAL (expires in 15 days)
 INSERT INTO documents (id, boat_id, user_id, type, expiry_date, alert_days) VALUES
-  (doc_3_id, boat_2_id, test_user_id, 'Licencia de Navegacion', (CURRENT_DATE + INTERVAL '15 days')::date, '{30, 14, 7}');
+  (doc_3_id, boat_1_id, test_user_id, 'Licencia de Navegacion', (CURRENT_DATE + INTERVAL '15 days')::date, '{30, 14, 7}');
 
 -- Doc 4: EXPIRED (expired 10 days ago)
 INSERT INTO documents (id, boat_id, user_id, type, expiry_date, notes, alert_days) VALUES
-  (doc_4_id, boat_2_id, test_user_id, 'Certificado de Navegabilidad', (CURRENT_DATE - INTERVAL '10 days')::date,
+  (doc_4_id, boat_1_id, test_user_id, 'Certificado de Navegabilidad', (CURRENT_DATE - INTERVAL '10 days')::date,
    'Necesita renovacion urgente', '{30, 7}');
 
 -- ─── Trips ─────────────────────────────────────────────────────────
@@ -98,7 +99,7 @@ INSERT INTO trips (id, boat_id, user_id, departure_port, arrival_port, departure
 
 -- Trip 2: currently recording
 INSERT INTO trips (id, boat_id, user_id, departure_port, departure_time, crew_members, status) VALUES
-  (trip_2_id, boat_2_id, test_user_id,
+  (trip_2_id, boat_1_id, test_user_id,
    'Port Olimpic Barcelona',
    (CURRENT_TIMESTAMP - INTERVAL '1 hour')::timestamptz,
    ARRAY['Carlos'],

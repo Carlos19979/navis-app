@@ -16,13 +16,36 @@ and what remains (mostly external config). Use this to continue.
 | **Sign in with Apple/Google** | n/a (provider-agnostic JWT) | ✅ code + URL scheme | build only | **Needs external config**: Supabase providers + Apple/Google credentials + iOS capability. iOS Info.plist URL scheme NOT committed (lives in local ios/ hacks) — re-add `CFBundleURLTypes` scheme `navis` when wiring. |
 | **Boat sharing (crew/co-owners)** | ✅ | ✅ | 🔒 security-tested | **Granular per-member permissions** (record trips · manage expenses · manage maintenance · view documents · manage documents). Boat edit/delete + member management stay owner-only. |
 
+## One boat per account — every plan (2026-08-21)
+Boat count stopped being a tier perk: `MaxBoats` is **1 on Free, Plus and Pro**
+(`domain.MaxBoatsPerAccount`). The whole product is built around "your boat"
+(home screen, readiness, reminders, costs), so selling "up to 2/3 boats" promised
+an experience the app does not deliver; several boats belong on the future Fleet
+tier instead.
+- Go: `Plan.MaxBoats()` returns the constant for every plan; `BoatService.Create`
+  still enforces it → **402** `PLAN_LIMIT`. `entitlements.max_boats` keeps its
+  shape (now always 1), so no client breaks.
+- Flutter: `maxBoatsPerAccount` in `billing.dart` (mirror), `PlanTier.maxBoats`
+  returns it. The dashboard **hides the add-boat FAB** at the cap instead of
+  opening a paywall — an upgrade would not lift the limit. Remaining guard on the
+  shared add path shows `boatLimitOne` ("Navis manages one boat per account for
+  now.").
+- Copy: the "Up to N boats" paywall benefit lines are gone from both tiers
+  (`proBenefitBoats` / `plusBenefitBoats` removed, along with
+  `paywallReasonBoatLimit`). Store listings updated in `docs/app-store-listing.md`.
+- Tests: tier matrix pins 1/1/1 (Go + Dart), `BoatService.Create` rejects the 2nd
+  boat on every plan, dashboard test asserts "no FAB at the cap on any tier",
+  E2E J02 asserts the cap holds after flipping to Pro.
+
 ## Three-tier plans — Free / Plus / Pro (2026-07-18)
 Split the single paid tier into **Plus** (individual owner) and **Pro** (shared boat /
 data). No DB migration — `profiles.plan` gains value `plus` (validated in `Plan.Valid`).
-- **Plus** (4,99 €/mes · 39,99 €/año): 2 boats, unlimited reminders, maintenance schedules
+- **Plus** (4,99 €/mes · 39,99 €/año): unlimited reminders, maintenance schedules
   + cron, full readiness, **anchor alarm**, gallery/attachments. **Pro** (8,99 €/mes ·
   69,99 €/año): everything in Plus + cost intelligence/€L/anomalies, shared coordination
-  (bookings + splits), passport PDF, clubs, 5 boats.
+  (bookings + splits), passport PDF, clubs. (The per-tier boat counts this batch
+  shipped — 2 for Plus, later 3 for Pro — were dropped: one boat per account on
+  every plan, see the section above.)
 - Go: `Plan.rank()`/`atLeast()`; each `CanUse*`/limit is per-tier. Webhook maps entitlement
   `plus`/`pro` → plan (`highestTier`). `oneof=free plus pro`.
 - Flutter: `PlanTier` enum with capability getters (mirror of `profile.go`) +
@@ -37,7 +60,7 @@ Free / Plus / Pro, see above; a B2B "fleet" tier is future work). Migration `000
 `normal→free`, `armador|gestor→pro`, sets default `free` and `CHECK (free|pro)`.
 
 - Table `profiles(plan)` ∈ `free|pro`, default `free` (auto-created). `Plan` helpers in
-  `domain/profile.go`: `IsPro`, `MaxBoats` (1/3), `CanCreateGroups` (Pro), `ReminderDocLimit`
+  `domain/profile.go`: `IsPro`, `MaxBoats` (1/3 then, 1 for all plans now), `CanCreateGroups` (Pro), `ReminderDocLimit`
   (Free=1, Pro=unlimited/-1), `CanUseMaintenanceSchedules` (Pro), `AttachmentLimit` (Free=1).
 - Enforced in `BoatService.Create`, `GroupService.Create` and the expiration cron →
   HTTP **402** (`PLAN_LIMIT` / `PLAN_FORBIDDEN`). Free reminders are limited to the single
@@ -54,7 +77,8 @@ Free / Plus / Pro, see above; a B2B "fleet" tier is future work). Migration `000
   (`features/billing/presentation/paywall_sheet.dart`, monthly/annual + Restore) shown when
   gating Boats/Groups FABs; dev plan switcher in Settings gated to `kDebugMode`.
 - Verified E2E (local API + DB): free `/me` → 402 on 2nd boat & group; webhook grant → pro
-  (max_boats 3, groups, unlimited reminders); pro creates boat+group; webhook expiration → free;
+  (max_boats 3 at the time — 1 for every plan since 2026-08-21, groups, unlimited
+  reminders); pro creates boat+group; webhook expiration → free;
   bad webhook secret → 401.
 - **Pending external config (not code):** RevenueCat 4 products (`navis_plus_monthly` 4,99 € /
   `navis_plus_yearly` 39,99 € / `navis_pro_monthly` 8,99 € / `navis_pro_yearly` 69,99 €) +

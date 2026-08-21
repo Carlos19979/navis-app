@@ -1729,12 +1729,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Recordatorios de mantenimiento programado';
 
   @override
-  String get proBenefitBoats => 'Hasta 3 barcos';
-
-  @override
-  String get plusBenefitBoats => 'Hasta 2 barcos';
-
-  @override
   String get paywallTitle => 'Navis Plus y Pro';
 
   @override
@@ -1753,12 +1747,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get proBenefitAttachments => 'Adjuntos ilimitados en documentos';
 
   @override
-  String get planBoatLimitReached =>
-      'Has alcanzado el máximo de barcos de tu plan.';
-
-  @override
-  String get paywallReasonBoatLimit =>
-      'Tu plan Free permite 1 barco. Hazte Pro para gestionar hasta 3.';
+  String get boatLimitOne => 'Por ahora Navis gestiona un barco por cuenta.';
 
   @override
   String get joinBoat => 'Unirse a un barco';

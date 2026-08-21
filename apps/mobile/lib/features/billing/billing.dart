@@ -15,6 +15,13 @@ import 'package:navis_mobile/features/profile/data/account_provider.dart';
 const plusEntitlementId = 'plus';
 const proEntitlementId = 'pro';
 
+/// How many boats one account may hold — the same on every tier. Mirrors
+/// `domain.MaxBoatsPerAccount` in the Go API, which enforces it.
+///
+/// Navis is deliberately a one-boat product for now: home, readiness, reminders
+/// and costs are all built around "your boat", so boat count is not a paid perk.
+const maxBoatsPerAccount = 1;
+
 /// The subscription tier ladder. `index` is the rank (free < plus < pro).
 enum PlanTier {
   free,
@@ -37,11 +44,7 @@ enum PlanTier {
   bool get canSharedCoordination => this == PlanTier.pro;
   bool get canExportPassport => this == PlanTier.pro;
   bool get canCreateGroups => this == PlanTier.pro;
-  int get maxBoats => switch (this) {
-        PlanTier.pro => 3,
-        PlanTier.plus => 2,
-        PlanTier.free => 1,
-      };
+  int get maxBoats => maxBoatsPerAccount;
   int get galleryLimit => atLeast(PlanTier.plus) ? 10 : 1;
   int get attachmentLimit => atLeast(PlanTier.plus) ? -1 : 1;
 }

@@ -3284,18 +3284,6 @@ abstract class AppLocalizations {
   /// **'Scheduled maintenance reminders'**
   String get proBenefitMaintenance;
 
-  /// No description provided for @proBenefitBoats.
-  ///
-  /// In en, this message translates to:
-  /// **'Up to 3 boats'**
-  String get proBenefitBoats;
-
-  /// No description provided for @plusBenefitBoats.
-  ///
-  /// In en, this message translates to:
-  /// **'Up to 2 boats'**
-  String get plusBenefitBoats;
-
   /// No description provided for @paywallTitle.
   ///
   /// In en, this message translates to:
@@ -3332,17 +3320,11 @@ abstract class AppLocalizations {
   /// **'Unlimited document attachments'**
   String get proBenefitAttachments;
 
-  /// No description provided for @planBoatLimitReached.
+  /// No description provided for @boatLimitOne.
   ///
   /// In en, this message translates to:
-  /// **'You\'ve reached your plan\'s boat limit.'**
-  String get planBoatLimitReached;
-
-  /// No description provided for @paywallReasonBoatLimit.
-  ///
-  /// In en, this message translates to:
-  /// **'Your Free plan allows 1 boat. Go Pro to manage up to 3.'**
-  String get paywallReasonBoatLimit;
+  /// **'Navis manages one boat per account for now.'**
+  String get boatLimitOne;
 
   /// No description provided for @joinBoat.
   ///

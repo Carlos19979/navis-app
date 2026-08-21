@@ -35,9 +35,9 @@ el código espera (`navis_plus_*` / `navis_pro_*`).
 
 | Product ID | Display Name (ES) | Descripción de revisión (ES) |
 |---|---|---|
-| `navis_plus_monthly` | Navis Plus (mensual) | Recordatorios ilimitados, mantenimiento programado, alarma de fondeo y hasta 2 barcos. |
+| `navis_plus_monthly` | Navis Plus (mensual) | Recordatorios ilimitados, mantenimiento programado, alarma de fondeo y galeria de fotos del barco. |
 | `navis_plus_yearly` | Navis Plus (anual) | Plan Plus con facturación anual (2 meses gratis). |
-| `navis_pro_monthly` | Navis Pro (mensual) | Todo lo de Plus + coste por milla, reservas compartidas, pasaporte PDF y hasta 3 barcos. |
+| `navis_pro_monthly` | Navis Pro (mensual) | Todo lo de Plus + coste por milla, reservas compartidas, pasaporte PDF y clubes. |
 | `navis_pro_yearly` | Navis Pro (anual) | Plan Pro con facturación anual (2 meses gratis). |
 
 ---
@@ -90,9 +90,9 @@ TODO LO DEMÁS
 · Tu año navegado en un pasaporte PDF
 
 PLANES
-Navis es gratis para empezar: documentos, un barco y el reparto de gastos no cuestan nada.
-· Plus (4,99 €/mes · 39,99 €/año): recordatorios ilimitados, mantenimiento programado, alarma de fondeo y 2 barcos.
-· Pro (8,99 €/mes · 69,99 €/año): coste por milla, reservas compartidas, pasaporte PDF y 3 barcos.
+Navis es gratis para empezar: documentos, tu barco y el registro de viajes no cuestan nada. Navis gestiona un barco por cuenta en todos los planes.
+· Plus (4,99 €/mes · 39,99 €/año): recordatorios ilimitados, mantenimiento programado, alarma de fondeo y galería de fotos.
+· Pro (8,99 €/mes · 69,99 €/año): coste por milla, reservas compartidas, pasaporte PDF y clubes.
 
 Las suscripciones se renuevan automáticamente salvo que las canceles al menos 24 h antes del fin del período, desde los ajustes de tu cuenta de App Store.
 
@@ -160,9 +160,9 @@ EVERYTHING ELSE
 · Your sailing year in a PDF passport
 
 PLANS
-Navis is free to start: documents, one boat and expense splitting cost nothing.
-· Plus (€4.99/mo · €39.99/yr): unlimited reminders, scheduled maintenance, anchor watch and 2 boats.
-· Pro (€8.99/mo · €69.99/yr): cost per mile, shared bookings, PDF passport and 3 boats.
+Navis is free to start: documents, your boat and the logbook cost nothing. Navis manages one boat per account on every plan.
+· Plus (€4.99/mo · €39.99/yr): unlimited reminders, scheduled maintenance, anchor watch and a boat photo gallery.
+· Pro (€8.99/mo · €69.99/yr): cost per mile, shared bookings, PDF passport and clubs.
 
 Subscriptions renew automatically unless cancelled at least 24h before the end of the period, from your App Store account settings.
 
