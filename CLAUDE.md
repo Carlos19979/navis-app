@@ -554,6 +554,8 @@ Prerequisites: Docker (or Podman — on Windows the Podman WSL machine exposes t
 
 The API container in `docker-compose.yml` joins the Supabase CLI network (`supabase_network_packages`) and reaches the DB/Kong by container name, so `make dev` works on Docker Desktop and rootless Podman alike. iOS builds need macOS + Xcode; there is no way to build them on Windows.
 
+Worktrees: each task gets its own Orca worktree (`~/orca/workspaces/navis-app/<name>`); the main checkout is for questions, ops and merges. `orca.yaml` runs `scripts/worktree_setup.dart` on every new worktree (copies `apps/api/.env` from the main checkout, `flutter pub get`). Worktrees share the local Supabase stack and port 8080 — one `make dev` at a time.
+
 ```bash
 # 1. Start Supabase (Postgres + Auth + Storage + Dashboard)
 make db-start
