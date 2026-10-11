@@ -1,0 +1,3 @@
+scripts:
+  setup: |
+    dart scripts/worktree_setup.dart
