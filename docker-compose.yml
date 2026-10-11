@@ -7,15 +7,26 @@ services:
       - "8080:8080"
     environment:
       PORT: "8080"
-      DATABASE_URL: "postgres://postgres:postgres@host.docker.internal:54322/postgres?sslmode=disable"
+      # The API joins the Supabase CLI's own network and talks to its
+      # containers by name, instead of going out to the host's published
+      # ports via host.docker.internal: rootless Podman (Windows/Linux) cannot
+      # reach the host that way, and this works identically on Docker Desktop.
+      DATABASE_URL: "postgres://postgres:postgres@supabase_db_packages:5432/postgres?sslmode=disable"
       SUPABASE_JWT_SECRET: "super-secret-jwt-token-with-at-least-32-characters-long"
-      SUPABASE_URL: "http://host.docker.internal:54321"
+      SUPABASE_URL: "http://supabase_kong_packages:8000"
       # Supabase local demo service_role key (public knowledge, local-only).
       # Needed by account deletion to purge storage buckets via the admin API.
       SUPABASE_SERVICE_ROLE_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU"
       LOG_LEVEL: "debug"
       CORS_ALLOWED_ORIGINS: "http://localhost:3000"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    networks:
+      - supabase
     volumes:
       - ./apps/api:/app
+
+networks:
+  # Created by `supabase start` (make db-start). The suffix is the Supabase
+  # project id, which defaults to the folder name: packages/supabase → packages.
+  supabase:
+    name: supabase_network_packages
+    external: true
