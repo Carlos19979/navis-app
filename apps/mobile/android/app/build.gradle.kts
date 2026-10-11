@@ -27,6 +27,10 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        // flutter_local_notifications (anchor alarm) uses java.time APIs that
+        // need desugaring below API 26; without it the AAR metadata check
+        // fails the build.
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
@@ -78,4 +82,8 @@ if (file("google-services.json").exists()) {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

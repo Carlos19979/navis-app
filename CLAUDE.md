@@ -6,7 +6,7 @@ Boat management mobile app for recreational owners. Monorepo: Flutter mobile + G
 
 ```
 apps/api/          — Go 1.26 API (Chi v5, pgx/v5, Clean Architecture)
-apps/mobile/       — Flutter 3.32 / Dart 3.x (Riverpod, GoRouter, Dio)
+apps/mobile/       — Flutter 3.41.7 / Dart 3.x (Riverpod, GoRouter, Dio)
 packages/supabase/ — Migrations, RLS policies, seeds
 docs/              — Architecture, API spec, features, plan
 ```
@@ -550,7 +550,9 @@ make install-hooks   # git hooks
 
 ## Local Development Setup
 
-Prerequisites: Docker, Supabase CLI, Flutter SDK, Go.
+Prerequisites: Docker (or Podman — on Windows the Podman WSL machine exposes the Docker pipe, add the Docker CLI + compose plugin), Supabase CLI, Flutter SDK, Go, JDK 17 + Android SDK for Android builds.
+
+The API container in `docker-compose.yml` joins the Supabase CLI network (`supabase_network_packages`) and reaches the DB/Kong by container name, so `make dev` works on Docker Desktop and rootless Podman alike. iOS builds need macOS + Xcode; there is no way to build them on Windows.
 
 ```bash
 # 1. Start Supabase (Postgres + Auth + Storage + Dashboard)
@@ -684,7 +686,7 @@ code → local checks → push → PR → CI green → merge → delete branch
 ## Stack Versions
 
 - Go 1.26, Chi v5, pgx/v5, robfig/cron/v3, go-playground/validator/v10, log/slog
-- Flutter 3.32, Dart 3.x, Riverpod 2, GoRouter 14, Dio 5, supabase_flutter 2.5
+- Flutter 3.41.7 (the CI pin — `pubspec.lock` must be resolved with it, a newer local Flutter rewrites it), Dart 3.x, Riverpod 2, GoRouter 14, Dio 5, supabase_flutter 2.5
 - flutter_map 7, geolocator 12, drift/sqflite, mocktail, cached_network_image
 - purchases_flutter (RevenueCat SDK), pdf (client-side passport export)
 - audioplayers, flutter_local_notifications, vibration, wakelock_plus (anchor-watch alarm)
