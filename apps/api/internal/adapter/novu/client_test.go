@@ -28,6 +28,10 @@ func newTestClient(t *testing.T, captured *map[string]any) *Client {
 
 	c := New("test-key", slog.New(slog.NewTextHandler(io.Discard, nil)))
 	c.baseURL = srv.URL
+	// The server's own client, not the production one: that uses
+	// http.DefaultTransport, and every parallel test's srv.Close() calls
+	// CloseIdleConnections on it, breaking a sibling's in-flight request.
+	c.http = srv.Client()
 	return c
 }
 
